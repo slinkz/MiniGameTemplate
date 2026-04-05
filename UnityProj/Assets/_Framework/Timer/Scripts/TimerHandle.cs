@@ -1,52 +1,28 @@
-using System;
-
 namespace MiniGameTemplate.Timing
 {
     /// <summary>
-    /// Handle to a running timer. Use to cancel, pause, or resume.
+    /// Lightweight handle to a running timer. This is a value type (struct) to avoid
+    /// GC pressure from high-frequency timer creation. The actual timer data lives
+    /// inside TimerService — this handle is just an ID token.
+    ///
+    /// Use TimerService.Instance.Cancel/Pause/Resume(handle) to control the timer.
     /// </summary>
-    public class TimerHandle
+    public readonly struct TimerHandle
     {
-        internal float Duration;
-        internal float Elapsed;
-        internal bool IsRepeating;
-        internal bool UseRealTime;
-        internal Action Callback;
-        internal bool IsCancelled;
-        internal bool IsPaused;
-
         /// <summary>
-        /// Cancel this timer. It will not fire again.
+        /// Unique identifier for this timer within TimerService.
+        /// A value of 0 means "invalid / no timer".
         /// </summary>
-        public void Cancel()
+        public readonly int Id;
+
+        internal TimerHandle(int id)
         {
-            IsCancelled = true;
+            Id = id;
         }
 
-        /// <summary>
-        /// Pause this timer. Elapsed time is preserved.
-        /// </summary>
-        public void Pause()
-        {
-            IsPaused = true;
-        }
+        /// <summary>Whether this handle points to a valid timer (non-zero id).</summary>
+        public bool IsValid => Id != 0;
 
-        /// <summary>
-        /// Resume a paused timer.
-        /// </summary>
-        public void Resume()
-        {
-            IsPaused = false;
-        }
-
-        /// <summary>
-        /// How much time remains until the next fire.
-        /// </summary>
-        public float Remaining => Duration - Elapsed;
-
-        /// <summary>
-        /// Whether this timer is still active (not cancelled, not completed for non-repeating).
-        /// </summary>
-        public bool IsActive => !IsCancelled;
+        public static readonly TimerHandle Invalid = default;
     }
 }

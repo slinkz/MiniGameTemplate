@@ -6,6 +6,7 @@ using MiniGameTemplate.UI;
 using MiniGameTemplate.Audio;
 using MiniGameTemplate.Timing;
 using MiniGameTemplate.Pool;
+using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.Core
 {
@@ -25,12 +26,15 @@ namespace MiniGameTemplate.Core
 
         private static bool _hasBooted;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => _hasBooted = false;
+
         private async void Awake()
         {
             // Guard: prevent duplicate Bootstrapper instances
             if (_hasBooted)
             {
-                UnityEngine.Debug.LogWarning("[Bootstrapper] Duplicate detected — destroying this instance.");
+                GameLog.LogWarning("[Bootstrapper] Duplicate detected — destroying this instance.");
                 Destroy(gameObject);
                 return;
             }
@@ -45,7 +49,7 @@ namespace MiniGameTemplate.Core
                 Application.runInBackground = _gameConfig.RunInBackground;
                 Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
-                UnityEngine.Debug.Log($"[Bootstrapper] Starting {_gameConfig.GameName} v{_gameConfig.Version}");
+                GameLog.Log($"[Bootstrapper] Starting {_gameConfig.GameName} v{_gameConfig.Version}");
 
                 // Initialize systems in dependency order
                 await InitializeSystemsAsync();
@@ -74,36 +78,36 @@ namespace MiniGameTemplate.Core
             if (_assetConfig != null)
             {
                 await AssetService.Instance.InitializeAsync(_assetConfig);
-                UnityEngine.Debug.Log("[Bootstrapper] AssetService initialized.");
+                GameLog.Log("[Bootstrapper] AssetService initialized.");
             }
             else
             {
-                UnityEngine.Debug.LogWarning("[Bootstrapper] No AssetConfig assigned — AssetService skipped. " +
+                GameLog.LogWarning("[Bootstrapper] No AssetConfig assigned — AssetService skipped. " +
                     "Resources.Load fallback will be used.");
             }
 
             // 2. Config tables (Luban) — async to avoid WebGL deadlock
             await ConfigManager.InitializeAsync();
-            UnityEngine.Debug.Log("[Bootstrapper] ConfigManager initialized.");
+            GameLog.Log("[Bootstrapper] ConfigManager initialized.");
 
             // 3. Timer (needed by others)
             _ = TimerService.Instance;
-            UnityEngine.Debug.Log("[Bootstrapper] TimerService initialized.");
+            GameLog.Log("[Bootstrapper] TimerService initialized.");
 
             // 4. Audio
             // AudioManager auto-initializes via Singleton if present in scene/prefab
             // If not in scene, it will be created on first access
-            UnityEngine.Debug.Log("[Bootstrapper] AudioManager ready.");
+            GameLog.Log("[Bootstrapper] AudioManager ready.");
 
             // 5. UI (FairyGUI)
             _ = UIManager.Instance;
-            UnityEngine.Debug.Log("[Bootstrapper] UIManager initialized.");
+            GameLog.Log("[Bootstrapper] UIManager initialized.");
 
             // 6. Object Pool
             _ = PoolManager.Instance;
-            UnityEngine.Debug.Log("[Bootstrapper] PoolManager initialized.");
+            GameLog.Log("[Bootstrapper] PoolManager initialized.");
 
-            UnityEngine.Debug.Log("[Bootstrapper] All systems initialized.");
+            GameLog.Log("[Bootstrapper] All systems initialized.");
         }
 
         private void LoadInitialScene()
@@ -114,7 +118,7 @@ namespace MiniGameTemplate.Core
             }
             else
             {
-                UnityEngine.Debug.LogWarning("[Bootstrapper] No initial scene configured in GameConfig!");
+                GameLog.LogWarning("[Bootstrapper] No initial scene configured in GameConfig!");
             }
         }
     }

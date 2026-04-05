@@ -4,6 +4,7 @@ namespace MiniGameTemplate.Pool
 {
     /// <summary>
     /// Attach to pooled GameObjects for auto-return functionality.
+    /// Only ticks Update when _autoReturnDelay > 0 to avoid wasted MonoBehaviour.Update overhead.
     /// </summary>
     public class PooledObject : MonoBehaviour
     {
@@ -19,12 +20,13 @@ namespace MiniGameTemplate.Pool
         private void OnEnable()
         {
             _elapsedTime = 0f;
+            // Only enable Update ticking when auto-return is configured
+            enabled = _autoReturnDelay > 0f;
         }
 
         private void Update()
         {
-            if (_autoReturnDelay <= 0f) return;
-
+            // Update is only called when enabled (i.e., _autoReturnDelay > 0)
             _elapsedTime += Time.deltaTime;
             if (_elapsedTime >= _autoReturnDelay)
             {

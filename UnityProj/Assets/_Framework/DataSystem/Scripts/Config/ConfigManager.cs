@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Asset;
+using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.Data
 {
@@ -14,6 +15,9 @@ namespace MiniGameTemplate.Data
     public static class ConfigManager
     {
         private static bool _initialized;
+
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => _initialized = false;
 
         /// <summary>
         /// Base path for config data when loading via YooAsset.
@@ -38,7 +42,7 @@ namespace MiniGameTemplate.Data
             // _tables = await cfg.Tables.CreateAsync(LoadConfigTextAsync);
 
             _initialized = true;
-            Debug.Log("[ConfigManager] Config tables initialized.");
+            GameLog.Log("[ConfigManager] Config tables initialized.");
         }
 
         /// <summary>
@@ -54,7 +58,7 @@ namespace MiniGameTemplate.Data
             // _tables = new cfg.Tables(file => LoadConfigTextSync(file));
 
             _initialized = true;
-            Debug.Log("[ConfigManager] Config tables initialized (sync/Resources fallback).");
+            GameLog.Log("[ConfigManager] Config tables initialized (sync/Resources fallback).");
         }
 
         /// <summary>
@@ -76,7 +80,7 @@ namespace MiniGameTemplate.Data
                     return text;
                 }
 
-                Debug.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
             }
 
             // Fallback: Resources.Load (synchronous but safe on all platforms)

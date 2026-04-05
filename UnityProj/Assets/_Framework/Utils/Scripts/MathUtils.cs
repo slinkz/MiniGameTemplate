@@ -9,9 +9,14 @@ namespace MiniGameTemplate.Utils
     {
         /// <summary>
         /// Remap a value from one range to another.
+        /// Returns toMin if fromMin == fromMax (avoids division-by-zero / NaN).
         /// </summary>
         public static float Remap(float value, float fromMin, float fromMax, float toMin, float toMax)
         {
+            // Guard: degenerate source range — return start of target range
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (fromMin == fromMax) return toMin;
+
             float t = Mathf.InverseLerp(fromMin, fromMax, value);
             return Mathf.Lerp(toMin, toMax, t);
         }

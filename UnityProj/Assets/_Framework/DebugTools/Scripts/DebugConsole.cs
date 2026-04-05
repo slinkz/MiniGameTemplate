@@ -79,11 +79,38 @@ namespace MiniGameTemplate.Debug
             }
         }
 
+        // Per-LogType cached GUIStyles to avoid mutating textColor every line
+        private GUIStyle _errorStyle;
+        private GUIStyle _warningStyle;
+        private GUIStyle _exceptionStyle;
+        private GUIStyle _infoStyle;
+
+        // Reusable Rect to avoid per-call struct allocation
+        private Rect _lineRect;
+
+        private void EnsureLogTypeStyles()
+        {
+            if (_errorStyle != null) return;
+
+            _errorStyle = new GUIStyle(_labelStyle) { };
+            _errorStyle.normal.textColor = Color.red;
+
+            _warningStyle = new GUIStyle(_labelStyle) { };
+            _warningStyle.normal.textColor = Color.yellow;
+
+            _exceptionStyle = new GUIStyle(_labelStyle) { };
+            _exceptionStyle.normal.textColor = Color.magenta;
+
+            _infoStyle = new GUIStyle(_labelStyle) { };
+            _infoStyle.normal.textColor = Color.white;
+        }
+
         private void OnGUI()
         {
             if (!_isVisible) return;
 
             EnsureStyles();
+            EnsureLogTypeStyles();
 
             float w = Screen.width * 0.9f;
             float h = Screen.height * 0.5f;
@@ -93,24 +120,27 @@ namespace MiniGameTemplate.Debug
             GUI.Box(new Rect(x, y, w, h), "Debug Console", _bgStyle);
 
             var scrollRect = new Rect(x + 5, y + 25, w - 10, h - 35);
-            float contentHeight = _messages.Count * (_fontSize + 4);
+            float lineHeight = _fontSize + 4;
+            float contentHeight = _messages.Count * lineHeight;
             var viewRect = new Rect(0, 0, w - 30, contentHeight);
 
             _scrollPosition = GUI.BeginScrollView(scrollRect, _scrollPosition, viewRect);
 
             float lineY = 0;
+            float lineWidth = w - 30;
             foreach (var entry in _messages)
             {
-                _labelStyle.normal.textColor = entry.Type switch
+                var style = entry.Type switch
                 {
-                    LogType.Error => Color.red,
-                    LogType.Warning => Color.yellow,
-                    LogType.Exception => Color.magenta,
-                    _ => Color.white
+                    LogType.Error => _errorStyle,
+                    LogType.Warning => _warningStyle,
+                    LogType.Exception => _exceptionStyle,
+                    _ => _infoStyle
                 };
 
-                GUI.Label(new Rect(0, lineY, w - 30, _fontSize + 4), entry.Message, _labelStyle);
-                lineY += _fontSize + 4;
+                _lineRect.Set(0, lineY, lineWidth, lineHeight);
+                GUI.Label(_lineRect, entry.Message, style);
+                lineY += lineHeight;
             }
 
             GUI.EndScrollView();

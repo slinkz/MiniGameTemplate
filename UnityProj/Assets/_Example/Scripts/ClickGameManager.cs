@@ -35,7 +35,7 @@ namespace MiniGameTemplate.Example
         private ISaveSystem _saveSystem;
         private const string HIGH_SCORE_KEY = "example_high_score";
 
-        private TimerHandle _countdownTimer;
+        private TimerHandle _countdownTimer = TimerHandle.Invalid;
 
         private void Awake()
         {
@@ -87,7 +87,7 @@ namespace MiniGameTemplate.Example
         /// </summary>
         private void EndGame()
         {
-            _countdownTimer?.Cancel();
+            TimerService.Instance.Cancel(_countdownTimer);
             _stateMachine.TransitionTo(_gameOverState);
             _onGameOver?.Raise();
 
@@ -113,7 +113,7 @@ namespace MiniGameTemplate.Example
         /// </summary>
         public void ReturnToMenu()
         {
-            _countdownTimer?.Cancel();
+            TimerService.Instance.Cancel(_countdownTimer);
             _stateMachine.ForceTransitionTo(_menuState);
         }
 

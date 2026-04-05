@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FairyGUI;
 using UnityEngine;
 using MiniGameTemplate.Asset;
+using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.UI
 {
@@ -20,6 +21,14 @@ namespace MiniGameTemplate.UI
         private static readonly Dictionary<string, YooAsset.AssetHandle> _assetHandles = new Dictionary<string, YooAsset.AssetHandle>();
         // Cache for assets loaded during async package add — used by LoadFairyGUIAsset callback
         private static readonly Dictionary<string, UnityEngine.Object> _loadedAssetCache = new Dictionary<string, UnityEngine.Object>();
+
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            _refCounts.Clear();
+            _assetHandles.Clear();
+            _loadedAssetCache.Clear();
+        }
 
         /// <summary>
         /// The base path prefix for FairyGUI package assets when loading via YooAsset.
@@ -44,7 +53,7 @@ namespace MiniGameTemplate.UI
             UIPackage.AddPackage(packageName);
 
             _refCounts[packageName] = 1;
-            Debug.Log($"[UIPackageLoader] Loaded package (Resources): {packageName}");
+            GameLog.Log($"[UIPackageLoader] Loaded package (Resources): {packageName}");
         }
 
         /// <summary>
@@ -69,7 +78,7 @@ namespace MiniGameTemplate.UI
             }
 
             _refCounts[packageName] = 1;
-            Debug.Log($"[UIPackageLoader] Loaded package (async): {packageName}");
+            GameLog.Log($"[UIPackageLoader] Loaded package (async): {packageName}");
         }
 
         /// <summary>
@@ -92,7 +101,7 @@ namespace MiniGameTemplate.UI
                 }
 
                 _refCounts.Remove(packageName);
-                Debug.Log($"[UIPackageLoader] Unloaded package: {packageName}");
+                GameLog.Log($"[UIPackageLoader] Unloaded package: {packageName}");
             }
         }
 
@@ -111,7 +120,7 @@ namespace MiniGameTemplate.UI
             _refCounts.Clear();
             _loadedAssetCache.Clear();
 
-            Debug.Log("[UIPackageLoader] All packages unloaded.");
+            GameLog.Log("[UIPackageLoader] All packages unloaded.");
         }
 
         private static async System.Threading.Tasks.Task LoadViaYooAssetAsync(string packageName)
@@ -168,7 +177,7 @@ namespace MiniGameTemplate.UI
                     return handle.AssetObject;
                 }
 #endif
-                Debug.LogWarning($"[UIPackageLoader] FairyGUI asset not pre-cached: {assetPath}. " +
+                GameLog.LogWarning($"[UIPackageLoader] FairyGUI asset not pre-cached: {assetPath}. " +
                     "Consider pre-loading assets before UIPackage.AddPackage.");
             }
 

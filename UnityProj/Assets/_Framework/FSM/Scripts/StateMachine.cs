@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.FSM
 {
@@ -14,6 +16,11 @@ namespace MiniGameTemplate.FSM
 
         private State _currentState;
 
+        // Pre-built lookup for O(1) transition validation.
+        // Key: (fromState, toState). null fromState = wildcard ("any state").
+        private HashSet<(State, State)> _transitionLookup;
+        private bool _hasWildcardTransitions;
+
         public State CurrentState => _currentState;
 
         /// <summary>
@@ -23,10 +30,35 @@ namespace MiniGameTemplate.FSM
 
         private void Start()
         {
+            BuildTransitionLookup();
+
             if (_initialState != null)
             {
                 _currentState = _initialState;
                 _currentState.Enter();
+            }
+        }
+
+        /// <summary>
+        /// Build a HashSet of valid (from, to) pairs for O(1) lookup.
+        /// </summary>
+        private void BuildTransitionLookup()
+        {
+            if (_validTransitions == null || _validTransitions.Length == 0)
+            {
+                _transitionLookup = null; // null means "allow all"
+                return;
+            }
+
+            _transitionLookup = new HashSet<(State, State)>(_validTransitions.Length);
+            _hasWildcardTransitions = false;
+
+            foreach (var t in _validTransitions)
+            {
+                if (t == null) continue;
+                _transitionLookup.Add((t.FromState, t.ToState));
+                if (t.FromState == null)
+                    _hasWildcardTransitions = true;
             }
         }
 
@@ -41,7 +73,7 @@ namespace MiniGameTemplate.FSM
 
             if (!IsTransitionValid(targetState))
             {
-                Debug.LogWarning($"[FSM] Invalid transition: {_currentState?.name} → {targetState.name}");
+                GameLog.LogWarning($"[FSM] Invalid transition: {_currentState?.name} → {targetState.name}");
                 return false;
             }
 
@@ -51,7 +83,7 @@ namespace MiniGameTemplate.FSM
             _currentState.Enter();
 
             OnStateChanged?.Invoke(previous, _currentState);
-            Debug.Log($"[FSM] Transition: {previous?.name} → {_currentState.name}");
+            GameLog.Log($"[FSM] Transition: {previous?.name} → {_currentState.name}");
             return true;
         }
 
@@ -72,14 +104,17 @@ namespace MiniGameTemplate.FSM
 
         private bool IsTransitionValid(State targetState)
         {
-            if (_validTransitions == null || _validTransitions.Length == 0)
-                return true; // No restrictions defined — allow all transitions
+            // No restrictions defined — allow all transitions
+            if (_transitionLookup == null)
+                return true;
 
-            foreach (var transition in _validTransitions)
-            {
-                if (transition.ToState == targetState && transition.IsValid(_currentState))
-                    return true;
-            }
+            // O(1) exact match: (currentState → targetState)
+            if (_transitionLookup.Contains((_currentState, targetState)))
+                return true;
+
+            // O(1) wildcard match: (null → targetState) means "any state → target"
+            if (_hasWildcardTransitions && _transitionLookup.Contains((null, targetState)))
+                return true;
 
             return false;
         }

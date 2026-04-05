@@ -3,7 +3,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using MiniGameTemplate.Utils;
 using MiniGameTemplate.Events;
+using MiniGameTemplate.Data;
 using MiniGameTemplate.Asset;
+using static MiniGameTemplate.Utils.GameLog;
 
 namespace MiniGameTemplate.Core
 {
@@ -17,6 +19,13 @@ namespace MiniGameTemplate.Core
         [Header("Events")]
         [SerializeField] private GameEvent _onSceneLoadStarted;
         [SerializeField] private GameEvent _onSceneLoadCompleted;
+
+        [Header("Progress (Optional)")]
+        [Tooltip("Optional float event for loading progress [0..1]. Throttled to avoid per-frame overhead.")]
+        [SerializeField] private FloatVariable _loadingProgress;
+
+        /// <summary>Minimum interval between progress updates (seconds).</summary>
+        private const float PROGRESS_THROTTLE = 0.1f;
 
         private bool _isLoading;
 
@@ -34,7 +43,7 @@ namespace MiniGameTemplate.Core
 
             if (_isLoading)
             {
-                UnityEngine.Debug.LogWarning("[SceneLoader] Already loading a scene. Ignoring request.");
+                GameLog.LogWarning("[SceneLoader] Already loading a scene. Ignoring request.");
                 return;
             }
 
@@ -65,7 +74,7 @@ namespace MiniGameTemplate.Core
 
             if (sceneHandle.Status == YooAsset.EOperationStatus.Succeed)
             {
-                UnityEngine.Debug.Log($"[SceneLoader] Scene loaded via AssetService: {sceneDef.SceneName}");
+                GameLog.Log($"[SceneLoader] Scene loaded via AssetService: {sceneDef.SceneName}");
             }
             else
             {
@@ -101,13 +110,21 @@ namespace MiniGameTemplate.Core
 
             while (!operation.isDone)
             {
+                // Throttled progress update — avoids per-frame SO event overhead
+                if (_loadingProgress != null)
+                {
+                    _loadingProgress.SetValue(operation.progress);
+                }
                 yield return null;
             }
+
+            if (_loadingProgress != null)
+                _loadingProgress.SetValue(1f);
 
             _isLoading = false;
             if (_onSceneLoadCompleted != null)
                 _onSceneLoadCompleted.Raise();
-            UnityEngine.Debug.Log($"[SceneLoader] Scene loaded via SceneManager: {sceneDef.SceneName}");
+            GameLog.Log($"[SceneLoader] Scene loaded via SceneManager: {sceneDef.SceneName}");
         }
 
         /// <summary>

@@ -11,12 +11,23 @@ namespace MiniGameTemplate.Utils
     /// - If accessed before Awake, auto-creates a new GameObject.
     /// - If placed in scene, self-registers in Awake.
     /// - Does NOT use FindObjectOfType (expensive and unreliable across scenes).
+    ///
+    /// Performance notes:
+    /// - No lock: WebGL is single-threaded; Unity API is main-thread-only.
+    /// - Uses ReferenceEquals to skip Unity's overloaded == (avoids native interop cost).
+    /// - [RuntimeInitializeOnLoadMethod] resets statics for Domain Reload disabled workflows.
     /// </summary>
     public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
-        private static readonly object _lock = new object();
         private static bool _applicationIsQuitting;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            _instance = null;
+            _applicationIsQuitting = false;
+        }
 
         public static T Instance
         {
@@ -28,29 +39,27 @@ namespace MiniGameTemplate.Utils
                     return null;
                 }
 
-                lock (_lock)
+                // ReferenceEquals avoids Unity's overloaded == which calls native Object.CompareBaseObjects
+                if (ReferenceEquals(_instance, null) || !_instance)
                 {
-                    if (_instance == null)
-                    {
-                        // Auto-create if not yet registered via Awake
-                        var go = new GameObject($"[{typeof(T).Name}]");
-                        _instance = go.AddComponent<T>();
-                        DontDestroyOnLoad(go);
-                    }
-
-                    return _instance;
+                    // Auto-create if not yet registered via Awake
+                    var go = new GameObject($"[{typeof(T).Name}]");
+                    _instance = go.AddComponent<T>();
+                    DontDestroyOnLoad(go);
                 }
+
+                return _instance;
             }
         }
 
         protected virtual void Awake()
         {
-            if (_instance == null)
+            if (ReferenceEquals(_instance, null) || !_instance)
             {
                 _instance = this as T;
                 DontDestroyOnLoad(gameObject);
             }
-            else if (_instance != this)
+            else if (!ReferenceEquals(_instance, this))
             {
                 Debug.LogWarning($"[Singleton] Duplicate {typeof(T).Name} detected on '{gameObject.name}' — destroying.");
                 Destroy(gameObject);
@@ -59,7 +68,7 @@ namespace MiniGameTemplate.Utils
 
         protected virtual void OnDestroy()
         {
-            if (_instance == this)
+            if (ReferenceEquals(_instance, this))
                 _instance = null;
         }
 

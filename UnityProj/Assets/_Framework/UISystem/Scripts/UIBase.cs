@@ -28,7 +28,9 @@ namespace MiniGameTemplate.UI
         protected virtual int SortOrder => UIConstants.LAYER_NORMAL;
 
         /// <summary>
-        /// Create and display the panel.
+        /// [Sync] Create and display the panel using Resources.Load path.
+        /// Suitable for editor quick iteration. For production (especially WebGL/WeChat),
+        /// prefer OpenAsync() which loads via YooAsset without blocking.
         /// </summary>
         public void Open(object data = null)
         {
@@ -39,6 +41,30 @@ namespace MiniGameTemplate.UI
             }
 
             UIPackageLoader.AddPackage(PackageName);
+            CreateAndShow(data);
+        }
+
+        /// <summary>
+        /// [Async] Create and display the panel via YooAsset.
+        /// Preferred path for WebGL / WeChat Mini Game — avoids synchronous I/O blocking a frame.
+        /// </summary>
+        public async System.Threading.Tasks.Task OpenAsync(object data = null)
+        {
+            if (ContentPane != null)
+            {
+                OnRefresh(data);
+                return;
+            }
+
+            await UIPackageLoader.AddPackageAsync(PackageName);
+            CreateAndShow(data);
+        }
+
+        /// <summary>
+        /// Shared creation logic after package is loaded (sync or async).
+        /// </summary>
+        private void CreateAndShow(object data)
+        {
             ContentPane = UIPackage.CreateObject(PackageName, ComponentName).asCom;
 
             if (ContentPane == null)

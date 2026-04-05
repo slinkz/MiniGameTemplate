@@ -14,6 +14,9 @@ namespace MiniGameTemplate.Pool
         private readonly Transform _parent;
         private int _totalCreated;
 
+        // Reusable buffer for ReturnAll to avoid per-call List allocation
+        private readonly List<GameObject> _returnBuffer = new List<GameObject>();
+
         public int AvailableCount => _available.Count;
         public int InUseCount => _inUse.Count;
 
@@ -97,14 +100,21 @@ namespace MiniGameTemplate.Pool
 
         /// <summary>
         /// Return all in-use objects to the pool.
+        /// Uses a cached buffer to avoid allocating a new List each call.
         /// </summary>
         public void ReturnAll()
         {
-            var list = new List<GameObject>(_inUse);
-            foreach (var obj in list)
+            if (_inUse.Count == 0) return;
+
+            _returnBuffer.Clear();
+            _returnBuffer.AddRange(_inUse);
+
+            foreach (var obj in _returnBuffer)
             {
                 Return(obj);
             }
+
+            _returnBuffer.Clear();
         }
     }
 }

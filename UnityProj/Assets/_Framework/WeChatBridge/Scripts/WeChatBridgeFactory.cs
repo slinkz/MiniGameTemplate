@@ -12,6 +12,9 @@ namespace MiniGameTemplate.Platform
     {
         private static IWeChatBridge _instance;
 
+        [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => _instance = null;
+
         public static IWeChatBridge Create()
         {
             if (_instance != null)

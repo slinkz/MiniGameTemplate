@@ -23,15 +23,15 @@ namespace MiniGameTemplate.Audio
 
         public AudioClipSO GetClip(string key)
         {
-            EnsureLookup();
+            if (_lookup == null) BuildLookup(); // Safety fallback (should not happen)
             _lookup.TryGetValue(key, out var clip);
             return clip;
         }
 
-        private void EnsureLookup()
+        private void BuildLookup()
         {
-            if (_lookup != null) return;
-            _lookup = new Dictionary<string, AudioClipSO>();
+            int capacity = _entries != null ? _entries.Length : 0;
+            _lookup = new Dictionary<string, AudioClipSO>(capacity);
             if (_entries == null) return;
             foreach (var entry in _entries)
             {
@@ -42,7 +42,8 @@ namespace MiniGameTemplate.Audio
 
         private void OnEnable()
         {
-            _lookup = null; // Force rebuild on load
+            // Pre-build lookup eagerly to avoid first-frame allocation spike
+            BuildLookup();
         }
     }
 }

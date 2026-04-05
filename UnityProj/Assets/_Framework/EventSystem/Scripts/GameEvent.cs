@@ -41,8 +41,17 @@ namespace MiniGameTemplate.Events
 
         public void UnregisterListener(GameEventListener listener)
         {
-            if (_listenerSet.Remove(listener)) // O(1)
-                _listeners.Remove(listener);   // O(n) but only on removal
+            if (!_listenerSet.Remove(listener)) return; // O(1)
+
+            // Swap-remove: find index, swap with last, RemoveAt end → O(1) total
+            int idx = _listeners.IndexOf(listener);
+            if (idx >= 0)
+            {
+                int last = _listeners.Count - 1;
+                if (idx != last)
+                    _listeners[idx] = _listeners[last];
+                _listeners.RemoveAt(last);
+            }
         }
     }
 }
