@@ -66,7 +66,7 @@ GameOverTrigger.cs ─Raise→ OnGameOver.asset ─→ GameOverPanel.cs
 Boot.unity 加载
   └→ GameBootstrapper.Awake()
       ├→ AssetService.InitializeAsync()   // 资源管理（YooAsset）
-      ├→ ConfigManager.Initialize()       // 配置表
+      ├→ ConfigManager.InitializeAsync()   // 配置表 (Luban)
       ├→ TimerService (Singleton)         // 计时器
       ├→ AudioManager (Singleton)         // 音频
       ├→ UIManager (Singleton)            // UI

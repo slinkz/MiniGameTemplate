@@ -2,6 +2,33 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.3.0] - 2026-04-05
+
+### Added
+- **Luban Config System**: fully wired Luban-generated config tables with runtime loading
+  - `GlobalConst` table (key/stringValue/intValue) with HelloWorld test data
+  - `TbItem` / `TbGlobalConst` generated table classes under `_Framework/DataSystem/Scripts/Config/Generated/`
+  - `Tables.cs` async/sync factory with null-safety checks on loader return values
+  - JSON data files at `_Game/ConfigData/` (YooAsset) + `Resources/ConfigData/` (fallback)
+  - Luban table definitions at `DataTables/Defs/` with data sources at `DataTables/Datas/`
+- **luban_unity package**: added `com.code-philosophy.luban` (Git URL) to `manifest.json`
+- **Luban.Runtime asmdef reference**: added to `MiniGameFramework.Runtime.asmdef`
+- **Config verification**: `GameBootstrapper` logs GlobalConst data on startup (`#if UNITY_EDITOR || DEVELOPMENT_BUILD`)
+
+### Fixed
+- **AssetService**: added `RequestPackageVersionAsync` + `UpdatePackageManifestAsync` after YooAsset init — fixes `ActiveManifest == null` crash on all asset loads
+- **ConfigManager**: wrapped YooAsset `LoadAssetAsync` in try-catch — graceful degradation to `Resources.Load` when YooAsset throws
+- **ConfigManager**: `ResetStatics` now clears `_tables` (domain reload safety)
+- **ConfigManager**: `ReloadAsync`/`Reload` now nulls `_tables` before re-init
+
+### Changed
+- **ConfigManager**: activated real Luban integration — replaced TODO stubs with actual `cfg.Tables.CreateAsync` / `cfg.Tables.Create` calls
+- **ConfigManager**: `YooAssetConfigPath` updated from `Assets/ConfigData/` to `Assets/_Game/ConfigData/`
+- **gen_config scripts**: output data to `_Game/ConfigData/` + auto-sync copy to `Resources/ConfigData/`
+- **CONVENTIONS.md**: corrected ConfigManager path reference
+- **Luban README**: corrected output data path
+- **.gitignore**: added `UnityProj/.vs/`
+
 ## [0.2.2] - 2026-04-05
 
 ### Fixed

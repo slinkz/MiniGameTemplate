@@ -153,8 +153,10 @@ bash Tools/setup_fairygui.sh
 2. 在 `UnityProj/DataTables/Defs/__tables__.xml` 注册新表
 3. 在 `UnityProj/DataTables/Datas/` 新建对应 JSON 数据文件
 4. 运行 `UnityProj/Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
-5. 生成的 C# 代码位于 `UnityProj/Assets/_Game/Scripts/Config/`
-6. 在 `ConfigManager.Initialize()` 中可直接访问生成的 `Tables` 类
+5. 生成的 C# 代码位于 `UnityProj/Assets/_Framework/DataSystem/Scripts/Config/Generated/`
+6. 生成的 JSON 数据文件位于 `UnityProj/Assets/_Game/ConfigData/`（YooAsset 管理），同步副本在 `Resources/ConfigData/`（fallback）
+7. **重要**：新增表后需在 `Generated/Tables.cs` 中添加对应属性和 loader 调用
+8. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据（需在 `ConfigManager.InitializeAsync()` 完成后）
 
 ## Step 14: 构建与发布
 
