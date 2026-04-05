@@ -147,10 +147,9 @@ namespace MiniGameTemplate.EditorTools
             if (_reimportingPaths.Contains(path)) return;
 
             // WebGL / mini game audio settings
-            var webglSettings = importer.GetOverrideSampleSettings("WebGL");
-            if (!webglSettings.overridden)
+            if (!importer.ContainsSampleSettingsOverride("WebGL"))
             {
-                webglSettings.overridden = true;
+                var webglSettings = importer.GetOverrideSampleSettings("WebGL");
                 webglSettings.loadType = AudioClipLoadType.CompressedInMemory;
                 webglSettings.compressionFormat = AudioCompressionFormat.Vorbis;
                 webglSettings.quality = 0.5f; // 50% quality — good balance for mini games

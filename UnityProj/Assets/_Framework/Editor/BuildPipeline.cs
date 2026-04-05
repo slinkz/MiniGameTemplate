@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
@@ -191,9 +192,11 @@ namespace MiniGameTemplate.EditorTools
 
             // IL2CPP code generation: faster runtime, slightly larger build
             // For WeChat, smaller is usually better — use OptimizeSize for release
+#if UNITY_2022_3_OR_NEWER
             EditorUserBuildSettings.il2CppCodeGeneration = isDevelopment
                 ? Il2CppCodeGeneration.OptimizeSpeed
                 : Il2CppCodeGeneration.OptimizeSize;
+#endif
 
             Debug.Log($"[BuildPipeline] PlayerSettings configured for {(isDevelopment ? "Development" : "Release")} WebGL (WeChat Mini Game).");
         }

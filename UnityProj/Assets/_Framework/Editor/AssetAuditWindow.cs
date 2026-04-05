@@ -153,8 +153,7 @@ namespace MiniGameTemplate.EditorTools
                 if (importer == null) continue;
 
                 // Check: no WebGL override
-                var webglSettings = importer.GetOverrideSampleSettings("WebGL");
-                if (!webglSettings.overridden)
+                if (!importer.ContainsSampleSettingsOverride("WebGL"))
                 {
                     AddEntry(path, "No WebGL audio override — may use unoptimized settings", Severity.Warning);
                 }
