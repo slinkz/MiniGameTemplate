@@ -252,22 +252,30 @@ namespace MiniGameTemplate.Asset
         /// <summary>
         /// Force unload all unused assets from memory.
         /// Call after scene transitions or large UI closures.
+        /// Returns null only if asset system is not initialized — caller should null-check before awaiting.
         /// </summary>
         public UnloadUnusedAssetsOperation UnloadUnusedAssetsAsync()
         {
-            if (_defaultPackage != null)
-                return _defaultPackage.UnloadUnusedAssetsAsync();
-            return null;
+            if (!_initialized || _defaultPackage == null)
+            {
+                GameLog.LogWarning("[AssetService] UnloadUnusedAssetsAsync called before initialization. Ignored.");
+                return null;
+            }
+            return _defaultPackage.UnloadUnusedAssetsAsync();
         }
 
         /// <summary>
         /// Force unload ALL assets. Use sparingly — typically only on full game reset.
+        /// Returns null only if asset system is not initialized — caller should null-check before awaiting.
         /// </summary>
         public UnloadAllAssetsOperation ForceUnloadAllAssetsAsync()
         {
-            if (_defaultPackage != null)
-                return _defaultPackage.UnloadAllAssetsAsync();
-            return null;
+            if (!_initialized || _defaultPackage == null)
+            {
+                GameLog.LogWarning("[AssetService] ForceUnloadAllAssetsAsync called before initialization. Ignored.");
+                return null;
+            }
+            return _defaultPackage.UnloadAllAssetsAsync();
         }
 
         #endregion

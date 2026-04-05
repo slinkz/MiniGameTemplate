@@ -75,10 +75,8 @@ namespace MiniGameTemplate.EditorTools
                 changed = true;
             }
 
-            // --- Platform-specific compression ---
+            // --- Platform-specific compression (WebGL only — target is WeChat Mini Game) ---
             SetPlatformCompression(importer, "WebGL");
-            SetPlatformCompression(importer, "Android");
-            SetPlatformCompression(importer, "iPhone");
 
             if (changed)
             {
@@ -95,20 +93,10 @@ namespace MiniGameTemplate.EditorTools
 
                 bool isNormalMap = importer.textureType == TextureImporterType.NormalMap;
 
-                switch (platform)
-                {
-                    case "WebGL":
-                    case "Android":
-                        settings.format = isNormalMap
-                            ? TextureImporterFormat.ASTC_4x4
-                            : TextureImporterFormat.ASTC_6x6;
-                        break;
-                    case "iPhone":
-                        settings.format = isNormalMap
-                            ? TextureImporterFormat.ASTC_4x4
-                            : TextureImporterFormat.ASTC_6x6;
-                        break;
-                }
+                // ASTC is the optimal format for WebGL (WeChat Mini Game)
+                settings.format = isNormalMap
+                    ? TextureImporterFormat.ASTC_4x4
+                    : TextureImporterFormat.ASTC_6x6;
 
                 settings.maxTextureSize = MAX_TEXTURE_SIZE;
                 importer.SetPlatformTextureSettings(settings);

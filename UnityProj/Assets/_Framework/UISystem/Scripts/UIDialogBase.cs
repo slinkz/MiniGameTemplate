@@ -37,10 +37,14 @@ namespace MiniGameTemplate.UI
         private void CreateModalOverlay()
         {
             _modalOverlay = new GGraph();
-            _modalOverlay.MakeFullScreen();
+            _modalOverlay.SetSize(GRoot.inst.width, GRoot.inst.height);
             _modalOverlay.DrawRect(
-                GRoot.inst.width, GRoot.inst.height,
+                _modalOverlay.width, _modalOverlay.height,
                 0, UnityEngine.Color.clear, new UnityEngine.Color(0, 0, 0, 0.6f));
+
+            // Bind overlay size to GRoot so it stays full-screen on resize/orientation change
+            _modalOverlay.AddRelation(GRoot.inst, FairyGUI.RelationType.Size);
+
             _modalOverlay.sortingOrder = SortOrder - 1;
             GRoot.inst.AddChild(_modalOverlay);
 

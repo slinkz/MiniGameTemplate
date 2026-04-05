@@ -13,8 +13,10 @@ namespace MiniGameTemplate.EditorTools
     /// Automates platform switch, player settings, build, and post-build steps.
     ///
     /// Access via: Tools → MiniGame Template → Build → Build WebGL (Dev/Release)
+    ///
+    /// Named MiniGameBuildPipeline to avoid collision with UnityEditor.BuildPipeline.
     /// </summary>
-    public static class BuildPipeline
+    public static class MiniGameBuildPipeline
     {
         private const string BUILD_OUTPUT = "Build/WebGL";
         private const string MENU_ROOT = "Tools/MiniGame Template/Build/";

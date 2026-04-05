@@ -132,6 +132,12 @@ namespace MiniGameTemplate.EditorTools
                 {
                     AddEntry(path, "Uncompressed WebGL texture (RGBA32) — use ASTC", Severity.Error);
                 }
+
+                // Check: missing WebGL override entirely
+                if (!webglSettings.overridden)
+                {
+                    AddEntry(path, "No WebGL texture override — will use default compression (may be suboptimal)", Severity.Warning);
+                }
             }
 
             EditorUtility.ClearProgressBar();

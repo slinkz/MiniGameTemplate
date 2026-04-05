@@ -18,6 +18,14 @@ echo "Creating FairyGUI symbolic link..."
 if [ -L "Assets/FairyGUI" ]; then
     echo "Symlink Assets/FairyGUI already exists, skipping."
 elif [ -d "Assets/FairyGUI" ]; then
+    echo "WARNING: Assets/FairyGUI exists as a regular directory (not a symlink)."
+    echo "It will be DELETED and replaced with a symlink to ../ThirdParty/FairyGUI-unity/Assets."
+    printf "Are you sure you want to continue? (y/N): "
+    read -r CONFIRM
+    if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+        echo "Aborted by user."
+        exit 0
+    fi
     echo "Removing existing Assets/FairyGUI directory..."
     rm -rf "Assets/FairyGUI"
     ln -s "../ThirdParty/FairyGUI-unity/Assets" "Assets/FairyGUI"

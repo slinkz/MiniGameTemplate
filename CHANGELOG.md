@@ -2,6 +2,17 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.2.1] - 2026-04-05
+
+### Fixed
+- **AssetService**: `UnloadUnusedAssetsAsync` / `ForceUnloadAllAssetsAsync` — add initialization guard with warning log instead of silently returning null (prevents downstream NRE when awaiting result)
+- **setup_fairygui.bat/.sh**: add user confirmation prompt before deleting existing non-junction/non-symlink `Assets/FairyGUI` directory (prevents accidental data loss)
+- **ConfigManager.InitializeAsync**: remove unnecessary `async` keyword + `await Task.CompletedTask` — now returns `Task.CompletedTask` directly to avoid allocating an async state machine on WebGL
+- **UIDialogBase**: replace `MakeFullScreen()` + hardcoded `DrawRect` size with `AddRelation(GRoot.inst, RelationType.Size)` so modal overlay properly resizes on screen orientation/resolution changes
+- **TextureImportEnforcer**: remove redundant Android/iPhone platform overrides — target platform is WebGL only (WeChat Mini Game); simplify `SetPlatformCompression` accordingly
+- **AssetAuditWindow**: add audit check for textures missing WebGL platform override (previously only checked for uncompressed RGBA32)
+- **BuildPipeline → MiniGameBuildPipeline**: rename class to avoid ambiguity with `UnityEditor.BuildPipeline`
+
 ## [0.2.0] - 2026-04-05
 
 ### Fixed

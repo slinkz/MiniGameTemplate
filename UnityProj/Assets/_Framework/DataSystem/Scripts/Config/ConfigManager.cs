@@ -43,19 +43,21 @@ namespace MiniGameTemplate.Data
         /// Initialize config tables asynchronously. Call once during game bootstrap.
         /// Luban's Tables constructor accepts an async loader — use InitializeAsync() for WebGL safety.
         /// </summary>
-        public static async Task InitializeAsync()
+        public static Task InitializeAsync()
         {
-            if (_initialized) return;
+            if (_initialized) return Task.CompletedTask;
 
             // TODO: Uncomment after Luban generates code:
             // _tables = new cfg.Tables(file => await LoadConfigTextAsync(file));
             // For Luban async loader pattern:
             // _tables = await cfg.Tables.CreateAsync(LoadConfigTextAsync);
+            // NOTE: When Luban code is generated and the above is uncommented,
+            //       restore the 'async' keyword on this method.
 
             _initialized = true;
             GameLog.Log("[ConfigManager] Config tables initialized.");
 
-            await Task.CompletedTask; // Suppress CS1998 until Luban generates async loader code
+            return Task.CompletedTask;
         }
 
         /// <summary>
