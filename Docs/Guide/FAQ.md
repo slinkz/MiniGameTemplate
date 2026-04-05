@@ -45,10 +45,12 @@
 
 ### Q: 控制台报 "Duplicate detected — destroying this instance."
 
-**原因**：Boot 场景被重复加载，或者场景里有多个 `GameBootstrapper` 对象。框架会自动销毁重复实例，这条警告一般无害。
+**原因**：Boot 场景被重复加载，导致场景里出现了多个 `GameBootstrapper` 对象。框架会自动销毁重复实例，这条警告一般无害。
 
-如果频繁出现，检查：
-- 是否有脚本在运行时又加载了 Boot 场景
+> 📝 v0.2.2+ 已修复常见触发场景：当 `GameConfig.InitialScene` 指向 Boot 场景自身时，Bootstrapper 会检测到当前已在目标场景并跳过加载，不再触发此警告。
+
+如果仍然出现，检查：
+- 是否有脚本在运行时手动加载了 Boot 场景
 - Boot 场景是否被放进了 Additive 加载流程
 
 ---

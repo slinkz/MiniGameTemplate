@@ -2,6 +2,19 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.2.2] - 2026-04-05
+
+### Fixed
+- **YooAsset**: configure `AssetBundleCollectorSetting.asset` with `DefaultPackage` + `GameAssets` collector group — resolves `Not found package : DefaultPackage` error in editor simulate mode
+- **GameBootstrapper**: fix duplicate instance warning by skipping scene load when already in target scene (Boot → Boot circular load)
+- **GameBootstrapper**: add `_isPrimaryInstance` flag so duplicate instances' `OnDestroy` does not reset `_hasBooted`
+- **ArchitectureValidator**: remove duplicate `[MenuItem]` attribute (unified via `MenuItems.cs`)
+- **Analytics SDK**: remove `com.unity.analytics` and `com.unity.modules.unityanalytics` to eliminate `No cloud project ID` error
+
+### Changed
+- **manifest.json**: remove 14 unused Unity packages (Ads, Analytics, Purchasing, XR, VR, Cloth, Terrain, Vehicles, Video, Wind, Umbra) to reduce build size and compile time
+- **.gitignore**: add rules for `.vsconfig`, `Bundles/`, `ResolvedPackageCache`, `FairyGUI.meta`
+
 ## [0.2.1] - 2026-04-05
 
 ### Fixed

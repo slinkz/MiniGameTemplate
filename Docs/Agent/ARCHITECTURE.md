@@ -71,7 +71,9 @@ Boot.unity 加载
       ├→ AudioManager (Singleton)         // 音频
       ├→ UIManager (Singleton)            // UI
       ├→ PoolManager (Singleton)          // 对象池
-      └→ SceneLoader.LoadScene(initialScene)  // 加载主场景
+      └→ LoadInitialScene()
+           ├→ 如果 InitialScene == 当前场景 → 跳过（避免循环加载）
+           └→ 否则 → SceneLoader.LoadScene(initialScene)
 ```
 
 ### 4. UI 工作流
