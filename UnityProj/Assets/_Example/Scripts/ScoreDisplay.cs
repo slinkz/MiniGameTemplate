@@ -1,5 +1,6 @@
 using UnityEngine;
 using MiniGameTemplate.Data;
+using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.Example
 {
@@ -12,7 +13,7 @@ namespace MiniGameTemplate.Example
         [SerializeField] private IntVariable _score;
 
         // In a real project, this would update a FairyGUI text component.
-        // For demonstration, we use Debug.Log.
+        // For demonstration, we use GameLog (stripped in release builds).
 
         private void OnEnable()
         {
@@ -30,7 +31,7 @@ namespace MiniGameTemplate.Example
         {
             // TODO: Replace with FairyGUI text update
             // _scoreText.text = value.ToString();
-            UnityEngine.Debug.Log($"[ScoreDisplay] Score: {value}");
+            GameLog.Log($"[ScoreDisplay] Score: {value}");
         }
     }
 }

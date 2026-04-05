@@ -32,11 +32,22 @@ namespace MiniGameTemplate.Timing
         private int _nextId = 1; // 0 = invalid
 
         /// <summary>
+        /// Generate next unique timer ID with overflow wrap-around.
+        /// Wraps from int.MaxValue back to 1 (skipping 0 which is "invalid").
+        /// </summary>
+        private int NextId()
+        {
+            int id = _nextId;
+            _nextId = (_nextId == int.MaxValue) ? 1 : _nextId + 1;
+            return id;
+        }
+
+        /// <summary>
         /// Create a one-shot timer that fires after the given delay.
         /// </summary>
         public TimerHandle Delay(float seconds, Action callback, bool realTime = false)
         {
-            int id = _nextId++;
+            int id = NextId();
             _toAdd.Add(new TimerData
             {
                 Id = id,
@@ -54,7 +65,7 @@ namespace MiniGameTemplate.Timing
         /// </summary>
         public TimerHandle Repeat(float intervalSeconds, Action callback, bool realTime = false)
         {
-            int id = _nextId++;
+            int id = NextId();
             _toAdd.Add(new TimerData
             {
                 Id = id,

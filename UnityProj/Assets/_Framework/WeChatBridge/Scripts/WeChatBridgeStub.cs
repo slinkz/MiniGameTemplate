@@ -145,27 +145,18 @@ namespace MiniGameTemplate.Platform
         // === Helper: Delayed callback to simulate async behavior ===
 
         /// <summary>
-        /// Simulates async delay for callbacks. Uses a temporary GameObject with coroutine.
+        /// Simulates async delay for callbacks using the framework's CoroutineRunner.
         /// In a real WeChat environment, these callbacks are inherently async.
         /// </summary>
         private static void DelayedInvoke(float seconds, Action action)
         {
-            var go = new GameObject("[WeChatBridge:Stub] DelayHelper");
-            go.hideFlags = HideFlags.HideAndDontSave;
-            var runner = go.AddComponent<CoroutineRunner>();
-            runner.StartCoroutine(DelayCoroutine(seconds, action, go));
+            CoroutineRunner.Run(DelayCoroutine(seconds, action));
         }
 
-        private static IEnumerator DelayCoroutine(float seconds, Action action, GameObject go)
+        private static IEnumerator DelayCoroutine(float seconds, Action action)
         {
             yield return new WaitForSeconds(seconds);
             action?.Invoke();
-            UnityEngine.Object.Destroy(go);
         }
-
-        /// <summary>
-        /// Minimal MonoBehaviour for running coroutines in the Stub.
-        /// </summary>
-        private class CoroutineRunner : MonoBehaviour { }
     }
 }

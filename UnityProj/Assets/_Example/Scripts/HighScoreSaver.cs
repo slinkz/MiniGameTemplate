@@ -1,4 +1,5 @@
 using UnityEngine;
+using MiniGameTemplate.Core;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.Utils;
 
@@ -7,23 +8,18 @@ namespace MiniGameTemplate.Example
     /// <summary>
     /// Saves high score to local storage when it changes.
     /// Demonstrates ISaveSystem integration with SO Variables.
+    /// Uses the shared GameBootstrapper.SaveSystem instance.
     /// </summary>
     public class HighScoreSaver : MonoBehaviour
     {
         [SerializeField] private IntVariable _highScore;
 
-        private ISaveSystem _saveSystem;
         private const string HIGH_SCORE_KEY = "example_high_score";
-
-        private void Awake()
-        {
-            _saveSystem = new PlayerPrefsSaveSystem();
-        }
 
         private void Start()
         {
             // Load saved high score on start
-            int saved = _saveSystem.LoadInt(HIGH_SCORE_KEY, 0);
+            int saved = GameBootstrapper.SaveSystem.LoadInt(HIGH_SCORE_KEY, 0);
             _highScore.SetValue(saved);
         }
 
@@ -41,8 +37,8 @@ namespace MiniGameTemplate.Example
 
         private void OnHighScoreChanged(int value)
         {
-            _saveSystem.SaveInt(HIGH_SCORE_KEY, value);
-            _saveSystem.Save();
+            GameBootstrapper.SaveSystem.SaveInt(HIGH_SCORE_KEY, value);
+            GameBootstrapper.SaveSystem.Save();
             GameLog.Log($"[HighScoreSaver] High score saved: {value}");
         }
     }

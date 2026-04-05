@@ -12,6 +12,7 @@ namespace MiniGameTemplate.UI
     public class UIManager : Singleton<UIManager>
     {
         private readonly Dictionary<Type, UIBase> _activePanels = new Dictionary<Type, UIBase>();
+        private List<UIBase> _closeBuffer; // Reusable buffer for CloseAllPanels — avoids GC
 
         /// <summary>
         /// Open a panel of type T. Creates it if not already open, refreshes if already open.
@@ -64,14 +65,28 @@ namespace MiniGameTemplate.UI
 
         /// <summary>
         /// Close all open panels. Call on scene transition.
+        /// Snapshot-then-clear pattern avoids InvalidOperationException
+        /// if panel.Close() triggers further dictionary modifications.
         /// </summary>
         public void CloseAllPanels()
         {
+            if (_activePanels.Count == 0) return;
+
+            // Snapshot values before clearing to avoid iterator invalidation
+            if (_closeBuffer == null)
+                _closeBuffer = new List<UIBase>(_activePanels.Count);
+            else
+                _closeBuffer.Clear();
+
             foreach (var panel in _activePanels.Values)
-            {
-                panel.Close();
-            }
+                _closeBuffer.Add(panel);
+
             _activePanels.Clear();
+
+            foreach (var panel in _closeBuffer)
+                panel.Close();
+
+            _closeBuffer.Clear();
         }
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using MiniGameTemplate.Core;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.Events;
 using MiniGameTemplate.FSM;
@@ -31,21 +32,14 @@ namespace MiniGameTemplate.Example
         [SerializeField] private GameEvent _onGameStart;
         [SerializeField] private GameEvent _onGameOver;
 
-        [Header("Persistence")]
-        private ISaveSystem _saveSystem;
         private const string HIGH_SCORE_KEY = "example_high_score";
 
         private TimerHandle _countdownTimer = TimerHandle.Invalid;
 
-        private void Awake()
-        {
-            _saveSystem = new PlayerPrefsSaveSystem();
-        }
-
         private void Start()
         {
-            // Load high score from local storage
-            _highScore.SetValue(_saveSystem.LoadInt(HIGH_SCORE_KEY, 0));
+            // Load high score from local storage via shared SaveSystem
+            _highScore.SetValue(GameBootstrapper.SaveSystem.LoadInt(HIGH_SCORE_KEY, 0));
         }
 
         /// <summary>
@@ -95,8 +89,8 @@ namespace MiniGameTemplate.Example
             if (_playerScore.Value > _highScore.Value)
             {
                 _highScore.SetValue(_playerScore.Value);
-                _saveSystem.SaveInt(HIGH_SCORE_KEY, _highScore.Value);
-                _saveSystem.Save();
+                GameBootstrapper.SaveSystem.SaveInt(HIGH_SCORE_KEY, _highScore.Value);
+                GameBootstrapper.SaveSystem.Save();
             }
         }
 
