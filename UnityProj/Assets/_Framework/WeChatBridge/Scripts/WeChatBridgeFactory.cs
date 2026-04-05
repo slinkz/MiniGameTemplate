@@ -33,10 +33,15 @@ namespace MiniGameTemplate.Platform
 
         /// <summary>
         /// Override the bridge instance (useful for testing).
+        /// SEC: Only available in Editor and Development builds to prevent runtime injection attacks.
         /// </summary>
         public static void SetOverride(IWeChatBridge bridge)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             _instance = bridge;
+#else
+            UnityEngine.Debug.LogError("[WeChatBridgeFactory] SEC: SetOverride is disabled in release builds.");
+#endif
         }
     }
 }

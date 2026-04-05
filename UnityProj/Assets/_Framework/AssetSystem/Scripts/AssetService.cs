@@ -33,8 +33,16 @@ namespace MiniGameTemplate.Asset
         {
             if (_initialized)
             {
-                Debug.LogWarning("[AssetService] Already initialized.");
+                GameLog.LogWarning("[AssetService] Already initialized.");
                 return;
+            }
+
+            // SEC-04: Enforce HTTPS for CDN URLs to prevent MITM attacks on asset downloads.
+            // Only applies to Host and WebGL modes where remote URLs are used.
+            if (config.PlayMode == EAssetPlayMode.Host || config.PlayMode == EAssetPlayMode.WebGL)
+            {
+                ValidateUrlSecurity(config.HostServerUrl, "HostServerUrl");
+                ValidateUrlSecurity(config.FallbackHostServerUrl, "FallbackHostServerUrl");
             }
 
             // Initialize YooAsset
@@ -101,7 +109,7 @@ namespace MiniGameTemplate.Asset
                     // ---------------------------------------------------------------
 
                     // Temporary fallback: standard Host mode (replace when SDK is imported)
-                    Debug.LogWarning("[AssetService] WebGL mode selected but WechatFileSystem is not imported. " +
+                    GameLog.LogWarning("[AssetService] WebGL mode selected but WechatFileSystem is not imported. " +
                         "Using standard Host mode as fallback. See AssetService.cs for integration guide.");
                     var fallbackParams = new HostPlayModeParameters();
                     fallbackParams.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
@@ -130,7 +138,7 @@ namespace MiniGameTemplate.Asset
             }
 
             _initialized = true;
-            Debug.Log($"[AssetService] Initialized. Package: {config.DefaultPackageName}, Mode: {config.PlayMode}");
+            GameLog.Log($"[AssetService] Initialized. Package: {config.DefaultPackageName}, Mode: {config.PlayMode}");
         }
 
         #region Asset Loading
@@ -231,7 +239,7 @@ namespace MiniGameTemplate.Asset
             var downloader = _defaultPackage.CreateResourceDownloader(10, 3);
             if (downloader.TotalDownloadCount == 0)
             {
-                Debug.Log("[AssetService] No resources need downloading.");
+                GameLog.Log("[AssetService] No resources need downloading.");
                 return null;
             }
             return downloader;
@@ -266,6 +274,27 @@ namespace MiniGameTemplate.Asset
         {
             if (!_initialized)
                 Debug.LogError("[AssetService] Not initialized! Call InitializeAsync() first.");
+        }
+
+        /// <summary>
+        /// SEC: Validate that remote URLs use HTTPS to prevent MITM attacks.
+        /// Logs a warning in editor (for local testing with http://), errors in builds.
+        /// </summary>
+        private static void ValidateUrlSecurity(string url, string fieldName)
+        {
+            if (string.IsNullOrEmpty(url)) return;
+
+            if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning($"[AssetService] SEC: {fieldName} uses HTTP (insecure). " +
+                    "This is acceptable for local testing but MUST use HTTPS in production builds.");
+#else
+                Debug.LogError($"[AssetService] SEC: {fieldName} uses HTTP (insecure). " +
+                    "All CDN URLs MUST use HTTPS to prevent man-in-the-middle attacks on asset downloads. " +
+                    "Change the URL to https:// in AssetConfig.");
+#endif
+            }
         }
 
         private void OnDestroy()

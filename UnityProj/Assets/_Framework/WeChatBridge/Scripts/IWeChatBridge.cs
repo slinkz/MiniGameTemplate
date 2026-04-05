@@ -48,6 +48,10 @@ namespace MiniGameTemplate.Platform
 
         /// <summary>
         /// Submit score to the WeChat friend ranking.
+        ///
+        /// SECURITY: Client-reported scores can be trivially forged. For competitive features,
+        /// validate scores server-side (e.g., replay verification, server-authoritative game logic,
+        /// or statistical anomaly detection) before committing to the leaderboard.
         /// </summary>
         void SubmitScore(int score);
 
@@ -66,6 +70,11 @@ namespace MiniGameTemplate.Platform
 
         /// <summary>
         /// Request user login. Returns auth code on success.
+        ///
+        /// SECURITY: The auth code MUST be sent to your backend server immediately for
+        /// wx.code2session exchange. NEVER store the auth code locally, log it, or use it
+        /// for any client-side logic. The session_key returned by code2session is a server
+        /// secret and must never be sent to the client.
         /// </summary>
         void Login(Action<bool, string> onComplete);
 

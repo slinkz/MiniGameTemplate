@@ -11,6 +11,10 @@ namespace MiniGameTemplate.Data
     ///
     /// All loading paths are fully async to avoid WebGL/IL2CPP deadlocks.
     /// On WebGL (WeChat Mini Game), WaitForAsyncComplete() will deadlock the single thread.
+    ///
+    /// Security:
+    /// - File names are validated against path traversal attacks (../ sequences).
+    /// - An optional integrity verification hook is provided for production builds.
     /// </summary>
     public static class ConfigManager
     {
@@ -27,6 +31,13 @@ namespace MiniGameTemplate.Data
         // TODO: Replace with actual Luban-generated Tables class after running gen_config
         // private static cfg.Tables _tables;
         // public static cfg.Tables Tables => _tables;
+
+        /// <summary>
+        /// Optional: Assign a delegate to verify config file integrity after loading.
+        /// Example: (fileName, content) => verify content hash against a known manifest.
+        /// Return true if valid, false to reject.
+        /// </summary>
+        public static System.Func<string, string, bool> IntegrityVerifier { get; set; }
 
         /// <summary>
         /// Initialize config tables asynchronously. Call once during game bootstrap.
@@ -62,11 +73,35 @@ namespace MiniGameTemplate.Data
         }
 
         /// <summary>
+        /// SEC: Validate config file name to prevent path traversal attacks.
+        /// Rejects names containing "..", "/", "\", or other dangerous patterns.
+        /// </summary>
+        private static bool IsValidConfigFileName(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return false;
+            // Block path traversal sequences and absolute paths
+            if (fileName.Contains("..") || fileName.Contains("/") || fileName.Contains("\\"))
+                return false;
+            // Block null bytes (classic path traversal trick)
+            if (fileName.Contains("\0"))
+                return false;
+            return true;
+        }
+
+        /// <summary>
         /// Load a config JSON file asynchronously. WebGL-safe.
         /// Uses YooAsset when available, Resources.Load otherwise.
         /// </summary>
         public static async Task<string> LoadConfigTextAsync(string fileName)
         {
+            if (!IsValidConfigFileName(fileName))
+            {
+                Debug.LogError($"[ConfigManager] SEC: Rejected invalid config file name: '{fileName}' (possible path traversal).");
+                return null;
+            }
+
+            string content = null;
+
             if (AssetService.Instance != null && AssetService.Instance.IsInitialized)
             {
                 string path = $"{YooAssetConfigPath}{fileName}.json";
@@ -75,16 +110,29 @@ namespace MiniGameTemplate.Data
 
                 if (handle.Status == YooAsset.EOperationStatus.Succeed)
                 {
-                    var text = (handle.AssetObject as TextAsset).text;
+                    content = (handle.AssetObject as TextAsset).text;
                     handle.Release();
-                    return text;
                 }
-
-                GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                else
+                {
+                    GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                }
             }
 
-            // Fallback: Resources.Load (synchronous but safe on all platforms)
-            return LoadConfigTextSync(fileName);
+            if (content == null)
+            {
+                // Fallback: Resources.Load (synchronous but safe on all platforms)
+                content = LoadConfigTextSync(fileName);
+            }
+
+            // Optional integrity verification
+            if (content != null && IntegrityVerifier != null && !IntegrityVerifier(fileName, content))
+            {
+                Debug.LogError($"[ConfigManager] SEC: Integrity check failed for config '{fileName}'. Data rejected.");
+                return null;
+            }
+
+            return content;
         }
 
         /// <summary>
@@ -93,6 +141,12 @@ namespace MiniGameTemplate.Data
         /// </summary>
         public static string LoadConfigTextSync(string fileName)
         {
+            if (!IsValidConfigFileName(fileName))
+            {
+                Debug.LogError($"[ConfigManager] SEC: Rejected invalid config file name: '{fileName}' (possible path traversal).");
+                return null;
+            }
+
             var textAsset = Resources.Load<TextAsset>($"ConfigData/{fileName}");
             if (textAsset != null)
                 return textAsset.text;

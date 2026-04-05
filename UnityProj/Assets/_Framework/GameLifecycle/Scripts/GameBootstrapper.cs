@@ -26,8 +26,18 @@ namespace MiniGameTemplate.Core
 
         private static bool _hasBooted;
 
+        /// <summary>
+        /// Shared SaveSystem instance — used to flush on pause/quit.
+        /// Game code can reference this to avoid creating duplicate instances.
+        /// </summary>
+        public static ISaveSystem SaveSystem { get; private set; }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => _hasBooted = false;
+        private static void ResetStatics()
+        {
+            _hasBooted = false;
+            SaveSystem = null;
+        }
 
         private async void Awake()
         {
@@ -72,8 +82,29 @@ namespace MiniGameTemplate.Core
                 _hasBooted = false;
         }
 
+        /// <summary>
+        /// SEC: Flush save data when the app is paused (minimized, switched to background).
+        /// Critical for WeChat Mini Games — the OS may kill the process at any time after pause.
+        /// </summary>
+        private void OnApplicationPause(bool pauseStatus)
+        {
+            if (pauseStatus)
+                SaveSystem?.FlushIfDirty();
+        }
+
+        /// <summary>
+        /// SEC: Flush save data before the app quits.
+        /// </summary>
+        private void OnApplicationQuit()
+        {
+            SaveSystem?.FlushIfDirty();
+        }
+
         private async System.Threading.Tasks.Task InitializeSystemsAsync()
         {
+            // 0. Save System — initialize early so other systems can use it
+            SaveSystem = new PlayerPrefsSaveSystem();
+
             // 1. Asset System (YooAsset) — must be first, other systems may need it
             if (_assetConfig != null)
             {

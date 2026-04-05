@@ -3,6 +3,11 @@ namespace MiniGameTemplate.Data
     /// <summary>
     /// Interface for local data persistence.
     /// Swap implementations without touching game logic.
+    ///
+    /// Security notes:
+    /// - Implementations SHOULD protect data integrity (e.g., HMAC signatures).
+    /// - Keys MUST NOT contain user-controlled strings without sanitization.
+    /// - Sensitive values (tokens, credentials) MUST NOT be stored via this interface.
     /// </summary>
     public interface ISaveSystem
     {
@@ -26,5 +31,11 @@ namespace MiniGameTemplate.Data
         /// Flush pending writes to disk.
         /// </summary>
         void Save();
+
+        /// <summary>
+        /// Force flush if there are pending dirty writes.
+        /// Call on scene transitions, app pause/quit to prevent data loss.
+        /// </summary>
+        void FlushIfDirty();
     }
 }

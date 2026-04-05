@@ -1,5 +1,6 @@
 using UnityEngine;
 using MiniGameTemplate.Data;
+using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.Example
 {
@@ -42,7 +43,7 @@ namespace MiniGameTemplate.Example
         {
             _saveSystem.SaveInt(HIGH_SCORE_KEY, value);
             _saveSystem.Save();
-            UnityEngine.Debug.Log($"[HighScoreSaver] High score saved: {value}");
+            GameLog.Log($"[HighScoreSaver] High score saved: {value}");
         }
     }
 }
