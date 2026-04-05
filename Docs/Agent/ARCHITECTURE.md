@@ -36,9 +36,11 @@ MiniGameTemplate/               ← Git 仓库根
 ├── Docs/                       ← 本文档所在目录（Agent/人类阅读）
 ├── UIProject/                  ← FairyGUI 编辑器工程
 └── UnityProj/                  ← Unity 工程（用 Unity 打开此目录）
+    ├── Assets/FairyGUI/        # Junction → ThirdParty/FairyGUI-unity/Assets/
     ├── Assets/_Framework/      # 框架代码
     ├── Assets/_Game/           # 游戏业务代码
     ├── DataTables/             # Luban 配置表
+    ├── ThirdParty/             # FairyGUI submodule + YooAsset 源码
     └── Tools/                  # 构建脚本
 ```
 

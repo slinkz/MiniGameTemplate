@@ -181,6 +181,15 @@ Game ── _Game/ _Example/        ← 可以引用所有框架模块
 
 如果你不小心引入了违规依赖，运行 `Tools → MiniGame Template → Validate → Architecture Check` 会告诉你。
 
+## 第三方库引入方式
+
+| 库 | 引入方式 | 路径 |
+|----|----------|------|
+| FairyGUI | Git submodule + Junction 链接 | `ThirdParty/FairyGUI-unity/` → `Assets/FairyGUI/`（Junction） |
+| YooAsset | 本地源码 UPM 包 | `ThirdParty/YooAsset/`（`manifest.json` 中 `file:` 引用） |
+
+> 💡 FairyGUI 没有 `package.json`（不是 UPM 包），所以通过目录 Junction/符号链接让 Unity 识别。首次克隆后需运行 `Tools/setup_fairygui.bat`（Windows）或 `setup_fairygui.sh`（macOS/Linux）创建链接。
+
 ## 程序集定义
 
 项目使用 Assembly Definition 分离编译域，加快编译速度：

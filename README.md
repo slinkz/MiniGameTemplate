@@ -19,7 +19,7 @@ Unity 小游戏开发模板 — 基于 ScriptableObject 驱动的模块化架构
 | UI 框架 | FairyGUI |
 | 配置表 | Luban |
 | 目标平台 | 微信小游戏 |
-| 资源管理 | YooAsset 2.3.x（OpenUPM） |
+| 资源管理 | YooAsset 2.3.18（本地源码） |
 
 ## 📁 项目结构
 
@@ -45,6 +45,7 @@ MiniGameTemplate/               ← Git 仓库根
 │   └── *.fairy                 # FairyGUI 工程文件
 ├── UnityProj/                  ← Unity 工程（用 Unity 2022 LTS 打开此目录）
 │   ├── Assets/
+│   │   ├── FairyGUI/ → Junction → ThirdParty/FairyGUI-unity/Assets/
 │   │   ├── _Framework/         # 框架层（一般不改）
 │   │   │   ├── GameLifecycle/  # 启动流程 + 场景管理
 │   │   │   ├── AssetSystem/    # YooAsset 资源管理封装

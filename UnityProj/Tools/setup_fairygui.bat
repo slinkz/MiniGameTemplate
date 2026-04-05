@@ -1,6 +1,6 @@
 @echo off
-REM Setup FairyGUI SDK directory junctions
-REM Run this after cloning the repository and initializing submodules
+REM Setup FairyGUI SDK directory junction
+REM Run this after cloning the repository
 
 cd /d "%~dp0..\.."
 
@@ -9,27 +9,22 @@ git submodule update --init --recursive
 
 cd /d "%~dp0.."
 
-echo Creating FairyGUI directory junctions...
+echo Creating FairyGUI directory junction...
 
-if not exist "Assets\FairyGUI" mkdir "Assets\FairyGUI"
-
-if exist "Assets\FairyGUI\Scripts" (
-    echo Junction Assets\FairyGUI\Scripts already exists, skipping.
-) else (
-    mklink /J "Assets\FairyGUI\Scripts" "ThirdParty\FairyGUI-unity\Assets\Scripts"
+if exist "Assets\FairyGUI" (
+    REM Check if it's already a junction
+    dir "Assets\FairyGUI" /AL >nul 2>&1
+    if not errorlevel 1 (
+        echo Junction Assets\FairyGUI already exists, skipping.
+        goto done
+    )
+    REM It's a regular directory — remove it first
+    echo Removing existing Assets\FairyGUI directory...
+    rmdir /S /Q "Assets\FairyGUI"
 )
 
-if exist "Assets\FairyGUI\Editor" (
-    echo Junction Assets\FairyGUI\Editor already exists, skipping.
-) else (
-    mklink /J "Assets\FairyGUI\Editor" "ThirdParty\FairyGUI-unity\Assets\Editor"
-)
+mklink /J "Assets\FairyGUI" "ThirdParty\FairyGUI-unity\Assets"
 
-if exist "Assets\FairyGUI\Resources" (
-    echo Junction Assets\FairyGUI\Resources already exists, skipping.
-) else (
-    mklink /J "Assets\FairyGUI\Resources" "ThirdParty\FairyGUI-unity\Assets\Resources"
-)
-
+:done
 echo Done! FairyGUI SDK is ready.
 pause

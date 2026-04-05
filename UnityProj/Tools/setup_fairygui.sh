@@ -1,6 +1,6 @@
 #!/bin/bash
-# Setup FairyGUI SDK symbolic links
-# Run this after cloning the repository and initializing submodules
+# Setup FairyGUI SDK symbolic link
+# Run this after cloning the repository
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -13,26 +13,16 @@ git submodule update --init --recursive
 
 cd "$PROJECT_DIR"
 
-echo "Creating FairyGUI symbolic links..."
+echo "Creating FairyGUI symbolic link..."
 
-mkdir -p "Assets/FairyGUI"
-
-if [ -L "Assets/FairyGUI/Scripts" ] || [ -d "Assets/FairyGUI/Scripts" ]; then
-    echo "Link Assets/FairyGUI/Scripts already exists, skipping."
+if [ -L "Assets/FairyGUI" ]; then
+    echo "Symlink Assets/FairyGUI already exists, skipping."
+elif [ -d "Assets/FairyGUI" ]; then
+    echo "Removing existing Assets/FairyGUI directory..."
+    rm -rf "Assets/FairyGUI"
+    ln -s "../ThirdParty/FairyGUI-unity/Assets" "Assets/FairyGUI"
 else
-    ln -s "../../ThirdParty/FairyGUI-unity/Assets/Scripts" "Assets/FairyGUI/Scripts"
-fi
-
-if [ -L "Assets/FairyGUI/Editor" ] || [ -d "Assets/FairyGUI/Editor" ]; then
-    echo "Link Assets/FairyGUI/Editor already exists, skipping."
-else
-    ln -s "../../ThirdParty/FairyGUI-unity/Assets/Editor" "Assets/FairyGUI/Editor"
-fi
-
-if [ -L "Assets/FairyGUI/Resources" ] || [ -d "Assets/FairyGUI/Resources" ]; then
-    echo "Link Assets/FairyGUI/Resources already exists, skipping."
-else
-    ln -s "../../ThirdParty/FairyGUI-unity/Assets/Resources" "Assets/FairyGUI/Resources"
+    ln -s "../ThirdParty/FairyGUI-unity/Assets" "Assets/FairyGUI"
 fi
 
 echo "Done! FairyGUI SDK is ready."

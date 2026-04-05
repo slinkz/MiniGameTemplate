@@ -48,10 +48,9 @@ cd UnityProj
 bash Tools/setup_fairygui.sh
 ```
 
-脚本做了三件事：
-1. 初始化 Git submodule
-2. 创建 `Assets/FairyGUI/Scripts` → `ThirdParty/FairyGUI-unity/Assets/Scripts` 的目录链接
-3. 创建 `Assets/FairyGUI/Editor` 和 `Assets/FairyGUI/Resources` 的目录链接
+脚本做了两件事：
+1. 初始化 Git submodule（如果尚未初始化）
+2. 创建 `Assets/FairyGUI` → `ThirdParty/FairyGUI-unity/Assets` 的目录 Junction（Windows）或符号链接（macOS/Linux），让 Unity 能识别 FairyGUI 源码
 
 执行成功后你应该看到：
 ```
@@ -101,6 +100,7 @@ Done! FairyGUI SDK is ready.
 
 ```
 Assets/
+├── FairyGUI/ → Junction     ← ThirdParty/FairyGUI-unity/Assets/（setup 脚本自动创建）
 ├── _Framework/              ← 框架代码（一般不改）
 │   ├── AssetSystem/         ← YooAsset 资源管理封装
 │   ├── AudioSystem/         ← 音频管理（BGM + SFX）
