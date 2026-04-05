@@ -155,7 +155,7 @@ wx.SetClipboardData("复制的文本");
 | Name Files As Hashes | On | CDN 缓存友好 |
 | Incremental GC | On | 减少 GC 卡顿 |
 | Managed Stripping | High (Release) | 减小 WASM 体积 |
-| IL2CPP Code Gen | OptimizeSize (Release) | 减小 WASM 体积 |
+| IL2CPP Code Gen | OptimizeSize (Release) | 减小 WASM 体积（`#if UNITY_2022_3_OR_NEWER`） |
 
 构建后使用微信小游戏 Unity 插件转换 WebGL 输出为微信小游戏项目。
 

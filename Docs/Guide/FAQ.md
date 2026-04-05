@@ -243,7 +243,7 @@ await UIPackageLoader.AddPackageAsync("MyPackage");
 | Managed Stripping | Medium | High |
 | Exception Support | FullWithStacktrace | ExplicitlyThrownExceptionsOnly |
 | Incremental GC | On | On |
-| IL2CPP Code Gen | OptimizeSpeed | OptimizeSize |
+| IL2CPP Code Gen | OptimizeSpeed | OptimizeSize | *(Unity 2022.3+)* |
 | Debug Symbols | External | Off |
 
 ### Q: 构建出来的包体太大怎么办？

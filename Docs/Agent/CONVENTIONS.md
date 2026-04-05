@@ -432,7 +432,7 @@ wx.Login((success, code) =>
 
 ### 内存
 - **总堆上限约 256MB**（WeChat 实际更低），加载大纹理前检查内存余量
-- 场景切换后调用 `AssetService.Instance.UnloadUnusedAssets()`
+- 场景切换后调用 `AssetService.Instance.UnloadUnusedAssetsAsync()`
 - 纹理最大 1024px（AssetImportEnforcer 自动限制）
 
 ### 渲染
