@@ -25,12 +25,20 @@ Unity 小游戏开发模板 — 基于 ScriptableObject 驱动的模块化架构
 
 ```
 MiniGameTemplate/               ← Git 仓库根
-├── Docs/                       ← Agent / 人类阅读的项目文档
-│   ├── ARCHITECTURE.md         # 架构设计、数据流、模块依赖
-│   ├── CONVENTIONS.md          # 命名规范、代码风格、禁止事项
-│   ├── NEWGAME_GUIDE.md        # 新建游戏操作手册
-│   ├── SO_CATALOG.md           # ScriptableObject 类型清单
-│   └── WECHAT_INTEGRATION.md   # 微信 SDK 接入说明
+├── Docs/
+│   ├── Agent/                  ← AI Agent 阅读的技术文档
+│   │   ├── ARCHITECTURE.md     # 架构设计、数据流、模块依赖
+│   │   ├── CONVENTIONS.md      # 命名规范、代码风格、禁止事项
+│   │   ├── NEWGAME_GUIDE.md    # 新建游戏操作手册
+│   │   ├── SO_CATALOG.md       # ScriptableObject 类型清单
+│   │   └── WECHAT_INTEGRATION.md # 微信 SDK 接入说明
+│   └── Guide/                  ← 人类开发者文档
+│       ├── README.md           # 文档导航首页
+│       ├── GETTING_STARTED.md  # 环境搭建与首次运行
+│       ├── ARCHITECTURE_OVERVIEW.md # 架构设计解读
+│       ├── FRAMEWORK_MODULES.md    # 框架模块使用手册
+│       ├── EXAMPLE_WALKTHROUGH.md  # 示例游戏代码解读
+│       └── FAQ.md              # 常见问题与排错指南
 ├── UIProject/                  ← FairyGUI 编辑器工程
 │   ├── assets/                 # UI 素材（图片、字体等）
 │   ├── settings/               # FairyGUI 工程设置
@@ -77,18 +85,31 @@ MiniGameTemplate/               ← Git 仓库根
    ```
 2. 用 Unity 2022 LTS 打开 `UnityProj/` 目录
 3. 运行 `UnityProj/Tools/setup_fairygui.bat`（Windows）或 `.sh`（macOS/Linux）
-4. 阅读 `Docs/NEWGAME_GUIDE.md` 了解详细步骤
+4. 阅读 [环境搭建与首次运行](Docs/Guide/GETTING_STARTED.md) 了解详细步骤
 5. 在 `UnityProj/Assets/_Game/` 中开始开发你的游戏
 
 ## 📖 文档
 
+### 👨‍💻 人类开发者文档（[Docs/Guide/](Docs/Guide/README.md)）
+
 | 文档 | 说明 |
 |------|------|
-| [ARCHITECTURE.md](Docs/ARCHITECTURE.md) | 架构设计、数据流、模块依赖 |
-| [CONVENTIONS.md](Docs/CONVENTIONS.md) | 命名规范、代码风格、禁止事项 |
-| [NEWGAME_GUIDE.md](Docs/NEWGAME_GUIDE.md) | 新建游戏操作手册 |
-| [SO_CATALOG.md](Docs/SO_CATALOG.md) | ScriptableObject 类型清单 |
-| [WECHAT_INTEGRATION.md](Docs/WECHAT_INTEGRATION.md) | 微信 SDK 接入说明 |
+| [文档导航首页](Docs/Guide/README.md) | 文档总览、技术栈、阅读路线 |
+| [环境搭建与首次运行](Docs/Guide/GETTING_STARTED.md) | 从 clone 到运行起来（15 分钟） |
+| [架构设计解读](Docs/Guide/ARCHITECTURE_OVERVIEW.md) | SO 驱动架构、三层设计、模块依赖 |
+| [框架模块使用手册](Docs/Guide/FRAMEWORK_MODULES.md) | 12 个模块的 API、用法和注意事项 |
+| [示例游戏代码解读](Docs/Guide/EXAMPLE_WALKTHROUGH.md) | 逐步理解示例游戏如何串联框架 |
+| [常见问题与排错](Docs/Guide/FAQ.md) | 常见报错、微信小游戏坑点、性能优化 |
+
+### 🤖 AI Agent 文档（[Docs/Agent/](Docs/Agent/)）
+
+| 文档 | 说明 |
+|------|------|
+| [ARCHITECTURE.md](Docs/Agent/ARCHITECTURE.md) | 架构设计、数据流、模块依赖（Agent 视角） |
+| [CONVENTIONS.md](Docs/Agent/CONVENTIONS.md) | 命名规范、代码风格、禁止事项 |
+| [NEWGAME_GUIDE.md](Docs/Agent/NEWGAME_GUIDE.md) | 新建游戏操作手册 |
+| [SO_CATALOG.md](Docs/Agent/SO_CATALOG.md) | ScriptableObject 类型清单 |
+| [WECHAT_INTEGRATION.md](Docs/Agent/WECHAT_INTEGRATION.md) | 微信 SDK 接入说明 |
 
 每个框架模块目录下还有 `MODULE_README.md`，阅读它即可上手使用该模块。
 
