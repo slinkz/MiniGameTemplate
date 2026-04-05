@@ -54,6 +54,8 @@ namespace MiniGameTemplate.Data
 
             _initialized = true;
             GameLog.Log("[ConfigManager] Config tables initialized.");
+
+            await Task.CompletedTask; // Suppress CS1998 until Luban generates async loader code
         }
 
         /// <summary>

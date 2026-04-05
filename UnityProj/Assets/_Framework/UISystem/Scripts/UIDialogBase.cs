@@ -38,7 +38,9 @@ namespace MiniGameTemplate.UI
         {
             _modalOverlay = new GGraph();
             _modalOverlay.MakeFullScreen();
-            _modalOverlay.DrawRect(0, UnityEngine.Color.clear, new UnityEngine.Color(0, 0, 0, 0.6f));
+            _modalOverlay.DrawRect(
+                GRoot.inst.width, GRoot.inst.height,
+                0, UnityEngine.Color.clear, new UnityEngine.Color(0, 0, 0, 0.6f));
             _modalOverlay.sortingOrder = SortOrder - 1;
             GRoot.inst.AddChild(_modalOverlay);
 

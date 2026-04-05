@@ -253,19 +253,21 @@ namespace MiniGameTemplate.Asset
         /// Force unload all unused assets from memory.
         /// Call after scene transitions or large UI closures.
         /// </summary>
-        public void UnloadUnusedAssets()
+        public UnloadUnusedAssetsOperation UnloadUnusedAssetsAsync()
         {
             if (_defaultPackage != null)
-                _defaultPackage.UnloadUnusedAssets();
+                return _defaultPackage.UnloadUnusedAssetsAsync();
+            return null;
         }
 
         /// <summary>
         /// Force unload ALL assets. Use sparingly — typically only on full game reset.
         /// </summary>
-        public void ForceUnloadAllAssets()
+        public UnloadAllAssetsOperation ForceUnloadAllAssetsAsync()
         {
             if (_defaultPackage != null)
-                _defaultPackage.ForceUnloadAllAssets();
+                return _defaultPackage.UnloadAllAssetsAsync();
+            return null;
         }
 
         #endregion
@@ -297,13 +299,14 @@ namespace MiniGameTemplate.Asset
             }
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             if (_initialized)
             {
                 YooAssets.Destroy();
                 _initialized = false;
             }
+            base.OnDestroy();
         }
     }
 
