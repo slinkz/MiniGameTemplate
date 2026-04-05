@@ -62,7 +62,7 @@ namespace MiniGameTemplate.Asset
                 {
                     var simulateBuildResult = EditorSimulateModeHelper.SimulateBuild(config.DefaultPackageName);
                     var parameters = new EditorSimulateModeParameters();
-                    parameters.EditorFileSystemParameters = FileSystemParameters.CreateDefaultEditorFileSystemParameters(simulateBuildResult);
+                    parameters.EditorFileSystemParameters = FileSystemParameters.CreateDefaultEditorFileSystemParameters(simulateBuildResult.PackageRootDirectory);
                     initOp = _defaultPackage.InitializeAsync(parameters);
                     break;
                 }

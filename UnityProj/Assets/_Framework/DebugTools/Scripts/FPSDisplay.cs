@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace MiniGameTemplate.Debug
+namespace MiniGameTemplate.DebugTools
 {
     /// <summary>
     /// Displays current FPS in the top-left corner using OnGUI.

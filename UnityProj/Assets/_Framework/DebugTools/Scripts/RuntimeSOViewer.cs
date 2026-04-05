@@ -2,7 +2,7 @@
 using UnityEngine;
 using MiniGameTemplate.Data;
 
-namespace MiniGameTemplate.Debug
+namespace MiniGameTemplate.DebugTools
 {
     /// <summary>
     /// Editor-only component that displays SO variable values in the scene view.

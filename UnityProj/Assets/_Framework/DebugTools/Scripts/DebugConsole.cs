@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MiniGameTemplate.Debug
+namespace MiniGameTemplate.DebugTools
 {
     /// <summary>
     /// Simple runtime debug console that captures Debug.Log output.
