@@ -48,9 +48,17 @@ UnityProj/Assets/[Ss]treamingAssets/yoo/
 
 # ===== UPM Lock (Unity auto-generated, machine-specific) =====
 UnityProj/Packages/packages-lock.json
+UnityProj/Packages/ResolvedPackageCache
+
+# ===== Visual Studio workload hint (auto-generated) =====
+UnityProj/.vsconfig
+
+# ===== YooAsset build output =====
+UnityProj/Bundles/
 
 # ===== FairyGUI SDK (Junction → ThirdParty/FairyGUI-unity/Assets, do not track) =====
 UnityProj/Assets/FairyGUI/
+UnityProj/Assets/FairyGUI.meta
 
 # ===== FairyGUI UIProject output (generated, tracked in Unity) =====
 # UIProject 导出的 bytes/texture 在 UnityProj 中由 Unity 管理

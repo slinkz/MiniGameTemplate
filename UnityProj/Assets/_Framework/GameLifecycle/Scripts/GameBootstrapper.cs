@@ -26,6 +26,9 @@ namespace MiniGameTemplate.Core
 
         private static bool _hasBooted;
 
+        /// <summary>Marks whether this particular instance is the primary (first) bootstrapper.</summary>
+        private bool _isPrimaryInstance;
+
         /// <summary>
         /// Shared SaveSystem instance — used to flush on pause/quit.
         /// Game code can reference this to avoid creating duplicate instances.
@@ -49,6 +52,7 @@ namespace MiniGameTemplate.Core
                 return;
             }
             _hasBooted = true;
+            _isPrimaryInstance = true;
 
             DontDestroyOnLoad(gameObject);
 
@@ -77,8 +81,9 @@ namespace MiniGameTemplate.Core
 
         private void OnDestroy()
         {
-            // Reset boot flag when the Bootstrapper is destroyed (e.g., domain reload in editor)
-            if (_hasBooted && this != null)
+            // Only reset boot flag if this is the primary instance being destroyed
+            // (e.g., domain reload in editor). Duplicate instances must not reset the flag.
+            if (_isPrimaryInstance)
                 _hasBooted = false;
         }
 
@@ -143,14 +148,21 @@ namespace MiniGameTemplate.Core
 
         private void LoadInitialScene()
         {
-            if (_gameConfig.InitialScene != null)
-            {
-                SceneLoader.Instance.LoadScene(_gameConfig.InitialScene);
-            }
-            else
+            if (_gameConfig.InitialScene == null)
             {
                 GameLog.LogWarning("[Bootstrapper] No initial scene configured in GameConfig!");
+                return;
             }
+
+            // Skip loading if we're already in the target scene (e.g. Boot → Boot)
+            var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (currentScene.name == _gameConfig.InitialScene.SceneName)
+            {
+                GameLog.Log($"[Bootstrapper] Already in target scene '{currentScene.name}' — skipping load.");
+                return;
+            }
+
+            SceneLoader.Instance.LoadScene(_gameConfig.InitialScene);
         }
     }
 }

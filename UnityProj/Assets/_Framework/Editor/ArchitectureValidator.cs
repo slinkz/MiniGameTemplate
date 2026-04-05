@@ -61,7 +61,6 @@ namespace MiniGameTemplate.EditorTools
         private static readonly Regex LineCommentRegex = new Regex(@"//.*$", RegexOptions.Multiline);
         private static readonly Regex BlockCommentRegex = new Regex(@"/\*.*?\*/", RegexOptions.Singleline);
 
-        [MenuItem("Tools/MiniGame Template/Validate/Architecture Check", false, 200)]
         public static void RunValidation()
         {
             int errorCount = 0;
