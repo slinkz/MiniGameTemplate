@@ -32,7 +32,10 @@ namespace MiniGameTemplate.EditorTools
             bool changed = false;
 
             // Skip third-party / submodule assets
-            if (path.Contains("ThirdParty/") || path.Contains("FairyGUI/Scripts/"))
+            // NOTE: FairyGUI-unity is a submodule at ThirdParty/FairyGUI-unity,
+            // symlinked/junctioned into Assets/FairyGUI/. Unity sees the assetPath
+            // as "Assets/FairyGUI/..." so we must also exclude that prefix.
+            if (path.Contains("ThirdParty/") || path.StartsWith("Assets/FairyGUI/"))
                 return;
 
             // --- Rule: Max resolution budget ---
@@ -128,8 +131,8 @@ namespace MiniGameTemplate.EditorTools
             var importer = (AudioImporter)assetImporter;
             string path = assetPath;
 
-            // Skip third-party
-            if (path.Contains("ThirdParty/")) return;
+            // Skip third-party / submodule assets (see TextureImportEnforcer for junction note)
+            if (path.Contains("ThirdParty/") || path.StartsWith("Assets/FairyGUI/")) return;
 
             // Skip if we're in a recursive reimport triggered by ourselves
             if (_reimportingPaths.Contains(path)) return;
@@ -152,8 +155,8 @@ namespace MiniGameTemplate.EditorTools
         {
             string path = assetPath;
 
-            // Skip third-party
-            if (path.Contains("ThirdParty/")) return;
+            // Skip third-party / submodule assets
+            if (path.Contains("ThirdParty/") || path.StartsWith("Assets/FairyGUI/")) return;
 
             // Skip if we're already reimporting this asset (prevents recursion)
             if (_reimportingPaths.Contains(path)) return;
