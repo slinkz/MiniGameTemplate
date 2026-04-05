@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.tuyoogame.yooasset": "2.3.18",
+    "com.tuyoogame.yooasset": "file:../ThirdParty/YooAsset",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.ugui": "1.0.0",
@@ -15,14 +15,5 @@
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.modules.unitywebrequestassetbundle": "1.0.0",
     "com.unity.modules.unitywebrequesttexture": "1.0.0"
-  },
-  "scopedRegistries": [
-    {
-      "name": "package.openupm.com",
-      "url": "https://package.openupm.com",
-      "scopes": [
-        "com.tuyoogame.yooasset"
-      ]
-    }
-  ]
+  }
 }
