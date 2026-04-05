@@ -50,8 +50,9 @@ UnityProj/Assets/[Ss]treamingAssets/yoo/
 UnityProj/Packages/packages-lock.json
 UnityProj/Packages/ResolvedPackageCache
 
-# ===== Visual Studio workload hint (auto-generated) =====
+# ===== Visual Studio =====
 UnityProj/.vsconfig
+UnityProj/.vs/
 
 # ===== YooAsset build output =====
 UnityProj/Bundles/

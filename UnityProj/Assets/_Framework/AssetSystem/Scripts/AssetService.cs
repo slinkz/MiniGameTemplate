@@ -137,6 +137,25 @@ namespace MiniGameTemplate.Asset
                 return;
             }
 
+            // Request package version and update manifest.
+            // YooAsset 2.x requires this step after InitializeAsync to activate the manifest.
+            // Without it, ActiveManifest remains null and all asset loads will throw.
+            var versionOp = _defaultPackage.RequestPackageVersionAsync();
+            await versionOp.Task;
+            if (versionOp.Status != EOperationStatus.Succeed)
+            {
+                Debug.LogError($"[AssetService] Failed to request package version: {versionOp.Error}");
+                return;
+            }
+
+            var manifestOp = _defaultPackage.UpdatePackageManifestAsync(versionOp.PackageVersion);
+            await manifestOp.Task;
+            if (manifestOp.Status != EOperationStatus.Succeed)
+            {
+                Debug.LogError($"[AssetService] Failed to update package manifest: {manifestOp.Error}");
+                return;
+            }
+
             _initialized = true;
             GameLog.Log($"[AssetService] Initialized. Package: {config.DefaultPackageName}, Mode: {config.PlayMode}");
         }

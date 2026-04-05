@@ -4,7 +4,7 @@ setlocal
 set LUBAN_CLIENT=luban
 set CONF_ROOT=%~dp0..\DataTables
 set OUTPUT_CODE=%~dp0..\Assets\_Framework\DataSystem\Scripts\Config\Generated
-set OUTPUT_DATA=%~dp0..\Assets\_Framework\DataSystem\Resources\ConfigData
+set OUTPUT_DATA=%~dp0..\Assets\_Game\ConfigData
 
 echo [Luban] Generating config tables...
 
@@ -24,4 +24,11 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo [Luban] Generation complete.
+
+REM Copy JSON data to Resources/ConfigData for fallback loading
+set FALLBACK_DIR=%~dp0..\Assets\_Framework\DataSystem\Resources\ConfigData
+if not exist "%FALLBACK_DIR%" mkdir "%FALLBACK_DIR%"
+xcopy /Y /Q "%OUTPUT_DATA%\*.json" "%FALLBACK_DIR%\"
+echo [Luban] Fallback data synced to Resources/ConfigData.
+
 pause

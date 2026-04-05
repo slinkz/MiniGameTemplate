@@ -126,6 +126,19 @@ namespace MiniGameTemplate.Core
             await ConfigManager.InitializeAsync();
             GameLog.Log("[Bootstrapper] ConfigManager initialized.");
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Verify config tables loaded correctly (stripped from release builds)
+            if (ConfigManager.Tables?.TbGlobalConst != null)
+            {
+                var helloWorld = ConfigManager.Tables.TbGlobalConst.Get("HelloWorld");
+                if (helloWorld != null)
+                {
+                    GameLog.Log($"[Bootstrapper] GlobalConst verification: key={helloWorld.Key}, " +
+                        $"stringValue={helloWorld.StringValue}, intValue={helloWorld.IntValue}");
+                }
+            }
+#endif
+
             // 3. Timer (needed by others)
             _ = TimerService.Instance;
             GameLog.Log("[Bootstrapper] TimerService initialized.");

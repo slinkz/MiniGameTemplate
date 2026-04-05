@@ -16,7 +16,7 @@ dotnet tool install -g luban.client
    - Windows: `UnityProj/Tools/gen_config.bat`
    - macOS/Linux: `UnityProj/Tools/gen_config.sh`
 4. 生成的 C# 代码 → `UnityProj/Assets/_Framework/DataSystem/Scripts/Config/Generated/`
-5. 生成的数据文件 → `UnityProj/Assets/_Framework/DataSystem/Resources/ConfigData/`
+5. 生成的数据文件 → `UnityProj/Assets/_Game/ConfigData/`
 
 ## 新增配置表流程
 1. 在 `Defs/` 中新增 `.xml` 定义文件

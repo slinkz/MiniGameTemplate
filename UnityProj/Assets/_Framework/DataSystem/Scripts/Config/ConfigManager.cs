@@ -21,16 +21,25 @@ namespace MiniGameTemplate.Data
         private static bool _initialized;
 
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => _initialized = false;
+        private static void ResetStatics()
+        {
+            _initialized = false;
+            _tables = null;
+        }
 
         /// <summary>
         /// Base path for config data when loading via YooAsset.
+        /// JSON files are placed under Assets/_Game/ConfigData/ and collected by YooAsset.
         /// </summary>
-        public static string YooAssetConfigPath = "Assets/ConfigData/";
+        public static string YooAssetConfigPath = "Assets/_Game/ConfigData/";
 
-        // TODO: Replace with actual Luban-generated Tables class after running gen_config
-        // private static cfg.Tables _tables;
-        // public static cfg.Tables Tables => _tables;
+        private static cfg.Tables _tables;
+
+        /// <summary>
+        /// Luban-generated Tables instance. Access individual tables via Tables.TbItem, Tables.TbGlobalConst, etc.
+        /// Null until InitializeAsync() or Initialize() completes successfully.
+        /// </summary>
+        public static cfg.Tables Tables => _tables;
 
         /// <summary>
         /// Optional: Assign a delegate to verify config file integrity after loading.
@@ -43,21 +52,14 @@ namespace MiniGameTemplate.Data
         /// Initialize config tables asynchronously. Call once during game bootstrap.
         /// Luban's Tables constructor accepts an async loader — use InitializeAsync() for WebGL safety.
         /// </summary>
-        public static Task InitializeAsync()
+        public static async Task InitializeAsync()
         {
-            if (_initialized) return Task.CompletedTask;
+            if (_initialized) return;
 
-            // TODO: Uncomment after Luban generates code:
-            // _tables = new cfg.Tables(file => await LoadConfigTextAsync(file));
-            // For Luban async loader pattern:
-            // _tables = await cfg.Tables.CreateAsync(LoadConfigTextAsync);
-            // NOTE: When Luban code is generated and the above is uncommented,
-            //       restore the 'async' keyword on this method.
+            _tables = await cfg.Tables.CreateAsync(LoadConfigTextAsync);
 
             _initialized = true;
             GameLog.Log("[ConfigManager] Config tables initialized.");
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -68,9 +70,7 @@ namespace MiniGameTemplate.Data
         {
             if (_initialized) return;
 
-            // Sync path can only use Resources.Load — safe on all platforms
-            // TODO: Uncomment after Luban generates code:
-            // _tables = new cfg.Tables(file => LoadConfigTextSync(file));
+            _tables = cfg.Tables.Create(LoadConfigTextSync);
 
             _initialized = true;
             GameLog.Log("[ConfigManager] Config tables initialized (sync/Resources fallback).");
@@ -108,18 +108,25 @@ namespace MiniGameTemplate.Data
 
             if (AssetService.Instance != null && AssetService.Instance.IsInitialized)
             {
-                string path = $"{YooAssetConfigPath}{fileName}.json";
-                var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(path);
-                await handle.Task;
+                try
+                {
+                    string path = $"{YooAssetConfigPath}{fileName}.json";
+                    var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(path);
+                    await handle.Task;
 
-                if (handle.Status == YooAsset.EOperationStatus.Succeed)
-                {
-                    content = (handle.AssetObject as TextAsset).text;
-                    handle.Release();
+                    if (handle.Status == YooAsset.EOperationStatus.Succeed)
+                    {
+                        content = (handle.AssetObject as TextAsset).text;
+                        handle.Release();
+                    }
+                    else
+                    {
+                        GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                    }
                 }
-                else
+                catch (System.Exception ex)
                 {
-                    GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                    GameLog.LogWarning($"[ConfigManager] YooAsset exception: {ex.Message}. Falling back to Resources.");
                 }
             }
 
@@ -165,6 +172,7 @@ namespace MiniGameTemplate.Data
         public static async Task ReloadAsync()
         {
             _initialized = false;
+            _tables = null;
             await InitializeAsync();
         }
 
@@ -174,6 +182,7 @@ namespace MiniGameTemplate.Data
         public static void Reload()
         {
             _initialized = false;
+            _tables = null;
             Initialize();
         }
     }

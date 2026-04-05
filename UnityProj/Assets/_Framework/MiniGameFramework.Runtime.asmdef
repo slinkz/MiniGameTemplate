@@ -3,7 +3,8 @@
     "rootNamespace": "MiniGameTemplate",
     "references": [
         "FairyGUI",
-        "YooAsset"
+        "YooAsset",
+        "Luban.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

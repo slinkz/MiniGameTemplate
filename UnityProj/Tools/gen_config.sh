@@ -4,7 +4,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONF_ROOT="$SCRIPT_DIR/../DataTables"
 OUTPUT_CODE="$SCRIPT_DIR/../Assets/_Framework/DataSystem/Scripts/Config/Generated"
-OUTPUT_DATA="$SCRIPT_DIR/../Assets/_Framework/DataSystem/Resources/ConfigData"
+OUTPUT_DATA="$SCRIPT_DIR/../Assets/_Game/ConfigData"
 
 echo "[Luban] Generating config tables..."
 
@@ -18,3 +18,9 @@ luban \
     -s all
 
 echo "[Luban] Generation complete."
+
+# Copy JSON data to Resources/ConfigData for fallback loading
+FALLBACK_DIR="$SCRIPT_DIR/../Assets/_Framework/DataSystem/Resources/ConfigData"
+mkdir -p "$FALLBACK_DIR"
+cp "$OUTPUT_DATA"/*.json "$FALLBACK_DIR/"
+echo "[Luban] Fallback data synced to Resources/ConfigData."

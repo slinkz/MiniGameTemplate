@@ -1,0 +1,5 @@
+<bean name="GlobalConst">
+    <var name="key" type="string"/>
+    <var name="stringValue" type="string"/>
+    <var name="intValue" type="int"/>
+</bean>

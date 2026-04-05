@@ -140,7 +140,7 @@ namespace MiniGameTemplate.Game
 | 文件 | 路径 | 说明 |
 |------|------|------|
 | `UIPackageLoader.cs` | `Assets/FairyGUI_Export/` | FairyGUI 包的 YooAsset 加载基路径 |
-| `ConfigManager.cs` | `Assets/ConfigData/` | Luban 配置数据的 YooAsset 加载基路径 |
+| `ConfigManager.cs` | `Assets/_Game/ConfigData/` | Luban 配置数据的 YooAsset 加载基路径 |
 | `SOCreationWizard.cs` | `Assets/_Game/ScriptableObjects` | SO 创建向导的默认保存路径（可在 Inspector 修改）|
 | `ArchitectureValidator.cs` | `Assets`（`Directory.GetFiles` 起始目录） | 架构验证扫描范围 |
 
