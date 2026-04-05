@@ -58,7 +58,7 @@ namespace MiniGameTemplate.EditorTools
 
         // === Validation ===
 
-        [MenuItem(MENU_ROOT + "Validate Architecture", false, 200)]
+        [MenuItem(MENU_ROOT + "Validate/Architecture Check", false, 200)]
         private static void ValidateArchitecture()
         {
             ArchitectureValidator.RunValidation();
@@ -69,7 +69,8 @@ namespace MiniGameTemplate.EditorTools
         [MenuItem(MENU_ROOT + "Open Docs Folder", false, 300)]
         private static void OpenDocsFolder()
         {
-            var path = System.IO.Path.GetFullPath("Docs");
+            // Docs/ is at repo root, one level above the Unity project
+            var path = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../Docs"));
             if (System.IO.Directory.Exists(path))
                 EditorUtility.RevealInFinder(path);
             else

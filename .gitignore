@@ -6,7 +6,10 @@ UnityProj/[Bb]uild/
 UnityProj/[Bb]uilds/
 UnityProj/[Ll]ogs/
 UnityProj/[Uu]ser[Ss]ettings/
-UnityProj/[Pp]roject[Ss]ettings/
+
+# ProjectSettings — MUST be tracked for template portability
+# Only ignore machine-specific files inside it
+UnityProj/ProjectSettings/Packages/
 
 # ===== Memory & IDE =====
 .workbuddy/

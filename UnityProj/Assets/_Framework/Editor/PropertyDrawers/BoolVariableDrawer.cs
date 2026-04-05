@@ -6,11 +6,11 @@ using MiniGameTemplate.Data;
 namespace MiniGameTemplate.EditorTools
 {
     /// <summary>
-    /// Custom property drawer for IntVariable.
+    /// Custom property drawer for BoolVariable.
     /// Shows the current runtime value inline next to the object reference.
     /// </summary>
-    [CustomPropertyDrawer(typeof(IntVariable))]
-    public class IntVariableDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(BoolVariable))]
+    public class BoolVariableDrawer : PropertyDrawer
     {
         private static GUIStyle _runtimeValueStyle;
         private static GUIStyle RuntimeValueStyle
@@ -33,7 +33,7 @@ namespace MiniGameTemplate.EditorTools
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            var obj = property.objectReferenceValue as IntVariable;
+            var obj = property.objectReferenceValue as BoolVariable;
             if (obj != null && Application.isPlaying)
             {
                 float fieldWidth = position.width * 0.6f;

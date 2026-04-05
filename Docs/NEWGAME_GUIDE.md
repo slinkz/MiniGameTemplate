@@ -104,17 +104,85 @@ public class MainMenuPanel : UIBase
 
 ## Step 9: 验证
 
-1. 运行 `Tools → MiniGame Template → Validate Architecture` 检查架构合规
-2. 从 Boot 场景启动，确认初始化流程正常
-3. 测试游戏核心循环
+1. 运行 `Tools → MiniGame Template → Validate → Architecture Check` 检查架构合规
+2. 运行 `Tools → MiniGame Template → Validate → Asset Audit` 检查资源预算
+3. 从 Boot 场景启动，确认初始化流程正常
+4. 测试游戏核心循环
+
+## Step 10: 微信小游戏 PlayerSettings 配置
+
+1. `Edit → Project Settings → Player → WebGL`：
+   - **Color Space**: Gamma（微信小游戏推荐）
+   - **Memory Size**: 256 MB
+   - **Compression Format**: Release 用 Brotli，Dev 用 Disabled
+   - **Exception Support**: Release 用 `Explicitly Thrown Exceptions Only`
+   - **Linker Target**: Wasm
+   - **Strip Engine Code**: 启用
+   - **Managed Stripping Level**: Medium
+2. 或直接使用 `Tools → MiniGame Template → Build → Build WebGL (Release)` — 会自动配置以上参数
+
+## Step 11: YooAsset 包规则配置
+
+1. 打开 `UnityProj/Assets/_Game/ScriptableObjects/` 中的 `AssetConfig` SO
+2. 配置 `Default Package Name`（默认 "DefaultPackage"）
+3. **编辑器开发**：Play Mode 选 `EditorSimulate`（无需构建 Bundle）
+4. **真机测试**：Play Mode 选 `Offline`（需先构建 Bundle 到 StreamingAssets）
+5. **在线更新**：Play Mode 选 `Host`，填入 CDN 服务器地址
+6. YooAsset Bundle 构建：通过 `YooAsset → AssetBundle Builder` 窗口操作
+
+## Step 12: FairyGUI Git Submodule 设置
+
+clone 新项目后需要初始化 FairyGUI SDK：
+
+```bash
+# 在仓库根目录执行
+git submodule update --init --recursive
+
+# 建立目录链接（Windows）
+cd UnityProj
+Tools\setup_fairygui.bat
+
+# 建立目录链接（macOS/Linux）
+cd UnityProj
+bash Tools/setup_fairygui.sh
+```
+
+## Step 13: Luban 配置表新增表流程
+
+1. 在 `UnityProj/DataTables/Defs/` 新建 XML 定义文件，定义字段
+2. 在 `UnityProj/DataTables/Defs/__tables__.xml` 注册新表
+3. 在 `UnityProj/DataTables/Datas/` 新建对应 JSON 数据文件
+4. 运行 `UnityProj/Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
+5. 生成的 C# 代码位于 `UnityProj/Assets/_Game/Scripts/Config/`
+6. 在 `ConfigManager.Initialize()` 中可直接访问生成的 `Tables` 类
+
+## Step 14: 构建与发布
+
+```bash
+# 方式一：Unity 菜单一键构建
+Tools → MiniGame Template → Build → Build WebGL (Release)
+
+# 方式二：打开构建输出目录
+Tools → MiniGame Template → Build → Open Build Folder
+```
+
+构建完成后：
+1. 使用微信小游戏 Unity 转换插件将 WebGL 输出转为微信小游戏格式
+2. 在微信开发者工具中打开转换后的项目
+3. 真机预览测试
 
 ## 检查清单
 
 - [ ] 修改了 GameConfig（名称、版本）
-- [ ] 修改了 Player Settings（Bundle ID）
+- [ ] 修改了 Player Settings（Bundle ID、WebGL 配置）
+- [ ] 初始化了 FairyGUI git submodule 并执行 setup 脚本
 - [ ] 创建了游戏场景并配置为 Initial Scene
 - [ ] Boot 场景在 Build Settings 中排第一
 - [ ] 清理了 _Example（如不需要）
 - [ ] 创建了需要的 SO 变量和事件
 - [ ] FairyGUI 工程导出路径正确指向 UnityProj
+- [ ] YooAsset AssetConfig 已配置（Play Mode + Package Name）
+- [ ] 配置表已生成并验证
 - [ ] 架构验证通过
+- [ ] 资源审计通过
+- [ ] WebGL 构建成功

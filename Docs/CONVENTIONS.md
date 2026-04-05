@@ -103,6 +103,43 @@ namespace MiniGameTemplate.Game
 - 配置表源数据 → `UnityProj/DataTables/`
 - 构建/生成脚本 → `UnityProj/Tools/`
 
+## 路径规范
+
+### 原则：优先使用相对路径
+
+项目中**禁止硬编码系统绝对路径**（如 `C:\Users\...`、`/home/user/...`）。所有路径应通过以下方式获取：
+
+| 场景 | 做法 |
+|------|------|
+| `.bat` 脚本 | `%~dp0` 取脚本所在目录，再用 `..` 做相对导航 |
+| `.sh` 脚本 | `SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"`，再用 `../` 相对导航 |
+| Unity C# 运行时 | `Application.streamingAssetsPath`、`Application.persistentDataPath` 等 API 动态获取 |
+| Unity C# 编辑器 | `Application.dataPath`（指向 `Assets/`），通过 `Path.Combine` 向上导航到仓库根 |
+| FairyGUI 发布路径 | Publish.json 中使用相对路径 `../UnityProj/Assets/_Game/FairyGUI_Export` |
+| YooAsset 资源路径 | Unity 工程内的 `Assets/...` 形式路径（YooAsset 需要此前缀）|
+
+### Unity 工程内的 `Assets/` 路径（非系统绝对路径）
+
+以下路径是 **Unity AssetDatabase 约定的相对路径**，以 `Assets/` 开头。它们不是系统绝对路径，但属于硬编码字符串——如果 Unity 工程内的目录结构变化，需要同步修改：
+
+| 文件 | 路径 | 说明 |
+|------|------|------|
+| `UIPackageLoader.cs` | `Assets/FairyGUI_Export/` | FairyGUI 包的 YooAsset 加载基路径 |
+| `ConfigManager.cs` | `Assets/ConfigData/` | Luban 配置数据的 YooAsset 加载基路径 |
+| `SOCreationWizard.cs` | `Assets/_Game/ScriptableObjects` | SO 创建向导的默认保存路径（可在 Inspector 修改）|
+| `ArchitectureValidator.cs` | `Assets`（`Directory.GetFiles` 起始目录） | 架构验证扫描范围 |
+
+这些路径通过 `public static` 字段暴露，可在运行时覆盖，无需修改源码。
+
+### 跨目录引用
+
+仓库采用三区分离结构（`Docs/`、`UIProject/`、`UnityProj/`）。从 Unity 工程内引用仓库根目录的文件时，需要向上导航：
+
+```csharp
+// 从 Unity 编辑器代码引用仓库根的 Docs/ 目录
+var docsPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../../Docs"));
+```
+
 ## Git 规范
 
 - 提交前运行架构验证

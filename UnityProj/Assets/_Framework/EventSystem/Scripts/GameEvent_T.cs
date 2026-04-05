@@ -10,6 +10,7 @@ namespace MiniGameTemplate.Events
     public abstract class GameEvent<T> : ScriptableObject
     {
         private readonly List<GameEventListener<T>> _listeners = new List<GameEventListener<T>>();
+        private readonly HashSet<GameEventListener<T>> _listenerSet = new HashSet<GameEventListener<T>>();
 
 #if UNITY_EDITOR
         [TextArea(2, 4)]
@@ -26,13 +27,14 @@ namespace MiniGameTemplate.Events
 
         public void RegisterListener(GameEventListener<T> listener)
         {
-            if (!_listeners.Contains(listener))
+            if (_listenerSet.Add(listener))
                 _listeners.Add(listener);
         }
 
         public void UnregisterListener(GameEventListener<T> listener)
         {
-            _listeners.Remove(listener);
+            if (_listenerSet.Remove(listener))
+                _listeners.Remove(listener);
         }
     }
 }

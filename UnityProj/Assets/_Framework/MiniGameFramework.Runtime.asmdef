@@ -1,0 +1,17 @@
+{
+    "name": "MiniGameFramework.Runtime",
+    "rootNamespace": "MiniGameTemplate",
+    "references": [
+        "FairyGUI",
+        "YooAsset"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

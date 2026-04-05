@@ -70,6 +70,7 @@ namespace MiniGameTemplate.Timing
 
             float dt = Time.deltaTime;
             float unscaledDt = Time.unscaledDeltaTime;
+            bool needsCompact = false;
 
             for (int i = _timers.Count - 1; i >= 0; i--)
             {
@@ -77,7 +78,7 @@ namespace MiniGameTemplate.Timing
 
                 if (t.IsCancelled)
                 {
-                    _timers.RemoveAt(i);
+                    needsCompact = true;
                     continue;
                 }
 
@@ -96,9 +97,15 @@ namespace MiniGameTemplate.Timing
                     else
                     {
                         t.IsCancelled = true;
-                        _timers.RemoveAt(i);
+                        needsCompact = true;
                     }
                 }
+            }
+
+            // Batch remove all cancelled timers in one pass (O(n) total, not O(n) per removal)
+            if (needsCompact)
+            {
+                _timers.RemoveAll(t => t.IsCancelled);
             }
         }
     }

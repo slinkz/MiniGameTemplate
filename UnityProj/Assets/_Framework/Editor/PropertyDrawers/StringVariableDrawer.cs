@@ -6,11 +6,11 @@ using MiniGameTemplate.Data;
 namespace MiniGameTemplate.EditorTools
 {
     /// <summary>
-    /// Custom property drawer for IntVariable.
+    /// Custom property drawer for StringVariable.
     /// Shows the current runtime value inline next to the object reference.
     /// </summary>
-    [CustomPropertyDrawer(typeof(IntVariable))]
-    public class IntVariableDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(StringVariable))]
+    public class StringVariableDrawer : PropertyDrawer
     {
         private static GUIStyle _runtimeValueStyle;
         private static GUIStyle RuntimeValueStyle
@@ -33,7 +33,7 @@ namespace MiniGameTemplate.EditorTools
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            var obj = property.objectReferenceValue as IntVariable;
+            var obj = property.objectReferenceValue as StringVariable;
             if (obj != null && Application.isPlaying)
             {
                 float fieldWidth = position.width * 0.6f;
@@ -43,7 +43,11 @@ namespace MiniGameTemplate.EditorTools
                 var valueRect = new Rect(position.x + fieldWidth + position.width * 0.02f, position.y, valueWidth, position.height);
 
                 EditorGUI.ObjectField(fieldRect, property, label);
-                EditorGUI.LabelField(valueRect, $"= {obj.Value}", RuntimeValueStyle);
+
+                string display = string.IsNullOrEmpty(obj.Value) ? "= \"\"" : $"= \"{obj.Value}\"";
+                // Truncate if too long
+                if (display.Length > 30) display = display.Substring(0, 27) + "...\"";
+                EditorGUI.LabelField(valueRect, display, RuntimeValueStyle);
             }
             else
             {

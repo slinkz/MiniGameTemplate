@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using MiniGameTemplate.Asset;
 using MiniGameTemplate.Data;
@@ -22,23 +23,49 @@ namespace MiniGameTemplate.Core
         [Header("Asset Configuration")]
         [SerializeField] private AssetConfig _assetConfig;
 
+        private static bool _hasBooted;
+
         private async void Awake()
         {
-            // Ensure only one instance survives
+            // Guard: prevent duplicate Bootstrapper instances
+            if (_hasBooted)
+            {
+                UnityEngine.Debug.LogWarning("[Bootstrapper] Duplicate detected — destroying this instance.");
+                Destroy(gameObject);
+                return;
+            }
+            _hasBooted = true;
+
             DontDestroyOnLoad(gameObject);
 
-            // Apply game settings
-            Application.targetFrameRate = _gameConfig.TargetFrameRate;
-            Application.runInBackground = _gameConfig.RunInBackground;
-            Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            try
+            {
+                // Apply game settings
+                Application.targetFrameRate = _gameConfig.TargetFrameRate;
+                Application.runInBackground = _gameConfig.RunInBackground;
+                Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
-            UnityEngine.Debug.Log($"[Bootstrapper] Starting {_gameConfig.GameName} v{_gameConfig.Version}");
+                UnityEngine.Debug.Log($"[Bootstrapper] Starting {_gameConfig.GameName} v{_gameConfig.Version}");
 
-            // Initialize systems in dependency order
-            await InitializeSystemsAsync();
+                // Initialize systems in dependency order
+                await InitializeSystemsAsync();
 
-            // Load the initial scene
-            LoadInitialScene();
+                // Load the initial scene
+                LoadInitialScene();
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogException(ex);
+                UnityEngine.Debug.LogError("[Bootstrapper] FATAL: Initialization failed. See exception above.");
+                // TODO: Show a user-facing fatal error UI here
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // Reset boot flag when the Bootstrapper is destroyed (e.g., domain reload in editor)
+            if (_hasBooted && this != null)
+                _hasBooted = false;
         }
 
         private async System.Threading.Tasks.Task InitializeSystemsAsync()

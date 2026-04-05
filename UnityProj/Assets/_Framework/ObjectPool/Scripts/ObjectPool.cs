@@ -28,21 +28,30 @@ namespace MiniGameTemplate.Pool
         {
             for (int i = 0; i < _definition.InitialSize; i++)
             {
-                CreateNewInstance();
+                CreateNewInstance(addToAvailable: true);
             }
         }
 
-        private GameObject CreateNewInstance()
+        private GameObject CreateNewInstance(bool addToAvailable = true)
         {
+            if (_definition.Prefab == null)
+            {
+                Debug.LogError("[ObjectPool] Prefab is null — cannot create instance.");
+                return null;
+            }
+
             var obj = Object.Instantiate(_definition.Prefab, _parent);
             obj.SetActive(false);
-            _available.Enqueue(obj);
             _totalCreated++;
+
+            if (addToAvailable)
+                _available.Enqueue(obj);
+
             return obj;
         }
 
         /// <summary>
-        /// Get an object from the pool. Returns null if max size reached.
+        /// Get an object from the pool. Returns null if max size reached or prefab is missing.
         /// </summary>
         public GameObject Get()
         {
@@ -54,8 +63,9 @@ namespace MiniGameTemplate.Pool
             }
             else if (_definition.MaxSize <= 0 || _totalCreated < _definition.MaxSize)
             {
-                obj = CreateNewInstance();
-                _available.Dequeue(); // Remove from available since we'll use it immediately
+                // Create directly without enqueuing to _available — we'll use it immediately
+                obj = CreateNewInstance(addToAvailable: false);
+                if (obj == null) return null;
             }
             else
             {

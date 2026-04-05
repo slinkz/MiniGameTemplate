@@ -20,6 +20,8 @@ namespace MiniGameTemplate.Data
             get => _value;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (_value == value) return;
                 _value = value;
                 OnValueChanged?.Invoke(_value);
             }

@@ -12,6 +12,23 @@ namespace MiniGameTemplate.EditorTools
     [CustomPropertyDrawer(typeof(FloatVariable))]
     public class FloatVariableDrawer : PropertyDrawer
     {
+        private static GUIStyle _runtimeValueStyle;
+        private static GUIStyle RuntimeValueStyle
+        {
+            get
+            {
+                if (_runtimeValueStyle == null)
+                {
+                    _runtimeValueStyle = new GUIStyle(EditorStyles.helpBox)
+                    {
+                        alignment = TextAnchor.MiddleRight,
+                        fontStyle = FontStyle.Bold
+                    };
+                }
+                return _runtimeValueStyle;
+            }
+        }
+
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
@@ -26,11 +43,7 @@ namespace MiniGameTemplate.EditorTools
                 var valueRect = new Rect(position.x + fieldWidth + position.width * 0.02f, position.y, valueWidth, position.height);
 
                 EditorGUI.ObjectField(fieldRect, property, label);
-
-                var style = new GUIStyle(EditorStyles.helpBox);
-                style.alignment = TextAnchor.MiddleRight;
-                style.fontStyle = FontStyle.Bold;
-                EditorGUI.LabelField(valueRect, $"= {obj.Value:F2}", style);
+                EditorGUI.LabelField(valueRect, $"= {obj.Value:F2}", RuntimeValueStyle);
             }
             else
             {

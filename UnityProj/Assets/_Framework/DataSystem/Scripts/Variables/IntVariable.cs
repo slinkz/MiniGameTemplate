@@ -20,6 +20,7 @@ namespace MiniGameTemplate.Data
             get => _value;
             set
             {
+                if (_value == value) return;
                 _value = value;
                 OnValueChanged?.Invoke(_value);
             }

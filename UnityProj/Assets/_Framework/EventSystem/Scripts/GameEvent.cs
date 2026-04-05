@@ -11,10 +11,14 @@ namespace MiniGameTemplate.Events
     public class GameEvent : ScriptableObject
     {
         private readonly List<GameEventListener> _listeners = new List<GameEventListener>();
+        private readonly HashSet<GameEventListener> _listenerSet = new HashSet<GameEventListener>();
 
 #if UNITY_EDITOR
         [TextArea(2, 4)]
         [SerializeField] private string _description;
+
+        /// <summary>Editor-only: number of active listeners (for debug tools).</summary>
+        public int ListenerCount => _listeners.Count;
 #endif
 
         /// <summary>
@@ -31,13 +35,14 @@ namespace MiniGameTemplate.Events
 
         public void RegisterListener(GameEventListener listener)
         {
-            if (!_listeners.Contains(listener))
+            if (_listenerSet.Add(listener)) // O(1) duplicate check
                 _listeners.Add(listener);
         }
 
         public void UnregisterListener(GameEventListener listener)
         {
-            _listeners.Remove(listener);
+            if (_listenerSet.Remove(listener)) // O(1)
+                _listeners.Remove(listener);   // O(n) but only on removal
         }
     }
 }

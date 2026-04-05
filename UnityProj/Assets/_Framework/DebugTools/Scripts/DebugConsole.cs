@@ -15,9 +15,13 @@ namespace MiniGameTemplate.Debug
         [SerializeField] private int _maxMessages = 100;
         [SerializeField] private int _fontSize = 14;
 
-        private readonly List<LogEntry> _messages = new List<LogEntry>();
+        private readonly Queue<LogEntry> _messages = new Queue<LogEntry>();
         private bool _isVisible;
         private Vector2 _scrollPosition;
+
+        // Cached GUIStyles — avoid allocation per OnGUI call
+        private GUIStyle _bgStyle;
+        private GUIStyle _labelStyle;
 
         private struct LogEntry
         {
@@ -37,9 +41,9 @@ namespace MiniGameTemplate.Debug
 
         private void HandleLog(string condition, string stackTrace, LogType type)
         {
-            _messages.Add(new LogEntry { Message = condition, Type = type });
-            if (_messages.Count > _maxMessages)
-                _messages.RemoveAt(0);
+            _messages.Enqueue(new LogEntry { Message = condition, Type = type });
+            while (_messages.Count > _maxMessages)
+                _messages.Dequeue(); // O(1)
         }
 
         private void Update()
@@ -60,21 +64,33 @@ namespace MiniGameTemplate.Debug
             }
         }
 
+        private void EnsureStyles()
+        {
+            if (_bgStyle == null)
+                _bgStyle = new GUIStyle(GUI.skin.box);
+
+            if (_labelStyle == null)
+            {
+                _labelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = _fontSize,
+                    wordWrap = true
+                };
+            }
+        }
+
         private void OnGUI()
         {
             if (!_isVisible) return;
+
+            EnsureStyles();
 
             float w = Screen.width * 0.9f;
             float h = Screen.height * 0.5f;
             float x = (Screen.width - w) / 2f;
             float y = Screen.height - h - 10;
 
-            var bgStyle = new GUIStyle(GUI.skin.box);
-            GUI.Box(new Rect(x, y, w, h), "Debug Console", bgStyle);
-
-            var style = new GUIStyle(GUI.skin.label);
-            style.fontSize = _fontSize;
-            style.wordWrap = true;
+            GUI.Box(new Rect(x, y, w, h), "Debug Console", _bgStyle);
 
             var scrollRect = new Rect(x + 5, y + 25, w - 10, h - 35);
             float contentHeight = _messages.Count * (_fontSize + 4);
@@ -85,7 +101,7 @@ namespace MiniGameTemplate.Debug
             float lineY = 0;
             foreach (var entry in _messages)
             {
-                style.normal.textColor = entry.Type switch
+                _labelStyle.normal.textColor = entry.Type switch
                 {
                     LogType.Error => Color.red,
                     LogType.Warning => Color.yellow,
@@ -93,7 +109,7 @@ namespace MiniGameTemplate.Debug
                     _ => Color.white
                 };
 
-                GUI.Label(new Rect(0, lineY, w - 30, _fontSize + 4), entry.Message, style);
+                GUI.Label(new Rect(0, lineY, w - 30, _fontSize + 4), entry.Message, _labelStyle);
                 lineY += _fontSize + 4;
             }
 

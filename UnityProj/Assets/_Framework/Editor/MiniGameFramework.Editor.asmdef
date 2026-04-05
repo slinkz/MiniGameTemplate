@@ -1,0 +1,20 @@
+{
+    "name": "MiniGameFramework.Editor",
+    "rootNamespace": "MiniGameTemplate.EditorTools",
+    "references": [
+        "MiniGameFramework.Runtime",
+        "FairyGUI",
+        "YooAsset"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
