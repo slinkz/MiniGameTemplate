@@ -3,12 +3,14 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using MiniGameTemplate.Utils;
 using MiniGameTemplate.Events;
+using MiniGameTemplate.Asset;
 
 namespace MiniGameTemplate.Core
 {
     /// <summary>
     /// Scene loading manager. Loads scenes based on SceneDefinition SOs.
-    /// Supports async loading with optional transition events.
+    /// Routes through AssetService (YooAsset) when available for consistent
+    /// asset pipeline. Falls back to SceneManager for editor/quick iteration.
     /// </summary>
     public class SceneLoader : Singleton<SceneLoader>
     {
@@ -20,6 +22,7 @@ namespace MiniGameTemplate.Core
 
         /// <summary>
         /// Load a scene defined by a SceneDefinition SO.
+        /// Uses AssetService (YooAsset) when initialized, falls back to SceneManager.
         /// </summary>
         public void LoadScene(SceneDefinition sceneDef)
         {
@@ -35,13 +38,56 @@ namespace MiniGameTemplate.Core
                 return;
             }
 
-            StartCoroutine(LoadSceneAsync(sceneDef));
+            // Prefer AssetService (YooAsset) for scene loading when available
+            if (AssetService.Instance != null && AssetService.Instance.IsInitialized
+                && !string.IsNullOrEmpty(sceneDef.ScenePath))
+            {
+                StartCoroutine(LoadSceneViaAssetServiceAsync(sceneDef));
+            }
+            else
+            {
+                StartCoroutine(LoadSceneViaSceneManagerAsync(sceneDef));
+            }
         }
 
-        private IEnumerator LoadSceneAsync(SceneDefinition sceneDef)
+        /// <summary>
+        /// Load scene through YooAsset — ensures all assets go through the same pipeline.
+        /// </summary>
+        private IEnumerator LoadSceneViaAssetServiceAsync(SceneDefinition sceneDef)
         {
             _isLoading = true;
             _onSceneLoadStarted?.Raise();
+
+            var loadMode = sceneDef.IsAdditive ? LoadSceneMode.Additive : LoadSceneMode.Single;
+            var sceneHandle = AssetService.Instance.LoadSceneAsync(sceneDef.ScenePath, loadMode);
+
+            yield return sceneHandle;
+
+            if (sceneHandle.Status == YooAsset.EOperationStatus.Succeed)
+            {
+                UnityEngine.Debug.Log($"[SceneLoader] Scene loaded via AssetService: {sceneDef.SceneName}");
+            }
+            else
+            {
+                UnityEngine.Debug.LogError($"[SceneLoader] AssetService failed to load scene: {sceneDef.ScenePath}. " +
+                    $"Error: {sceneHandle.LastError}. Falling back to SceneManager.");
+                // Fallback to SceneManager
+                yield return LoadSceneViaSceneManagerAsync(sceneDef);
+                yield break;
+            }
+
+            _isLoading = false;
+            _onSceneLoadCompleted?.Raise();
+        }
+
+        /// <summary>
+        /// Fallback: load scene via Unity SceneManager (for editor or when AssetService is unavailable).
+        /// </summary>
+        private IEnumerator LoadSceneViaSceneManagerAsync(SceneDefinition sceneDef)
+        {
+            _isLoading = true;
+            if (_onSceneLoadStarted != null)
+                _onSceneLoadStarted.Raise();
 
             var loadMode = sceneDef.IsAdditive ? LoadSceneMode.Additive : LoadSceneMode.Single;
             var operation = SceneManager.LoadSceneAsync(sceneDef.SceneName, loadMode);
@@ -55,13 +101,13 @@ namespace MiniGameTemplate.Core
 
             while (!operation.isDone)
             {
-                // Progress is available via operation.progress (0..1)
                 yield return null;
             }
 
             _isLoading = false;
-            _onSceneLoadCompleted?.Raise();
-            UnityEngine.Debug.Log($"[SceneLoader] Scene loaded: {sceneDef.SceneName}");
+            if (_onSceneLoadCompleted != null)
+                _onSceneLoadCompleted.Raise();
+            UnityEngine.Debug.Log($"[SceneLoader] Scene loaded via SceneManager: {sceneDef.SceneName}");
         }
 
         /// <summary>

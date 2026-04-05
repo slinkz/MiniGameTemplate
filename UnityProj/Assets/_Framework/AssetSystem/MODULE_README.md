@@ -18,6 +18,7 @@
 | **EditorSimulate** | 直接从 AssetDatabase 加载，无需构建 Bundle | 编辑器开发阶段 |
 | **Offline** | 从 StreamingAssets 中的预构建 Bundle 加载 | 单机发布、微信小游戏首包 |
 | **Host** | 从远程 CDN 加载，本地缓存 | 线上热更新 |
+| **WebGL** | 微信小游戏专用，使用 WechatFileSystem | 微信小游戏发布 |
 
 ## 使用方式
 

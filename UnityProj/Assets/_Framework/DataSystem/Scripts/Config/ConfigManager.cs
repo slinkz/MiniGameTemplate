@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Asset;
 
@@ -7,8 +8,8 @@ namespace MiniGameTemplate.Data
     /// Loads Luban-generated config data at runtime.
     /// Generated C# table classes live in the Generated/ subfolder.
     ///
-    /// When AssetService is initialized, loads data via YooAsset.
-    /// Otherwise falls back to Resources.Load from Resources/ConfigData/.
+    /// All loading paths are fully async to avoid WebGL/IL2CPP deadlocks.
+    /// On WebGL (WeChat Mini Game), WaitForAsyncComplete() will deadlock the single thread.
     /// </summary>
     public static class ConfigManager
     {
@@ -24,30 +25,49 @@ namespace MiniGameTemplate.Data
         // public static cfg.Tables Tables => _tables;
 
         /// <summary>
-        /// Initialize config tables. Call once during game bootstrap.
+        /// Initialize config tables asynchronously. Call once during game bootstrap.
+        /// Luban's Tables constructor accepts an async loader — use InitializeAsync() for WebGL safety.
         /// </summary>
-        public static void Initialize()
+        public static async Task InitializeAsync()
         {
             if (_initialized) return;
 
             // TODO: Uncomment after Luban generates code:
-            // _tables = new cfg.Tables(file => LoadConfigJson(file));
+            // _tables = new cfg.Tables(file => await LoadConfigTextAsync(file));
+            // For Luban async loader pattern:
+            // _tables = await cfg.Tables.CreateAsync(LoadConfigTextAsync);
 
             _initialized = true;
             Debug.Log("[ConfigManager] Config tables initialized.");
         }
 
         /// <summary>
-        /// Load a config JSON file by name. Uses YooAsset when available,
-        /// Resources.Load otherwise.
+        /// Synchronous Initialize for backward compatibility (editor-only or Resources.Load fallback).
+        /// WARNING: This only works when NOT using YooAsset path. For WebGL builds, use InitializeAsync().
         /// </summary>
-        public static string LoadConfigText(string fileName)
+        public static void Initialize()
+        {
+            if (_initialized) return;
+
+            // Sync path can only use Resources.Load — safe on all platforms
+            // TODO: Uncomment after Luban generates code:
+            // _tables = new cfg.Tables(file => LoadConfigTextSync(file));
+
+            _initialized = true;
+            Debug.Log("[ConfigManager] Config tables initialized (sync/Resources fallback).");
+        }
+
+        /// <summary>
+        /// Load a config JSON file asynchronously. WebGL-safe.
+        /// Uses YooAsset when available, Resources.Load otherwise.
+        /// </summary>
+        public static async Task<string> LoadConfigTextAsync(string fileName)
         {
             if (AssetService.Instance != null && AssetService.Instance.IsInitialized)
             {
                 string path = $"{YooAssetConfigPath}{fileName}.json";
                 var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(path);
-                handle.WaitForAsyncComplete();
+                await handle.Task;
 
                 if (handle.Status == YooAsset.EOperationStatus.Succeed)
                 {
@@ -59,7 +79,16 @@ namespace MiniGameTemplate.Data
                 Debug.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
             }
 
-            // Fallback: Resources.Load
+            // Fallback: Resources.Load (synchronous but safe on all platforms)
+            return LoadConfigTextSync(fileName);
+        }
+
+        /// <summary>
+        /// Synchronous fallback loader via Resources.Load.
+        /// Safe on all platforms but only loads from Resources/ConfigData/.
+        /// </summary>
+        public static string LoadConfigTextSync(string fileName)
+        {
             var textAsset = Resources.Load<TextAsset>($"ConfigData/{fileName}");
             if (textAsset != null)
                 return textAsset.text;
@@ -69,7 +98,16 @@ namespace MiniGameTemplate.Data
         }
 
         /// <summary>
-        /// Force reload all config tables (e.g., after hot-reload in editor).
+        /// Force reload all config tables asynchronously.
+        /// </summary>
+        public static async Task ReloadAsync()
+        {
+            _initialized = false;
+            await InitializeAsync();
+        }
+
+        /// <summary>
+        /// Force reload all config tables (sync fallback for editor).
         /// </summary>
         public static void Reload()
         {

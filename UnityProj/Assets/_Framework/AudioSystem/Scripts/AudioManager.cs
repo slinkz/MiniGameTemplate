@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.Utils;
@@ -7,6 +8,8 @@ namespace MiniGameTemplate.Audio
     /// <summary>
     /// Central audio manager. Handles BGM and SFX playback.
     /// Volume levels are driven by FloatVariable SOs for easy UI binding.
+    ///
+    /// SFX uses a pool of AudioSources to support concurrent sound effects.
     /// </summary>
     public class AudioManager : Singleton<AudioManager>
     {
@@ -18,8 +21,13 @@ namespace MiniGameTemplate.Audio
         [Header("Audio Library")]
         [SerializeField] private AudioLibrary _audioLibrary;
 
+        [Header("SFX Pool")]
+        [Tooltip("Maximum number of concurrent SFX channels. More channels = more simultaneous sounds.")]
+        [SerializeField] private int _sfxPoolSize = 4;
+
         private AudioSource _bgmSource;
-        private AudioSource _sfxSource;
+        private List<AudioSource> _sfxPool;
+        private int _nextSfxIndex;
 
         protected override void Awake()
         {
@@ -29,8 +37,16 @@ namespace MiniGameTemplate.Audio
             _bgmSource.playOnAwake = false;
             _bgmSource.loop = true;
 
-            _sfxSource = gameObject.AddComponent<AudioSource>();
-            _sfxSource.playOnAwake = false;
+            // Create SFX audio source pool
+            _sfxPoolSize = Mathf.Max(1, _sfxPoolSize);
+            _sfxPool = new List<AudioSource>(_sfxPoolSize);
+            for (int i = 0; i < _sfxPoolSize; i++)
+            {
+                var sfxSource = gameObject.AddComponent<AudioSource>();
+                sfxSource.playOnAwake = false;
+                _sfxPool.Add(sfxSource);
+            }
+            _nextSfxIndex = 0;
         }
 
         private void OnEnable()
@@ -51,10 +67,9 @@ namespace MiniGameTemplate.Audio
         {
             float master = _masterVolume != null ? _masterVolume.Value : 1f;
             float bgm = _bgmVolume != null ? _bgmVolume.Value : 1f;
-            float sfx = _sfxVolume != null ? _sfxVolume.Value : 1f;
 
             _bgmSource.volume = master * bgm;
-            _sfxSource.volume = master * sfx;
+            // SFX volume is applied per-PlayOneShot call, no need to update pool sources
         }
 
         /// <summary>
@@ -80,7 +95,8 @@ namespace MiniGameTemplate.Audio
         }
 
         /// <summary>
-        /// Play a sound effect (fire-and-forget).
+        /// Play a sound effect using the SFX pool (fire-and-forget).
+        /// Round-robins through available AudioSources for concurrent playback.
         /// </summary>
         public void PlaySFX(AudioClipSO clipSO)
         {
@@ -89,7 +105,8 @@ namespace MiniGameTemplate.Audio
             float master = _masterVolume != null ? _masterVolume.Value : 1f;
             float sfx = _sfxVolume != null ? _sfxVolume.Value : 1f;
 
-            _sfxSource.PlayOneShot(clipSO.Clip, clipSO.Volume * master * sfx);
+            var source = GetNextSfxSource();
+            source.PlayOneShot(clipSO.Clip, clipSO.Volume * master * sfx);
         }
 
         /// <summary>
@@ -100,6 +117,24 @@ namespace MiniGameTemplate.Audio
             if (_audioLibrary == null) return;
             var clip = _audioLibrary.GetClip(key);
             if (clip != null) PlaySFX(clip);
+        }
+
+        /// <summary>
+        /// Stop all currently playing SFX.
+        /// </summary>
+        public void StopAllSFX()
+        {
+            foreach (var source in _sfxPool)
+            {
+                source.Stop();
+            }
+        }
+
+        private AudioSource GetNextSfxSource()
+        {
+            var source = _sfxPool[_nextSfxIndex];
+            _nextSfxIndex = (_nextSfxIndex + 1) % _sfxPool.Count;
+            return source;
         }
     }
 }

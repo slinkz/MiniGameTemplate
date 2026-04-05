@@ -82,8 +82,8 @@ namespace MiniGameTemplate.Core
                     "Resources.Load fallback will be used.");
             }
 
-            // 2. Config tables (Luban)
-            ConfigManager.Initialize();
+            // 2. Config tables (Luban) — async to avoid WebGL deadlock
+            await ConfigManager.InitializeAsync();
             UnityEngine.Debug.Log("[Bootstrapper] ConfigManager initialized.");
 
             // 3. Timer (needed by others)

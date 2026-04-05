@@ -30,6 +30,35 @@ namespace MiniGameTemplate.EditorTools
             Build(isDevelopment: false);
         }
 
+        [MenuItem(MENU_ROOT + "Validate WeChat Settings", false, 410)]
+        public static void ValidateWeChatSettings()
+        {
+            bool allGood = true;
+
+            if (PlayerSettings.colorSpace != ColorSpace.Gamma)
+            {
+                Debug.LogWarning("[BuildPipeline] ColorSpace should be Gamma for WeChat Mini Game.");
+                allGood = false;
+            }
+
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.WebGL)
+            {
+                Debug.LogWarning("[BuildPipeline] Active build target is not WebGL.");
+                allGood = false;
+            }
+
+#if UNITY_2021_2_OR_NEWER
+            if (!PlayerSettings.gcIncremental)
+            {
+                Debug.LogWarning("[BuildPipeline] Incremental GC should be enabled for WeChat Mini Game.");
+                allGood = false;
+            }
+#endif
+
+            if (allGood)
+                Debug.Log("[BuildPipeline] All WeChat Mini Game settings validated OK.");
+        }
+
         [MenuItem(MENU_ROOT + "Open Build Folder", false, 420)]
         public static void OpenBuildFolder()
         {
@@ -97,6 +126,7 @@ namespace MiniGameTemplate.EditorTools
 
                 // Post-build: remind about WeChat Mini Game conversion
                 Debug.Log("[BuildPipeline] Next step: Use WeChat Minigame Unity Plugin to convert WebGL output.");
+                Debug.Log("[BuildPipeline] Run: minigame-unity-sdk-cli convert --input <build-path> --output <wx-project-path>");
             }
             else
             {
@@ -106,30 +136,66 @@ namespace MiniGameTemplate.EditorTools
 
         private static void ConfigurePlayerSettings(bool isDevelopment)
         {
+            // === WeChat Mini Game MANDATORY settings ===
+
+            // Color Space: MUST be Gamma — WeChat Mini Game does not support Linear
+            if (PlayerSettings.colorSpace != ColorSpace.Gamma)
+            {
+                Debug.Log("[BuildPipeline] Setting Color Space to Gamma (required by WeChat Mini Game).");
+                PlayerSettings.colorSpace = ColorSpace.Gamma;
+            }
+
+            // Auto Graphics API — let Unity pick the best WebGL version
+            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.WebGL, true);
+
             // WebGL memory settings optimized for WeChat Mini Game
             PlayerSettings.WebGL.memorySize = 256;
             PlayerSettings.WebGL.linkerTarget = WebGLLinkerTarget.Wasm;
-            PlayerSettings.WebGL.compressionFormat = isDevelopment
-                ? WebGLCompressionFormat.Disabled
-                : WebGLCompressionFormat.Brotli;
+
+            // Compression: Disabled for WeChat — the WX plugin handles its own compression
+            // Using Brotli/Gzip will double-compress and waste size
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+
+            // Decompression fallback: must be disabled for WeChat
+            PlayerSettings.WebGL.decompressionFallback = false;
+
+            // Name output files as hashes — required for WeChat CDN cache busting
+            PlayerSettings.WebGL.nameFilesAsHashes = true;
 
 #if UNITY_2022_1_OR_NEWER
-            // Unity 2022+ WebGL settings
+            // Debug symbols for development builds
             PlayerSettings.WebGL.debugSymbolMode = isDevelopment
                 ? WebGLDebugSymbolMode.External
                 : WebGLDebugSymbolMode.Off;
 #endif
 
-            // Strip unused code to minimize package size
-            PlayerSettings.stripEngineCode = true;
-            PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL, ManagedStrippingLevel.Medium);
+            // === Performance optimization settings ===
 
-            // Disable exceptions in release for performance
+            // Strip unused engine code to minimize WASM size
+            PlayerSettings.stripEngineCode = true;
+
+            // Aggressive stripping for release — saves significant WASM size
+            // Use High for release, Medium for dev (easier debugging)
+            PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.WebGL,
+                isDevelopment ? ManagedStrippingLevel.Medium : ManagedStrippingLevel.High);
+
+            // Exception support: minimal for release, full for dev
             PlayerSettings.WebGL.exceptionSupport = isDevelopment
                 ? WebGLExceptionSupport.FullWithStacktrace
                 : WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
 
-            Debug.Log($"[BuildPipeline] PlayerSettings configured for {(isDevelopment ? "Development" : "Release")} WebGL.");
+            // Incremental GC — reduces GC spikes, important for smooth gameplay
+#if UNITY_2021_2_OR_NEWER
+            PlayerSettings.gcIncremental = true;
+#endif
+
+            // IL2CPP code generation: faster runtime, slightly larger build
+            // For WeChat, smaller is usually better — use OptimizeSize for release
+            EditorUserBuildSettings.il2CppCodeGeneration = isDevelopment
+                ? Il2CppCodeGeneration.OptimizeSpeed
+                : Il2CppCodeGeneration.OptimizeSize;
+
+            Debug.Log($"[BuildPipeline] PlayerSettings configured for {(isDevelopment ? "Development" : "Release")} WebGL (WeChat Mini Game).");
         }
 
         private static string[] GetEnabledScenes()

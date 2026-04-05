@@ -16,10 +16,11 @@ namespace MiniGameTemplate.Asset
         [Header("Play Mode")]
         [Tooltip("Editor Simulate: loads from AssetDatabase (no build needed).\n" +
                  "Offline: loads from pre-built bundles in StreamingAssets.\n" +
-                 "Host: loads from a remote CDN/server.")]
+                 "Host: loads from a remote CDN/server.\n" +
+                 "WebGL: WeChat Mini Game mode — uses WechatFileSystem with builtin + cache.")]
         [SerializeField] private EAssetPlayMode _playMode = EAssetPlayMode.EditorSimulate;
 
-        [Header("Host Server (only for Host play mode)")]
+        [Header("Host Server (for Host and WebGL play modes)")]
         [SerializeField] private string _hostServerUrl = "";
         [SerializeField] private string _fallbackHostServerUrl = "";
 
@@ -44,6 +45,13 @@ namespace MiniGameTemplate.Asset
         /// <summary>
         /// Loads from a remote CDN/server with local cache fallback.
         /// </summary>
-        Host
+        Host,
+
+        /// <summary>
+        /// WeChat Mini Game mode. Uses WechatFileSystem for builtin resources
+        /// and cache file system for CDN resources.
+        /// Requires: YooAsset WechatFileSystem extension + WX-WASM-SDK-V2.
+        /// </summary>
+        WebGL
     }
 }

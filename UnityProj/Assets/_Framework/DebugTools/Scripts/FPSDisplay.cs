@@ -14,6 +14,19 @@ namespace MiniGameTemplate.Debug
         private float _deltaTime;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private GUIStyle _style;
+        private Rect _rect;
+
+        private void Start()
+        {
+            _style = new GUIStyle
+            {
+                alignment = TextAnchor.UpperLeft,
+                fontSize = _fontSize,
+            };
+            _style.normal.textColor = _textColor;
+        }
+
         private void Update()
         {
             _deltaTime += (Time.unscaledDeltaTime - _deltaTime) * 0.1f;
@@ -21,16 +34,13 @@ namespace MiniGameTemplate.Debug
 
         private void OnGUI()
         {
+            if (_style == null) return;
+
             int w = Screen.width, h = Screen.height;
-            var style = new GUIStyle();
-            var rect = new Rect(10, 10, w, h * 2 / 100);
-            style.alignment = TextAnchor.UpperLeft;
-            style.fontSize = _fontSize;
-            style.normal.textColor = _textColor;
+            _rect.Set(10, 10, w, h * 2 / 100);
 
             float fps = 1.0f / _deltaTime;
-            string text = $"FPS: {fps:0.}";
-            GUI.Label(rect, text, style);
+            GUI.Label(_rect, $"FPS: {fps:0.}", _style);
         }
 #endif
     }

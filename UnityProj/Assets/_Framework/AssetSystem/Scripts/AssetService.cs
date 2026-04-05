@@ -10,6 +10,8 @@ namespace MiniGameTemplate.Asset
     /// Lightweight wrapper around YooAsset for the MiniGameTemplate framework.
     /// Provides a clean API for asset loading without exposing YooAsset internals.
     ///
+    /// Supports 4 play modes: EditorSimulate, Offline, Host, and WebGL (WeChat Mini Game).
+    ///
     /// Usage:
     ///   await AssetService.Instance.InitializeAsync(config);
     ///   var handle = AssetService.Instance.LoadAssetAsync&lt;GameObject&gt;("Assets/Prefabs/Player.prefab");
@@ -72,6 +74,40 @@ namespace MiniGameTemplate.Asset
                     parameters.CacheFileSystemParameters = FileSystemParameters.CreateDefaultCacheFileSystemParameters(
                         new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl));
                     initOp = _defaultPackage.InitializeAsync(parameters);
+                    break;
+                }
+
+                case EAssetPlayMode.WebGL:
+                {
+                    // WeChat Mini Game: uses WechatFileSystem for builtin + cache
+                    // This requires the YooAsset WechatFileSystem extension and WX-WASM-SDK-V2.
+                    //
+                    // HOW TO INTEGRATE:
+                    // 1. Import YooAsset's WechatFileSystem extension package
+                    // 2. Import WX-WASM-SDK-V2 (com.qq.weixin.minigame)
+                    // 3. Uncomment the real implementation below and remove the fallback
+                    //
+                    // Real implementation (uncomment after importing WechatFileSystem):
+                    // ---------------------------------------------------------------
+                    // var parameters = new HostPlayModeParameters();
+                    // parameters.BuildinFileSystemParameters =
+                    //     WechatFileSystemCreater.CreateWechatFileSystemParameters(
+                    //         "buildin");
+                    // parameters.CacheFileSystemParameters =
+                    //     WechatFileSystemCreater.CreateWechatFileSystemParameters(
+                    //         "cache",
+                    //         new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl));
+                    // initOp = _defaultPackage.InitializeAsync(parameters);
+                    // ---------------------------------------------------------------
+
+                    // Temporary fallback: standard Host mode (replace when SDK is imported)
+                    Debug.LogWarning("[AssetService] WebGL mode selected but WechatFileSystem is not imported. " +
+                        "Using standard Host mode as fallback. See AssetService.cs for integration guide.");
+                    var fallbackParams = new HostPlayModeParameters();
+                    fallbackParams.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
+                    fallbackParams.CacheFileSystemParameters = FileSystemParameters.CreateDefaultCacheFileSystemParameters(
+                        new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl));
+                    initOp = _defaultPackage.InitializeAsync(fallbackParams);
                     break;
                 }
 
