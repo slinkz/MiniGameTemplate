@@ -72,7 +72,7 @@ Done! FairyGUI SDK is ready.
 | 错误 | 原因 | 解决方案 |
 |------|------|----------|
 | `The type or namespace name 'FairyGUI' could not be found` | FairyGUI 目录链接未建立 | 回到 Step 2 执行 setup 脚本 |
-| `The type or namespace name 'YooAsset' could not be found` | YooAsset 包未下载 | 检查网络，Unity 会自动从 OpenUPM 下载 |
+| `The type or namespace name 'YooAsset' could not be found` | YooAsset 本地包路径无效 | 确认 `ThirdParty/YooAsset/` 目录存在且含 `package.json` |
 
 ## Step 4：运行示例游戏
 

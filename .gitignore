@@ -46,6 +46,9 @@ sysinfo.txt
 # ===== YooAsset =====
 UnityProj/Assets/[Ss]treamingAssets/yoo/
 
+# ===== UPM Lock (Unity auto-generated, machine-specific) =====
+UnityProj/Packages/packages-lock.json
+
 # ===== FairyGUI SDK (linked from submodule, do not track directly) =====
 UnityProj/Assets/FairyGUI/Scripts/
 UnityProj/Assets/FairyGUI/Editor/

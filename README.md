@@ -65,7 +65,7 @@ MiniGameTemplate/               ← Git 仓库根
 │   │   └── ScriptTemplates/    # C# 脚本模板
 │   ├── DataTables/             # Luban 配置表源数据
 │   ├── Packages/               # Unity Package Manager 配置
-│   ├── ThirdParty/             # 第三方库（Git submodule）
+│   ├── ThirdParty/             # 第三方库（FairyGUI submodule + YooAsset 源码）
 │   └── Tools/                  # 构建 & 生成脚本
 │       ├── gen_config.bat/sh   # Luban 配置表生成
 │       ├── setup_fairygui.*    # FairyGUI SDK 链接脚本
