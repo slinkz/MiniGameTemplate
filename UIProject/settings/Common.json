@@ -1,0 +1,16 @@
+{
+	"buttonClickSound":"",
+	"colorScheme":[],
+	"font":"",
+	"fontScheme":["默认字体"],
+	"fontSize":24,
+	"fontSizeScheme":[],
+	"pivot":"default",
+	"scrollBars":{
+		"defaultDisplay":"visible",
+		"horizontal":"",
+		"vertical":""
+	},
+	"textColor":"#000000",
+	"tipsRes":""
+}

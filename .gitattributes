@@ -1,0 +1,57 @@
+# Unity LFS Tracking (assets in UnityProj/)
+UnityProj/**/*.png filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.gif filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.psd filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.tga filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.tif filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.exr filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.hdr filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.wav filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.mp3 filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.aif filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.obj filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.blend filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.ma filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.mb filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.max filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.unitypackage filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.dll filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.so filter=lfs diff=lfs merge=lfs -text
+UnityProj/**/*.a filter=lfs diff=lfs merge=lfs -text
+
+# FairyGUI UIProject assets (images)
+UIProject/**/*.png filter=lfs diff=lfs merge=lfs -text
+UIProject/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+UIProject/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+UIProject/**/*.gif filter=lfs diff=lfs merge=lfs -text
+UIProject/**/*.psd filter=lfs diff=lfs merge=lfs -text
+
+# Force text for Unity serialized files
+UnityProj/**/*.unity text merge=unityyamlmerge eol=lf
+UnityProj/**/*.prefab text merge=unityyamlmerge eol=lf
+UnityProj/**/*.asset text merge=unityyamlmerge eol=lf
+UnityProj/**/*.meta text eol=lf
+UnityProj/**/*.mat text merge=unityyamlmerge eol=lf
+UnityProj/**/*.anim text merge=unityyamlmerge eol=lf
+UnityProj/**/*.controller text merge=unityyamlmerge eol=lf
+UnityProj/**/*.overrideController text merge=unityyamlmerge eol=lf
+UnityProj/**/*.physicMaterial text merge=unityyamlmerge eol=lf
+UnityProj/**/*.physicsMaterial2D text merge=unityyamlmerge eol=lf
+UnityProj/**/*.playable text merge=unityyamlmerge eol=lf
+UnityProj/**/*.mask text merge=unityyamlmerge eol=lf
+UnityProj/**/*.brush text merge=unityyamlmerge eol=lf
+UnityProj/**/*.flare text merge=unityyamlmerge eol=lf
+UnityProj/**/*.fontsettings text merge=unityyamlmerge eol=lf
+UnityProj/**/*.guiskin text merge=unityyamlmerge eol=lf
+UnityProj/**/*.giparams text merge=unityyamlmerge eol=lf
+UnityProj/**/*.renderTexture text merge=unityyamlmerge eol=lf
+UnityProj/**/*.spriteatlas text merge=unityyamlmerge eol=lf
+UnityProj/**/*.terrainlayer text merge=unityyamlmerge eol=lf
+UnityProj/**/*.mixer text merge=unityyamlmerge eol=lf
+UnityProj/**/*.shadergraph text merge=unityyamlmerge eol=lf
+UnityProj/**/*.shadersubgraph text merge=unityyamlmerge eol=lf
+UnityProj/**/*.signal text merge=unityyamlmerge eol=lf

@@ -1,0 +1,38 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace MiniGameTemplate.Events
+{
+    /// <summary>
+    /// Generic event channel that carries a payload of type T.
+    /// Subclass this to create typed event channels (IntGameEvent, FloatGameEvent, etc.).
+    /// </summary>
+    public abstract class GameEvent<T> : ScriptableObject
+    {
+        private readonly List<GameEventListener<T>> _listeners = new List<GameEventListener<T>>();
+
+#if UNITY_EDITOR
+        [TextArea(2, 4)]
+        [SerializeField] private string _description;
+#endif
+
+        public void Raise(T value)
+        {
+            for (int i = _listeners.Count - 1; i >= 0; i--)
+            {
+                _listeners[i].OnEventRaised(value);
+            }
+        }
+
+        public void RegisterListener(GameEventListener<T> listener)
+        {
+            if (!_listeners.Contains(listener))
+                _listeners.Add(listener);
+        }
+
+        public void UnregisterListener(GameEventListener<T> listener)
+        {
+            _listeners.Remove(listener);
+        }
+    }
+}

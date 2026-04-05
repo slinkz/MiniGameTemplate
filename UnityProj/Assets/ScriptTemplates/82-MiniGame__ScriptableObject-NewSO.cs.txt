@@ -1,0 +1,15 @@
+// MiniGameTemplate — Custom ScriptableObject Template
+// This SO represents a data asset for #SCRIPTNAME#.
+
+using UnityEngine;
+
+namespace MiniGameTemplate.Game
+{
+    [CreateAssetMenu(menuName = "MiniGameTemplate/Game/#SCRIPTNAME#")]
+    public class #SCRIPTNAME# : ScriptableObject
+    {
+        #region Data Fields
+        // Define your data fields here
+        #endregion
+    }
+}

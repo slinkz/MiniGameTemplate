@@ -1,0 +1,4 @@
+<tables>
+    <!-- 示例：道具表 -->
+    <table name="TbItem" value="Item" input="item.json"/>
+</tables>

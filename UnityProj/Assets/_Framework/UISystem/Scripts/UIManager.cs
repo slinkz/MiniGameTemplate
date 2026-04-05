@@ -1,0 +1,77 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using MiniGameTemplate.Utils;
+
+namespace MiniGameTemplate.UI
+{
+    /// <summary>
+    /// Central UI panel manager. Handles opening, closing, and tracking active panels.
+    /// Uses Singleton pattern (framework-internal only).
+    /// </summary>
+    public class UIManager : Singleton<UIManager>
+    {
+        private readonly Dictionary<Type, UIBase> _activePanels = new Dictionary<Type, UIBase>();
+
+        /// <summary>
+        /// Open a panel of type T. Creates it if not already open, refreshes if already open.
+        /// </summary>
+        public T OpenPanel<T>(object data = null) where T : UIBase, new()
+        {
+            var type = typeof(T);
+
+            if (_activePanels.TryGetValue(type, out var existing))
+            {
+                existing.Open(data); // Will call OnRefresh
+                return (T)existing;
+            }
+
+            var panel = new T();
+            _activePanels[type] = panel;
+            panel.Open(data);
+            return panel;
+        }
+
+        /// <summary>
+        /// Close a panel of type T.
+        /// </summary>
+        public void ClosePanel<T>() where T : UIBase
+        {
+            var type = typeof(T);
+            if (_activePanels.TryGetValue(type, out var panel))
+            {
+                panel.Close();
+                _activePanels.Remove(type);
+            }
+        }
+
+        /// <summary>
+        /// Check if a panel type is currently open.
+        /// </summary>
+        public bool IsPanelOpen<T>() where T : UIBase
+        {
+            return _activePanels.ContainsKey(typeof(T));
+        }
+
+        /// <summary>
+        /// Get an active panel instance, or null if not open.
+        /// </summary>
+        public T GetPanel<T>() where T : UIBase
+        {
+            _activePanels.TryGetValue(typeof(T), out var panel);
+            return panel as T;
+        }
+
+        /// <summary>
+        /// Close all open panels. Call on scene transition.
+        /// </summary>
+        public void CloseAllPanels()
+        {
+            foreach (var panel in _activePanels.Values)
+            {
+                panel.Close();
+            }
+            _activePanels.Clear();
+        }
+    }
+}

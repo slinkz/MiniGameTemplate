@@ -1,0 +1,55 @@
+# ===== Unity =====
+UnityProj/[Ll]ibrary/
+UnityProj/[Tt]emp/
+UnityProj/[Oo]bj/
+UnityProj/[Bb]uild/
+UnityProj/[Bb]uilds/
+UnityProj/[Ll]ogs/
+UnityProj/[Uu]ser[Ss]ettings/
+UnityProj/[Pp]roject[Ss]ettings/
+
+# ===== Memory & IDE =====
+.workbuddy/
+MemoryCaptures/
+*.csproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Gradle =====
+*.apk
+*.aab
+*.unitypackage
+*.gz
+
+# ===== Crashlytics =====
+crashlytics-build.properties
+sysinfo.txt
+
+# ===== YooAsset =====
+UnityProj/Assets/[Ss]treamingAssets/yoo/
+
+# ===== FairyGUI SDK (linked from submodule, do not track directly) =====
+UnityProj/Assets/FairyGUI/Scripts/
+UnityProj/Assets/FairyGUI/Editor/
+UnityProj/Assets/FairyGUI/Resources/
+
+# ===== FairyGUI UIProject output (generated, tracked in Unity) =====
+# UIProject 导出的 bytes/texture 在 UnityProj 中由 Unity 管理
+
+# ===== Luban Generated (keep tracked, but ignore temp) =====
+UnityProj/Tools/Luban/.cache/

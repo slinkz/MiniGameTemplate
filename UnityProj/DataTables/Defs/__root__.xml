@@ -1,0 +1,4 @@
+<root>
+    <topmodule name="cfg"/>
+    <importexcel name="__tables__.xml"/>
+</root>

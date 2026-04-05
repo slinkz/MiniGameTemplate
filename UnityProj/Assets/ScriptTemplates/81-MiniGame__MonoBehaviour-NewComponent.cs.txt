@@ -1,0 +1,28 @@
+// MiniGameTemplate — Custom MonoBehaviour Template
+// Single Responsibility: This component handles #SCRIPTNAME# only.
+// Communicate with other systems via SO events/variables, not direct references.
+
+using UnityEngine;
+using MiniGameTemplate.Events;
+using MiniGameTemplate.Data;
+
+namespace MiniGameTemplate.Game
+{
+    public class #SCRIPTNAME# : MonoBehaviour
+    {
+        #region SO References
+        // [SerializeField] private IntVariable _someVariable;
+        // [SerializeField] private GameEvent _someEvent;
+        #endregion
+
+        private void OnEnable()
+        {
+            // Subscribe to SO events here
+        }
+
+        private void OnDisable()
+        {
+            // Unsubscribe from SO events here
+        }
+    }
+}

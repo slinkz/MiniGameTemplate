@@ -1,0 +1,7 @@
+<bean name="Item">
+    <var name="id" type="int"/>
+    <var name="name" type="string"/>
+    <var name="desc" type="string"/>
+    <var name="icon" type="string"/>
+    <var name="price" type="int"/>
+</bean>

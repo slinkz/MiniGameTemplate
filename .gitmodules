@@ -1,0 +1,3 @@
+[submodule "UnityProj/ThirdParty/FairyGUI-unity"]
+	path = UnityProj/ThirdParty/FairyGUI-unity
+	url = https://github.com/fairygui/FairyGUI-unity.git
