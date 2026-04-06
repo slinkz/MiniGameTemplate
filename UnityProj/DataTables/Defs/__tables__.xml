@@ -1,6 +1,0 @@
-<tables>
-    <!-- 示例：道具表 -->
-    <table name="TbItem" value="Item" input="item.json"/>
-    <!-- 全局常量表（key-value 形式，mode=map 以 key 为主键） -->
-    <table name="TbGlobalConst" value="GlobalConst" input="globalconst.json" mode="map" index="key"/>
-</tables>

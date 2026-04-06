@@ -1,5 +1,0 @@
-[
-    { "id": 1001, "name": "小型生命药水", "desc": "恢复少量生命值", "icon": "icon_potion_hp_s", "price": 10 },
-    { "id": 1002, "name": "中型生命药水", "desc": "恢复中量生命值", "icon": "icon_potion_hp_m", "price": 30 },
-    { "id": 2001, "name": "加速卷轴", "desc": "短时间内提升移动速度", "icon": "icon_scroll_speed", "price": 50 }
-]

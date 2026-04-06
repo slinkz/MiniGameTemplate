@@ -2,6 +2,35 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.4.0] - 2026-04-06
+
+### Added
+- **Luban v4.6.0**: compiled from source to `Tools/Luban/`, replacing legacy Luban CLI
+- **Dual-format config system**: Binary for runtime + JSON for editor preview
+  - Runtime loads `.bytes` via YooAsset (primary) or Resources (fallback)
+  - JSON preview files in `Editor/ConfigPreview/` excluded from builds — no plaintext in shipped packages
+- **TablesExtension.cs**: hand-written `partial class Tables` with `GetTableNames()` for pre-loading
+- **luban.conf (v4.6.0)**: new-style config with `groups`, `schemaFiles` directory scanning, `topModule: "cfg"`
+- **tables.xml**: consolidated bean + table definitions (replaces split `item.xml` / `globalconst.xml` / `__tables__.xml`)
+
+### Changed
+- **ConfigManager**: rewritten from JSON text loading to Binary ByteBuf loading
+  - `InitializeAsync()` pre-loads all `.bytes` asynchronously, then constructs `Tables` synchronously
+  - `Initialize()` sync fallback also uses `.bytes` from Resources
+  - `IntegrityVerifier` signature changed from `Func<string, string, bool>` to `Func<string, byte[], bool>`
+- **gen_config.bat/sh**: rewritten for Luban v4.6.0 syntax, 3-step process:
+  1. `cs-bin` + `bin` → Generated code + `_Game/ConfigData/*.bytes`
+  2. `json` → `Editor/ConfigPreview/*.json`
+  3. Copy `.bytes` to `Resources/ConfigData/` (fallback)
+- **Generated code**: switched from `cs-simple-json` (JSONNode) to `cs-bin` (ByteBuf)
+- **Luban input syntax**: `*@filename.json` for multi-record JSON files (v4.x)
+
+### Removed
+- Legacy Luban v2/v3 CLI dependency and `--gen_types` command syntax
+- JSON runtime loading in ConfigManager (replaced by Binary)
+- Plaintext JSON from `_Game/ConfigData/` (now only `.bytes`)
+- `__root__.xml` legacy Luban config file
+
 ## [0.3.0] - 2026-04-05
 
 ### Added

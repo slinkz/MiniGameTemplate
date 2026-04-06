@@ -88,15 +88,15 @@ public class MainMenuPanel : UIBase
 - `OnGameStart` (GameEvent) — 游戏开始事件
 - `OnGameOver` (GameEvent) — 游戏结束事件
 
-## Step 7: 配置表（Luban）
+## Step 7: 配置表（Luban v4.6.0）
 
 如果游戏需要配置表：
 
-1. 在 `UnityProj/DataTables/Defs/` 中定义表结构
-2. 在 `UnityProj/DataTables/Defs/__tables__.xml` 中注册
-3. 在 `UnityProj/DataTables/Datas/` 中编写数据（JSON 格式）
-4. 运行 `UnityProj/Tools/gen_config.bat` 生成代码
-5. 在 `ConfigManager` 中调用生成的 Tables 类
+1. 在 `UnityProj/DataTables/Defs/tables.xml` 中定义 Bean 和 Table
+2. 在 `UnityProj/DataTables/Datas/` 中编写数据（JSON 格式，数组用 `*@filename.json` 语法）
+3. 运行 `UnityProj/Tools/gen_config.bat` 生成代码和数据
+4. 更新 `TablesExtension.cs` 中的 `GetTableNames()` 添加新表名
+5. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据
 
 ## Step 8: 微信 SDK（如需要）
 
@@ -149,14 +149,13 @@ bash Tools/setup_fairygui.sh
 
 ## Step 13: Luban 配置表新增表流程
 
-1. 在 `UnityProj/DataTables/Defs/` 新建 XML 定义文件，定义字段
-2. 在 `UnityProj/DataTables/Defs/__tables__.xml` 注册新表
-3. 在 `UnityProj/DataTables/Datas/` 新建对应 JSON 数据文件
-4. 运行 `UnityProj/Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
+1. 在 `UnityProj/DataTables/Defs/tables.xml` 中新增 `<bean>` 和 `<table>` 定义
+2. 在 `UnityProj/DataTables/Datas/` 新建对应 JSON 数据文件
+3. 运行 `UnityProj/Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
+4. 更新 `TablesExtension.cs` 中的 `GetTableNames()` 方法，添加新表名
 5. 生成的 C# 代码位于 `UnityProj/Assets/_Framework/DataSystem/Scripts/Config/Generated/`
-6. 生成的 JSON 数据文件位于 `UnityProj/Assets/_Game/ConfigData/`（YooAsset 管理），同步副本在 `Resources/ConfigData/`（fallback）
-7. **重要**：新增表后需在 `Generated/Tables.cs` 中添加对应属性和 loader 调用
-8. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据（需在 `ConfigManager.InitializeAsync()` 完成后）
+6. 生成输出：`_Game/ConfigData/*.bytes`（运行时）+ `Resources/ConfigData/*.bytes`（fallback）+ `Editor/ConfigPreview/*.json`（编辑器查看）
+7. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据（需在 `ConfigManager.InitializeAsync()` 完成后）
 
 ## Step 14: 构建与发布
 

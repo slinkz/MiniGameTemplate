@@ -140,7 +140,7 @@ namespace MiniGameTemplate.Game
 | 文件 | 路径 | 说明 |
 |------|------|------|
 | `UIPackageLoader.cs` | `Assets/FairyGUI_Export/` | FairyGUI 包的 YooAsset 加载基路径 |
-| `ConfigManager.cs` | `Assets/_Game/ConfigData/` | Luban 配置数据的 YooAsset 加载基路径 |
+| `ConfigManager.cs` | `Assets/_Game/ConfigData/` | Luban 配置二进制数据的 YooAsset 加载基路径（`.bytes` 文件） |
 | `SOCreationWizard.cs` | `Assets/_Game/ScriptableObjects` | SO 创建向导的默认保存路径（可在 Inspector 修改）|
 | `ArchitectureValidator.cs` | `Assets`（`Directory.GetFiles` 起始目录） | 架构验证扫描范围 |
 
@@ -448,7 +448,7 @@ wx.Login((success, code) =>
 ### 文件 I/O
 - WebGL 无文件系统，**禁止 `System.IO`**
 - 持久化只用 `PlayerPrefs`（通过 `ISaveSystem` 接口）
-- 配置数据通过 `ConfigManager` 加载（YooAsset 或 Resources）
+- 配置数据通过 `ConfigManager` 加载二进制 `.bytes`（YooAsset 或 Resources fallback）
 
 ---
 

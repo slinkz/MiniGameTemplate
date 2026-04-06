@@ -1,0 +1,18 @@
+<module>
+    <bean name="Item">
+        <var name="id" type="int"/>
+        <var name="name" type="string"/>
+        <var name="desc" type="string"/>
+        <var name="icon" type="string"/>
+        <var name="price" type="int"/>
+    </bean>
+
+    <bean name="GlobalConst">
+        <var name="key" type="string"/>
+        <var name="stringValue" type="string"/>
+        <var name="intValue" type="int"/>
+    </bean>
+
+    <table name="TbItem" value="Item" input="*@item.json" mode="map" index="id"/>
+    <table name="TbGlobalConst" value="GlobalConst" input="*@globalconst.json" mode="map" index="key"/>
+</module>
