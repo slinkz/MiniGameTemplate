@@ -35,7 +35,7 @@ MiniGameTemplate 采用 **ScriptableObject 驱动的组件化架构**：
 MiniGameTemplate/               ← Git 仓库根
 ├── Docs/                       ← 本文档所在目录（Agent/人类阅读）
 ├── UIProject/                  ← FairyGUI 编辑器工程
-├── .workbuddy/skills/          ← AI Agent Skills（luban-config 等）
+├── .codebuddy/skills/          ← AI Agent Skills（luban-config 等）
 └── UnityProj/                  ← Unity 工程（用 Unity 打开此目录）
     ├── Assets/FairyGUI/        # Junction → ThirdParty/FairyGUI-unity/Assets/
     ├── Assets/_Framework/      # 框架代码

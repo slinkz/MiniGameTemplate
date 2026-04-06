@@ -153,7 +153,7 @@ bash Tools/gen_config.sh
 | 二进制数据 | `Assets/_Framework/DataSystem/Resources/ConfigData/*.bytes` | Resources fallback |
 | JSON 数据 | `Assets/_Framework/Editor/ConfigPreview/*.json` | 编辑器预览（不打包） |
 
-> 💡 **AI 开发者提示**：项目中提供了 `luban-config` Skill（位于 `.workbuddy/skills/luban-config/`），可自动化新增/修改/删除配置表的完整流程。详见下方 [AI Skills 章节](#ai-skills-工具链)。
+> 💡 **AI 开发者提示**：项目中提供了 `luban-config` Skill（位于 `.codebuddy/skills/luban-config/`），可自动化新增/修改/删除配置表的完整流程。详见下方 [AI Skills 章节](#ai-skills-工具链)。
 
 ## Step 7（可选）：打开 FairyGUI 工程
 
@@ -188,13 +188,13 @@ bash Tools/gen_config.sh
 
 ## AI Skills 工具链
 
-本模板内置了供 AI Agent（如 CodeBuddy / WorkBuddy）使用的 **Skills**，可以大幅提升 AI 协作开发效率。Skills 存放在 `.workbuddy/skills/` 目录，会随 Git 仓库一起分发。
+本模板内置了供 AI Agent（如 CodeBuddy / WorkBuddy）使用的 **Skills**，可以大幅提升 AI 协作开发效率。Skills 存放在 `.codebuddy/skills/` 目录（CodeBuddy 官方标准路径），会随 Git 仓库一起分发。
 
 ### 当前可用 Skills
 
 | Skill | 路径 | 功能 |
 |-------|------|------|
-| `luban-config` | `.workbuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
+| `luban-config` | `.codebuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
 
 ### 如何使用
 
@@ -208,5 +208,5 @@ bash Tools/gen_config.sh
 
 ### 想了解更多？
 
-- 查看 `.workbuddy/skills/luban-config/SKILL.md` 了解完整的 SOP 和技术细节
-- Skill 的格式遵循 WorkBuddy Skill 标准，你也可以为项目创建自定义 Skill
+- 查看 `.codebuddy/skills/luban-config/SKILL.md` 了解完整的 SOP 和技术细节
+- Skill 的格式遵循 CodeBuddy Skill 标准，你也可以为项目创建自定义 Skill

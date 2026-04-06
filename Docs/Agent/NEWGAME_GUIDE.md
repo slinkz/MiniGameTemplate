@@ -98,7 +98,7 @@ public class MainMenuPanel : UIBase
 4. 运行 `UnityProj/Tools/gen_config.bat` 生成代码和数据
 5. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据
 
-> 💡 详细格式规范、踩坑记录见 `.workbuddy/skills/luban-config/` Skill 文档。
+> 💡 详细格式规范、踩坑记录见 `.codebuddy/skills/luban-config/` Skill 文档。
 
 ## Step 8: 微信 SDK（如需要）
 
@@ -154,8 +154,8 @@ bash Tools/setup_fairygui.sh
 > 💡 加载 `luban-config` Skill 后按其 SOP 操作，以下是快速参考：
 
 1. 在 `DataTables/Defs/tables.xml` 中新增 `<bean>` 和 `<table>` 定义
-2. 用 `create_xlsx.py` 创建 xlsx：`python .workbuddy/skills/luban-config/scripts/create_xlsx.py -o DataTables/Datas/xxx.xlsx -s TbXxx -f "id:int:ID,..."`
-3. 用 `update_tables_extension.py` 自动同步表名：`python .workbuddy/skills/luban-config/scripts/update_tables_extension.py --project-root UnityProj`
+2. 用 `create_xlsx.py` 创建 xlsx：`python .codebuddy/skills/luban-config/scripts/create_xlsx.py -o DataTables/Datas/xxx.xlsx -s TbXxx -f "id:int:ID,..."`
+3. 用 `update_tables_extension.py` 自动同步表名：`python .codebuddy/skills/luban-config/scripts/update_tables_extension.py --project-root UnityProj`
 4. 运行 `Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
 5. 生成输出：`_Game/ConfigData/*.bytes` + `Resources/ConfigData/*.bytes` + `Editor/ConfigPreview/*.json`
 6. 通过 `ConfigManager.Tables.TbXxx` 访问（需在 `ConfigManager.InitializeAsync()` 完成后）

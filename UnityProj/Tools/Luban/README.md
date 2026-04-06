@@ -3,7 +3,7 @@
 ## 简介
 [Luban](https://github.com/focus-creative-games/luban) v4.6.0 是本项目使用的配置表解决方案。
 
-> 💡 **AI Agent**：处理 Luban 配置表相关任务时，请先加载 `luban-config` Skill（`.workbuddy/skills/luban-config/`），里面有完整的 SOP、格式规范和自动化脚本。
+> 💡 **AI Agent**：处理 Luban 配置表相关任务时，请先加载 `luban-config` Skill（`.codebuddy/skills/luban-config/`），里面有完整的 SOP、格式规范和自动化脚本。
 
 ## 安装
 Luban CLI 已编译到 `UnityProj/Tools/Luban/` 目录下（通过 `dotnet publish` 从 v4.6.0 源码构建），无需全局安装。
@@ -39,12 +39,12 @@ Luban CLI 已编译到 `UnityProj/Tools/Luban/` 目录下（通过 `dotnet publi
 1. 在 `DataTables/Defs/tables.xml` 中新增 `<bean>` 和 `<table>` 定义
 2. 创建 xlsx 数据文件（可用 Skill 脚本自动化）：
    ```bash
-   python .workbuddy/skills/luban-config/scripts/create_xlsx.py \
+   python .codebuddy/skills/luban-config/scripts/create_xlsx.py \
      -o DataTables/Datas/xxx.xlsx -s TbXxx -f "id:int:ID,name:string:名称"
    ```
 3. 自动更新 `TablesExtension.cs`（可用 Skill 脚本）：
    ```bash
-   python .workbuddy/skills/luban-config/scripts/update_tables_extension.py --project-root .
+   python .codebuddy/skills/luban-config/scripts/update_tables_extension.py --project-root .
    ```
 4. 运行生成脚本：`Tools/gen_config.bat`
 

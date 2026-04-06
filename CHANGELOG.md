@@ -12,7 +12,7 @@ All notable changes to MiniGameTemplate will be documented in this file.
 - **TablesExtension.cs**: hand-written `partial class Tables` with `GetTableNames()` for pre-loading
 - **luban.conf (v4.6.0)**: new-style config with `groups`, `schemaFiles` directory scanning, `topModule: "cfg"`
 - **tables.xml**: consolidated bean + table definitions (replaces split `item.xml` / `globalconst.xml` / `__tables__.xml`)
-- **luban-config Skill** (`.workbuddy/skills/luban-config/`): project skill with SOP, format references, and automation scripts
+- **luban-config Skill** (`.codebuddy/skills/luban-config/`): project skill with SOP, format references, and automation scripts
   - `scripts/create_xlsx.py`: auto-create Luban-compliant xlsx data files
   - `scripts/update_tables_extension.py`: auto-sync `TablesExtension.cs` from `tables.xml`
 

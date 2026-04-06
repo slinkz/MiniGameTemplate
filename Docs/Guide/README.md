@@ -76,7 +76,7 @@ MiniGameTemplate/               ← Git 仓库根
 │   ├── Packages/               ← UPM 配置
 │   ├── ThirdParty/             ← 第三方库（FairyGUI submodule + YooAsset 源码）
 │   └── Tools/                  ← 构建/生成脚本
-├── .workbuddy/skills/          ← AI Agent Skills（Luban 配置等自动化工具）
+├── .codebuddy/skills/          ← AI Agent Skills（Luban 配置等自动化工具）
 ├── README.md
 └── CHANGELOG.md
 ```

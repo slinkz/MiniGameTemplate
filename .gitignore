@@ -12,8 +12,9 @@ UnityProj/[Uu]ser[Ss]ettings/
 UnityProj/ProjectSettings/Packages/
 
 # ===== Memory & IDE =====
-.workbuddy/*
-!.workbuddy/skills/
+.workbuddy/
+.codebuddy/*
+!.codebuddy/skills/
 MemoryCaptures/
 *.csproj
 *.sln
