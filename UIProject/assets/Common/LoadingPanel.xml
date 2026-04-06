@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="720,1280">
+  <displayList>
+    <graph id="gen_10" name="bg" xy="0,0" size="720,1280"
+           type="rect" fillColor="#ff1a1a2e">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="gen_11" name="txtTitle" xy="160,380" size="400,60"
+          fontSize="42" color="#ffffffff" bold="true"
+          align="center" vAlign="middle" autoSize="none" singleLine="true"
+          text="Mini Game"/>
+    <text id="gen_12" name="txtSubtitle" xy="160,450" size="400,30"
+          fontSize="18" color="#88ffffff"
+          align="center" vAlign="middle" autoSize="none" singleLine="true"
+          text="Loading..."/>
+    <component id="gen_13" name="progressBar" src="gen_03"
+               fileName="components/CommonProgressBar.xml"
+               xy="120,1080" size="480,20"/>
+    <text id="gen_14" name="txtHint" xy="120,1110" size="480,30"
+          fontSize="14" color="#66ffffff"
+          align="center" vAlign="middle" autoSize="none" singleLine="true"
+          text="小游戏正努力加载，请稍候"/>
+  </displayList>
+</component>

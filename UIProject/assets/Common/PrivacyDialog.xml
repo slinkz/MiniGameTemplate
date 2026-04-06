@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="600,500">
+  <displayList>
+    <graph id="gen_70" name="bg" xy="0,0" size="600,500"
+           type="rect" fillColor="#ff2d2d44" corner="16"/>
+    <text id="gen_71" name="txtTitle" xy="20,20" size="560,36"
+          fontSize="22" color="#ffffffff" bold="true"
+          align="center" vAlign="middle" autoSize="none" singleLine="true"
+          text="用户隐私保护提示"/>
+    <graph id="gen_72" name="divider" xy="20,66" size="560,1"
+           type="rect" fillColor="#ff555555"/>
+    <text id="gen_73" name="txtContent" xy="30,80" size="540,260"
+          fontSize="16" color="#cccccc" autoSize="height"
+          text="在你使用本小游戏服务前，请仔细阅读并了解我们的隐私保护指引。我们将依据相关法律法规和协议条款，合理收集和使用你的个人信息，并采取适当的安全措施保障信息安全。"/>
+    <text id="gen_74" name="txtPrivacyLink" xy="30,340" size="540,30"
+          fontSize="16" color="#ff4a90d9" underline="true"
+          align="left" vAlign="middle" autoSize="none" singleLine="true"
+          text="《隐私保护指引》"/>
+    <component id="gen_75" name="btnReject" src="gen_04"
+               fileName="components/CommonButton.xml"
+               xy="60,420" size="220,50">
+      <Button title="拒绝"/>
+    </component>
+    <component id="gen_76" name="btnAgree" src="gen_04"
+               fileName="components/CommonButton.xml"
+               xy="320,420" size="220,50">
+      <Button title="同意"/>
+    </component>
+  </displayList>
+</component>

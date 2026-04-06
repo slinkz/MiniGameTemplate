@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="720,1280">
+  <displayList>
+    <graph id="gen_80" name="overlay" xy="0,0" size="720,1280"
+           type="rect" fillColor="#88000000">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="gen_81" name="spinnerIcon" xy="330,590" size="60,60"
+           type="eclipse" fillColor="#ff4a90d9"/>
+    <text id="gen_82" name="txtHint" xy="160,670" size="400,30"
+          fontSize="16" color="#cccccc"
+          align="center" vAlign="middle" autoSize="none" singleLine="true"
+          text="请稍候..."/>
+  </displayList>
+  <transition name="spin" autoPlay="true" autoPlayRepeat="0">
+    <item type="Rotation" target="gen_81" tween="true"
+          time="0" startValue="0" endValue="360"
+          duration="1" repeat="-1"/>
+  </transition>
+</component>

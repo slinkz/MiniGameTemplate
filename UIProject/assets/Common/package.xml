@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="cm01ab02">
+  <resources>
+    <component id="gen_01" name="LoadingPanel.xml" path="/" exported="true"/>
+    <component id="gen_02" name="ConfirmDialog.xml" path="/" exported="true"/>
+    <component id="gen_03" name="CommonProgressBar.xml" path="/components/"/>
+    <component id="gen_04" name="CommonButton.xml" path="/components/"/>
+    <component id="gen_05" name="PrivacyDialog.xml" path="/" exported="true"/>
+    <component id="gen_06" name="GlobalSpinner.xml" path="/" exported="true"/>
+  </resources>
+  <publish name="Common">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>
