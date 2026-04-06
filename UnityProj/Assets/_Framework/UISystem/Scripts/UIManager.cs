@@ -40,7 +40,7 @@ namespace MiniGameTemplate.UI
             catch
             {
                 // Loading failed — do NOT register a half-initialized panel
-                GameLog.LogError($"[UIManager] Failed to open panel: {type.Name}");
+                Debug.LogError($"[UIManager] Failed to open panel: {type.Name}");
                 throw;
             }
             _activePanels[type] = panel; // Register only after successful load

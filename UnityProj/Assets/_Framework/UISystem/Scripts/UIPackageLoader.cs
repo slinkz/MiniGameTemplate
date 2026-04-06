@@ -188,7 +188,7 @@ namespace MiniGameTemplate.UI
                     "Consider pre-loading assets before UIPackage.AddPackage.");
 #else
                 // Production: pre-cache is mandatory. Cache miss = missing texture on screen.
-                GameLog.LogError($"[UIPackageLoader] CRITICAL: FairyGUI asset not pre-cached: {assetPath}. " +
+                Debug.LogError($"[UIPackageLoader] CRITICAL: FairyGUI asset not pre-cached: {assetPath}. " +
                     "On WebGL/WeChat, all FairyGUI package assets MUST be pre-cached via " +
                     "PreCachePackageAssetsAsync() before AddPackageAsync().");
 #endif
