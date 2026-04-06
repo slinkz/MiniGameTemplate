@@ -157,7 +157,7 @@ bash Tools/setup_fairygui.sh
 2. 用 `create_xlsx.py` 创建 xlsx：`python .codebuddy/skills/luban-config/scripts/create_xlsx.py -o DataTables/Datas/xxx.xlsx -s TbXxx -f "id:int:ID,..."`
 3. 用 `update_tables_extension.py` 自动同步表名：`python .codebuddy/skills/luban-config/scripts/update_tables_extension.py --project-root UnityProj`
 4. 运行 `Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
-5. 生成输出：`_Game/ConfigData/*.bytes` + `Resources/ConfigData/*.bytes` + `Editor/ConfigPreview/*.json`
+5. 生成输出：`_Game/ConfigData/*.bytes` + `Editor/ConfigPreview/*.json`
 6. 通过 `ConfigManager.Tables.TbXxx` 访问（需在 `ConfigManager.InitializeAsync()` 完成后）
 
 ## Step 14: 构建与发布

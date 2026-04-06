@@ -17,7 +17,6 @@ Luban CLI 已编译到 `UnityProj/Tools/Luban/` 目录下（通过 `dotnet publi
 | 格式 | 位置 | 用途 | 是否打包 |
 |------|------|------|----------|
 | Binary (`.bytes`) | `Assets/_Game/ConfigData/` | YooAsset 运行时加载 | ✅ |
-| Binary (`.bytes`) | `Assets/_Framework/.../Resources/ConfigData/` | Resources fallback 加载 | ✅ |
 | JSON (`.json`) | `Assets/_Framework/Editor/ConfigPreview/` | 编辑器人工查看明文 | ❌ |
 
 - **运行时代码**使用 `cs-bin` 生成（ByteBuf 反序列化），性能高且数据不可人读
@@ -31,7 +30,7 @@ Luban CLI 已编译到 `UnityProj/Tools/Luban/` 目录下（通过 `dotnet publi
    - macOS/Linux: `Tools/gen_config.sh`
 4. 生成结果：
    - C# 代码 → `Assets/_Framework/DataSystem/Scripts/Config/Generated/`
-   - Binary 数据 → `Assets/_Game/ConfigData/*.bytes` + `Resources/ConfigData/*.bytes`
+   - Binary 数据 → `Assets/_Game/ConfigData/*.bytes`
    - JSON 预览 → `Assets/_Framework/Editor/ConfigPreview/*.json`
 
 ## 新增配置表流程

@@ -50,7 +50,6 @@ namespace MiniGameTemplate.EditorTools
             "Singleton.cs",
             "GameBootstrapper.cs",
             "UIPackageLoader.cs",   // Has Resources.Load as fallback
-            "ConfigManager.cs",     // Has Resources.Load as fallback
         };
 
         // Max recommended file length (SRP indicator)

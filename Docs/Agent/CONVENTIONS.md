@@ -448,7 +448,7 @@ wx.Login((success, code) =>
 ### 文件 I/O
 - WebGL 无文件系统，**禁止 `System.IO`**
 - 持久化只用 `PlayerPrefs`（通过 `ISaveSystem` 接口）
-- 配置数据通过 `ConfigManager` 加载二进制 `.bytes`（YooAsset 或 Resources fallback）
+- 配置数据通过 `ConfigManager` 加载二进制 `.bytes`（仅 YooAsset，无 Resources fallback）
 
 ---
 

@@ -60,9 +60,8 @@ MiniGameTemplate/
                     │                                              │
                     │  Step 1: -c cs-bin -d bin → C# 代码 + .bytes │
                     │  Step 2: -d json → .json 预览                │
-                    │  Step 3: copy .bytes → Resources fallback    │
-                    └───┬──────────┬─────────────┬────────────────┘
-                        │          │             │
+                    └───┬──────────┬────────────────────────────────┘
+                        │          │
               ┌─────────▼───┐  ┌──▼──────────┐  ┌▼──────────────────┐
               │ Generated/  │  │ ConfigData/ │  │ ConfigPreview/    │
               │ *.cs        │  │ *.bytes     │  │ *.json            │
@@ -83,7 +82,7 @@ MiniGameTemplate/
 
 - `InitializeAsync()` — 异步加载（推荐，WebGL 安全）
   1. 从 `TablesExtension.GetTableNames()` 获取所有表名
-  2. 异步加载每个 `.bytes`（YooAsset 优先 → Resources fallback）
+  2. 异步加载每个 `.bytes`（仅 YooAsset，编辑器使用 EditorSimulate 模式）
   3. 构造 `cfg.Tables(Func<string, ByteBuf>)`
 
 - `Initialize()` — 同步加载（编辑器/测试用）

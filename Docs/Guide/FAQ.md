@@ -29,7 +29,7 @@
 2. 最常见原因：
    - `GameConfig` 或 `AssetConfig` 未在 Inspector 中赋值 → 打开 Boot 场景，选中 GameBootstrapper 对象，检查两个配置字段
    - YooAsset 包未正确安装 → 检查 `Packages/manifest.json` 中是否有 `com.tuyoogame.yooasset`
-3. 如果是 `AssetConfig` 为空，控制台会先出现 `"No AssetConfig assigned"` 的警告
+3. 如果是 `AssetConfig` 为空，Bootstrapper 会直接抛出 FATAL 错误（`AssetConfig is not assigned`）。打开 Boot 场景，选中 GameBootstrapper，确保 Asset Configuration 字段已赋值 `DefaultAssetConfig`。
 
 ### Q: 直接打开游戏场景运行就报空引用
 
@@ -346,7 +346,6 @@ var player = _players.Items[0];
 - `Singleton.cs`
 - `GameBootstrapper.cs`
 - `UIPackageLoader.cs`（YooAsset 失败时回退）
-- `ConfigManager.cs`（YooAsset 失败时回退）
 
 如果你的代码确实需要 Resources.Load 作为回退，可以在 `ArchitectureValidator.cs` 的白名单中添加文件名。
 
@@ -411,7 +410,6 @@ var player = _players.Items[0];
 3. 生成的 C# 代码 → `Assets/_Framework/DataSystem/Scripts/Config/Generated/`
 4. 生成的数据文件：
    - `Assets/_Game/ConfigData/*.bytes` — 运行时二进制（YooAsset）
-   - `Assets/_Framework/DataSystem/Resources/ConfigData/*.bytes` — Resources fallback
    - `Assets/_Framework/Editor/ConfigPreview/*.json` — 编辑器预览（不打包）
 5. 在代码中通过 `ConfigManager` 访问配置：
    ```csharp

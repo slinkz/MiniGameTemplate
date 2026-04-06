@@ -150,7 +150,6 @@ bash Tools/gen_config.sh
 |------|------|------|
 | C# 代码 | `Assets/_Framework/DataSystem/Scripts/Config/Generated/` | ByteBuf 反序列化代码 |
 | 二进制数据 | `Assets/_Game/ConfigData/*.bytes` | YooAsset 运行时加载 |
-| 二进制数据 | `Assets/_Framework/DataSystem/Resources/ConfigData/*.bytes` | Resources fallback |
 | JSON 数据 | `Assets/_Framework/Editor/ConfigPreview/*.json` | 编辑器预览（不打包） |
 
 > 💡 **AI 开发者提示**：项目中提供了 `luban-config` Skill（位于 `.codebuddy/skills/luban-config/`），可自动化新增/修改/删除配置表的完整流程。详见下方 [AI Skills 章节](#ai-skills-工具链)。

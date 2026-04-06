@@ -110,17 +110,16 @@ namespace MiniGameTemplate.Core
             // 0. Save System — initialize early so other systems can use it
             SaveSystem = new PlayerPrefsSaveSystem();
 
-            // 1. Asset System (YooAsset) — must be first, other systems may need it
-            if (_assetConfig != null)
+            // 1. Asset System (YooAsset) — must be first, other systems depend on it
+            if (_assetConfig == null)
             {
-                await AssetService.Instance.InitializeAsync(_assetConfig);
-                GameLog.Log("[Bootstrapper] AssetService initialized.");
+                throw new System.InvalidOperationException(
+                    "[Bootstrapper] FATAL: AssetConfig is not assigned on GameBootstrapper! " +
+                    "Open the Boot scene, select the GameBootstrapper GameObject, and assign a " +
+                    "DefaultAssetConfig asset to the 'Asset Configuration' field.");
             }
-            else
-            {
-                GameLog.LogWarning("[Bootstrapper] No AssetConfig assigned — AssetService skipped. " +
-                    "Resources.Load fallback will be used.");
-            }
+            await AssetService.Instance.InitializeAsync(_assetConfig);
+            GameLog.Log("[Bootstrapper] AssetService initialized.");
 
             // 2. Config tables (Luban) — async to avoid WebGL deadlock
             await ConfigManager.InitializeAsync();

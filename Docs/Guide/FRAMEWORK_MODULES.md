@@ -174,7 +174,7 @@ int score = save.LoadInt("high_score", 0); // 第二个参数是默认值
 
 基于 Luban v4.6.0 的配置数据系统，使用 **Binary ByteBuf** 格式。生成的代码和数据由 `ConfigManager` 管理。
 
-运行时通过 YooAsset 加载 `.bytes` 二进制文件（主路径），Resources 作为 fallback。编辑器下额外生成 JSON 预览文件（`Editor/ConfigPreview/`，不打包）。
+运行时通过 YooAsset 加载 `.bytes` 二进制文件（编辑器使用 EditorSimulate 模式，无需构建 AB）。编辑器下额外生成 JSON 预览文件（`Editor/ConfigPreview/`，不打包）。
 
 ```csharp
 // 配置表在 GameBootstrapper 中已经初始化

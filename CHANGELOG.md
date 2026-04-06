@@ -24,7 +24,7 @@ All notable changes to MiniGameTemplate will be documented in this file.
 - **gen_config.bat/sh**: rewritten for Luban v4.6.0 syntax, 3-step process:
   1. `cs-bin` + `bin` → Generated code + `_Game/ConfigData/*.bytes`
   2. `json` → `Editor/ConfigPreview/*.json`
-  3. Copy `.bytes` to `Resources/ConfigData/` (fallback)
+  3. Copy `.bytes` to `Resources/ConfigData/` (fallback) — **removed in v0.3.0**
 - **Generated code**: switched from `cs-simple-json` (JSONNode) to `cs-bin` (ByteBuf)
 - **Luban data source**: switched from JSON (`*@filename.json`) to **xlsx** for designer-friendly Excel editing
 
@@ -41,7 +41,7 @@ All notable changes to MiniGameTemplate will be documented in this file.
   - `GlobalConst` table (key/stringValue/intValue) with HelloWorld test data
   - `TbItem` / `TbGlobalConst` generated table classes under `_Framework/DataSystem/Scripts/Config/Generated/`
   - `Tables.cs` async/sync factory with null-safety checks on loader return values
-  - JSON data files at `_Game/ConfigData/` (YooAsset) + `Resources/ConfigData/` (fallback)
+  - JSON data files at `_Game/ConfigData/` (YooAsset)
   - Luban table definitions at `DataTables/Defs/` with data sources at `DataTables/Datas/`
 - **luban_unity package**: added `com.code-philosophy.luban` (Git URL) to `manifest.json`
 - **Luban.Runtime asmdef reference**: added to `MiniGameFramework.Runtime.asmdef`
@@ -56,7 +56,7 @@ All notable changes to MiniGameTemplate will be documented in this file.
 ### Changed
 - **ConfigManager**: activated real Luban integration — replaced TODO stubs with actual `cfg.Tables.CreateAsync` / `cfg.Tables.Create` calls
 - **ConfigManager**: `YooAssetConfigPath` updated from `Assets/ConfigData/` to `Assets/_Game/ConfigData/`
-- **gen_config scripts**: output data to `_Game/ConfigData/` + auto-sync copy to `Resources/ConfigData/`
+- **gen_config scripts**: output data to `_Game/ConfigData/`
 - **CONVENTIONS.md**: corrected ConfigManager path reference
 - **Luban README**: corrected output data path
 - **.gitignore**: added `UnityProj/.vs/`

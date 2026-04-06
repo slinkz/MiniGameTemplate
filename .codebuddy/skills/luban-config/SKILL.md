@@ -105,7 +105,6 @@ bash UnityProj/Tools/gen_config.sh
 生成成功后检查：
 - `Generated/` 下出现新的 `MyData.cs` + `TbMyData.cs` + 更新后的 `Tables.cs`
 - `Assets/_Game/ConfigData/` 下出现 `tbmydata.bytes`
-- `Resources/ConfigData/` 下出现副本
 
 ### Step 5: 代码中访问
 

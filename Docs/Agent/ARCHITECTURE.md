@@ -85,14 +85,11 @@ DataTables/Datas/*.xlsx       ← 源数据（策划用 Excel 编辑）
         │
         ├→ cs-bin 代码 → Generated/*.cs      （ByteBuf 反序列化）
         ├→ bin 数据   → _Game/ConfigData/*.bytes    （YooAsset 运行时加载）
-        │             → Resources/ConfigData/*.bytes （Resources fallback）
         └→ json 数据  → Editor/ConfigPreview/*.json  （编辑器人工查看，不打包）
 
 运行时加载链：
   ConfigManager.InitializeAsync()
-    ├→ YooAsset: _Game/ConfigData/{name}.bytes
-    └→ fallback: Resources.Load("ConfigData/{name}") → .bytes
-        └→ new ByteBuf(bytes) → Tables 构造函数
+    └→ YooAsset: _Game/ConfigData/{name}.bytes → new ByteBuf(bytes) → Tables 构造函数
 ```
 
 ### 5. UI 工作流
