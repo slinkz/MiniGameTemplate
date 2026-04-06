@@ -48,6 +48,12 @@ namespace MiniGameTemplate.UI
         }
 
         /// <summary>
+        /// Whether this panel should be made full-screen when created.
+        /// Override to return false for dialogs/popups that should keep their original size.
+        /// </summary>
+        protected virtual bool IsFullScreen => true;
+
+        /// <summary>
         /// Shared creation logic after package is loaded.
         /// </summary>
         private void CreateAndShow(object data)
@@ -61,7 +67,20 @@ namespace MiniGameTemplate.UI
             }
 
             ContentPane.sortingOrder = SortOrder;
-            ContentPane.MakeFullScreen();
+
+            if (IsFullScreen)
+            {
+                ContentPane.MakeFullScreen();
+                ContentPane.AddRelation(GRoot.inst, RelationType.Size);
+            }
+            else
+            {
+                // Center the panel in GRoot
+                ContentPane.Center();
+                ContentPane.AddRelation(GRoot.inst, RelationType.Center_Center);
+                ContentPane.AddRelation(GRoot.inst, RelationType.Middle_Middle);
+            }
+
             GRoot.inst.AddChild(ContentPane);
 
             OnInit();

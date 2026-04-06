@@ -38,7 +38,7 @@ namespace MiniGameTemplate.UI
         /// The base path prefix for FairyGUI package assets when loading via YooAsset.
         /// Default: "Assets/FairyGUI_Export/" — override if your export path differs.
         /// </summary>
-        public static string YooAssetBasePath = "Assets/FairyGUI_Export/";
+        public static string YooAssetBasePath = "Assets/_Game/FairyGUI_Export/";
 
         /// <summary>
         /// Load a FairyGUI package asynchronously via YooAsset.
@@ -125,7 +125,7 @@ namespace MiniGameTemplate.UI
 
         private static async Task LoadViaYooAssetAsync(string packageName)
         {
-            string descPath = $"{YooAssetBasePath}{packageName}/{packageName}_fui.bytes";
+            string descPath = $"{YooAssetBasePath}{packageName}_fui.bytes";
             var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(descPath);
             await handle.Task;
 

@@ -17,13 +17,14 @@ namespace MiniGameTemplate.UI
         public const int LAYER_LOADING = 600;
 
         // === Package names (match FairyGUI export names) ===
-        // Example:
-        // public const string PKG_COMMON = "Common";
-        // public const string PKG_MAIN_MENU = "MainMenu";
+        public const string PKG_COMMON = "Common";
+        public const string PKG_MAIN_MENU = "MainMenu";
 
-        // === Component names ===
-        // Example:
-        // public const string COMP_MAIN_PANEL = "MainPanel";
-        // public const string COMP_CONFIRM_DIALOG = "ConfirmDialog";
+        // === Component names (match FairyGUI component names) ===
+        public const string COMP_LOADING_PANEL = "LoadingPanel";
+        public const string COMP_CONFIRM_DIALOG = "ConfirmDialog";
+        public const string COMP_PRIVACY_DIALOG = "PrivacyDialog";
+        public const string COMP_GLOBAL_SPINNER = "GlobalSpinner";
+        public const string COMP_MAIN_MENU_PANEL = "MainMenuPanel";
     }
 }

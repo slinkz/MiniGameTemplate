@@ -119,6 +119,32 @@ namespace MiniGameTemplate.Platform
             };
         }
 
+        // === Privacy ===
+
+        private bool _privacyAuthorized;
+
+        public void CheckPrivacyAuthorize(Action<bool> onResult)
+        {
+            bool needAuth = !_privacyAuthorized;
+            GameLog.Log($"[WeChatBridge:Stub] CheckPrivacyAuthorize — needAuth: {needAuth}");
+            onResult?.Invoke(needAuth);
+        }
+
+        public void RequirePrivacyAuthorize(Action<bool> onComplete)
+        {
+            GameLog.Log("[WeChatBridge:Stub] RequirePrivacyAuthorize — simulating 0.3s delay then accept.");
+            DelayedInvoke(0.3f, () =>
+            {
+                _privacyAuthorized = true;
+                onComplete?.Invoke(true);
+            });
+        }
+
+        public string GetPrivacySettingName()
+        {
+            return "隐私保护指引";
+        }
+
         // === System ===
 
         public void Vibrate(bool isLong = false)

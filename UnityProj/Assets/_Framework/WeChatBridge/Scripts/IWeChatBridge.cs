@@ -103,6 +103,25 @@ namespace MiniGameTemplate.Platform
         /// </summary>
         LaunchOptions GetLaunchOptions();
 
+        // === Privacy ===
+
+        /// <summary>
+        /// Check whether the user needs to authorize privacy settings.
+        /// Callback: true if authorization is needed (first launch or policy updated), false otherwise.
+        /// </summary>
+        void CheckPrivacyAuthorize(Action<bool> onResult);
+
+        /// <summary>
+        /// Execute the privacy authorization flow.
+        /// Callback: true if the user accepted, false if rejected or failed.
+        /// </summary>
+        void RequirePrivacyAuthorize(Action<bool> onComplete);
+
+        /// <summary>
+        /// Get the display name of the privacy policy (e.g. "隐私保护指引").
+        /// </summary>
+        string GetPrivacySettingName();
+
         // === System ===
 
         /// <summary>

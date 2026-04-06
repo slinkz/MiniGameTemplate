@@ -14,7 +14,8 @@ namespace MiniGameTemplate.Core
     /// Game entry point. This MonoBehaviour lives in the Boot scene and
     /// initializes all framework systems in the correct order.
     ///
-    /// Boot scene should contain ONLY this script on a single GameObject.
+    /// Boot scene should contain this script (and optionally an IStartupFlow
+    /// MonoBehaviour) on a single "Boot" GameObject.
     /// </summary>
     public class GameBootstrapper : MonoBehaviour
     {
@@ -23,6 +24,11 @@ namespace MiniGameTemplate.Core
 
         [Header("Asset Configuration")]
         [SerializeField] private AssetConfig _assetConfig;
+
+        [Header("Startup Flow (Optional)")]
+        [Tooltip("Assign a MonoBehaviour implementing IStartupFlow to run game-specific startup " +
+                 "(loading UI, privacy check, main menu). If null, goes directly to LoadInitialScene.")]
+        [SerializeField] private MonoBehaviour _startupFlowBehaviour;
 
         private static bool _hasBooted;
 
@@ -68,8 +74,30 @@ namespace MiniGameTemplate.Core
                 // Initialize systems in dependency order
                 await InitializeSystemsAsync();
 
+                // Run game-specific startup flow (loading UI, privacy check, etc.) if assigned
+                if (_startupFlowBehaviour != null)
+                {
+                    var startupFlow = _startupFlowBehaviour as IStartupFlow;
+                    if (startupFlow != null)
+                    {
+                        await startupFlow.RunAsync(_gameConfig);
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogError(
+                            $"[Bootstrapper] Startup flow '{_startupFlowBehaviour.GetType().Name}' " +
+                            "does not implement IStartupFlow! Skipping startup flow.");
+                    }
+                }
+
                 // Load the initial scene
                 LoadInitialScene();
+            }
+            catch (OperationCanceledException cancelEx)
+            {
+                // Startup flow was intentionally cancelled (e.g. user rejected privacy policy).
+                // This is NOT a fatal error — the game stays on the loading screen.
+                GameLog.LogWarning($"[Bootstrapper] Startup cancelled: {cancelEx.Message}");
             }
             catch (Exception ex)
             {

@@ -10,6 +10,7 @@ namespace MiniGameTemplate.UI
     public abstract class UIDialogBase : UIBase
     {
         protected override int SortOrder => UIConstants.LAYER_DIALOG;
+        protected override bool IsFullScreen => false; // Dialogs keep their original size and are centered
 
         /// <summary>
         /// Whether clicking the modal overlay closes this dialog.
