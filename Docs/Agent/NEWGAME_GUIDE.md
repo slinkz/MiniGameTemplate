@@ -90,14 +90,15 @@ public class MainMenuPanel : UIBase
 
 ## Step 7: 配置表（Luban v4.6.0）
 
-如果游戏需要配置表：
+如果游戏需要配置表，先加载 `luban-config` Skill，然后按 Skill 中的 SOP 操作：
 
 1. 在 `UnityProj/DataTables/Defs/tables.xml` 中定义 Bean 和 Table
-2. 在 `UnityProj/DataTables/Datas/` 中编写数据（**xlsx 格式**，第一行 `##var` 字段名，第二行 `##type` 类型，第三行起为数据）
-3. 在 `tables.xml` 的 `<table>` 中用 `input="filename.xlsx"` 指向数据文件
-3. 运行 `UnityProj/Tools/gen_config.bat` 生成代码和数据
-4. 更新 `TablesExtension.cs` 中的 `GetTableNames()` 添加新表名
+2. 用 `create_xlsx.py` 脚本创建 xlsx 数据文件，或手动创建（`##var`/`##type`/`##` 三行表头 + 数据行）
+3. 用 `update_tables_extension.py` 脚本自动更新 `TablesExtension.cs`
+4. 运行 `UnityProj/Tools/gen_config.bat` 生成代码和数据
 5. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据
+
+> 💡 详细格式规范、踩坑记录见 `.workbuddy/skills/luban-config/` Skill 文档。
 
 ## Step 8: 微信 SDK（如需要）
 
@@ -150,13 +151,14 @@ bash Tools/setup_fairygui.sh
 
 ## Step 13: Luban 配置表新增表流程
 
-1. 在 `UnityProj/DataTables/Defs/tables.xml` 中新增 `<bean>` 和 `<table>` 定义
-2. 在 `UnityProj/DataTables/Datas/` 新建对应 **xlsx 数据文件**（`##var` 行 + `##type` 行 + 数据行）
-3. 运行 `UnityProj/Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
-4. 更新 `TablesExtension.cs` 中的 `GetTableNames()` 方法，添加新表名
-5. 生成的 C# 代码位于 `UnityProj/Assets/_Framework/DataSystem/Scripts/Config/Generated/`
-6. 生成输出：`_Game/ConfigData/*.bytes`（运行时）+ `Resources/ConfigData/*.bytes`（fallback）+ `Editor/ConfigPreview/*.json`（编辑器查看）
-7. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据（需在 `ConfigManager.InitializeAsync()` 完成后）
+> 💡 加载 `luban-config` Skill 后按其 SOP 操作，以下是快速参考：
+
+1. 在 `DataTables/Defs/tables.xml` 中新增 `<bean>` 和 `<table>` 定义
+2. 用 `create_xlsx.py` 创建 xlsx：`python .workbuddy/skills/luban-config/scripts/create_xlsx.py -o DataTables/Datas/xxx.xlsx -s TbXxx -f "id:int:ID,..."`
+3. 用 `update_tables_extension.py` 自动同步表名：`python .workbuddy/skills/luban-config/scripts/update_tables_extension.py --project-root UnityProj`
+4. 运行 `Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
+5. 生成输出：`_Game/ConfigData/*.bytes` + `Resources/ConfigData/*.bytes` + `Editor/ConfigPreview/*.json`
+6. 通过 `ConfigManager.Tables.TbXxx` 访问（需在 `ConfigManager.InitializeAsync()` 完成后）
 
 ## Step 14: 构建与发布
 

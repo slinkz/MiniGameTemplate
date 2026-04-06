@@ -4,6 +4,8 @@
 //
 // NOTE: The namespace "cfg" is lowercase because it must match the Luban-generated code
 // (controlled by luban.conf topModule setting). This is intentional, not a style violation.
+//
+// AUTO-UPDATED by update_tables_extension.py — do not manually edit the GetTableNames() array.
 
 namespace cfg
 {
@@ -11,15 +13,14 @@ namespace cfg
     {
         /// <summary>
         /// Returns all table file names that the Tables constructor will request from the loader.
-        /// Must match the lowercase names used in the generated Tables constructor (e.g., "tbitem", "tbglobalconst").
-        /// UPDATE THIS when adding/removing tables in Luban schema.
+        /// Must match the lowercase names used in the generated Tables constructor.
         /// </summary>
         public static string[] GetTableNames()
         {
             return new string[]
             {
-                "tbitem",
                 "tbglobalconst",
+                "tbitem",
             };
         }
     }
