@@ -28,6 +28,9 @@ UIManager.Instance.ClosePanel<MainMenuPanel>();
 - **所有 FairyGUI 包通过 YooAsset 异步加载**，无 Resources.Load fallback
 - 编辑器中使用 YooAsset EditorSimulate 模式，无需构建 AB
 - `AssetService` 必须在 UI 加载前完成初始化（由 GameBootstrapper 保证）
+- `AddPackageAsync` 有并发保护：同一个包不会被两个 async 调用重复加载
+- `OpenPanelAsync` 采用"成功后注册"策略：加载失败的面板不会残留在活跃列表中
+- **非编辑器构建**中 FairyGUI 资源缓存未命中会输出 Error 日志（编辑器中为 Warning）
 
 ## FairyGUI 工程
 FairyGUI 编辑器工程在仓库根目录 `UIProject/`，导出资源到 `Assets/_Game/FairyGUI_Export/`。

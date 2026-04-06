@@ -28,6 +28,8 @@ namespace MiniGameTemplate.UI
         {
             if (_modalOverlay != null)
             {
+                // GObject.Dispose() internally calls RemoveFromParent(),
+                // so the overlay is automatically removed from GRoot.
                 _modalOverlay.Dispose();
                 _modalOverlay = null;
             }

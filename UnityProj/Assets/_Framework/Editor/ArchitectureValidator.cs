@@ -35,13 +35,13 @@ namespace MiniGameTemplate.EditorTools
             new Rule { Pattern = @"GameObject\.Find\s*\(",        Description = "GameObject.Find — use SO references instead", IsError = true },
             new Rule { Pattern = @"FindObjectOfType\s*[<(]",      Description = "FindObjectOfType — expensive scene search",   IsError = true },
             new Rule { Pattern = @"FindObjectsOfType\s*[<(]",     Description = "FindObjectsOfType — expensive scene search",  IsError = true },
+            new Rule { Pattern = @"Resources\.Load\s*[<(]",        Description = "Resources.Load — BANNED, use YooAsset",       IsError = true },
         };
 
         private static readonly Rule[] WarningRules = new[]
         {
             new Rule { Pattern = @"static\s+\w+\s+Instance\s*\{", Description = "Homegrown singleton — use Singleton<T> base or SO events", IsError = false },
             new Rule { Pattern = @"DontDestroyOnLoad\s*\(",        Description = "DontDestroyOnLoad — should only be in Singleton<T>/Bootstrapper", IsError = false },
-            new Rule { Pattern = @"Resources\.Load\s*[<(]",        Description = "Resources.Load — prefer YooAsset (check if this is a fallback)", IsError = false },
         };
 
         // Files that are ALLOWED to use restricted patterns

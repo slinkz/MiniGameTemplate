@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using FairyGUI;
 using UnityEngine;
 using MiniGameTemplate.Asset;
@@ -21,6 +22,8 @@ namespace MiniGameTemplate.UI
         private static readonly Dictionary<string, YooAsset.AssetHandle> _assetHandles = new Dictionary<string, YooAsset.AssetHandle>();
         // Cache for assets loaded during async package add — used by LoadFairyGUIAsset callback
         private static readonly Dictionary<string, UnityEngine.Object> _loadedAssetCache = new Dictionary<string, UnityEngine.Object>();
+        // Guard against concurrent AddPackageAsync calls for the same package
+        private static readonly HashSet<string> _loading = new HashSet<string>();
 
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -28,6 +31,7 @@ namespace MiniGameTemplate.UI
             _refCounts.Clear();
             _assetHandles.Clear();
             _loadedAssetCache.Clear();
+            _loading.Clear();
         }
 
         /// <summary>
@@ -42,7 +46,7 @@ namespace MiniGameTemplate.UI
         /// AssetService must be initialized before calling this method.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when AssetService is not initialized.</exception>
-        public static async System.Threading.Tasks.Task AddPackageAsync(string packageName)
+        public static async Task AddPackageAsync(string packageName)
         {
             if (_refCounts.ContainsKey(packageName))
             {
@@ -50,17 +54,31 @@ namespace MiniGameTemplate.UI
                 return;
             }
 
+            // Guard: if another async call is already loading this package, skip duplicate load
+            if (!_loading.Add(packageName))
+            {
+                GameLog.LogWarning($"[UIPackageLoader] Package '{packageName}' is already being loaded by another call. Skipping.");
+                return;
+            }
+
             if (AssetService.Instance == null || !AssetService.Instance.IsInitialized)
             {
+                _loading.Remove(packageName);
                 throw new InvalidOperationException(
                     $"[UIPackageLoader] AssetService not initialized. Cannot load package '{packageName}'. " +
                     "Ensure GameBootstrapper has completed AssetService initialization before opening UI.");
             }
 
-            await LoadViaYooAssetAsync(packageName);
-
-            _refCounts[packageName] = 1;
-            GameLog.Log($"[UIPackageLoader] Loaded package: {packageName}");
+            try
+            {
+                await LoadViaYooAssetAsync(packageName);
+                _refCounts[packageName] = 1;
+                GameLog.Log($"[UIPackageLoader] Loaded package: {packageName}");
+            }
+            finally
+            {
+                _loading.Remove(packageName);
+            }
         }
 
         /// <summary>
@@ -105,7 +123,7 @@ namespace MiniGameTemplate.UI
             GameLog.Log("[UIPackageLoader] All packages unloaded.");
         }
 
-        private static async System.Threading.Tasks.Task LoadViaYooAssetAsync(string packageName)
+        private static async Task LoadViaYooAssetAsync(string packageName)
         {
             string descPath = $"{YooAssetBasePath}{packageName}/{packageName}_fui.bytes";
             var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(descPath);
@@ -118,7 +136,16 @@ namespace MiniGameTemplate.UI
                     $"Status: {handle.Status}. Ensure the package is exported and included in YooAsset collection.");
             }
 
-            var descData = (handle.AssetObject as TextAsset).bytes;
+            var textAsset = handle.AssetObject as TextAsset;
+            if (textAsset == null)
+            {
+                throw new InvalidOperationException(
+                    $"[UIPackageLoader] Package descriptor is not a TextAsset: {descPath} " +
+                    $"(actual type: {handle.AssetObject?.GetType().Name ?? "null"}). " +
+                    "Check that the file is a valid FairyGUI _fui.bytes descriptor.");
+            }
+
+            var descData = textAsset.bytes;
             UIPackage.AddPackage(descData, packageName, LoadFairyGUIAsset);
             _assetHandles[packageName] = handle;
         }
@@ -129,7 +156,8 @@ namespace MiniGameTemplate.UI
         ///
         /// NOTE: FairyGUI calls this synchronously. We pre-cache assets during
         /// AddPackageAsync, or load sync from cache. In editor, WaitForAsyncComplete
-        /// is used as last resort. On WebGL, assets MUST be pre-cached.
+        /// is used as last resort. On WebGL, assets MUST be pre-cached — cache miss
+        /// logs an error to catch the problem early.
         /// </summary>
         private static object LoadFairyGUIAsset(string name, string extension, Type type, out DestroyMethod destroyMethod)
         {
@@ -156,9 +184,14 @@ namespace MiniGameTemplate.UI
                     _loadedAssetCache[assetPath] = handle.AssetObject;
                     return handle.AssetObject;
                 }
-#endif
                 GameLog.LogWarning($"[UIPackageLoader] FairyGUI asset not pre-cached: {assetPath}. " +
                     "Consider pre-loading assets before UIPackage.AddPackage.");
+#else
+                // Production: pre-cache is mandatory. Cache miss = missing texture on screen.
+                GameLog.LogError($"[UIPackageLoader] CRITICAL: FairyGUI asset not pre-cached: {assetPath}. " +
+                    "On WebGL/WeChat, all FairyGUI package assets MUST be pre-cached via " +
+                    "PreCachePackageAssetsAsync() before AddPackageAsync().");
+#endif
             }
 
             return null;
@@ -169,7 +202,7 @@ namespace MiniGameTemplate.UI
         /// Call this in your async loading flow to ensure LoadFairyGUIAsset callback
         /// can return assets without blocking.
         /// </summary>
-        public static async System.Threading.Tasks.Task PreCachePackageAssetsAsync(string packageName, string[] assetPaths)
+        public static async Task PreCachePackageAssetsAsync(string packageName, string[] assetPaths)
         {
             if (AssetService.Instance == null || !AssetService.Instance.IsInitialized)
             {

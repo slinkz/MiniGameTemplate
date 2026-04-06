@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using FairyGUI;
 using UnityEngine;
 
@@ -34,7 +35,7 @@ namespace MiniGameTemplate.UI
         /// [Async] Create and display the panel via YooAsset.
         /// This is the ONLY open path — no synchronous Resources.Load fallback.
         /// </summary>
-        public async System.Threading.Tasks.Task OpenAsync(object data = null)
+        public async Task OpenAsync(object data = null)
         {
             if (ContentPane != null)
             {

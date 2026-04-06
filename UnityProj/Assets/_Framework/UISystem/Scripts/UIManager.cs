@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Utils;
 
@@ -19,8 +20,9 @@ namespace MiniGameTemplate.UI
         /// <summary>
         /// Open a panel of type T asynchronously via YooAsset.
         /// Creates it if not already open, refreshes if already open.
+        /// If loading fails, the panel is NOT registered — caller should catch the exception.
         /// </summary>
-        public async System.Threading.Tasks.Task<T> OpenPanelAsync<T>(object data = null) where T : UIBase, new()
+        public async Task<T> OpenPanelAsync<T>(object data = null) where T : UIBase, new()
         {
             var type = typeof(T);
 
@@ -31,8 +33,17 @@ namespace MiniGameTemplate.UI
             }
 
             var panel = new T();
-            _activePanels[type] = panel;
-            await panel.OpenAsync(data);
+            try
+            {
+                await panel.OpenAsync(data);
+            }
+            catch
+            {
+                // Loading failed — do NOT register a half-initialized panel
+                GameLog.LogError($"[UIManager] Failed to open panel: {type.Name}");
+                throw;
+            }
+            _activePanels[type] = panel; // Register only after successful load
             return panel;
         }
 
