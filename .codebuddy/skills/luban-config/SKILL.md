@@ -85,7 +85,7 @@ python .workbuddy/skills/luban-config/scripts/create_xlsx.py \
 运行 Skill 脚本自动更新：
 
 ```bash
-python .workbuddy/skills/luban-config/scripts/update_tables_extension.py
+python .codebuddy/skills/luban-config/scripts/update_tables_extension.py
 ```
 
 此脚本会读取 `tables.xml` 中所有 `<table>` 定义，自动重新生成 `TablesExtension.cs` 中的 `GetTableNames()` 数组。
