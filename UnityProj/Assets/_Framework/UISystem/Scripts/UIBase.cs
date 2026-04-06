@@ -6,6 +6,9 @@ namespace MiniGameTemplate.UI
     /// <summary>
     /// Base class for all UI panels.
     /// Subclass this for each game panel. Override lifecycle methods as needed.
+    ///
+    /// ALL panel loading is async via YooAsset — no Resources.Load fallback.
+    /// Use OpenAsync() to open panels.
     /// </summary>
     public abstract class UIBase
     {
@@ -28,25 +31,8 @@ namespace MiniGameTemplate.UI
         protected virtual int SortOrder => UIConstants.LAYER_NORMAL;
 
         /// <summary>
-        /// [Sync] Create and display the panel using Resources.Load path.
-        /// Suitable for editor quick iteration. For production (especially WebGL/WeChat),
-        /// prefer OpenAsync() which loads via YooAsset without blocking.
-        /// </summary>
-        public void Open(object data = null)
-        {
-            if (ContentPane != null)
-            {
-                OnRefresh(data);
-                return;
-            }
-
-            UIPackageLoader.AddPackage(PackageName);
-            CreateAndShow(data);
-        }
-
-        /// <summary>
         /// [Async] Create and display the panel via YooAsset.
-        /// Preferred path for WebGL / WeChat Mini Game — avoids synchronous I/O blocking a frame.
+        /// This is the ONLY open path — no synchronous Resources.Load fallback.
         /// </summary>
         public async System.Threading.Tasks.Task OpenAsync(object data = null)
         {
@@ -61,7 +47,7 @@ namespace MiniGameTemplate.UI
         }
 
         /// <summary>
-        /// Shared creation logic after package is loaded (sync or async).
+        /// Shared creation logic after package is loaded.
         /// </summary>
         private void CreateAndShow(object data)
         {
@@ -111,7 +97,7 @@ namespace MiniGameTemplate.UI
         protected virtual void OnClose() { }
 
         /// <summary>
-        /// Called when the panel is already open and Open() is called again.
+        /// Called when the panel is already open and OpenAsync() is called again.
         /// Use for refreshing data without recreating the panel.
         /// </summary>
         protected virtual void OnRefresh(object data) { }

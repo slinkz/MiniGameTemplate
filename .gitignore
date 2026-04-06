@@ -65,6 +65,7 @@ UnityProj/Assets/FairyGUI.meta
 
 # ===== FairyGUI UIProject output (generated, tracked in Unity) =====
 # UIProject 导出的 bytes/texture 在 UnityProj 中由 Unity 管理
+UIProject/.objs/
 
 # ===== Luban Generated (keep tracked, but ignore temp) =====
 UnityProj/Tools/Luban/.cache/

@@ -8,6 +8,8 @@ namespace MiniGameTemplate.UI
     /// <summary>
     /// Central UI panel manager. Handles opening, closing, and tracking active panels.
     /// Uses Singleton pattern (framework-internal only).
+    ///
+    /// ALL panel opening is async — no synchronous Resources.Load path.
     /// </summary>
     public class UIManager : Singleton<UIManager>
     {
@@ -15,21 +17,22 @@ namespace MiniGameTemplate.UI
         private List<UIBase> _closeBuffer; // Reusable buffer for CloseAllPanels — avoids GC
 
         /// <summary>
-        /// Open a panel of type T. Creates it if not already open, refreshes if already open.
+        /// Open a panel of type T asynchronously via YooAsset.
+        /// Creates it if not already open, refreshes if already open.
         /// </summary>
-        public T OpenPanel<T>(object data = null) where T : UIBase, new()
+        public async System.Threading.Tasks.Task<T> OpenPanelAsync<T>(object data = null) where T : UIBase, new()
         {
             var type = typeof(T);
 
             if (_activePanels.TryGetValue(type, out var existing))
             {
-                existing.Open(data); // Will call OnRefresh
+                await existing.OpenAsync(data); // Will call OnRefresh
                 return (T)existing;
             }
 
             var panel = new T();
             _activePanels[type] = panel;
-            panel.Open(data);
+            await panel.OpenAsync(data);
             return panel;
         }
 

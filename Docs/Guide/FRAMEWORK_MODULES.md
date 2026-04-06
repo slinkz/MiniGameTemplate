@@ -266,10 +266,10 @@ public class MainMenuPanel : UIBase
 
 ```csharp
 // 打开（如果已打开则刷新）
-UIManager.Instance.OpenPanel<MainMenuPanel>();
+await UIManager.Instance.OpenPanelAsync<MainMenuPanel>();
 
 // 打开时传入数据
-UIManager.Instance.OpenPanel<MainMenuPanel>(someData);
+await UIManager.Instance.OpenPanelAsync<MainMenuPanel>(someData);
 
 // 关闭
 UIManager.Instance.ClosePanel<MainMenuPanel>();

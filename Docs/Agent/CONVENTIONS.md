@@ -384,13 +384,13 @@ private void OnDisable()
 
 ### UI 系统 (FairyGUI)
 ```csharp
-// 打开面板
-UIManager.Instance.OpenPanel<MyPanel>(optionalData);
+// 打开面板（async only，通过 YooAsset 加载）
+await UIManager.Instance.OpenPanelAsync<MyPanel>(optionalData);
 
 // 关闭面板
 UIManager.Instance.ClosePanel<MyPanel>();
 
-// 包加载（async 优先）
+// 包加载（async only）
 await UIPackageLoader.AddPackageAsync("CommonUI");
 // 用完后
 UIPackageLoader.RemovePackage("CommonUI");

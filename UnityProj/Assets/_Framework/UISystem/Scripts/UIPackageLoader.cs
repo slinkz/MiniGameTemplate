@@ -11,9 +11,9 @@ namespace MiniGameTemplate.UI
     /// Manages FairyGUI package loading and unloading.
     /// Packages are reference-counted to avoid premature unloading.
     ///
-    /// IMPORTANT: All loading paths are async-safe for WebGL (WeChat Mini Game).
-    /// The synchronous AddPackage() falls back to Resources.Load only.
-    /// For YooAsset loading, always use AddPackageAsync().
+    /// ALL loading goes through YooAsset — no Resources.Load fallback.
+    /// AssetService must be initialized before any package loading.
+    /// In editor, YooAsset EditorSimulate mode handles this transparently.
     /// </summary>
     public static class UIPackageLoader
     {
@@ -37,29 +37,11 @@ namespace MiniGameTemplate.UI
         public static string YooAssetBasePath = "Assets/FairyGUI_Export/";
 
         /// <summary>
-        /// [Sync / Resources.Load only] Load a FairyGUI package.
-        /// WARNING: This does NOT go through YooAsset. On WebGL/WeChat, you MUST use AddPackageAsync().
-        /// Kept for quick editor iteration with Resources.Load fallback.
-        /// </summary>
-        public static void AddPackage(string packageName)
-        {
-            if (_refCounts.ContainsKey(packageName))
-            {
-                _refCounts[packageName]++;
-                return;
-            }
-
-            // Sync path always uses Resources.Load — WaitForAsyncComplete is NOT WebGL-safe
-            UIPackage.AddPackage(packageName);
-
-            _refCounts[packageName] = 1;
-            GameLog.Log($"[UIPackageLoader] Loaded package (Resources): {packageName}");
-        }
-
-        /// <summary>
         /// Load a FairyGUI package asynchronously via YooAsset.
-        /// This is the preferred path for all platforms including WebGL / WeChat Mini Game.
+        /// This is the ONLY loading path — no Resources.Load fallback.
+        /// AssetService must be initialized before calling this method.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when AssetService is not initialized.</exception>
         public static async System.Threading.Tasks.Task AddPackageAsync(string packageName)
         {
             if (_refCounts.ContainsKey(packageName))
@@ -68,17 +50,17 @@ namespace MiniGameTemplate.UI
                 return;
             }
 
-            if (AssetService.Instance != null && AssetService.Instance.IsInitialized)
+            if (AssetService.Instance == null || !AssetService.Instance.IsInitialized)
             {
-                await LoadViaYooAssetAsync(packageName);
-            }
-            else
-            {
-                UIPackage.AddPackage(packageName);
+                throw new InvalidOperationException(
+                    $"[UIPackageLoader] AssetService not initialized. Cannot load package '{packageName}'. " +
+                    "Ensure GameBootstrapper has completed AssetService initialization before opening UI.");
             }
 
+            await LoadViaYooAssetAsync(packageName);
+
             _refCounts[packageName] = 1;
-            GameLog.Log($"[UIPackageLoader] Loaded package (async): {packageName}");
+            GameLog.Log($"[UIPackageLoader] Loaded package: {packageName}");
         }
 
         /// <summary>
@@ -129,17 +111,16 @@ namespace MiniGameTemplate.UI
             var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(descPath);
             await handle.Task;
 
-            if (handle.Status == YooAsset.EOperationStatus.Succeed)
+            if (handle.Status != YooAsset.EOperationStatus.Succeed)
             {
-                var descData = (handle.AssetObject as TextAsset).bytes;
-                UIPackage.AddPackage(descData, packageName, LoadFairyGUIAsset);
-                _assetHandles[packageName] = handle;
+                throw new InvalidOperationException(
+                    $"[UIPackageLoader] Failed to load FairyGUI package descriptor: {descPath}. " +
+                    $"Status: {handle.Status}. Ensure the package is exported and included in YooAsset collection.");
             }
-            else
-            {
-                Debug.LogError($"[UIPackageLoader] YooAsset failed to load: {descPath}. Falling back to Resources.");
-                UIPackage.AddPackage(packageName);
-            }
+
+            var descData = (handle.AssetObject as TextAsset).bytes;
+            UIPackage.AddPackage(descData, packageName, LoadFairyGUIAsset);
+            _assetHandles[packageName] = handle;
         }
 
         /// <summary>
@@ -147,8 +128,8 @@ namespace MiniGameTemplate.UI
         /// within a package. Routes through YooAsset.
         ///
         /// NOTE: FairyGUI calls this synchronously. We pre-cache assets during
-        /// AddPackageAsync, or load sync from cache. If not cached, we do a
-        /// synchronous Resources.Load as a last resort.
+        /// AddPackageAsync, or load sync from cache. In editor, WaitForAsyncComplete
+        /// is used as last resort. On WebGL, assets MUST be pre-cached.
         /// </summary>
         private static object LoadFairyGUIAsset(string name, string extension, Type type, out DestroyMethod destroyMethod)
         {
@@ -162,14 +143,13 @@ namespace MiniGameTemplate.UI
                 return cached;
             }
 
-            // Fallback: try YooAsset if available (editor non-WebGL only)
+            // Fallback: try YooAsset sync load (editor only — NOT WebGL-safe)
             if (AssetService.Instance != null && AssetService.Instance.IsInitialized)
             {
                 var handle = AssetService.Instance.LoadAssetAsync<UnityEngine.Object>(assetPath);
 
-                // In editor (non-WebGL), WaitForAsyncComplete works. On WebGL it would deadlock.
-                // This path should ideally not be hit if assets are pre-cached.
 #if UNITY_EDITOR
+                // In editor (non-WebGL), WaitForAsyncComplete works. On WebGL it would deadlock.
                 handle.WaitForAsyncComplete();
                 if (handle.Status == YooAsset.EOperationStatus.Succeed)
                 {
@@ -191,7 +171,11 @@ namespace MiniGameTemplate.UI
         /// </summary>
         public static async System.Threading.Tasks.Task PreCachePackageAssetsAsync(string packageName, string[] assetPaths)
         {
-            if (AssetService.Instance == null || !AssetService.Instance.IsInitialized) return;
+            if (AssetService.Instance == null || !AssetService.Instance.IsInitialized)
+            {
+                throw new InvalidOperationException(
+                    "[UIPackageLoader] AssetService not initialized. Cannot pre-cache assets.");
+            }
 
             foreach (var path in assetPaths)
             {
@@ -205,4 +189,3 @@ namespace MiniGameTemplate.UI
         }
     }
 }
-
