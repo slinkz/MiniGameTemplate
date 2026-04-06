@@ -76,20 +76,16 @@ bash Tools/setup_fairygui.sh
 
 ### Q: `The type or namespace name 'YooAsset' could not be found`
 
-**原因**：YooAsset 包未从 OpenUPM 下载完成。
+**原因**：YooAsset 本地包引用路径无效，或 `ThirdParty/YooAsset/` 目录不存在。
 
 **排查步骤**：
-1. 检查网络连接
-2. 打开 `Packages/manifest.json`，确认包含 `"com.tuyoogame.yooasset"` 条目
-3. 检查 `scopedRegistries` 中是否配置了 OpenUPM：
+1. 确认 `UnityProj/ThirdParty/YooAsset/` 目录存在且包含 `package.json` 文件
+2. 打开 `Packages/manifest.json`，确认包含如下本地引用：
    ```json
-   {
-     "name": "OpenUPM",
-     "url": "https://package.openupm.com",
-     "scopes": ["com.tuyoogame"]
-   }
+   "com.tuyoogame.yooasset": "file:../ThirdParty/YooAsset"
    ```
-4. 在 Unity 中执行 Window → Package Manager → 刷新
+3. 如果 `ThirdParty/YooAsset/` 为空或不存在，说明 Git clone 时可能遗漏了文件，尝试重新 clone 或从备份恢复
+4. 在 Unity 中执行 Window → Package Manager → 刷新，确认 YooAsset 2.3.18 已识别
 
 ### Q: 导入纹理后发现尺寸被自动改了
 
@@ -406,7 +402,7 @@ var player = _players.Items[0];
 ### Q: 如何正确使用 Luban 配置表？
 
 1. 配置表源数据放在 `UnityProj/DataTables/`
-2. 运行生成脚本（需要 .NET SDK 7.0+）：
+2. 运行生成脚本（需要 .NET SDK 8.0+）：
    ```bash
    cd UnityProj
    Tools\gen_config.bat   # Windows
@@ -422,6 +418,29 @@ var player = _players.Items[0];
    var tables = ConfigManager.Tables;
    var item = tables.TbItem.Get(1001);
    ```
+
+> 💡 项目中提供了 `luban-config` Skill（`.workbuddy/skills/luban-config/`），AI 助手会自动使用它完成配置表操作。
+
+### Q: Luban 生成报错 "table not exported" 或输出为空
+
+**原因**：`DataTables/Defs/tables.xml` 中未定义 `default: true` 的 group。Luban v4.x 要求至少有一个默认 group，否则表不会被导出。
+
+**解决**：确认 `tables.xml` 的 `<group>` 节点中有 `default="true"`：
+```xml
+<group name="c" default="true"/>
+```
+
+### Q: Luban xlsx 表头格式是什么？
+
+本项目的 xlsx 格式约定：
+| 行号 | 标记 | 内容 |
+|------|------|------|
+| 第 1 行 | `##var` | 字段名（英文，如 `id`, `name`, `price`） |
+| 第 2 行 | `##type` | 类型（如 `int`, `string`, `float`） |
+| 第 3 行 | `##` | 中文注释（如 `道具ID`, `名称`, `价格`） |
+| 第 4 行起 | | 实际数据 |
+
+> ⚠️ **常见坑**：`tables.xml` 中引用 xlsx 时，`input` 属性直接写文件名（如 `input="item.xlsx"`），**不需要** `*@` 前缀。
 
 ### Q: 微信 SDK 如何接入？
 
@@ -455,3 +474,4 @@ var player = _players.Items[0];
 2. 查看对应模块目录下的 `MODULE_README.md`
 3. 查看 [框架模块使用手册](FRAMEWORK_MODULES.md) 中的详细 API 说明
 4. 如果是微信平台特有问题，查看 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)
+5. 如果你在和 AI 助手协作，项目内置了 AI Skills（`.workbuddy/skills/`）可自动化常见操作（如配置表管理），详见 [环境搭建 → AI Skills 章节](GETTING_STARTED.md#ai-skills-工具链)

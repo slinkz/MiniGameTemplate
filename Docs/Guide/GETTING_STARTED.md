@@ -17,7 +17,7 @@
 | 工具 | 用途 |
 |------|------|
 | [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html) | 微信小游戏真机测试 |
-| [.NET SDK 7.0+](https://dotnet.microsoft.com/download) | 运行 Luban 配置表生成工具 |
+| [.NET SDK 8.0+](https://dotnet.microsoft.com/download) | 运行 Luban 配置表生成工具 |
 | VS Code / Rider | C# 代码编辑（Unity 自带的 Visual Studio 也行） |
 
 ## Step 1：克隆项目
@@ -129,7 +129,7 @@ Assets/
 
 如果你需要使用配置表系统：
 
-1. 确保已安装 [.NET SDK 7.0+](https://dotnet.microsoft.com/download) 和 [Luban](https://luban.gameframework.io/docs/install)
+1. 确保已安装 [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
 2. 运行生成脚本：
 
 **Windows：**
@@ -144,7 +144,16 @@ cd UnityProj
 bash Tools/gen_config.sh
 ```
 
-生成的 C# 代码会输出到 `Assets/_Framework/DataSystem/Scripts/Config/Generated/`，数据文件输出到 `Assets/_Framework/DataSystem/Resources/ConfigData/`。
+生成产物说明：
+
+| 输出 | 路径 | 用途 |
+|------|------|------|
+| C# 代码 | `Assets/_Framework/DataSystem/Scripts/Config/Generated/` | ByteBuf 反序列化代码 |
+| 二进制数据 | `Assets/_Game/ConfigData/*.bytes` | YooAsset 运行时加载 |
+| 二进制数据 | `Assets/_Framework/DataSystem/Resources/ConfigData/*.bytes` | Resources fallback |
+| JSON 数据 | `Assets/_Framework/Editor/ConfigPreview/*.json` | 编辑器预览（不打包） |
+
+> 💡 **AI 开发者提示**：项目中提供了 `luban-config` Skill（位于 `.workbuddy/skills/luban-config/`），可自动化新增/修改/删除配置表的完整流程。详见下方 [AI Skills 章节](#ai-skills-工具链)。
 
 ## Step 7（可选）：打开 FairyGUI 工程
 
@@ -174,3 +183,30 @@ bash Tools/gen_config.sh
 ### Q: 可以删掉不需要的模块吗？
 
 可以，但需要注意模块依赖关系。详见 [架构设计解读](ARCHITECTURE_OVERVIEW.md) 中的模块依赖图。删除模块前运行 `Tools → MiniGame Template → Validate → Architecture Check` 检查是否有依赖断裂。
+
+---
+
+## AI Skills 工具链
+
+本模板内置了供 AI Agent（如 CodeBuddy / WorkBuddy）使用的 **Skills**，可以大幅提升 AI 协作开发效率。Skills 存放在 `.workbuddy/skills/` 目录，会随 Git 仓库一起分发。
+
+### 当前可用 Skills
+
+| Skill | 路径 | 功能 |
+|-------|------|------|
+| `luban-config` | `.workbuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
+
+### 如何使用
+
+1. **你不需要手动做任何事**——当你和 AI 助手协作时，AI 会自动识别并加载相关 Skill
+2. 例如，当你对 AI 说"新增一张 TbShop 配置表"，AI 会自动加载 `luban-config` Skill，按照标准流程完成：
+   - 在 `DataTables/Defs/tables.xml` 中添加表定义
+   - 自动创建 xlsx 数据文件（带正确的表头格式）
+   - 同步 `TablesExtension.cs` 扩展代码
+   - 运行 `gen_config.bat` 验证生成结果
+3. Skill 内含踩坑记录和最佳实践，确保 AI 不会犯已知错误
+
+### 想了解更多？
+
+- 查看 `.workbuddy/skills/luban-config/SKILL.md` 了解完整的 SOP 和技术细节
+- Skill 的格式遵循 WorkBuddy Skill 标准，你也可以为项目创建自定义 Skill

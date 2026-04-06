@@ -73,6 +73,7 @@ MiniGameTemplate/               ← Git 仓库根
 │       └── Luban/              # Luban 工具说明
 ├── README.md                   ← 本文件
 ├── CHANGELOG.md                ← 版本变更记录
+├── .workbuddy/skills/          ← AI Agent Skills（luban-config 等）
 ├── .gitignore
 ├── .gitattributes
 └── .gitmodules
