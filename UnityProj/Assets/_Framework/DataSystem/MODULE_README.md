@@ -41,18 +41,27 @@ void AddScore(int amount) {
 | `PlayerPrefsSaveSystem` | PlayerPrefs实现 |
 
 ### 4. Config（配置表）
-Luban v4.6.0 生成的 C# 代码和数据加载器，使用 **Binary ByteBuf** 格式反序列化。
+Luban v4.6.0 generated C# code and data loader using **Binary ByteBuf** deserialization with **lazy deserialization**.
 
-| 类 | 用途 |
+**Loading strategy — Lazy Deserialization**:
+1. `ConfigManager.InitializeAsync()` pre-loads all `.bytes` files into a `byte[]` cache via YooAsset (I/O only, fast).
+2. No deserialization happens at startup. Each table is deserialized on **first property access** (e.g. `Tables.TbItem`).
+3. After deserialization, `ResolveRef()` is called automatically, and the raw `byte[]` is removed from cache to free memory.
+4. Business code access is unchanged: `ConfigManager.Tables.TbItem.Get(id)` — zero API changes required.
+
+| Class | Purpose |
 |---|------|
-| `ConfigManager` | 统一配置加载入口（YooAsset 专用） |
-| `TablesExtension` | 手写 partial class，维护表名列表供预加载 |
-| `Tables` / `TbItem` / ... | Luban 自动生成，**勿手动编辑** |
+| `ConfigManager` | Unified config entry point (YooAsset only); manages bytes cache and lazy loader |
+| `TablesExtension` | Hand-written partial class; maintains table name list for pre-loading |
+| `Tables` / `TbItem` / ... | Luban auto-generated with lazy properties — **do not edit** |
 
-**文件分布**：
-- `Assets/_Game/ConfigData/*.bytes` — 运行时二进制（YooAsset 收集）
-- `Assets/_Framework/Editor/ConfigPreview/*.json` — 编辑器预览（不打包）
+**Helper methods**:
+- `ConfigManager.IsTableLoaded(fileName)` — returns `true` if the table has been deserialized (its raw bytes freed). Useful for diagnostics and preload verification.
 
-> ⚠️ ConfigManager 要求 YooAsset 已初始化。编辑器中使用 EditorSimulate 模式，无需构建 AB。
+**File layout**:
+- `Assets/_Game/ConfigData/*.bytes` — runtime binary (collected by YooAsset)
+- `Assets/_Framework/Editor/ConfigPreview/*.json` — editor preview (not packaged)
 
-**新增/修改配置表**：运行 `Tools/gen_config.bat`（Windows）或 `Tools/gen_config.sh`（macOS/Linux），详见 `Tools/Luban/README.md`。
+> ⚠️ ConfigManager requires YooAsset to be initialized. In Editor, use EditorSimulate mode — no AB build needed.
+
+**Add/modify config tables**: run `Tools/gen_config.bat` (Windows) or `Tools/gen_config.sh` (macOS/Linux). See `Tools/Luban/README.md`.

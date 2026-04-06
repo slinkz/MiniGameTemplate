@@ -67,7 +67,7 @@ GameOverTrigger.cs ─Raise→ OnGameOver.asset ─→ GameOverPanel.cs
 Boot.unity 加载
   └→ GameBootstrapper.Awake()
       ├→ AssetService.InitializeAsync()   // 资源管理（YooAsset）
-      ├→ ConfigManager.InitializeAsync()   // 配置表 (Luban)
+      ├→ ConfigManager.InitializeAsync()   // 配置表 (Luban) — 仅预加载 bytes，不反序列化
       ├→ TimerService (Singleton)         // 计时器
       ├→ AudioManager (Singleton)         // 音频
       ├→ UIManager (Singleton)            // UI
@@ -85,20 +85,30 @@ Boot.unity 加载
 
 > **IStartupFlow 接口**：定义在 `_Framework/GameLifecycle/`，提供 `Task RunAsync(GameConfig)` 方法。Game 层通过 `GameStartupFlow` 实现自己的启动逻辑（如 Loading 界面、隐私授权）。`GameBootstrapper` 在系统初始化完成后、加载目标场景前调用。如果 `IStartupFlow` 抛出 `OperationCanceledException`，`GameBootstrapper` 将其视为非致命错误（如用户拒绝授权导致退出）。
 
-### 4. 配置表数据流（Luban 双格式）
+### 4. 配置表数据流（Luban 双格式 + Lazy Deserialization）
 ```
 DataTables/Datas/*.xlsx       ← 源数据（策划用 Excel 编辑）
         │
     gen_config.bat/sh          ← Luban v4.6.0 生成
         │
-        ├→ cs-bin 代码 → Generated/*.cs      （ByteBuf 反序列化）
+        ├→ cs-bin 代码 → Generated/*.cs      （ByteBuf 反序列化 + lazy property）
         ├→ bin 数据   → _Game/ConfigData/*.bytes    （YooAsset 运行时加载）
         └→ json 数据  → Editor/ConfigPreview/*.json  （编辑器人工查看，不打包）
 
-运行时加载链：
+运行时加载链（Lazy Deserialization）：
   ConfigManager.InitializeAsync()
-    └→ YooAsset: _Game/ConfigData/{name}.bytes → new ByteBuf(bytes) → Tables 构造函数
+    └→ Phase 1: YooAsset 异步预加载全部 .bytes → byte[] 缓存（仅 I/O，无反序列化）
+    └→ Phase 2: 创建 Tables 实例，传入 lazy loader（此时不反序列化任何表）
+
+  业务代码首次访问 ConfigManager.Tables.TbXxx
+    └→ Tables lazy property getter 触发：
+        ├→ 从 bytes 缓存取出 byte[] → new ByteBuf → 构造 TbXxx
+        ├→ TbXxx.ResolveRef(tables)
+        └→ 从缓存移除 byte[]（释放内存）
 ```
+
+> **对业务代码的影响**：无。`ConfigManager.Tables.TbItem.Get(id)` 用法完全不变。
+> `ConfigManager.IsTableLoaded(fileName)` 可查询某表是否已反序列化。
 
 ### 5. UI 工作流
 ```

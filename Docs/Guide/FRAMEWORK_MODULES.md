@@ -172,15 +172,25 @@ int score = save.LoadInt("high_score", 0); // 第二个参数是默认值
 
 ### 2.4 Config（配置表）
 
-基于 Luban v4.6.0 的配置数据系统，使用 **Binary ByteBuf** 格式。生成的代码和数据由 `ConfigManager` 管理。
+基于 Luban v4.6.0 的配置数据系统，使用 **Binary ByteBuf** 格式，采用 **Lazy Deserialization（延迟反序列化）** 策略。
+
+**加载机制**：
+1. `ConfigManager.InitializeAsync()` 启动时通过 YooAsset **异步预加载**全部 `.bytes` 到内存缓存（仅 I/O，速度很快）
+2. **不在启动时反序列化任何表**——反序列化推迟到首次访问表属性时自动执行
+3. 反序列化后自动调用 `ResolveRef()`，并释放原始 `byte[]` 缓存以节省内存
+
+> 💡 **对使用者的影响：无。** API 完全不变，`ConfigManager.Tables.TbItem.Get(1001)` 照常使用。
 
 运行时通过 YooAsset 加载 `.bytes` 二进制文件（编辑器使用 EditorSimulate 模式，无需构建 AB）。编辑器下额外生成 JSON 预览文件（`Editor/ConfigPreview/`，不打包）。
 
 ```csharp
-// 配置表在 GameBootstrapper 中已经初始化
-// 直接使用 ConfigManager.Tables 访问数据
+// 配置表在 GameBootstrapper 中已经初始化（bytes 预加载完成）
+// 直接使用 ConfigManager.Tables 访问数据（首次访问时自动反序列化）
 var itemConfig = ConfigManager.Tables.TbItem.Get(1001);
 Debug.Log(itemConfig.Name);
+
+// 辅助方法：查询某表是否已反序列化
+bool loaded = ConfigManager.IsTableLoaded("tbitem");
 ```
 
 ---

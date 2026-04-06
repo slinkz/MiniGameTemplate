@@ -9,7 +9,9 @@ namespace MiniGameTemplate.Data
 {
     /// <summary>
     /// Loads Luban-generated config data at runtime using binary format (.bytes).
-    /// In the Editor, human-readable JSON copies exist under Editor/ConfigPreview/ for inspection only.
+    /// Uses lazy deserialization: binary data is pre-loaded at startup, but each table
+    /// is only deserialized on first access. This reduces startup time while keeping
+    /// a synchronous access API (no async needed at call sites).
     ///
     /// Runtime loading: Binary .bytes files via YooAsset exclusively.
     /// YooAsset must be initialized before calling InitializeAsync().
@@ -22,12 +24,14 @@ namespace MiniGameTemplate.Data
     public static class ConfigManager
     {
         private static bool _initialized;
+        private static Dictionary<string, byte[]> _bytesCache;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             _initialized = false;
             _tables = null;
+            _bytesCache = null;
         }
 
         /// <summary>
@@ -40,6 +44,7 @@ namespace MiniGameTemplate.Data
 
         /// <summary>
         /// Luban-generated Tables instance. Access individual tables via Tables.TbItem, Tables.TbGlobalConst, etc.
+        /// Tables use lazy deserialization: each table is deserialized on first property access.
         /// Null until InitializeAsync() completes successfully.
         /// </summary>
         public static cfg.Tables Tables => _tables;
@@ -52,9 +57,10 @@ namespace MiniGameTemplate.Data
         public static System.Func<string, byte[], bool> IntegrityVerifier { get; set; }
 
         /// <summary>
-        /// Initialize config tables asynchronously. Call once during game bootstrap.
+        /// Initialize config system asynchronously. Call once during game bootstrap.
         /// Requires YooAsset (AssetService) to be initialized first.
-        /// Loads binary .bytes files via YooAsset, then constructs Luban Tables with ByteBuf deserialization.
+        /// Pre-loads all binary .bytes files via YooAsset into memory, then creates a Tables
+        /// instance with a lazy loader. Actual deserialization is deferred to first table access.
         /// </summary>
         public static async Task InitializeAsync()
         {
@@ -69,12 +75,11 @@ namespace MiniGameTemplate.Data
                     "and AssetService.InitializeAsync() completes before calling ConfigManager.InitializeAsync().");
             }
 
-            // Collect all table names that Tables constructor will request.
-            // These must match the file names Luban generates (lowercase table names).
+            // Collect all table names for pre-loading binary data.
             var tableNames = cfg.Tables.GetTableNames();
 
-            // Pre-load all binary data asynchronously
-            var bytesCache = new Dictionary<string, byte[]>(tableNames.Length);
+            // Pre-load all binary data asynchronously (I/O only, no deserialization).
+            _bytesCache = new Dictionary<string, byte[]>(tableNames.Length);
             foreach (var name in tableNames)
             {
                 var bytes = await LoadConfigBytesAsync(name);
@@ -85,19 +90,24 @@ namespace MiniGameTemplate.Data
                         "Check that gen_config has been run and .bytes files exist in " +
                         "Assets/_Game/ConfigData/.");
                 }
-                bytesCache[name] = bytes;
+                _bytesCache[name] = bytes;
             }
 
-            // Synchronous construction with pre-loaded data
+            // Create Tables with lazy loader. No deserialization happens here;
+            // each table is deserialized on first property access.
             _tables = new cfg.Tables(name =>
             {
-                if (bytesCache.TryGetValue(name, out var bytes))
+                if (_bytesCache != null && _bytesCache.TryGetValue(name, out var bytes))
+                {
+                    // Remove from cache after consumption to free the raw byte[] memory.
+                    _bytesCache.Remove(name);
                     return new ByteBuf(bytes);
+                }
                 throw new System.Exception($"[ConfigManager] Config data not found for '{name}'.");
             });
 
             _initialized = true;
-            GameLog.Log("[ConfigManager] Config tables initialized (binary via YooAsset).");
+            GameLog.Log($"[ConfigManager] Config system ready (lazy deserialization, {tableNames.Length} tables pre-loaded).");
         }
 
         /// <summary>
@@ -173,12 +183,29 @@ namespace MiniGameTemplate.Data
         }
 
         /// <summary>
+        /// Check whether a specific table's raw bytes have been consumed (deserialized).
+        /// Returns true if the table has already been deserialized and its bytes freed.
+        /// </summary>
+        /// <param name="fileName">Lowercase file name as used by the loader, e.g. "tbitem".</param>
+        public static bool IsTableLoaded(string fileName)
+        {
+            // If bytesCache exists and does NOT contain the key, the table was already consumed.
+            // If bytesCache is null, ConfigManager hasn't been initialized yet.
+            if (_bytesCache == null) return false;
+            return !_bytesCache.ContainsKey(fileName);
+        }
+
+        /// <summary>
         /// Force reload all config tables asynchronously.
+        /// Clears all cached data and re-initializes from scratch.
+        /// WARNING: During reload, Tables property will be null until InitializeAsync completes.
+        /// Callers must ensure no other code accesses ConfigManager.Tables while reload is in progress.
         /// </summary>
         public static async Task ReloadAsync()
         {
             _initialized = false;
             _tables = null;
+            _bytesCache = null;
             await InitializeAsync();
         }
     }

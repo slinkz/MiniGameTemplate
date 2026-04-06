@@ -2,6 +2,19 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.5.1] - 2026-04-07
+
+### Changed
+- **ConfigManager: Lazy Deserialization** — 配置表系统从 Eager Load 改为延迟反序列化模式
+  - `InitializeAsync()` 现在仅异步预加载全部 `.bytes` 到 `byte[]` 缓存（I/O only），不再在启动时反序列化
+  - 每个表在首次访问属性时才执行反序列化（`Tables.TbXxx` lazy property getter）
+  - 反序列化后自动调用 `ResolveRef()` 并释放原始 `byte[]` 缓存
+  - 业务代码访问方式完全不变：`ConfigManager.Tables.TbItem.Get(id)` 零侵入
+- **Luban Generated Code**: `Tables.cs` 改为 lazy property 模式（构造函数仅存储 loader，不执行反序列化）
+
+### Added
+- **ConfigManager.IsTableLoaded(fileName)**: 查询某表是否已完成反序列化的辅助方法
+
 ## [0.5.0] - 2026-04-06
 
 ### Added
