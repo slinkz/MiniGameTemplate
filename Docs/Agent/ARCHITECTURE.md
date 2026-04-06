@@ -35,7 +35,7 @@ MiniGameTemplate 采用 **ScriptableObject 驱动的组件化架构**：
 MiniGameTemplate/               ← Git 仓库根
 ├── Docs/                       ← 本文档所在目录（Agent/人类阅读）
 ├── UIProject/                  ← FairyGUI 编辑器工程
-├── .codebuddy/skills/          ← AI Agent Skills（luban-config 等）
+├── .codebuddy/skills/          ← AI Agent Skills（luban-config, fairygui-tools）
 └── UnityProj/                  ← Unity 工程（用 Unity 打开此目录）
     ├── Assets/FairyGUI/        # Junction → ThirdParty/FairyGUI-unity/Assets/
     ├── Assets/_Framework/      # 框架代码
@@ -72,10 +72,18 @@ Boot.unity 加载
       ├→ AudioManager (Singleton)         // 音频
       ├→ UIManager (Singleton)            // UI
       ├→ PoolManager (Singleton)          // 对象池
+      ├→ IStartupFlow.RunAsync()          // 游戏层启动编排（可选）
+      │    └→ GameStartupFlow（Game 层实现）
+      │         ├→ Phase 1: 打开 LoadingPanel，模拟加载进度
+      │         ├→ Phase 2: 检查隐私授权（PrivacyDialog / ConfirmDialog）
+      │         │    └→ 用户拒绝 → OperationCanceledException（非致命）
+      │         └→ Phase 3: 淡出 Loading，打开 MainMenuPanel
       └→ LoadInitialScene()
            ├→ 如果 InitialScene == 当前场景 → 跳过（避免循环加载）
            └→ 否则 → SceneLoader.LoadScene(initialScene)
 ```
+
+> **IStartupFlow 接口**：定义在 `_Framework/GameLifecycle/`，提供 `Task RunAsync(GameConfig)` 方法。Game 层通过 `GameStartupFlow` 实现自己的启动逻辑（如 Loading 界面、隐私授权）。`GameBootstrapper` 在系统初始化完成后、加载目标场景前调用。如果 `IStartupFlow` 抛出 `OperationCanceledException`，`GameBootstrapper` 将其视为非致命错误（如用户拒绝授权导致退出）。
 
 ### 4. 配置表数据流（Luban 双格式）
 ```
@@ -99,6 +107,22 @@ FairyGUI 编辑器（UIProject/）
       └→ UIPackageLoader 加载 FairyGUI 包
           └→ UIManager 管理面板生命周期
 ```
+
+### 6. UI 层级系统（SortingOrder）
+
+| 层级常量 | 值 | 用途 |
+|---------|-----|------|
+| `LAYER_BACKGROUND` | 0 | 背景面板 |
+| `LAYER_NORMAL` | 100 | 普通面板（游戏 HUD 等） |
+| `LAYER_POPUP` | 200 | 弹出面板 |
+| `LAYER_DIALOG` | 300 | 对话框（默认 UIDialogBase） |
+| `LAYER_TOAST` | 400 | Toast 提示 |
+| `LAYER_GUIDE` | 500 | 新手引导 |
+| `LAYER_LOADING` | 600 | 加载界面 |
+
+> **注意**：启动阶段弹出的对话框（PrivacyDialog、ConfirmDialog）需要覆盖 `SortOrder` 为 `LAYER_LOADING + 100`（700），否则会被 LoadingPanel 遮挡。
+>
+> `UIBase.IsFullScreen` 虚属性（默认 `true`）：全屏面板使用 `MakeFullScreen()`；`UIDialogBase` 覆盖为 `false`，保持原始尺寸并居中显示。
 
 ## 模块依赖关系
 

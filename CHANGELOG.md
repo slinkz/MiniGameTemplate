@@ -2,6 +2,37 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.5.0] - 2026-04-06
+
+### Added
+- **IStartupFlow** interface (`_Framework/GameLifecycle/`): game-layer startup orchestration hook called by `GameBootstrapper` after system init
+- **GameStartupFlow**: 3-phase startup implementation — loading screen with progress → privacy authorization (PrivacyDialog/ConfirmDialog) → fade out loading, open MainMenuPanel
+- **WeChat Privacy API**: `IWeChatBridge` extended with `CheckPrivacyAuthorize()`, `RequirePrivacyAuthorize()`, `GetPrivacySettingName()`; `WeChatBridgeStub` tracks `_privacyAuthorized` state
+- **UI panels** (FairyGUI white-box):
+  - `LoadingPanel` — fullscreen loading screen with progress bar and status text (SortOrder = LAYER_LOADING = 600)
+  - `PrivacyDialog` — privacy authorization dialog (SortOrder = LAYER_LOADING + 100 = 700, appears above loading)
+  - `ConfirmDialog` — generic confirm dialog with configurable title/content/buttons (SortOrder = LAYER_LOADING + 100 = 700)
+  - `MainMenuPanel` — main menu placeholder
+  - `GlobalSpinner` — fullscreen spinner overlay
+- **UIBase.IsFullScreen** virtual property (default `true`): fullscreen panels use `MakeFullScreen()`; non-fullscreen panels (dialogs) use `Center()` with center/middle relations
+- **UIDialogBase.IsFullScreen** override → `false`: dialogs keep original size and center instead of stretching fullscreen
+- **UIConstants layer constants**: LAYER_BACKGROUND(0), LAYER_NORMAL(100), LAYER_POPUP(200), LAYER_DIALOG(300), LAYER_TOAST(400), LAYER_GUIDE(500), LAYER_LOADING(600)
+- **FairyGUI UI Packages** (white-box prototypes in UIProject/):
+  - Common: LoadingPanel, PrivacyDialog, ConfirmDialog, GlobalSpinner, CommonButton, CommonProgressBar
+  - MainMenu: MainMenuPanel, MenuIconButton
+- **fairygui-tools Skill** (`.codebuddy/skills/fairygui-tools/`): AI Skill for FairyGUI workflow — mockup generation, XML creation, and structure analysis. Includes graph-based white-box rules, component closure principle, and validation script
+
+### Fixed
+- **PrivacyDialog invisible behind LoadingPanel**: Dialog SortOrder was 300 (LAYER_DIALOG) while LoadingPanel was 600 (LAYER_LOADING), making dialog hidden. Fixed by overriding SortOrder to LAYER_LOADING + 100 (700) for startup-phase dialogs
+- **Dialogs stretched to fullscreen**: `UIBase.CreateAndShow()` called `MakeFullScreen()` on all panels including 600×500 dialogs. Fixed by adding `IsFullScreen` virtual property with `UIDialogBase` override
+
+### Changed
+- **GameBootstrapper**: now optionally runs `IStartupFlow.RunAsync()` after system init, before `LoadInitialScene()`. Catches `OperationCanceledException` as non-fatal (e.g., user rejects privacy authorization)
+- **UIPackageLoader**: corrected `YooAssetBasePath` to `Assets/_Game/FairyGUI_Export/` and fixed path pattern from `{base}{pkg}/{pkg}_fui.bytes` to `{base}{pkg}_fui.bytes`
+
+### Removed
+- **ConfigManager Resources fallback**: removed `Resources/ConfigData/` copy step and sync `Initialize()` Resources path. All config loading now exclusively via YooAsset
+
 ## [0.4.0] - 2026-04-06
 
 ### Added

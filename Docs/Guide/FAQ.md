@@ -150,6 +150,27 @@ await UIPackageLoader.AddPackageAsync("MyPackage");
 
 项目预设为 **720×1280**（竖屏小游戏）。可以在 FairyGUI Editor 的 Project Settings 中修改。改了之后，Unity 侧的 `GRoot.inst` 会自动适配。
 
+### Q: 对话框弹出但看不见 / Loading 界面卡死
+
+**原因**：对话框的 `SortOrder` 低于当前最上层面板，被遮挡了。最常见场景：在 LoadingPanel（SortOrder = 600）显示期间弹出 Dialog（默认 SortOrder = 300），对话框被 LoadingPanel 完全覆盖。
+
+**解决**：覆盖对话框的 `SortOrder`，使其高于遮挡面板：
+```csharp
+public class MyDialog : UIDialogBase
+{
+    // 确保在 LoadingPanel 之上
+    public override int SortOrder => UIConstants.LAYER_LOADING + 100; // 700
+}
+```
+
+> 📝 v0.5.0 已修复此问题：PrivacyDialog 和 ConfirmDialog 在启动流程中使用的 SortOrder 已设为 700。
+
+### Q: 对话框被拉伸为全屏
+
+**原因**：你可能直接继承了 `UIBase` 而非 `UIDialogBase`。`UIBase` 的 `IsFullScreen` 默认为 `true`，会调用 `MakeFullScreen()` 拉伸面板。
+
+**解决**：对话框应继承 `UIDialogBase`（`IsFullScreen = false`，自动居中），不要继承 `UIBase`。
+
 ---
 
 ## 四、资源管理 / YooAsset
@@ -289,11 +310,11 @@ await UIPackageLoader.AddPackageAsync("MyPackage");
    正确做法是使用 `GameBootstrapper.SaveSystem`：
    ```csharp
    // ✅ 正确
-   GameBootstrapper.SaveSystem.SetString("key", "value");
+   GameBootstrapper.SaveSystem.SaveString("key", "value");
    
    // ❌ 错误 — 创建了新实例，数据不共享，FlushIfDirty 也不会触发
    var save = new PlayerPrefsSaveSystem();
-   save.SetString("key", "value");
+   save.SaveString("key", "value");
    ```
 
 2. **数据是否被 Flush？**
@@ -342,7 +363,6 @@ var player = _players.Items[0];
 **例外情况**：以下文件被列入白名单，允许使用 `Resources.Load` 作为回退：
 - `Singleton.cs`
 - `GameBootstrapper.cs`
-- `UIPackageLoader.cs`（YooAsset 失败时回退）
 
 如果你的代码确实需要 Resources.Load 作为回退，可以在 `ArchitectureValidator.cs` 的白名单中添加文件名。
 
@@ -390,9 +410,9 @@ var player = _players.Items[0];
 2. 场景中有活跃的 `TimerService` Singleton 实例
 3. 使用框架 API 创建计时器：
    ```csharp
-   var id = TimerService.Instance.StartTimer(5f, () => { /* callback */ });
+   var id = TimerService.Instance.Delay(5f, () => { /* callback */ });
    // 取消
-   TimerService.Instance.StopTimer(id);
+   TimerService.Instance.Cancel(id);
    ```
 
 ### Q: 如何正确使用 Luban 配置表？

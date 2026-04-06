@@ -195,6 +195,41 @@ Debug.Log(itemConfig.Name);
 
 挂在 Boot 场景的唯一 GameObject 上。`Awake()` 中按依赖顺序初始化所有系统。**你不需要修改它**，只需要在 Inspector 中配置 `GameConfig` 和 `AssetConfig`。
 
+### IStartupFlow — 游戏启动编排
+
+框架提供了 `IStartupFlow` 接口（`_Framework/GameLifecycle/`），让游戏层在系统初始化完成后、场景加载前插入自定义启动逻辑（如加载界面、隐私授权、公告弹窗等）。
+
+```csharp
+public interface IStartupFlow
+{
+    Task RunAsync(GameConfig gameConfig);
+}
+```
+
+**使用方式**：在 Game 层创建实现类，`GameBootstrapper` 会在所有系统初始化后自动调用。
+
+```csharp
+// Assets/_Game/Scripts/GameStartupFlow.cs
+public class GameStartupFlow : IStartupFlow
+{
+    public async Task RunAsync(GameConfig gameConfig)
+    {
+        // Phase 1: 显示 LoadingPanel，模拟加载进度
+        await UIManager.Instance.OpenPanelAsync<LoadingPanel>();
+        // ... 进度模拟
+
+        // Phase 2: 检查隐私授权
+        await CheckPrivacyAsync();
+
+        // Phase 3: 关闭 Loading，打开主菜单
+        UIManager.Instance.ClosePanel<LoadingPanel>();
+        await UIManager.Instance.OpenPanelAsync<MainMenuPanel>();
+    }
+}
+```
+
+> 💡 如果 `IStartupFlow.RunAsync()` 抛出 `OperationCanceledException`（如用户拒绝隐私授权），`GameBootstrapper` 会将其视为非致命错误并继续（不会 crash）。
+
 ### SceneLoader
 
 基于 SceneDefinition SO 的场景加载器。
@@ -299,6 +334,49 @@ UIPackageLoader.RemovePackage("CommonUI");
 ### UIDialogBase
 
 弹窗的基类，在 UIBase 基础上增加了半透明遮罩和点击遮罩关闭的功能。
+
+**与 UIBase 的关键区别**：
+- `IsFullScreen = false`：对话框保持原始尺寸并居中显示，不会被拉伸为全屏
+- 自动创建半透明遮罩（SortOrder - 1），可配置 `CloseOnClickOutside`（默认 `true`）
+- 默认 `SortOrder = LAYER_DIALOG (300)`
+
+```csharp
+public class MyDialog : UIDialogBase
+{
+    protected override string PackageName => UIConstants.PKG_COMMON;
+    protected override string ComponentName => "MyDialog";
+
+    // 如果需要在加载界面上方显示，覆盖 SortOrder
+    public override int SortOrder => UIConstants.LAYER_LOADING + 100; // 700
+
+    // 禁止点击遮罩关闭
+    protected override bool CloseOnClickOutside => false;
+}
+```
+
+### UI 层级系统
+
+所有 UI 面板通过 `SortOrder` 属性控制显示层级，常量定义在 `UIConstants.cs`：
+
+| 层级常量 | 值 | 用途 |
+|---------|-----|------|
+| `LAYER_BACKGROUND` | 0 | 背景面板 |
+| `LAYER_NORMAL` | 100 | 普通面板（游戏 HUD） |
+| `LAYER_POPUP` | 200 | 弹出面板 |
+| `LAYER_DIALOG` | 300 | 对话框（UIDialogBase 默认值） |
+| `LAYER_TOAST` | 400 | Toast 提示 |
+| `LAYER_GUIDE` | 500 | 新手引导 |
+| `LAYER_LOADING` | 600 | 加载界面 |
+
+> ⚠️ **常见坑**：如果需要在 LoadingPanel 显示期间弹出对话框（如启动时的隐私授权），对话框的 `SortOrder` 必须 > 600。否则对话框被 LoadingPanel 遮挡，界面看起来卡死。
+
+### IsFullScreen 属性
+
+`UIBase` 提供 `IsFullScreen` 虚属性（默认 `true`）：
+- **全屏面板**（`IsFullScreen = true`）：调用 `MakeFullScreen()` 铺满屏幕
+- **非全屏面板**（`IsFullScreen = false`）：调用 `Center()` 居中显示，保持原始尺寸
+
+`UIDialogBase` 覆盖为 `false`，因此所有继承 `UIDialogBase` 的对话框自动居中。
 
 ---
 
@@ -609,6 +687,19 @@ wx.OnHide(() => PauseGame());
 // 系统工具
 wx.Vibrate();
 wx.SetClipboardData("复制的文本");
+
+// 隐私授权
+wx.CheckPrivacyAuthorize(needAuthorize => {
+    if (needAuthorize)
+    {
+        wx.RequirePrivacyAuthorize(success => {
+            if (success) Debug.Log("用户已授权");
+        });
+    }
+});
+
+// 获取隐私设置名称（用于 UI 显示）
+string settingName = wx.GetPrivacySettingName();
 ```
 
 ### 桩实现的行为
@@ -616,6 +707,7 @@ wx.SetClipboardData("复制的文本");
 在 Editor 中运行时，`WeChatBridgeStub` 模拟所有 SDK 调用：
 - 广告回调延迟 1.5 秒后返回 true
 - 登录回调延迟 0.5 秒后返回模拟 code
+- 隐私授权首次调用 `CheckPrivacyAuthorize` 返回 `needAuthorize=true`，`RequirePrivacyAuthorize` 后标记为已授权
 - 其他调用打印日志
 
 ### 接入真实 SDK

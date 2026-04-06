@@ -194,6 +194,7 @@ bash Tools/gen_config.sh
 | Skill | 路径 | 功能 |
 |-------|------|------|
 | `luban-config` | `.codebuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
+| `fairygui-tools` | `.codebuddy/skills/fairygui-tools/` | FairyGUI UI 开发自动化：从效果图/自然语言生成白模 XML、解析 FairyGUI 工程结构、UI 结构分析 |
 
 ### 如何使用
 
@@ -203,9 +204,14 @@ bash Tools/gen_config.sh
    - 自动创建 xlsx 数据文件（带正确的表头格式）
    - 同步 `TablesExtension.cs` 扩展代码
    - 运行 `gen_config.bat` 验证生成结果
-3. Skill 内含踩坑记录和最佳实践，确保 AI 不会犯已知错误
+3. 当你对 AI 说"帮我做一个设置面板的 UI"，AI 会自动加载 `fairygui-tools` Skill，按照标准流程完成：
+   - 分析 UI 需求，生成白模示意图
+   - 生成符合 FairyGUI 规范的 XML 文件（含 package.xml 和组件 XML）
+   - 遵循"组件闭环原则"确保所有子组件引用完整
+4. Skill 内含踩坑记录和最佳实践，确保 AI 不会犯已知错误
 
 ### 想了解更多？
 
-- 查看 `.codebuddy/skills/luban-config/SKILL.md` 了解完整的 SOP 和技术细节
+- 查看 `.codebuddy/skills/luban-config/SKILL.md` 了解 Luban 配置表 Skill 的完整 SOP 和技术细节
+- 查看 `.codebuddy/skills/fairygui-tools/SKILL.md` 了解 FairyGUI UI 开发 Skill 的工作流和白模规范
 - Skill 的格式遵循 CodeBuddy Skill 标准，你也可以为项目创建自定义 Skill
