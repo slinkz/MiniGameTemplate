@@ -413,7 +413,10 @@ var player = _players.Items[0];
    bash Tools/gen_config.sh  # macOS/Linux
    ```
 3. 生成的 C# 代码 → `Assets/_Framework/DataSystem/Scripts/Config/Generated/`
-4. 生成的数据文件 → `Assets/_Framework/DataSystem/Resources/ConfigData/`
+4. 生成的数据文件：
+   - `Assets/_Game/ConfigData/*.bytes` — 运行时二进制（YooAsset）
+   - `Assets/_Framework/DataSystem/Resources/ConfigData/*.bytes` — Resources fallback
+   - `Assets/_Framework/Editor/ConfigPreview/*.json` — 编辑器预览（不打包）
 5. 在代码中通过 `ConfigManager` 访问配置：
    ```csharp
    var tables = ConfigManager.Tables;

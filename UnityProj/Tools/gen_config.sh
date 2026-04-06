@@ -43,7 +43,9 @@ echo ""
 # --- Step 3: Copy binary data to Resources for fallback loading ---
 echo "[Step 3/3] Copying binary data to Resources fallback..."
 mkdir -p "$RESOURCES_BIN"
-cp -f "$OUTPUT_DATA_BIN"/*.bytes "$RESOURCES_BIN/"
+if ! cp -f "$OUTPUT_DATA_BIN"/*.bytes "$RESOURCES_BIN/" 2>/dev/null; then
+    echo "[WARN] Binary copy to Resources failed! Check that .bytes files exist in $OUTPUT_DATA_BIN"
+fi
 echo "[OK] Binary data copied to Resources/ConfigData/."
 echo ""
 

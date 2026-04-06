@@ -41,4 +41,17 @@ void AddScore(int amount) {
 | `PlayerPrefsSaveSystem` | PlayerPrefs实现 |
 
 ### 4. Config（配置表）
-Luban生成的C#代码和数据加载器。详见 `Tools/Luban/README.md`。
+Luban v4.6.0 生成的 C# 代码和数据加载器，使用 **Binary ByteBuf** 格式反序列化。
+
+| 类 | 用途 |
+|---|------|
+| `ConfigManager` | 统一配置加载入口（YooAsset 优先 / Resources fallback） |
+| `TablesExtension` | 手写 partial class，维护表名列表供预加载 |
+| `Tables` / `TbItem` / ... | Luban 自动生成，**勿手动编辑** |
+
+**文件分布**：
+- `Assets/_Game/ConfigData/*.bytes` — 运行时二进制（YooAsset 收集）
+- `Assets/_Framework/DataSystem/Resources/ConfigData/*.bytes` — Resources fallback
+- `Assets/_Framework/Editor/ConfigPreview/*.json` — 编辑器预览（不打包）
+
+**新增/修改配置表**：运行 `Tools/gen_config.bat`（Windows）或 `Tools/gen_config.sh`（macOS/Linux），详见 `Tools/Luban/README.md`。

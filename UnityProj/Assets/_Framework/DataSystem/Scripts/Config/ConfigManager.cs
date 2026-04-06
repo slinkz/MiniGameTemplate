@@ -9,10 +9,10 @@ namespace MiniGameTemplate.Data
 {
     /// <summary>
     /// Loads Luban-generated config data at runtime using binary format (.bytes).
-    /// In the Editor, human-readable JSON copies exist under Resources/ConfigData/ for inspection only.
+    /// In the Editor, human-readable JSON copies exist under Editor/ConfigPreview/ for inspection only.
     ///
     /// Runtime loading: Binary .bytes files via YooAsset (primary) or Resources (fallback).
-    /// Editor inspection: JSON files in Resources/ConfigData/ are read-only reference copies for designers.
+    /// Editor inspection: JSON files in Editor/ConfigPreview/ are read-only reference copies for designers.
     ///
     /// Security:
     /// - File names are validated against path traversal attacks.
@@ -33,7 +33,7 @@ namespace MiniGameTemplate.Data
         /// Base path for binary config data when loading via YooAsset.
         /// Binary .bytes files are placed under Assets/_Game/ConfigData/ and collected by YooAsset.
         /// </summary>
-        public static string YooAssetConfigPath = "Assets/_Game/ConfigData/";
+        public static readonly string YooAssetConfigPath = "Assets/_Game/ConfigData/";
 
         private static cfg.Tables _tables;
 
@@ -70,8 +70,10 @@ namespace MiniGameTemplate.Data
                 var bytes = await LoadConfigBytesAsync(name);
                 if (bytes == null)
                 {
-                    Debug.LogError($"[ConfigManager] FATAL: Failed to load config '{name}'. Tables cannot be initialized.");
-                    return;
+                    throw new System.Exception(
+                        $"[ConfigManager] FATAL: Failed to load config '{name}'. " +
+                        "Check that gen_config has been run and .bytes files exist in " +
+                        "Assets/_Game/ConfigData/ or Resources/ConfigData/.");
                 }
                 bytesCache[name] = bytes;
             }
@@ -143,14 +145,28 @@ namespace MiniGameTemplate.Data
                     var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(path);
                     await handle.Task;
 
-                    if (handle.Status == YooAsset.EOperationStatus.Succeed)
+                    try
                     {
-                        bytes = (handle.AssetObject as TextAsset).bytes;
-                        handle.Release();
+                        if (handle.Status == YooAsset.EOperationStatus.Succeed)
+                        {
+                            var textAsset = handle.AssetObject as TextAsset;
+                            if (textAsset != null)
+                            {
+                                bytes = textAsset.bytes;
+                            }
+                            else
+                            {
+                                GameLog.LogWarning($"[ConfigManager] Asset loaded but is not TextAsset: {path}");
+                            }
+                        }
+                        else
+                        {
+                            GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                        }
                     }
-                    else
+                    finally
                     {
-                        GameLog.LogWarning($"[ConfigManager] YooAsset load failed for {path}, falling back to Resources.");
+                        handle.Release();
                     }
                 }
                 catch (System.Exception ex)
@@ -178,7 +194,7 @@ namespace MiniGameTemplate.Data
         /// Synchronous fallback loader via Resources.Load.
         /// Loads .bytes from Resources/ConfigData/.
         /// </summary>
-        public static byte[] LoadConfigBytesSync(string fileName)
+        private static byte[] LoadConfigBytesSync(string fileName)
         {
             if (!IsValidConfigFileName(fileName))
             {

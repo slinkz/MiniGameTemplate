@@ -29,7 +29,7 @@ All notable changes to MiniGameTemplate will be documented in this file.
 - Legacy Luban v2/v3 CLI dependency and `--gen_types` command syntax
 - JSON runtime loading in ConfigManager (replaced by Binary)
 - Plaintext JSON from `_Game/ConfigData/` (now only `.bytes`)
-- `__root__.xml` legacy Luban config file
+- Legacy Luban definition files: `__root__.xml`, `__tables__.xml`, `globalconst.xml`, `item.xml` (consolidated into `tables.xml`)
 
 ## [0.3.0] - 2026-04-05
 

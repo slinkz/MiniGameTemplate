@@ -172,12 +172,14 @@ int score = save.LoadInt("high_score", 0); // 第二个参数是默认值
 
 ### 2.4 Config（配置表）
 
-基于 Luban 的配置数据系统。生成的代码和数据由 `ConfigManager` 管理。
+基于 Luban v4.6.0 的配置数据系统，使用 **Binary ByteBuf** 格式。生成的代码和数据由 `ConfigManager` 管理。
+
+运行时通过 YooAsset 加载 `.bytes` 二进制文件（主路径），Resources 作为 fallback。编辑器下额外生成 JSON 预览文件（`Editor/ConfigPreview/`，不打包）。
 
 ```csharp
 // 配置表在 GameBootstrapper 中已经初始化
-// 直接使用生成的 Tables 类访问数据
-var itemConfig = Tables.Instance.TbItem.Get(1001);
+// 直接使用 ConfigManager.Tables 访问数据
+var itemConfig = ConfigManager.Tables.TbItem.Get(1001);
 Debug.Log(itemConfig.Name);
 ```
 

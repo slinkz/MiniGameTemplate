@@ -55,7 +55,11 @@ echo.
 REM --- Step 3: Copy binary data to Resources for fallback loading ---
 echo [Step 3/3] Copying binary data to Resources fallback...
 if not exist "%RESOURCES_BIN%" mkdir "%RESOURCES_BIN%"
-copy /Y "%OUTPUT_DATA_BIN%\*.bytes" "%RESOURCES_BIN%\" > nul 2>&1
+copy /Y "%OUTPUT_DATA_BIN%\*.bytes" "%RESOURCES_BIN%\" > nul
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [WARN] Binary copy to Resources failed! Check that .bytes files exist in %OUTPUT_DATA_BIN%
+)
 echo [OK] Binary data copied to Resources/ConfigData/.
 echo.
 
