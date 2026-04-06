@@ -23,7 +23,7 @@ All notable changes to MiniGameTemplate will be documented in this file.
   2. `json` → `Editor/ConfigPreview/*.json`
   3. Copy `.bytes` to `Resources/ConfigData/` (fallback)
 - **Generated code**: switched from `cs-simple-json` (JSONNode) to `cs-bin` (ByteBuf)
-- **Luban input syntax**: `*@filename.json` for multi-record JSON files (v4.x)
+- **Luban data source**: switched from JSON (`*@filename.json`) to **xlsx** for designer-friendly Excel editing
 
 ### Removed
 - Legacy Luban v2/v3 CLI dependency and `--gen_types` command syntax

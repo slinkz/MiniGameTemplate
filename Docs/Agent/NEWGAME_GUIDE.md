@@ -93,7 +93,8 @@ public class MainMenuPanel : UIBase
 如果游戏需要配置表：
 
 1. 在 `UnityProj/DataTables/Defs/tables.xml` 中定义 Bean 和 Table
-2. 在 `UnityProj/DataTables/Datas/` 中编写数据（JSON 格式，数组用 `*@filename.json` 语法）
+2. 在 `UnityProj/DataTables/Datas/` 中编写数据（**xlsx 格式**，第一行 `##var` 字段名，第二行 `##type` 类型，第三行起为数据）
+3. 在 `tables.xml` 的 `<table>` 中用 `input="filename.xlsx"` 指向数据文件
 3. 运行 `UnityProj/Tools/gen_config.bat` 生成代码和数据
 4. 更新 `TablesExtension.cs` 中的 `GetTableNames()` 添加新表名
 5. 通过 `ConfigManager.Tables.TbXxx` 访问生成的表数据
@@ -150,7 +151,7 @@ bash Tools/setup_fairygui.sh
 ## Step 13: Luban 配置表新增表流程
 
 1. 在 `UnityProj/DataTables/Defs/tables.xml` 中新增 `<bean>` 和 `<table>` 定义
-2. 在 `UnityProj/DataTables/Datas/` 新建对应 JSON 数据文件
+2. 在 `UnityProj/DataTables/Datas/` 新建对应 **xlsx 数据文件**（`##var` 行 + `##type` 行 + 数据行）
 3. 运行 `UnityProj/Tools/gen_config.bat`（Windows）或 `gen_config.sh`（macOS/Linux）
 4. 更新 `TablesExtension.cs` 中的 `GetTableNames()` 方法，添加新表名
 5. 生成的 C# 代码位于 `UnityProj/Assets/_Framework/DataSystem/Scripts/Config/Generated/`

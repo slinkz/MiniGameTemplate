@@ -55,10 +55,18 @@ Luban CLI 已编译到 `UnityProj/Tools/Luban/` 目录下（通过 `dotnet publi
 }
 ```
 
-### JSON 数据源多记录语法
-Luban v4.x 中，JSON 数组文件需要使用 `*@filename.json` 语法标记为多记录：
+### xlsx 数据源格式
+Luban v4.x 推荐使用 xlsx 作为数据源，策划可以直接用 Excel 打开编辑：
+
+| 行 | A列 | B列 | C列 | ... |
+|---|------|------|------|-----|
+| 1 | `##var` | 字段名1 | 字段名2 | ... |
+| 2 | `##type` | int | string | ... |
+| 3 | `##` | 中文注释 | 中文注释 | ... |
+| 4+ | (空) | 数据 | 数据 | ... |
+
 ```xml
-<table name="TbItem" value="Item" input="*@item.json" mode="map" index="id"/>
+<table name="TbItem" value="Item" input="item.xlsx" mode="map" index="id"/>
 ```
 
 ## 生成代码命名空间

@@ -78,7 +78,7 @@ Boot.unity 加载
 
 ### 4. 配置表数据流（Luban 双格式）
 ```
-DataTables/Datas/*.json       ← 源数据（人工编辑，JSON）
+DataTables/Datas/*.xlsx       ← 源数据（策划用 Excel 编辑）
         │
     gen_config.bat/sh          ← Luban v4.6.0 生成
         │

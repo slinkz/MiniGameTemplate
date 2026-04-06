@@ -30,6 +30,10 @@ UIProject/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
 UIProject/**/*.gif filter=lfs diff=lfs merge=lfs -text
 UIProject/**/*.psd filter=lfs diff=lfs merge=lfs -text
 
+# DataTables (binary, do not diff/merge as text)
+UnityProj/DataTables/**/*.xlsx binary
+UnityProj/DataTables/**/*.xls binary
+
 # Force text for Unity serialized files
 UnityProj/**/*.unity text merge=unityyamlmerge eol=lf
 UnityProj/**/*.prefab text merge=unityyamlmerge eol=lf
