@@ -132,7 +132,7 @@ namespace MiniGameTemplate.EditorTools
 
         private static HashSet<string> GetDefines(BuildTargetGroup group)
         {
-#if UNITY_2021_2_OR_NEWER
+#if UNITY_2022_1_OR_NEWER
             var named = NamedBuildTarget.FromBuildTargetGroup(group);
             var raw = PlayerSettings.GetScriptingDefineSymbols(named);
 #else
@@ -156,7 +156,7 @@ namespace MiniGameTemplate.EditorTools
         private static void SetDefines(BuildTargetGroup group, HashSet<string> defines)
         {
             var raw = string.Join(";", defines.OrderBy(x => x));
-#if UNITY_2021_2_OR_NEWER
+#if UNITY_2022_1_OR_NEWER
             var named = NamedBuildTarget.FromBuildTargetGroup(group);
             PlayerSettings.SetScriptingDefineSymbols(named, raw);
 #else

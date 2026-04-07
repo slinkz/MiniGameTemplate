@@ -184,7 +184,7 @@ namespace MiniGameTemplate.EditorTools
             if (group == BuildTargetGroup.Unknown)
                 return;
 
-#if UNITY_2021_2_OR_NEWER
+#if UNITY_2022_1_OR_NEWER
             var named = NamedBuildTarget.FromBuildTargetGroup(group);
             var definesRaw = PlayerSettings.GetScriptingDefineSymbols(named);
 #else
