@@ -26,5 +26,7 @@ namespace MiniGameTemplate.UI
         public const string COMP_PRIVACY_DIALOG = "PrivacyDialog";
         public const string COMP_GLOBAL_SPINNER = "GlobalSpinner";
         public const string COMP_MAIN_MENU_PANEL = "MainMenuPanel";
+        public const string COMP_CLICK_COUNTER_PANEL = "ClickCounterPanel";
+
     }
 }

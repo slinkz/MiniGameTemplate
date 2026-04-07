@@ -1,6 +1,9 @@
 using FairyGUI;
+using MiniGameTemplate.Core;
 using MiniGameTemplate.Events;
 using MiniGameTemplate.Platform;
+using MiniGameTemplate.Timing;
+using MiniGameTemplate.Utils;
 
 namespace Game.UI
 {
@@ -16,14 +19,23 @@ namespace Game.UI
     /// <summary>
     /// Main menu / lobby panel — the player's hub after loading completes.
     /// Displays player info, start button, and utility shortcuts.
+    ///
+    /// If StartGameEvent is not configured in Boot scene, this panel runs a built-in
+    /// ClickCounter fallback mode so the template remains playable out of the box.
     /// </summary>
     public class MainMenuPanel : MiniGameTemplate.UI.UIBase
     {
+        private const string HighScoreKey = "example_high_score";
+        private const float DefaultRoundDuration = 10f;
+        private const float TickInterval = 0.1f;
+
         protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_MAIN_MENU;
         protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_MAIN_MENU_PANEL;
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_NORMAL;
 
         private GTextField _txtNickname;
+        private GTextField _txtGameTitle;
+        private GTextField _txtVersion;
         private GButton _btnStart;
         private GButton _btnSettings;
         private GButton _btnRanking;
@@ -32,10 +44,19 @@ namespace Game.UI
         private GameEvent _startGameEvent;
         private IWeChatBridge _weChatBridge;
 
+        private bool _isLocalRoundRunning;
+        private bool _isResultState;
+        private int _score;
+        private int _highScore;
+        private float _remainingTime;
+        private TimerHandle _countdownTimer = TimerHandle.Invalid;
+
         protected override void OnInit()
         {
             base.OnInit();
             _txtNickname = ContentPane.GetChild("txtNickname") as GTextField;
+            _txtGameTitle = ContentPane.GetChild("txtGameTitle") as GTextField;
+            _txtVersion = ContentPane.GetChild("txtVersion") as GTextField;
             _btnStart = ContentPane.GetChild("btnStart") as GButton;
             _btnSettings = ContentPane.GetChild("btnSettings") as GButton;
             _btnRanking = ContentPane.GetChild("btnRanking") as GButton;
@@ -51,7 +72,6 @@ namespace Game.UI
         {
             base.OnOpen(data);
 
-            // Unpack dependencies from data — ensures they are available before RefreshPlayerInfo
             var menuData = data as MainMenuPanelData;
             if (menuData != null)
             {
@@ -59,46 +79,199 @@ namespace Game.UI
                 _weChatBridge = menuData.WeChatBridge;
             }
 
-            RefreshPlayerInfo();
+            LoadHighScore();
+            EnterMenuState();
         }
 
         protected override void OnClose()
         {
+            CancelRoundTimer();
             _startGameEvent = null;
             _weChatBridge = null;
             base.OnClose();
         }
 
+        private void LoadHighScore()
+        {
+            if (GameBootstrapper.SaveSystem == null)
+            {
+                _highScore = 0;
+                return;
+            }
+
+            _highScore = GameBootstrapper.SaveSystem.LoadInt(HighScoreKey, 0);
+        }
+
         private void RefreshPlayerInfo()
         {
-            if (_weChatBridge == null || _txtNickname == null) return;
+            if (_txtNickname == null)
+                return;
+
+            if (_weChatBridge == null)
+            {
+                _txtNickname.text = "点击开始游戏";
+                return;
+            }
 
             var userInfo = _weChatBridge.GetUserInfo();
-            if (userInfo != null)
-            {
-                _txtNickname.text = userInfo.Nickname;
-            }
+            _txtNickname.text = userInfo != null ? userInfo.Nickname : "点击开始游戏";
         }
 
         private void OnStartClicked()
         {
-            _startGameEvent?.Raise();
+            // Preferred path: event-driven game flow configured in Boot scene.
+            if (_startGameEvent != null)
+            {
+                _startGameEvent.Raise();
+                return;
+            }
+
+            // Fallback path: local ClickCounter mode inside MainMenuPanel.
+            if (_isLocalRoundRunning)
+            {
+                _score += 1;
+                RefreshLocalHud();
+                return;
+            }
+
+            StartLocalRound();
         }
 
         private void OnSettingsClicked()
         {
-            // Placeholder — open settings panel when implemented
-            MiniGameTemplate.Utils.GameLog.Log("[MainMenuPanel] Settings button clicked (not yet implemented).");
+            // In fallback ClickCounter mode: acts as "Back to Menu".
+            if (_isLocalRoundRunning || _isResultState)
+            {
+                EnterMenuState();
+                return;
+            }
+
+            GameLog.Log("[MainMenuPanel] Settings button clicked (not yet implemented).");
         }
 
         private void OnRankingClicked()
         {
+            // In fallback ClickCounter mode: acts as "Restart".
+            if (_isLocalRoundRunning || _isResultState)
+            {
+                StartLocalRound();
+                return;
+            }
+
             _weChatBridge?.ShowRankingPanel();
         }
 
         private void OnShareClicked()
         {
+            if (_isLocalRoundRunning || _isResultState)
+            {
+                _weChatBridge?.Share($"我在 ClickCounter 得了 {_score} 分，来挑战我！", "", $"score={_score}");
+                return;
+            }
+
             _weChatBridge?.Share("来和我一起玩吧！", "", "");
+        }
+
+        private void EnterMenuState()
+        {
+            CancelRoundTimer();
+            _isLocalRoundRunning = false;
+            _isResultState = false;
+
+            RefreshPlayerInfo();
+
+            if (_txtGameTitle != null)
+                _txtGameTitle.text = "ClickCounter";
+            if (_txtVersion != null)
+                _txtVersion.text = $"最高分：{_highScore}";
+
+            if (_btnStart != null) _btnStart.title = "开始游戏";
+            if (_btnSettings != null) _btnSettings.title = "设置";
+            if (_btnRanking != null) _btnRanking.title = "排行";
+            if (_btnShare != null) _btnShare.title = "分享";
+        }
+
+        private void StartLocalRound()
+        {
+            CancelRoundTimer();
+
+            _isLocalRoundRunning = true;
+            _isResultState = false;
+            _score = 0;
+            _remainingTime = DefaultRoundDuration;
+
+            if (_btnStart != null) _btnStart.title = "点击 +1";
+            if (_btnSettings != null) _btnSettings.title = "返回";
+            if (_btnRanking != null) _btnRanking.title = "重开";
+            if (_btnShare != null) _btnShare.title = "晒分";
+
+            if (_txtNickname != null)
+                _txtNickname.text = "疯狂点击开始！";
+
+            RefreshLocalHud();
+
+            _countdownTimer = TimerService.Instance.Repeat(TickInterval, OnLocalRoundTick);
+        }
+
+        private void OnLocalRoundTick()
+        {
+            if (!_isLocalRoundRunning)
+                return;
+
+            _remainingTime -= TickInterval;
+            if (_remainingTime <= 0f)
+            {
+                _remainingTime = 0f;
+                EndLocalRound();
+                return;
+            }
+
+            RefreshLocalHud();
+        }
+
+        private void EndLocalRound()
+        {
+            CancelRoundTimer();
+            _isLocalRoundRunning = false;
+            _isResultState = true;
+
+            if (_score > _highScore)
+            {
+                _highScore = _score;
+                if (GameBootstrapper.SaveSystem != null)
+                {
+                    GameBootstrapper.SaveSystem.SaveInt(HighScoreKey, _highScore);
+                    GameBootstrapper.SaveSystem.Save();
+                }
+            }
+
+            if (_txtNickname != null)
+                _txtNickname.text = "本局结束";
+            if (_txtGameTitle != null)
+                _txtGameTitle.text = $"本局得分：{_score}";
+            if (_txtVersion != null)
+                _txtVersion.text = $"最高分：{_highScore}";
+
+            if (_btnStart != null) _btnStart.title = "再来一局";
+            if (_btnSettings != null) _btnSettings.title = "返回";
+            if (_btnRanking != null) _btnRanking.title = "重开";
+            if (_btnShare != null) _btnShare.title = "晒分";
+        }
+
+        private void RefreshLocalHud()
+        {
+            if (_txtGameTitle != null)
+                _txtGameTitle.text = $"得分：{_score}";
+
+            if (_txtVersion != null)
+                _txtVersion.text = $"剩余：{_remainingTime:F1}s | 最高：{_highScore}";
+        }
+
+        private void CancelRoundTimer()
+        {
+            TimerService.Instance.Cancel(_countdownTimer);
+            _countdownTimer = TimerHandle.Invalid;
         }
     }
 }
+

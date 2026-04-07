@@ -2,7 +2,28 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [0.5.3] - 2026-04-07
+
+### 新增
+- **ClickCounter 独立面板骨架**
+  - 新增 `ClickCounterPanel` 运行时代码：`UnityProj/Assets/_Game/Scripts/UI/ClickCounterPanel.cs`
+  - 新增 FairyGUI 组件源文件：`UIProject/assets/MainMenu/ClickCounterPanel.xml`
+  - `UIConstants` 增加组件常量：`COMP_CLICK_COUNTER_PANEL`
+
+### 变更
+- **MainMenuPanel 内置可玩回退模式**
+  - 当 `GameStartupFlow._startGameEvent` 未配置时，主菜单点击“开始游戏”将直接进入内置 ClickCounter 玩法
+  - 支持开始、点击加分、倒计时、结算、重开、返回、分享、最高分本地保存
+- **示例展示脚本完善**
+  - `ScoreDisplay` 与 `CountdownDisplay` 去除 TODO 占位，改为可运行日志输出并在 `OnEnable` 时主动刷新一次
+- **文档更新**
+  - 更新 `_Example/README.md` 与 `Docs/Guide/EXAMPLE_WALKTHROUGH.md`，补充当前可玩路径与独立面板启用说明
+
+### 说明
+- `FairyGUI_Export/` 目录由 FairyGUI 编辑器发布生成；本次提交只更新了 UIProject 源文件。启用独立面板模式时，需要在 FairyGUI 编辑器重新发布 MainMenu 包。
+
 ## [0.5.2] - 2026-04-07
+
 
 ### 新增
 - **Spine 源码接入（可选）**

@@ -3,7 +3,9 @@
   <resources>
     <component id="gen_01" name="MainMenuPanel.xml" path="/" exported="true"/>
     <component id="gen_02" name="MenuIconButton.xml" path="/components/"/>
+    <component id="gen_03" name="ClickCounterPanel.xml" path="/" exported="true"/>
   </resources>
+
   <publish name="MainMenu">
     <atlas name="Default" index="0"/>
   </publish>

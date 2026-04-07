@@ -12,14 +12,18 @@ namespace MiniGameTemplate.Example
     {
         [SerializeField] private IntVariable _score;
 
-        // In a real project, this would update a FairyGUI text component.
-        // For demonstration, we use GameLog (stripped in release builds).
+        // This sample keeps rendering-agnostic behavior: if you later bind to FairyGUI,
+        // replace GameLog with concrete text assignment.
 
         private void OnEnable()
         {
             if (_score != null)
+            {
                 _score.OnValueChanged += UpdateDisplay;
+                UpdateDisplay(_score.Value);
+            }
         }
+
 
         private void OnDisable()
         {
@@ -29,9 +33,8 @@ namespace MiniGameTemplate.Example
 
         private void UpdateDisplay(int value)
         {
-            // TODO: Replace with FairyGUI text update
-            // _scoreText.text = value.ToString();
             GameLog.Log($"[ScoreDisplay] Score: {value}");
         }
+
     }
 }

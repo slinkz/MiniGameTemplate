@@ -1,5 +1,7 @@
 using UnityEngine;
 using MiniGameTemplate.Data;
+using MiniGameTemplate.Utils;
+
 
 namespace MiniGameTemplate.Example
 {
@@ -14,8 +16,12 @@ namespace MiniGameTemplate.Example
         private void OnEnable()
         {
             if (_remainingTime != null)
+            {
                 _remainingTime.OnValueChanged += UpdateDisplay;
+                UpdateDisplay(_remainingTime.Value);
+            }
         }
+
 
         private void OnDisable()
         {
@@ -25,8 +31,8 @@ namespace MiniGameTemplate.Example
 
         private void UpdateDisplay(float value)
         {
-            // TODO: Replace with FairyGUI text update
-            // _timerText.text = $"{value:F1}s";
+            GameLog.Log($"[CountdownDisplay] Remaining: {value:F1}s");
         }
+
     }
 }
