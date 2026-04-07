@@ -1,192 +1,191 @@
-# Changelog
+# 变更日志
 
-All notable changes to MiniGameTemplate will be documented in this file.
+MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
 ## [0.5.2] - 2026-04-07
 
-### Added
-- **Spine source integration (optional)**
-  - Added git submodule: `UnityProj/ThirdParty/spine-runtimes` (branch `4.2`)
-  - Added setup scripts: `UnityProj/Tools/setup_spine.bat` / `setup_spine.sh`
-  - Setup creates source links:
+### 新增
+- **Spine 源码接入（可选）**
+  - 新增 git 子模块：`UnityProj/ThirdParty/spine-runtimes`（分支 `4.2`）
+  - 新增初始化脚本：`UnityProj/Tools/setup_spine.bat` / `setup_spine.sh`
+  - 初始化脚本会创建源码链接：
     - `Assets/Spine` -> `ThirdParty/spine-runtimes/spine-unity/Assets/Spine`
     - `Assets/SpineCSharp` -> `ThirdParty/spine-runtimes/spine-csharp/src`
-- **Spine integration editor tools** (`Tools -> MiniGame Template -> Integrations -> Spine`)
-  - Enable/Disable defines for current target: `FAIRYGUI_SPINE`, `ENABLE_SPINE`
-  - Validate integration status (source links, asmdef readiness, define consistency)
-- **FairyGUI Spine helper**: `FairySpineHelper` for controlling `GLoader3D` playback via framework API
+- **Spine 集成编辑器工具**（`Tools -> MiniGame Template -> Integrations -> Spine`）
+  - 支持当前目标平台一键启用/禁用脚本宏：`FAIRYGUI_SPINE`、`ENABLE_SPINE`
+  - 支持校验集成状态（源码链接、asmdef 就绪情况、宏一致性）
+- **FairyGUI Spine 辅助类**：新增 `FairySpineHelper`，通过框架 API 控制 `GLoader3D` 播放
 
-### Changed
-- **Setup scripts hardening** (`setup_fairygui.*`, `setup_spine.*`)
-  - Added source existence checks before deleting existing directories
-  - Added explicit failure handling for submodule init / link creation
-  - Added non-interactive flags for automation (`--force`, Windows also supports `--no-pause`)
-- **ArchitectureValidator**: added optional Spine consistency check when `FAIRYGUI_SPINE` is enabled
-- Updated docs (README / GETTING_STARTED / FAQ / FRAMEWORK_MODULES / ARCHITECTURE / NEWGAME_GUIDE / UISystem MODULE_README) for optional Spine workflow
-
+### 变更
+- **初始化脚本加固**（`setup_fairygui.*`、`setup_spine.*`）
+  - 在删除已存在目录前先校验 source 路径是否存在
+  - 为子模块初始化/链接创建增加明确失败处理
+  - 增加自动化无交互参数（`--force`，Windows 额外支持 `--no-pause`）
+- **ArchitectureValidator**：当启用 `FAIRYGUI_SPINE` 时，增加 Spine 可选接入一致性校验
+- 更新文档（README / GETTING_STARTED / FAQ / FRAMEWORK_MODULES / ARCHITECTURE / NEWGAME_GUIDE / UISystem MODULE_README），补充 Spine 可选接入工作流
 
 ## [0.5.1] - 2026-04-07
 
-### Changed
-- **ConfigManager: Lazy Deserialization** — 配置表系统从 Eager Load 改为延迟反序列化模式
-  - `InitializeAsync()` 现在仅异步预加载全部 `.bytes` 到 `byte[]` 缓存（I/O only），不再在启动时反序列化
-  - 每个表在首次访问属性时才执行反序列化（`Tables.TbXxx` lazy property getter）
+### 变更
+- **ConfigManager：Lazy Deserialization** —— 配置表系统从 Eager Load 改为延迟反序列化模式
+  - `InitializeAsync()` 现在仅异步预加载全部 `.bytes` 到 `byte[]` 缓存（仅 I/O），不再在启动阶段反序列化
+  - 每张表在首次访问属性时才执行反序列化（`Tables.TbXxx` 延迟属性 getter）
   - 反序列化后自动调用 `ResolveRef()` 并释放原始 `byte[]` 缓存
-  - 业务代码访问方式完全不变：`ConfigManager.Tables.TbItem.Get(id)` 零侵入
-- **Luban Generated Code**: `Tables.cs` 改为 lazy property 模式（构造函数仅存储 loader，不执行反序列化）
+  - 业务代码访问方式保持不变：`ConfigManager.Tables.TbItem.Get(id)`，零侵入
+- **Luban 生成代码**：`Tables.cs` 改为延迟属性模式（构造函数仅保存 loader，不执行反序列化）
 
-### Added
-- **ConfigManager.IsTableLoaded(fileName)**: 查询某表是否已完成反序列化的辅助方法
+### 新增
+- **ConfigManager.IsTableLoaded(fileName)**：用于查询某张表是否已完成反序列化的辅助方法
 
 ## [0.5.0] - 2026-04-06
 
-### Added
-- **IStartupFlow** interface (`_Framework/GameLifecycle/`): game-layer startup orchestration hook called by `GameBootstrapper` after system init
-- **GameStartupFlow**: 3-phase startup implementation — loading screen with progress → privacy authorization (PrivacyDialog/ConfirmDialog) → fade out loading, open MainMenuPanel
-- **WeChat Privacy API**: `IWeChatBridge` extended with `CheckPrivacyAuthorize()`, `RequirePrivacyAuthorize()`, `GetPrivacySettingName()`; `WeChatBridgeStub` tracks `_privacyAuthorized` state
-- **UI panels** (FairyGUI white-box):
-  - `LoadingPanel` — fullscreen loading screen with progress bar and status text (SortOrder = LAYER_LOADING = 600)
-  - `PrivacyDialog` — privacy authorization dialog (SortOrder = LAYER_LOADING + 100 = 700, appears above loading)
-  - `ConfirmDialog` — generic confirm dialog with configurable title/content/buttons (SortOrder = LAYER_LOADING + 100 = 700)
-  - `MainMenuPanel` — main menu placeholder
-  - `GlobalSpinner` — fullscreen spinner overlay
-- **UIBase.IsFullScreen** virtual property (default `true`): fullscreen panels use `MakeFullScreen()`; non-fullscreen panels (dialogs) use `Center()` with center/middle relations
-- **UIDialogBase.IsFullScreen** override → `false`: dialogs keep original size and center instead of stretching fullscreen
-- **UIConstants layer constants**: LAYER_BACKGROUND(0), LAYER_NORMAL(100), LAYER_POPUP(200), LAYER_DIALOG(300), LAYER_TOAST(400), LAYER_GUIDE(500), LAYER_LOADING(600)
-- **FairyGUI UI Packages** (white-box prototypes in UIProject/):
-  - Common: LoadingPanel, PrivacyDialog, ConfirmDialog, GlobalSpinner, CommonButton, CommonProgressBar
-  - MainMenu: MainMenuPanel, MenuIconButton
-- **fairygui-tools Skill** (`.codebuddy/skills/fairygui-tools/`): AI Skill for FairyGUI workflow — mockup generation, XML creation, and structure analysis. Includes graph-based white-box rules, component closure principle, and validation script
+### 新增
+- **IStartupFlow 接口**（`_Framework/GameLifecycle/`）：由 `GameBootstrapper` 在系统初始化后调用的游戏层启动编排钩子
+- **GameStartupFlow**：三阶段启动流程实现——加载界面进度 → 隐私授权（PrivacyDialog/ConfirmDialog）→ 隐去加载界面并打开 MainMenuPanel
+- **微信隐私 API**：`IWeChatBridge` 扩展 `CheckPrivacyAuthorize()`、`RequirePrivacyAuthorize()`、`GetPrivacySettingName()`；`WeChatBridgeStub` 跟踪 `_privacyAuthorized` 状态
+- **UI 面板**（FairyGUI 白模）
+  - `LoadingPanel` —— 全屏加载界面，含进度条和状态文本（SortOrder = LAYER_LOADING = 600）
+  - `PrivacyDialog` —— 隐私授权弹窗（SortOrder = LAYER_LOADING + 100 = 700，显示在加载层上方）
+  - `ConfirmDialog` —— 通用确认弹窗，标题/内容/按钮可配置（SortOrder = LAYER_LOADING + 100 = 700）
+  - `MainMenuPanel` —— 主菜单占位面板
+  - `GlobalSpinner` —— 全屏等待遮罩
+- **UIBase.IsFullScreen** 虚属性（默认 `true`）：全屏面板使用 `MakeFullScreen()`；非全屏面板（对话框）使用 `Center()` 并设置 center/middle 关系
+- **UIDialogBase.IsFullScreen** 重写为 `false`：对话框保持原始尺寸并居中，不再拉伸为全屏
+- **UIConstants 层级常量**：LAYER_BACKGROUND(0)、LAYER_NORMAL(100)、LAYER_POPUP(200)、LAYER_DIALOG(300)、LAYER_TOAST(400)、LAYER_GUIDE(500)、LAYER_LOADING(600)
+- **FairyGUI UI 包**（UIProject/ 白模原型）
+  - Common：LoadingPanel、PrivacyDialog、ConfirmDialog、GlobalSpinner、CommonButton、CommonProgressBar
+  - MainMenu：MainMenuPanel、MenuIconButton
+- **fairygui-tools Skill**（`.codebuddy/skills/fairygui-tools/`）：用于 FairyGUI 工作流的 AI Skill，支持示意图生成、XML 生成和结构分析，包含图形白模规则、组件闭环原则与校验脚本
 
-### Fixed
-- **PrivacyDialog invisible behind LoadingPanel**: Dialog SortOrder was 300 (LAYER_DIALOG) while LoadingPanel was 600 (LAYER_LOADING), making dialog hidden. Fixed by overriding SortOrder to LAYER_LOADING + 100 (700) for startup-phase dialogs
-- **Dialogs stretched to fullscreen**: `UIBase.CreateAndShow()` called `MakeFullScreen()` on all panels including 600×500 dialogs. Fixed by adding `IsFullScreen` virtual property with `UIDialogBase` override
+### 修复
+- **PrivacyDialog 被 LoadingPanel 遮挡不可见**：Dialog 的 SortOrder 原为 300（LAYER_DIALOG），而 LoadingPanel 为 600（LAYER_LOADING），导致弹窗被遮挡。已将启动阶段弹窗 SortOrder 重写为 LAYER_LOADING + 100（700）
+- **对话框被拉伸成全屏**：`UIBase.CreateAndShow()` 会对所有面板调用 `MakeFullScreen()`，包含 600×500 对话框。已新增 `IsFullScreen` 虚属性并在 `UIDialogBase` 中重写
 
-### Changed
-- **GameBootstrapper**: now optionally runs `IStartupFlow.RunAsync()` after system init, before `LoadInitialScene()`. Catches `OperationCanceledException` as non-fatal (e.g., user rejects privacy authorization)
-- **UIPackageLoader**: corrected `YooAssetBasePath` to `Assets/_Game/FairyGUI_Export/` and fixed path pattern from `{base}{pkg}/{pkg}_fui.bytes` to `{base}{pkg}_fui.bytes`
+### 变更
+- **GameBootstrapper**：系统初始化后、`LoadInitialScene()` 前可选执行 `IStartupFlow.RunAsync()`；将 `OperationCanceledException` 视为非致命（例如用户拒绝隐私授权）
+- **UIPackageLoader**：修正 `YooAssetBasePath` 为 `Assets/_Game/FairyGUI_Export/`，并将路径模式从 `{base}{pkg}/{pkg}_fui.bytes` 修正为 `{base}{pkg}_fui.bytes`
 
-### Removed
-- **ConfigManager Resources fallback**: removed `Resources/ConfigData/` copy step and sync `Initialize()` Resources path. All config loading now exclusively via YooAsset
+### 移除
+- **ConfigManager 的 Resources 兜底路径**：移除 `Resources/ConfigData/` 拷贝步骤和同步 `Initialize()` 中的 Resources 路径。配置加载现统一通过 YooAsset
 
 ## [0.4.0] - 2026-04-06
 
-### Added
-- **Luban v4.6.0**: compiled from source to `Tools/Luban/`, replacing legacy Luban CLI
-- **Dual-format config system**: Binary for runtime + JSON for editor preview
-  - Runtime loads `.bytes` via YooAsset (primary) or Resources (fallback)
-  - JSON preview files in `Editor/ConfigPreview/` excluded from builds — no plaintext in shipped packages
-- **TablesExtension.cs**: hand-written `partial class Tables` with `GetTableNames()` for pre-loading
-- **luban.conf (v4.6.0)**: new-style config with `groups`, `schemaFiles` directory scanning, `topModule: "cfg"`
-- **tables.xml**: consolidated bean + table definitions (replaces split `item.xml` / `globalconst.xml` / `__tables__.xml`)
-- **luban-config Skill** (`.codebuddy/skills/luban-config/`): project skill with SOP, format references, and automation scripts
-  - `scripts/create_xlsx.py`: auto-create Luban-compliant xlsx data files
-  - `scripts/update_tables_extension.py`: auto-sync `TablesExtension.cs` from `tables.xml`
+### 新增
+- **Luban v4.6.0**：从源码编译到 `Tools/Luban/`，替换旧版 Luban CLI
+- **双格式配置系统**：运行时二进制 + 编辑器预览 JSON
+  - 运行时通过 YooAsset（主路径）或 Resources（兜底）加载 `.bytes`
+  - `Editor/ConfigPreview/` 下的 JSON 预览文件不参与构建，避免明文进入发布包
+- **TablesExtension.cs**：手写 `partial class Tables`，提供 `GetTableNames()` 用于预加载
+- **luban.conf（v4.6.0）**：使用新式配置，支持 `groups`、`schemaFiles` 目录扫描、`topModule: "cfg"`
+- **tables.xml**：合并 bean 与 table 定义（替代拆分的 `item.xml` / `globalconst.xml` / `__tables__.xml`）
+- **luban-config Skill**（`.codebuddy/skills/luban-config/`）：项目级 Skill，包含 SOP、格式参考和自动化脚本
+  - `scripts/create_xlsx.py`：自动创建符合 Luban 规范的 xlsx 数据文件
+  - `scripts/update_tables_extension.py`：根据 `tables.xml` 自动同步 `TablesExtension.cs`
 
-### Changed
-- **ConfigManager**: rewritten from JSON text loading to Binary ByteBuf loading
-  - `InitializeAsync()` pre-loads all `.bytes` asynchronously, then constructs `Tables` synchronously
-  - `Initialize()` sync fallback also uses `.bytes` from Resources
-  - `IntegrityVerifier` signature changed from `Func<string, string, bool>` to `Func<string, byte[], bool>`
-- **gen_config.bat/sh**: rewritten for Luban v4.6.0 syntax, 3-step process:
-  1. `cs-bin` + `bin` → Generated code + `_Game/ConfigData/*.bytes`
+### 变更
+- **ConfigManager**：由 JSON 文本加载重写为二进制 ByteBuf 加载
+  - `InitializeAsync()` 异步预加载全部 `.bytes`，随后同步构造 `Tables`
+  - 同步 `Initialize()` 兜底路径也改为从 Resources 读取 `.bytes`
+  - `IntegrityVerifier` 签名从 `Func<string, string, bool>` 调整为 `Func<string, byte[], bool>`
+- **gen_config.bat/sh**：按 Luban v4.6.0 语法重写为三步流程
+  1. `cs-bin` + `bin` → 生成代码 + `_Game/ConfigData/*.bytes`
   2. `json` → `Editor/ConfigPreview/*.json`
-  3. Copy `.bytes` to `Resources/ConfigData/` (fallback) — **removed in v0.3.0**
-- **Generated code**: switched from `cs-simple-json` (JSONNode) to `cs-bin` (ByteBuf)
-- **Luban data source**: switched from JSON (`*@filename.json`) to **xlsx** for designer-friendly Excel editing
+  3. 复制 `.bytes` 到 `Resources/ConfigData/`（兜底）—— **已在 v0.3.0 移除**
+- **生成代码**：由 `cs-simple-json`（JSONNode）切换到 `cs-bin`（ByteBuf）
+- **Luban 数据源**：由 JSON（`*@filename.json`）切换为 **xlsx**，便于策划使用 Excel 编辑
 
-### Removed
-- Legacy Luban v2/v3 CLI dependency and `--gen_types` command syntax
-- JSON runtime loading in ConfigManager (replaced by Binary)
-- Plaintext JSON from `_Game/ConfigData/` (now only `.bytes`)
-- Legacy Luban definition files: `__root__.xml`, `__tables__.xml`, `globalconst.xml`, `item.xml` (consolidated into `tables.xml`)
+### 移除
+- 旧版 Luban v2/v3 CLI 依赖及 `--gen_types` 命令语法
+- ConfigManager 中的 JSON 运行时加载（由二进制替代）
+- `_Game/ConfigData/` 下明文 JSON（现仅保留 `.bytes`）
+- 旧版 Luban 定义文件：`__root__.xml`、`__tables__.xml`、`globalconst.xml`、`item.xml`（已合并为 `tables.xml`）
 
 ## [0.3.0] - 2026-04-05
 
-### Added
-- **Luban Config System**: fully wired Luban-generated config tables with runtime loading
-  - `GlobalConst` table (key/stringValue/intValue) with HelloWorld test data
-  - `TbItem` / `TbGlobalConst` generated table classes under `_Framework/DataSystem/Scripts/Config/Generated/`
-  - `Tables.cs` async/sync factory with null-safety checks on loader return values
-  - JSON data files at `_Game/ConfigData/` (YooAsset)
-  - Luban table definitions at `DataTables/Defs/` with data sources at `DataTables/Datas/`
-- **luban_unity package**: added `com.code-philosophy.luban` (Git URL) to `manifest.json`
-- **Luban.Runtime asmdef reference**: added to `MiniGameFramework.Runtime.asmdef`
-- **Config verification**: `GameBootstrapper` logs GlobalConst data on startup (`#if UNITY_EDITOR || DEVELOPMENT_BUILD`)
+### 新增
+- **Luban 配置系统**：完整接入 Luban 生成配置表与运行时加载
+  - `GlobalConst` 表（key/stringValue/intValue），含 HelloWorld 测试数据
+  - 生成 `TbItem` / `TbGlobalConst` 表类，路径：`_Framework/DataSystem/Scripts/Config/Generated/`
+  - `Tables.cs` 提供异步/同步工厂，并对 loader 返回值做空安全检查
+  - `_Game/ConfigData/` 下 JSON 数据文件（YooAsset）
+  - `DataTables/Defs/` 下 Luban 表定义，`DataTables/Datas/` 下数据源
+- **luban_unity 包**：在 `manifest.json` 增加 `com.code-philosophy.luban`（Git URL）
+- **Luban.Runtime asmdef 引用**：加入 `MiniGameFramework.Runtime.asmdef`
+- **配置验证**：`GameBootstrapper` 启动时打印 GlobalConst 数据（`#if UNITY_EDITOR || DEVELOPMENT_BUILD`）
 
-### Fixed
-- **AssetService**: added `RequestPackageVersionAsync` + `UpdatePackageManifestAsync` after YooAsset init — fixes `ActiveManifest == null` crash on all asset loads
-- **ConfigManager**: wrapped YooAsset `LoadAssetAsync` in try-catch — graceful degradation to `Resources.Load` when YooAsset throws
-- **ConfigManager**: `ResetStatics` now clears `_tables` (domain reload safety)
-- **ConfigManager**: `ReloadAsync`/`Reload` now nulls `_tables` before re-init
+### 修复
+- **AssetService**：在 YooAsset 初始化后增加 `RequestPackageVersionAsync` + `UpdatePackageManifestAsync`，修复所有资源加载场景下 `ActiveManifest == null` 崩溃
+- **ConfigManager**：对 YooAsset `LoadAssetAsync` 增加 try-catch，YooAsset 抛错时可优雅降级到 `Resources.Load`
+- **ConfigManager**：`ResetStatics` 现在会清理 `_tables`（提升 domain reload 安全性）
+- **ConfigManager**：`ReloadAsync`/`Reload` 在重建前先置空 `_tables`
 
-### Changed
-- **ConfigManager**: activated real Luban integration — replaced TODO stubs with actual `cfg.Tables.CreateAsync` / `cfg.Tables.Create` calls
-- **ConfigManager**: `YooAssetConfigPath` updated from `Assets/ConfigData/` to `Assets/_Game/ConfigData/`
-- **gen_config scripts**: output data to `_Game/ConfigData/`
-- **CONVENTIONS.md**: corrected ConfigManager path reference
-- **Luban README**: corrected output data path
-- **.gitignore**: added `UnityProj/.vs/`
+### 变更
+- **ConfigManager**：启用真实 Luban 集成——将 TODO 桩代码替换为 `cfg.Tables.CreateAsync` / `cfg.Tables.Create`
+- **ConfigManager**：`YooAssetConfigPath` 从 `Assets/ConfigData/` 调整为 `Assets/_Game/ConfigData/`
+- **gen_config 脚本**：数据输出路径改为 `_Game/ConfigData/`
+- **CONVENTIONS.md**：修正 ConfigManager 路径引用
+- **Luban README**：修正输出数据路径
+- **.gitignore**：新增 `UnityProj/.vs/`
 
 ## [0.2.2] - 2026-04-05
 
-### Fixed
-- **YooAsset**: configure `AssetBundleCollectorSetting.asset` with `DefaultPackage` + `GameAssets` collector group — resolves `Not found package : DefaultPackage` error in editor simulate mode
-- **GameBootstrapper**: fix duplicate instance warning by skipping scene load when already in target scene (Boot → Boot circular load)
-- **GameBootstrapper**: add `_isPrimaryInstance` flag so duplicate instances' `OnDestroy` does not reset `_hasBooted`
-- **ArchitectureValidator**: remove duplicate `[MenuItem]` attribute (unified via `MenuItems.cs`)
-- **Analytics SDK**: remove `com.unity.analytics` and `com.unity.modules.unityanalytics` to eliminate `No cloud project ID` error
+### 修复
+- **YooAsset**：配置 `AssetBundleCollectorSetting.asset` 的 `DefaultPackage` + `GameAssets` 收集组，解决编辑器模拟模式下 `Not found package : DefaultPackage` 报错
+- **GameBootstrapper**：当已在目标场景时跳过重复加载，修复重复实例警告（Boot → Boot 循环加载）
+- **GameBootstrapper**：增加 `_isPrimaryInstance` 标记，避免重复实例在 `OnDestroy` 时重置 `_hasBooted`
+- **ArchitectureValidator**：移除重复 `[MenuItem]` 特性（统一由 `MenuItems.cs` 注册）
+- **Analytics SDK**：移除 `com.unity.analytics` 与 `com.unity.modules.unityanalytics`，消除 `No cloud project ID` 报错
 
-### Changed
-- **manifest.json**: remove 14 unused Unity packages (Ads, Analytics, Purchasing, XR, VR, Cloth, Terrain, Vehicles, Video, Wind, Umbra) to reduce build size and compile time
-- **.gitignore**: add rules for `.vsconfig`, `Bundles/`, `ResolvedPackageCache`, `FairyGUI.meta`
+### 变更
+- **manifest.json**：移除 14 个未使用 Unity 包（Ads、Analytics、Purchasing、XR、VR、Cloth、Terrain、Vehicles、Video、Wind、Umbra），减少构建体积与编译时间
+- **.gitignore**：增加 `.vsconfig`、`Bundles/`、`ResolvedPackageCache`、`FairyGUI.meta` 忽略规则
 
 ## [0.2.1] - 2026-04-05
 
-### Fixed
-- **AssetService**: `UnloadUnusedAssetsAsync` / `ForceUnloadAllAssetsAsync` — add initialization guard with warning log instead of silently returning null (prevents downstream NRE when awaiting result)
-- **setup_fairygui.bat/.sh**: add user confirmation prompt before deleting existing non-junction/non-symlink `Assets/FairyGUI` directory (prevents accidental data loss)
-- **ConfigManager.InitializeAsync**: remove unnecessary `async` keyword + `await Task.CompletedTask` — now returns `Task.CompletedTask` directly to avoid allocating an async state machine on WebGL
-- **UIDialogBase**: replace `MakeFullScreen()` + hardcoded `DrawRect` size with `AddRelation(GRoot.inst, RelationType.Size)` so modal overlay properly resizes on screen orientation/resolution changes
-- **TextureImportEnforcer**: remove redundant Android/iPhone platform overrides — target platform is WebGL only (WeChat Mini Game); simplify `SetPlatformCompression` accordingly
-- **AssetAuditWindow**: add audit check for textures missing WebGL platform override (previously only checked for uncompressed RGBA32)
-- **BuildPipeline → MiniGameBuildPipeline**: rename class to avoid ambiguity with `UnityEditor.BuildPipeline`
+### 修复
+- **AssetService**：`UnloadUnusedAssetsAsync` / `ForceUnloadAllAssetsAsync` 增加初始化守卫，未初始化时输出 warning 而非静默返回 null（避免下游 await 结果时 NRE）
+- **setup_fairygui.bat/.sh**：删除已存在且非 junction/symlink 的 `Assets/FairyGUI` 目录前增加用户确认，避免误删数据
+- **ConfigManager.InitializeAsync**：移除多余 `async` + `await Task.CompletedTask`，改为直接返回 `Task.CompletedTask`，避免 WebGL 分配异步状态机
+- **UIDialogBase**：将 `MakeFullScreen()` + 写死 `DrawRect` 尺寸改为 `AddRelation(GRoot.inst, RelationType.Size)`，确保横竖屏/分辨率变化时遮罩正确自适应
+- **TextureImportEnforcer**：移除 Android/iPhone 平台冗余覆盖配置——目标平台仅为 WebGL（微信小游戏），简化 `SetPlatformCompression`
+- **AssetAuditWindow**：新增“纹理缺少 WebGL 平台覆盖”审计项（此前仅检查未压缩 RGBA32）
+- **BuildPipeline → MiniGameBuildPipeline**：重命名类，避免与 `UnityEditor.BuildPipeline` 歧义
 
 ## [0.2.0] - 2026-04-05
 
-### Fixed
-- **UIManager.CloseAllPanels**: snapshot-then-clear pattern prevents `InvalidOperationException` from iterator invalidation when `panel.Close()` modifies the dictionary
-- **ClickGameManager / HighScoreSaver**: use `GameBootstrapper.SaveSystem` instead of creating duplicate `PlayerPrefsSaveSystem` instances (fixes FlushIfDirty bypass)
-- **TimerService**: `_nextId` overflow wrap-around protection (wraps from `int.MaxValue` → 1, skipping invalid 0)
-- **AudioImportEnforcer**: static `HashSet` guard prevents recursive reimport loop in `OnPostprocessAudio`
-- **WeChatBridgeStub**: replaced per-call temporary `GameObject` + private `CoroutineRunner` with framework's `CoroutineRunner.Run()` (eliminates GC waste and class name shadowing)
-- **ScoreDisplay**: replaced `UnityEngine.Debug.Log` with `GameLog.Log` (consistent with project convention, stripped in release builds)
-- **UIDialogBase**: fix `GGraph.DrawRect` missing width/height/lineColor params (CS7036)
-- **AssetService**: rename `UnloadUnusedAssets` → `UnloadUnusedAssetsAsync`, `ForceUnloadAllAssets` → `UnloadAllAssetsAsync` (YooAsset 2.3.18 API)
-- **AssetService**: `OnDestroy` now properly overrides `Singleton<T>.OnDestroy()` (CS0114)
-- **ConfigManager**: suppress CS1998 warning with `await Task.CompletedTask` placeholder
-- **AssetImportEnforcer/AssetAuditWindow**: replace non-existent `AudioImporterSampleSettings.overridden` with `AudioImporter.ContainsSampleSettingsOverride()` (CS1061)
-- **BuildPipeline**: add `using UnityEditor.Build` for `Il2CppCodeGeneration` enum and wrap with `#if UNITY_2022_3_OR_NEWER` (CS0103)
+### 修复
+- **UIManager.CloseAllPanels**：采用先快照后清空策略，避免 `panel.Close()` 修改字典时触发迭代器失效 `InvalidOperationException`
+- **ClickGameManager / HighScoreSaver**：改用 `GameBootstrapper.SaveSystem`，不再重复创建 `PlayerPrefsSaveSystem` 实例（修复 `FlushIfDirty` 被绕过）
+- **TimerService**：`_nextId` 溢出回绕保护（从 `int.MaxValue` 回绕到 1，跳过无效 0）
+- **AudioImportEnforcer**：静态 `HashSet` 守卫防止 `OnPostprocessAudio` 递归重导入死循环
+- **WeChatBridgeStub**：将每次调用创建临时 `GameObject` + 私有 `CoroutineRunner` 改为统一使用框架 `CoroutineRunner.Run()`（减少 GC 浪费并避免类名遮蔽）
+- **ScoreDisplay**：`UnityEngine.Debug.Log` 改为 `GameLog.Log`（符合项目规范，发布版可剥离）
+- **UIDialogBase**：修复 `GGraph.DrawRect` 缺少 width/height/lineColor 参数（CS7036）
+- **AssetService**：`UnloadUnusedAssets` → `UnloadUnusedAssetsAsync`，`ForceUnloadAllAssets` → `UnloadAllAssetsAsync`（适配 YooAsset 2.3.18 API）
+- **AssetService**：`OnDestroy` 正确重写 `Singleton<T>.OnDestroy()`（CS0114）
+- **ConfigManager**：用 `await Task.CompletedTask` 占位以消除 CS1998 警告
+- **AssetImportEnforcer/AssetAuditWindow**：将不存在的 `AudioImporterSampleSettings.overridden` 替换为 `AudioImporter.ContainsSampleSettingsOverride()`（CS1061）
+- **BuildPipeline**：增加 `using UnityEditor.Build` 以使用 `Il2CppCodeGeneration` 枚举，并用 `#if UNITY_2022_3_OR_NEWER` 包裹（CS0103）
 
-### Changed
-- **Docs/CONVENTIONS.md**: expanded from ~148 lines to ~460 lines with comprehensive Agent coding rules covering:
-  - Logging, error handling, async/await, GC optimization, WebGL constraints
-  - Security (input validation, HTTPS, HMAC, PII protection, conditional compilation)
-  - Framework system usage (SaveSystem, events, timers, UI, assets, WeChat bridge)
-  - Module dependency graph (L0–L6), SO design patterns quick reference
-  - Collection iteration safety, Agent pre-commit checklist (12 items)
+### 变更
+- **Docs/CONVENTIONS.md**：从约 148 行扩展到约 460 行，补充完整 Agent 编码规范，包括：
+  - 日志、错误处理、async/await、GC 优化、WebGL 约束
+  - 安全（输入校验、HTTPS、HMAC、PII 保护、条件编译）
+  - 框架系统使用（SaveSystem、事件、计时器、UI、资源、微信桥接）
+  - 模块依赖图（L0–L6）、SO 设计模式速查
+  - 集合迭代安全、Agent 提交前检查清单（12 项）
 
 ## [0.1.0] - 2026-04-05
 
-### Added
-- Initial project skeleton
-- Framework module structure with MODULE_README placeholders
-- Core architecture: ScriptableObject-driven event system, data variables, runtime sets
-- FairyGUI integration scaffold
-- Audio, ObjectPool, FSM, Timer systems
-- WeChat Bridge interface layer
-- Debug tools
-- Editor extensions (PropertyDrawers, menu items, architecture validator)
-- Luban config table integration
-- Example game scaffold
-- Project documentation suite
+### 新增
+- 初始项目骨架
+- 含 MODULE_README 占位的框架模块结构
+- 核心架构：ScriptableObject 驱动的事件系统、数据变量、运行时集合
+- FairyGUI 集成脚手架
+- Audio、ObjectPool、FSM、Timer 系统
+- 微信 Bridge 接口层
+- 调试工具
+- 编辑器扩展（PropertyDrawers、菜单项、架构校验器）
+- Luban 配置表集成
+- 示例游戏脚手架
+- 项目文档套件
