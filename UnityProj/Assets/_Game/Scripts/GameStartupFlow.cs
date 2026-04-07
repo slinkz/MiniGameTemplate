@@ -2,12 +2,11 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Core;
-using MiniGameTemplate.Events;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;
 
-namespace Game.UI
+namespace Game
 {
     /// <summary>
     /// Orchestrates the game's startup UI flow:
@@ -52,29 +51,32 @@ namespace Game.UI
         {
             GameLog.Log($"[StartupFlow] Starting UI flow for {gameConfig.GameName} v{gameConfig.Version}...");
 
+            // Register all FairyGUI Binders before opening any panels
+            UIManager.RegisterBinder("Common", Common.CommonBinder.BindAll);
+            UIManager.RegisterBinder("MainMenu", MainMenu.MainMenuBinder.BindAll);
+            UIManager.RegisterBinder("Example", Example.ExampleBinder.BindAll);
+
             WeChatBridgeFactory.SetAdUnitIds(_rewardedAdUnitId, _bannerAdUnitId, _interstitialAdUnitId);
             _weChatBridge = WeChatBridgeFactory.Create();
             _weChatBridge.PreloadRewardedAd();
 
 
             // --- Phase 1: Loading screen ---
-            LoadingPanel loadingPanel;
+            Common.LoadingPanel loadingPanel;
             try
             {
-                loadingPanel = await UIManager.Instance.OpenPanelAsync<LoadingPanel>();
+                loadingPanel = await UIManager.Instance.OpenPanelAsync<Common.LoadingPanel>();
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[StartupFlow] Failed to open LoadingPanel: {ex.Message}");
-                // Cannot show UI — fall through to scene load without startup flow
                 return;
             }
 
             loadingPanel.SetHintText("正在加载游戏资源...");
             loadingPanel.UpdateProgress(0f);
 
-            // Simulate loading progress (real loading already happened in Bootstrapper's InitializeSystems)
-            // We animate progress to give visual feedback and meet minimum display time.
+            // Simulate loading progress
             float progress = 0f;
             float elapsed = 0f;
 
@@ -93,17 +95,14 @@ namespace Game.UI
             bool privacyPassed = await CheckPrivacyAsync();
             if (!privacyPassed)
             {
-                // User rejected privacy — show a confirm dialog asking them to reconsider
                 loadingPanel.SetHintText("需要同意隐私协议才能继续...");
                 privacyPassed = await RetryPrivacyAsync();
 
                 if (!privacyPassed)
                 {
-                    // Still rejected — we can't proceed. Keep loading screen as dead-end.
                     Debug.LogWarning("[StartupFlow] User rejected privacy policy. Cannot continue.");
                     loadingPanel.SetHintText("请同意隐私协议后重新打开游戏");
                     loadingPanel.UpdateProgress(1f);
-                    // Throw to prevent Bootstrapper from continuing to LoadInitialScene
                     throw new OperationCanceledException(
                         "[StartupFlow] Startup aborted: user rejected privacy policy.");
                 }
@@ -113,7 +112,6 @@ namespace Game.UI
             loadingPanel.SetHintText("加载完成！");
             loadingPanel.UpdateProgress(1f);
 
-            // Ensure minimum loading time
             while (elapsed < _minLoadingDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
@@ -126,13 +124,13 @@ namespace Game.UI
             // Open main menu
             try
             {
-                var menuData = new MainMenuPanelData
+                var menuData = new MainMenu.MainMenuPanelData
                 {
                     StartGameEvent = _startGameEvent,
                     WeChatBridge = _weChatBridge,
                     EnableBannerAd = _enableBannerAdInMainMenu
                 };
-                await UIManager.Instance.OpenPanelAsync<MainMenuPanel>(menuData);
+                await UIManager.Instance.OpenPanelAsync<MainMenu.MainMenuPanel>(menuData);
                 GameLog.Log("[StartupFlow] Main menu opened. Startup flow complete.");
             }
             catch (Exception ex)
@@ -141,10 +139,6 @@ namespace Game.UI
             }
         }
 
-        /// <summary>
-        /// Check privacy authorization via the WeChat bridge.
-        /// Returns true if no auth needed or user agreed.
-        /// </summary>
         private async Task<bool> CheckPrivacyAsync()
         {
             var tcs = new TaskCompletionSource<bool>();
@@ -161,9 +155,8 @@ namespace Game.UI
                 return true;
             }
 
-            // Needs authorization — show the privacy dialog
             GameLog.Log("[StartupFlow] Privacy authorization required. Showing dialog...");
-            bool agreed = await PrivacyDialog.ShowAndWaitAsync();
+            bool agreed = await Common.PrivacyDialog.ShowAndWaitAsync();
             GameLog.Log($"[StartupFlow] Privacy dialog result: {(agreed ? "agreed" : "rejected")}");
             if (!agreed)
                 return false;
@@ -171,12 +164,7 @@ namespace Game.UI
             return await RequestPrivacyAuthorizeAsync();
         }
 
-
-        /// <summary>
-        /// Call WeChat bridge to request privacy authorization.
-        /// </summary>
         private async Task<bool> RequestPrivacyAuthorizeAsync()
-
         {
             if (_weChatBridge == null)
             {
@@ -195,17 +183,11 @@ namespace Game.UI
             return grantedResult;
         }
 
-        /// <summary>
-        /// Retry privacy authorization — show a confirm dialog explaining why it's needed,
-        /// then re-show the privacy dialog if user confirms.
-        /// </summary>
         private async Task<bool> RetryPrivacyAsync()
         {
-            // Show a confirm dialog asking the user to reconsider
-
             var confirmTcs = new TaskCompletionSource<bool>();
 
-            var confirmData = new ConfirmDialogData
+            var confirmData = new Common.ConfirmDialogData
             {
                 Title = "需要授权",
                 Content = "为了正常使用游戏功能，需要您同意隐私保护协议。是否重新查看？",
@@ -218,7 +200,7 @@ namespace Game.UI
 
             try
             {
-                await UIManager.Instance.OpenPanelAsync<ConfirmDialog>(confirmData);
+                await UIManager.Instance.OpenPanelAsync<Common.ConfirmDialog>(confirmData);
             }
             catch (Exception ex)
             {
@@ -230,14 +212,12 @@ namespace Game.UI
             if (!wantsRetry)
                 return false;
 
-            // Re-show privacy dialog
-            bool agreed = await PrivacyDialog.ShowAndWaitAsync();
+            bool agreed = await Common.PrivacyDialog.ShowAndWaitAsync();
             GameLog.Log($"[StartupFlow] Privacy retry result: {(agreed ? "agreed" : "rejected")}");
             if (!agreed)
                 return false;
 
             return await RequestPrivacyAuthorizeAsync();
         }
-
     }
 }

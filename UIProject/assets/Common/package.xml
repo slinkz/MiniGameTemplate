@@ -8,7 +8,7 @@
     <component id="gen_05" name="PrivacyDialog.xml" path="/" exported="true"/>
     <component id="gen_06" name="GlobalSpinner.xml" path="/" exported="true"/>
   </resources>
-  <publish name="Common">
+  <publish name="Common" genCode="true">
     <atlas name="Default" index="0"/>
   </publish>
 </packageDescription>

@@ -2,6 +2,36 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [0.6.0] - 2026-04-08
+
+### 重大变更（Breaking）
+- **UI 框架重构为 FairyGUI Extension 机制**
+  - 删除 `UIBase`、`UIDialogBase` 基类
+  - 新增 `IUIPanel` 接口（`OnOpen`/`OnClose`/`OnRefresh`/`PanelSortOrder`/`IsFullScreen`/`PanelPackageName`）
+  - 新增 `IModalDialog` 接口（`CloseOnClickOutside`），UIManager 自动管理遮罩
+  - `UIManager.OpenPanelAsync<T>()` 泛型约束从 `where T : UIBase` 改为 `where T : GComponent, IUIPanel`
+  - `UIConstants` 移除所有包名/组件名常量，仅保留层级常量
+- **面板代码结构变更**
+  - 启用 FairyGUI 编辑器 `genCode="true"` 导出 C# 代码（`XXXPanel.cs` + `XXXBinder.cs`）
+  - 手写业务逻辑统一使用 `XXXPanel.Logic.cs`（`partial class` + `IUIPanel`）
+  - 删除所有 `*.FUI.cs` 文件
+  - 面板按 FairyGUI 包名分目录（`UI/Common/`、`UI/MainMenu/`、`UI/Example/`）
+  - 命名空间 = FairyGUI 包名（`Common`、`MainMenu`、`Example`）
+- **Binder 注册机制**
+  - `UIManager.RegisterBinder()` + 懒激活模式（首次使用包时调用 `BindAll`）
+  - `GameStartupFlow` 启动时注册所有包 Binder
+
+### 修复
+- **事件双绑定 Bug（P0）**：所有面板 `OnRefresh` 不再调用 `OnOpen`，改为独立 `ApplyData` 方法，避免按钮事件重复绑定
+- **`CloseAllPanels` 迭代安全（P1）**：使用 `KeyValuePair<Type, GComponent>` 快照替代分离的 `types`/`panels` 列表，消除 Dictionary 枚举顺序不一致隐患
+- **`OpenPanelAsync` 并发安全（P1）**：新增 `_pendingOpens` HashSet 防止同一面板类型并发创建
+
+### 文档
+- 更新 CONVENTIONS.md：FairyGUI 面板规范改为 Extension + IUIPanel 模式
+- 更新 NEWGAME_GUIDE.md Step 5：新建面板流程对齐新架构
+- 更新 ARCHITECTURE.md：UI 层级系统说明对齐新接口
+- 重写 UISystem MODULE_README.md
+
 ## [0.5.5] - 2026-04-07
 
 ### 新增

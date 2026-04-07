@@ -89,60 +89,82 @@ namespace MiniGameTemplate.Game
 - 注释用英文撰写，一句话说明 **做什么**，不是 **怎么做**
 - `[SerializeField]` 字段如果用途不直观，加 `[Tooltip("...")]`
 
-## [AGENT] FairyGUI 面板分层规范（强制）
+## [AGENT] FairyGUI 面板规范（强制 — Extension + IUIPanel 模式）
 
 ### 目标
-保证 FairyGUI 重新导出时只覆盖“界面绑定代码”，不覆盖手写业务逻辑。
+利用 FairyGUI 原生 Extension 机制和代码导出，FairyGUI 编辑器导出的 `*.cs` 自动生成字段绑定和 Binder，手写业务逻辑放在 `*.Logic.cs` 中。两者通过 `partial class` 连接。
+
+### 架构概述
+- **FairyGUI 导出代码**（`_Game/Scripts/UI/<PackageName>/XXXPanel.cs` + `XXXBinder.cs`）
+  - 自动生成，包含 `GComponent` 子类 + `ConstructFromXML` 字段绑定 + `static URL` 常量
+  - 命名空间 = FairyGUI 包名（如 `namespace Common`、`namespace MainMenu`）
+  - **可被 FairyGUI 编辑器重新导出覆盖，禁止手动修改**
+- **业务逻辑代码**（`_Game/Scripts/UI/<PackageName>/XXXPanel.Logic.cs`）
+  - 手写 `partial class`，实现 `IUIPanel`（面板）或 `IUIPanel, IModalDialog`（对话框）
+  - 包含生命周期实现（`OnOpen`/`OnClose`/`OnRefresh`）、业务状态、交互逻辑
 
 ### 强制规则
-1. 每个 FairyGUI 面板必须拆成两个文件：
-   - `XXXPanel.FUI.cs`：仅放 **`PackageName`、`ComponentName` 两个 override + UI 字段声明 + OnInit 绑定**
-   - `XXXPanel.cs`：放 **其余 override（如 `SortOrder`、`CloseOnClickOutside`）+ 业务状态 + 交互逻辑 + OnOpen/OnClose + 业务方法**
-2. 两个文件必须使用同一个 `partial class XXXPanel`。
-3. `XXXPanel.FUI.cs` 只允许保留 `PackageName` 与 `ComponentName` 两个 override，禁止放其他 override。
-4. `PackageName` / `ComponentName` 必须直接使用字符串字面量（例如 `"MainMenu"`、`"MainMenuPanel"`），禁止引用 `UIConstants`、枚举或其他中间常量。
-5. `XXXPanel.FUI.cs` 可被导出流程覆盖；`XXXPanel.cs` 禁止放任何导出相关绑定代码。
-6. 禁止回退为“单文件混合模式”（UI 初始化和业务逻辑写在同一个 `.cs`）。
-7. 对话框/加载页/提示类面板同样必须遵守该分层规则（不仅限 `*Panel`）。
-
+1. **目录结构**：按 FairyGUI 包名分目录，如 `_Game/Scripts/UI/Common/`、`_Game/Scripts/UI/MainMenu/`
+2. **导出代码不可修改**：`XXXPanel.cs`、`XXXBinder.cs` 由 FairyGUI 编辑器导出，禁止手动编辑
+3. **业务逻辑文件命名**：`XXXPanel.Logic.cs`（不是 `.FUI.cs`，不是无后缀 `.cs`）
+4. **接口实现**：
+   - 普通面板：`partial class XXXPanel : IUIPanel`
+   - 对话框面板：`partial class XXXPanel : IUIPanel, IModalDialog`
+5. **事件绑定只在 OnOpen 中做一次**：`OnRefresh` 必须调用 `ApplyData(data)` 而非 `OnOpen(data)`，避免事件双绑定
+6. **`PanelPackageName` 属性**：使用字符串字面量（如 `"Common"`），与命名空间保持一致
+7. **UIManager 使用 `type.Namespace` 推导包名**：运行时 UIManager 从类型的命名空间获取包名，因此命名空间 = FairyGUI 包名是强约束
+8. **Binder 注册**：在 `GameStartupFlow.RunAsync` 中调用 `UIManager.RegisterBinder("PackageName", PackageName.XXXBinder.BindAll)`
 
 ### 推荐模板
 ```csharp
-// XXXPanel.FUI.cs
-public partial class XXXPanel : UIBase
+// ========== FairyGUI 自动导出（不要手动修改）==========
+// XXXPanel.cs — 由 FairyGUI 编辑器 genCode 生成
+namespace MainMenu
 {
-    protected override string PackageName => "MainMenu";
-    protected override string ComponentName => "MainMenuPanel";
-
-    private GTextField _txtTitle;
-    private GButton _btnConfirm;
-
-    protected override void OnInit()
+    public partial class MainMenuPanel : GComponent
     {
-        base.OnInit();
-        _txtTitle = ContentPane.GetChild("txtTitle") as GTextField;
-        _btnConfirm = ContentPane.GetChild("btnConfirm") as GButton;
-        AddEvents();
+        public GButton btnStart;
+        public GTextField txtTitle;
+        public const string URL = "ui://xxxx";
+
+        public static MainMenuPanel CreateInstance() { ... }
+        public override void ConstructFromXML(XML xml) { ... }
     }
 }
 
-// XXXPanel.cs
-public partial class XXXPanel
+// ========== 手写业务逻辑 ==========
+// XXXPanel.Logic.cs
+using MiniGameTemplate.UI;
+
+namespace MainMenu
 {
-    protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_NORMAL;
-
-    protected void AddEvents()
+    public partial class MainMenuPanel : IUIPanel
     {
-        if (_btnConfirm != null) _btnConfirm.onClick.Add(OnConfirmClicked);
-    }
+        public int PanelSortOrder => UIConstants.LAYER_NORMAL;
+        public bool IsFullScreen => true;
+        public string PanelPackageName => "MainMenu";
 
-    protected override void OnOpen(object data)
-    {
-        base.OnOpen(data);
-        // 业务逻辑
-    }
+        public void OnOpen(object data)
+        {
+            // 绑定按钮事件（仅在 OnOpen 中做一次）
+            if (btnStart != null) btnStart.onClick.Add(OnStartClicked);
+            ApplyData(data);
+        }
 
-    private void OnConfirmClicked() { }
+        public void OnClose()
+        {
+            // 清理资源、取消定时器
+        }
+
+        public void OnRefresh(object data)
+        {
+            // 仅刷新数据，不重新绑定事件
+            ApplyData(data);
+        }
+
+        private void ApplyData(object data) { /* 数据应用逻辑 */ }
+        private void OnStartClicked() { /* 业务逻辑 */ }
+    }
 }
 ```
 
@@ -441,13 +463,16 @@ private void OnDisable()
 }
 ```
 
-### UI 系统 (FairyGUI)
+### UI 系统 (FairyGUI Extension)
 ```csharp
-// 打开面板（async only，通过 YooAsset 加载）
-await UIManager.Instance.OpenPanelAsync<MyPanel>(optionalData);
+// 打开面板（async only，T 必须是 GComponent + IUIPanel）
+await UIManager.Instance.OpenPanelAsync<Common.LoadingPanel>();
 
 // 关闭面板
-UIManager.Instance.ClosePanel<MyPanel>();
+UIManager.Instance.ClosePanel<Common.LoadingPanel>();
+
+// 注册 Binder（启动时调用一次）
+UIManager.RegisterBinder("Common", Common.CommonBinder.BindAll);
 
 // 包加载（async only）
 await UIPackageLoader.AddPackageAsync("CommonUI");
@@ -618,10 +643,10 @@ foreach (var panel in _activePanels.Values)
     panel.Close(); // 如果 Close() 内部修改了 _activePanels → InvalidOperationException
 
 // ✅ 正确：先快照再迭代
-var snapshot = new List<UIBase>(_activePanels.Values);
+var snapshot = new List<GComponent>(_activePanels.Values);
 _activePanels.Clear();
 foreach (var panel in snapshot)
-    panel.Close();
+    CleanupPanel(panel);
 ```
 
 ### List 遍历中删除元素
@@ -652,7 +677,7 @@ Agent 在完成代码编写后，提交前必须自检以下项目：
 - [ ] **安全**: 无 PII 日志、文件名已验证、URL 使用 HTTPS
 - [ ] **命名**: 遵循命名规范表
 - [ ] **行数**: MonoBehaviour ≤ 150 行
-- [ ] **FairyGUI 分层**: `*.FUI.cs` 仅含 `PackageName`/`ComponentName`（字符串字面量）与 UI 绑定，其余 override 在业务 `*.cs`
+- [ ] **FairyGUI 分层**: FairyGUI 导出的 `*.cs` 不手动修改；业务逻辑在 `*.Logic.cs` 中实现 `IUIPanel`；`OnRefresh` 调 `ApplyData` 不调 `OnOpen`
 
 - [ ] **依赖方向**: 不违反层级依赖图
 - [ ] **MODULE_README**: 新模块目录包含 `MODULE_README.md`

@@ -132,14 +132,14 @@ Spine（可选）接入：
 | `LAYER_BACKGROUND` | 0 | 背景面板 |
 | `LAYER_NORMAL` | 100 | 普通面板（游戏 HUD 等） |
 | `LAYER_POPUP` | 200 | 弹出面板 |
-| `LAYER_DIALOG` | 300 | 对话框（默认 UIDialogBase） |
+| `LAYER_DIALOG` | 300 | 对话框（实现 IModalDialog） |
 | `LAYER_TOAST` | 400 | Toast 提示 |
 | `LAYER_GUIDE` | 500 | 新手引导 |
 | `LAYER_LOADING` | 600 | 加载界面 |
 
-> **注意**：启动阶段弹出的对话框（PrivacyDialog、ConfirmDialog）需要覆盖 `SortOrder` 为 `LAYER_LOADING + 100`（700），否则会被 LoadingPanel 遮挡。
+> **注意**：启动阶段弹出的对话框（PrivacyDialog、ConfirmDialog）需要 `PanelSortOrder` 返回 `LAYER_LOADING + 100`（700），否则会被 LoadingPanel 遮挡。
 >
-> `UIBase.IsFullScreen` 虚属性（默认 `true`）：全屏面板使用 `MakeFullScreen()`；`UIDialogBase` 覆盖为 `false`，保持原始尺寸并居中显示。
+> 面板通过实现 `IUIPanel.IsFullScreen` 控制布局：`true` 使用 `MakeFullScreen()`；`false`（对话框）保持原始尺寸并居中显示。实现 `IModalDialog` 的面板会自动添加半透明遮罩。
 
 ## 模块依赖关系
 

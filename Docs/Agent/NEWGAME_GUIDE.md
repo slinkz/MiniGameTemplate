@@ -48,51 +48,60 @@ UnityProj/Assets/_Example/  ← 删除整个目录
 ## Step 5: 创建游戏 UI
 
 1. 用 FairyGUI 编辑器打开 `UIProject/` 目录中的 `.fairy` 工程文件
-2. 创建你的 UI 包
+2. 创建你的 UI 包（在 `package.xml` 中确保 `<publish>` 节点含 `genCode="true"`）
 3. FairyGUI 导出目标已配置为 `UnityProj/Assets/_Game/FairyGUI_Export/`
-4. 更新 `UIConstants.cs` 中的包名和组件名常量
-5. **按强制分层规则创建面板代码（禁止单文件混写）**：
-   - `XXXPanel.FUI.cs`：仅放 `PackageName` / `ComponentName`（字符串字面量）+ UI 绑定与初始化（可被 FairyGUI 重新导出覆盖）
-   - `XXXPanel.cs`：放其余 override（如 `SortOrder`、`CloseOnClickOutside`）+ 业务逻辑（手写，禁止放导出绑定代码）
-
+4. FairyGUI 导出代码目标配置为 `UnityProj/Assets/_Game/Scripts/UI/<PackageName>/`
+5. **导出后自动生成的文件**（不要手动修改）：
+   - `<PackageName>Binder.cs` — Extension 注册
+   - `XXXPanel.cs` — GComponent 子类 + 字段绑定 + URL 常量
+6. **手写业务逻辑**：创建 `XXXPanel.Logic.cs`，实现 `IUIPanel` 接口
+7. **在 `GameStartupFlow.RunAsync` 中注册 Binder**：
+   ```csharp
+   UIManager.RegisterBinder("MyPackage", MyPackage.MyPackageBinder.BindAll);
+   ```
 
 ```csharp
-// MainMenuPanel.FUI.cs
-using FairyGUI;
-using MiniGameTemplate.UI;
-
-public partial class MainMenuPanel : UIBase
+// ========== 自动导出（不要修改）==========
+// MainMenuPanel.cs — FairyGUI genCode 生成
+namespace MainMenu
 {
-    protected override string PackageName => "MainMenu";
-    protected override string ComponentName => "MainMenuPanel";
-
-    private GButton _btnStart;
-
-    protected override void OnInit()
+    public partial class MainMenuPanel : GComponent
     {
-        base.OnInit();
-        _btnStart = ContentPane.GetChild("btnStart") as GButton;
-        AddEvents();
+        public GButton btnStart;
+        public const string URL = "ui://xxxx";
+        public static MainMenuPanel CreateInstance() { ... }
+        public override void ConstructFromXML(XML xml) { ... }
     }
 }
 
-// MainMenuPanel.cs
-public partial class MainMenuPanel
+// ========== 手写业务逻辑 ==========
+// MainMenuPanel.Logic.cs
+using MiniGameTemplate.UI;
+
+namespace MainMenu
 {
-    protected override int SortOrder => UIConstants.LAYER_NORMAL;
-
-    protected void AddEvents()
+    public partial class MainMenuPanel : IUIPanel
     {
-        if (_btnStart != null) _btnStart.onClick.Add(OnStartClicked);
-    }
+        public int PanelSortOrder => UIConstants.LAYER_NORMAL;
+        public bool IsFullScreen => true;
+        public string PanelPackageName => "MainMenu";
 
-    protected override void OnOpen(object data)
-    {
-        base.OnOpen(data);
-        // 显示时的业务逻辑
-    }
+        public void OnOpen(object data)
+        {
+            if (btnStart != null) btnStart.onClick.Add(OnStartClicked);
+            ApplyData(data);
+        }
 
-    private void OnStartClicked() { }
+        public void OnClose() { }
+
+        public void OnRefresh(object data)
+        {
+            ApplyData(data); // 不要调 OnOpen — 避免事件双绑定
+        }
+
+        private void ApplyData(object data) { }
+        private void OnStartClicked() { }
+    }
 }
 ```
 

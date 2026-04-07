@@ -272,60 +272,81 @@ void LoadGameScene()
 
 ## 4. UISystem — UI 管理 (FairyGUI)
 
-**用途**：管理 FairyGUI 面板的生命周期。
+**用途**：管理 FairyGUI 面板的生命周期，基于 FairyGUI 原生 Extension 机制。
 
 **位置**：`Assets/_Framework/UISystem/`
+
+### 架构概述
+
+1. FairyGUI 编辑器启用 `genCode="true"` 自动导出 C# 代码（`XXXPanel.cs` + `XXXBinder.cs`）
+2. 手写 `XXXPanel.Logic.cs` 作为 `partial class`，实现 `IUIPanel` 接口
+3. UIManager 通过 Binder 注册 Extension，`OpenPanelAsync` 创建面板实例
 
 ### 创建自定义面板
 
 1. 在 FairyGUI 编辑器中创建 UI 组件
-   - 当前模板内置包：`Common`（通用弹窗/加载）、`MainMenu`（主菜单）、`Example`（示例玩法，如 ClickCounterPanel）
-2. 在 `UIConstants.cs` 中添加包名和组件名常量
-3. 创建面板类：
-
+   - 当前模板内置包：`Common`（通用弹窗/加载）、`MainMenu`（主菜单）、`Example`（示例玩法）
+2. 确保 `package.xml` 中 `<publish>` 含 `genCode="true"`
+3. FairyGUI 导出代码到 `_Game/Scripts/UI/<PackageName>/`（自动生成，不要手改）
+4. 创建业务逻辑文件 `XXXPanel.Logic.cs`：
 
 ```csharp
 using MiniGameTemplate.UI;
 
-public class MainMenuPanel : UIBase
+namespace MainMenu
 {
-    protected override string PackageName => UIConstants.PKG_MAIN_MENU;
-    protected override string ComponentName => UIConstants.COMP_MAIN_PANEL;
-
-    protected override void OnInit()
+    public partial class MainMenuPanel : IUIPanel
     {
-        // 首次创建时调用。绑定 UI 元素事件。
-    }
+        public int PanelSortOrder => UIConstants.LAYER_NORMAL;
+        public bool IsFullScreen => true;
+        public string PanelPackageName => "MainMenu";
 
-    protected override void OnOpen(object data)
-    {
-        // 每次打开面板时调用。data 是可选的传入参数。
-    }
+        public void OnOpen(object data)
+        {
+            // 首次打开时绑定事件
+            if (btnStart != null) btnStart.onClick.Add(OnStartClicked);
+            ApplyData(data);
+        }
 
-    protected override void OnClose()
-    {
-        // 面板关闭时调用。清理资源。
+        public void OnClose()
+        {
+            // 清理资源
+        }
+
+        public void OnRefresh(object data)
+        {
+            // 仅刷新数据，不重新绑定事件
+            ApplyData(data);
+        }
+
+        private void ApplyData(object data) { }
+        private void OnStartClicked() { }
     }
 }
+```
+
+5. 在 `GameStartupFlow.RunAsync` 中注册 Binder：
+```csharp
+UIManager.RegisterBinder("MainMenu", MainMenu.MainMenuBinder.BindAll);
 ```
 
 ### 打开/关闭面板
 
 ```csharp
-// 打开（如果已打开则刷新）
-await UIManager.Instance.OpenPanelAsync<MainMenuPanel>();
+// 打开（如果已打开则调用 OnRefresh）
+await UIManager.Instance.OpenPanelAsync<MainMenu.MainMenuPanel>();
 
 // 打开时传入数据
-await UIManager.Instance.OpenPanelAsync<MainMenuPanel>(someData);
+await UIManager.Instance.OpenPanelAsync<MainMenu.MainMenuPanel>(someData);
 
 // 关闭
-UIManager.Instance.ClosePanel<MainMenuPanel>();
+UIManager.Instance.ClosePanel<MainMenu.MainMenuPanel>();
 
 // 检查是否打开
-bool isOpen = UIManager.Instance.IsPanelOpen<MainMenuPanel>();
+bool isOpen = UIManager.Instance.IsPanelOpen<MainMenu.MainMenuPanel>();
 
 // 获取已打开的面板实例
-var panel = UIManager.Instance.GetPanel<MainMenuPanel>();
+var panel = UIManager.Instance.GetPanel<MainMenu.MainMenuPanel>();
 
 // 关闭所有面板（场景切换时调用）
 UIManager.Instance.CloseAllPanels();
@@ -357,52 +378,55 @@ UIPackageLoader.RemovePackage("CommonUI");
 FairySpineHelper.TryPlaySpine(root, "role3d", "idle", loop: true);
 ```
 
-### UIDialogBase
+### 对话框 (IModalDialog)
 
-弹窗的基类，在 UIBase 基础上增加了半透明遮罩和点击遮罩关闭的功能。
+实现 `IModalDialog` 接口的面板会自动获得半透明遮罩和可选的点击外部关闭功能。
 
-**与 UIBase 的关键区别**：
-- `IsFullScreen = false`：对话框保持原始尺寸并居中显示，不会被拉伸为全屏
-- 自动创建半透明遮罩（SortOrder - 1），可配置 `CloseOnClickOutside`（默认 `true`）
-- 默认 `SortOrder = LAYER_DIALOG (300)`
+**与普通面板的区别**：
+- `IsFullScreen = false`：对话框保持原始尺寸并居中显示
+- 自动创建半透明遮罩（SortOrder - 1）
+- 通过 `CloseOnClickOutside` 控制点击遮罩是否关闭
 
 ```csharp
-public class MyDialog : UIDialogBase
+namespace Common
 {
-    protected override string PackageName => UIConstants.PKG_COMMON;
-    protected override string ComponentName => "MyDialog";
+    public partial class MyDialog : IUIPanel, IModalDialog
+    {
+        public int PanelSortOrder => UIConstants.LAYER_LOADING + 100; // 700
+        public bool IsFullScreen => false;
+        public string PanelPackageName => "Common";
+        public bool CloseOnClickOutside => false;
 
-    // 如果需要在加载界面上方显示，覆盖 SortOrder
-    public override int SortOrder => UIConstants.LAYER_LOADING + 100; // 700
-
-    // 禁止点击遮罩关闭
-    protected override bool CloseOnClickOutside => false;
+        public void OnOpen(object data) { }
+        public void OnClose() { }
+        public void OnRefresh(object data) { }
+    }
 }
 ```
 
 ### UI 层级系统
 
-所有 UI 面板通过 `SortOrder` 属性控制显示层级，常量定义在 `UIConstants.cs`：
+所有 UI 面板通过 `PanelSortOrder` 属性控制显示层级，常量定义在 `UIConstants.cs`：
 
 | 层级常量 | 值 | 用途 |
 |---------|-----|------|
 | `LAYER_BACKGROUND` | 0 | 背景面板 |
 | `LAYER_NORMAL` | 100 | 普通面板（游戏 HUD） |
 | `LAYER_POPUP` | 200 | 弹出面板 |
-| `LAYER_DIALOG` | 300 | 对话框（UIDialogBase 默认值） |
+| `LAYER_DIALOG` | 300 | 对话框 |
 | `LAYER_TOAST` | 400 | Toast 提示 |
 | `LAYER_GUIDE` | 500 | 新手引导 |
 | `LAYER_LOADING` | 600 | 加载界面 |
 
-> ⚠️ **常见坑**：如果需要在 LoadingPanel 显示期间弹出对话框（如启动时的隐私授权），对话框的 `SortOrder` 必须 > 600。否则对话框被 LoadingPanel 遮挡，界面看起来卡死。
+> ⚠️ **常见坑**：如果需要在 LoadingPanel 显示期间弹出对话框（如启动时的隐私授权），对话框的 `PanelSortOrder` 必须 > 600。否则对话框被 LoadingPanel 遮挡，界面看起来卡死。
 
 ### IsFullScreen 属性
 
-`UIBase` 提供 `IsFullScreen` 虚属性（默认 `true`）：
+`IUIPanel` 的 `IsFullScreen` 属性控制面板布局：
 - **全屏面板**（`IsFullScreen = true`）：调用 `MakeFullScreen()` 铺满屏幕
 - **非全屏面板**（`IsFullScreen = false`）：调用 `Center()` 居中显示，保持原始尺寸
 
-`UIDialogBase` 覆盖为 `false`，因此所有继承 `UIDialogBase` 的对话框自动居中。
+对话框面板返回 `false`，自动居中。
 
 ---
 
