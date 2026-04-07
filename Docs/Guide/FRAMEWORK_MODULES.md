@@ -279,8 +279,10 @@ void LoadGameScene()
 ### 创建自定义面板
 
 1. 在 FairyGUI 编辑器中创建 UI 组件
+   - 当前模板内置包：`Common`（通用弹窗/加载）、`MainMenu`（主菜单）、`Example`（示例玩法，如 ClickCounterPanel）
 2. 在 `UIConstants.cs` 中添加包名和组件名常量
 3. 创建面板类：
+
 
 ```csharp
 using MiniGameTemplate.UI;

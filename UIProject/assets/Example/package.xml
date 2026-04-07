@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<packageDescription id="mm03ef04">
+<packageDescription id="ex04cd05">
   <resources>
-    <component id="gen_01" name="MainMenuPanel.xml" path="/" exported="true"/>
+    <component id="gen_01" name="ClickCounterPanel.xml" path="/" exported="true"/>
     <component id="gen_02" name="MenuIconButton.xml" path="/components/"/>
   </resources>
 
-
-  <publish name="MainMenu">
+  <publish name="Example">
     <atlas name="Default" index="0"/>
   </publish>
 </packageDescription>

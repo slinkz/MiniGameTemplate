@@ -10,9 +10,10 @@
    - 支持：开始、点击加分、倒计时、结算、重开、返回、分享、最高分本地保存
 
 2. **独立面板模式（推荐）**
-   - 已新增 FairyGUI 组件源文件：`UIProject/assets/MainMenu/ClickCounterPanel.xml`
+   - 已新增 FairyGUI 组件源文件：`UIProject/assets/Example/ClickCounterPanel.xml`
    - 已新增运行时代码：`_Game/Scripts/UI/ClickCounterPanel.cs`
-   - 需要在 FairyGUI 编辑器中重新发布 MainMenu 包后使用（见下文）
+   - 需要在 FairyGUI 编辑器中重新发布 Example 包后使用（见下文）
+
 
 ## 玩法
 - 在限定时间内尽可能多地点击按钮
@@ -43,6 +44,7 @@ _Example/
 
 ## 启用独立面板模式（可选）
 1. 用 FairyGUI 编辑器打开 `UIProject/MiniGameTemplate.fairy`
-2. 确认 MainMenu 包包含 `ClickCounterPanel`
+2. 确认 Example 包包含 `ClickCounterPanel`
 3. 点击发布，导出到：`UnityProj/Assets/_Game/FairyGUI_Export/`
 4. 回到 Unity 运行
+

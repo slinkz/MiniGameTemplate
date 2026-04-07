@@ -19,6 +19,8 @@ namespace MiniGameTemplate.UI
         // === Package names (match FairyGUI export names) ===
         public const string PKG_COMMON = "Common";
         public const string PKG_MAIN_MENU = "MainMenu";
+        public const string PKG_EXAMPLE = "Example";
+
 
         // === Component names (match FairyGUI component names) ===
         public const string COMP_LOADING_PANEL = "LoadingPanel";

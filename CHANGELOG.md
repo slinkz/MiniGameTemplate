@@ -2,7 +2,19 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [0.5.4] - 2026-04-07
+
+### 变更
+- **ClickCounterPanel 包拆分**
+  - 将独立面板源文件从 `UIProject/assets/MainMenu/ClickCounterPanel.xml` 迁移到 `UIProject/assets/Example/ClickCounterPanel.xml`
+  - 新增独立 FairyGUI 包：`UIProject/assets/Example/`（含 `package.xml` 与 `components/MenuIconButton.xml`），避免示例玩法与主菜单资源耦合
+  - `ClickCounterPanel` 运行时加载包由 `PKG_MAIN_MENU` 切换为 `PKG_EXAMPLE`
+  - `UIConstants` 新增包常量：`PKG_EXAMPLE = "Example"`
+- **文档同步**
+  - 更新 `_Example/README.md` 与 `Docs/Guide/EXAMPLE_WALKTHROUGH.md` 中的面板路径与发布指引，发布目标由 MainMenu 包改为 Example 包
+
 ## [0.5.3] - 2026-04-07
+
 
 ### 新增
 - **ClickCounter 独立面板骨架**

@@ -15,15 +15,17 @@ namespace Game.UI
 
     /// <summary>
     /// Standalone ClickCounter gameplay panel.
-    /// Requires FairyGUI component MainMenu/ClickCounterPanel to be exported.
+    /// Requires FairyGUI component Example/ClickCounterPanel to be exported.
     /// </summary>
+
     public class ClickCounterPanel : MiniGameTemplate.UI.UIBase
     {
         private const string HighScoreKey = "example_high_score";
         private const float RoundDuration = 10f;
         private const float TickInterval = 0.1f;
 
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_MAIN_MENU;
+        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_EXAMPLE;
+
         protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_CLICK_COUNTER_PANEL;
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_NORMAL + 10;
 

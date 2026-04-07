@@ -10,8 +10,9 @@
 
 > **当前版本说明（2026-04-07）**
 > - 主菜单已内置 ClickCounter 回退玩法：即使 Boot 场景未配置 `StartGameEvent`，也可以直接开玩。
-> - 新增了独立 FairyGUI 组件源文件 `UIProject/assets/MainMenu/ClickCounterPanel.xml` 与对应运行时代码 `ClickCounterPanel.cs`。
-> - 若要启用独立面板模式，请在 FairyGUI 编辑器重新发布 MainMenu 包到 `Assets/_Game/FairyGUI_Export/`。
+> - 新增了独立 FairyGUI 组件源文件 `UIProject/assets/Example/ClickCounterPanel.xml` 与对应运行时代码 `ClickCounterPanel.cs`。
+> - 若要启用独立面板模式，请在 FairyGUI 编辑器重新发布 Example 包到 `Assets/_Game/FairyGUI_Export/`。
+
 
 
 | 框架模块 | 在示例中的角色 |
