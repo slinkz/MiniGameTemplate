@@ -179,6 +179,15 @@ namespace MiniGameTemplate.Timing
                 {
                     t.Callback?.Invoke();
 
+                    // Callback may cancel this timer (for example, repeating gameplay timer
+                    // cancels itself when a round ends). If we continue writing back local state,
+                    // we could accidentally resurrect a cancelled timer.
+                    if (_timers[i].IsCancelled)
+                    {
+                        needsCompact = true;
+                        continue;
+                    }
+
                     if (t.IsRepeating)
                     {
                         t.Elapsed -= t.Duration; // Preserve overflow for accuracy
@@ -189,6 +198,7 @@ namespace MiniGameTemplate.Timing
                         needsCompact = true;
                     }
                 }
+
 
                 _timers[i] = t; // Write back (struct)
             }
