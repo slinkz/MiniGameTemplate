@@ -173,12 +173,36 @@ namespace Game.UI
 
 
         /// <summary>
+        /// Call WeChat bridge to request privacy authorization.
+        /// </summary>
+        private async Task<bool> RequestPrivacyAuthorizeAsync()
+
+        {
+            if (_weChatBridge == null)
+            {
+                Debug.LogError("[StartupFlow] WeChat bridge is null when requesting privacy authorization.");
+                return false;
+            }
+
+            var tcs = new TaskCompletionSource<bool>();
+            _weChatBridge.RequirePrivacyAuthorize(granted =>
+            {
+                tcs.TrySetResult(granted);
+            });
+
+            bool grantedResult = await tcs.Task;
+            GameLog.Log($"[StartupFlow] RequirePrivacyAuthorize result: {(grantedResult ? "granted" : "rejected")}");
+            return grantedResult;
+        }
+
+        /// <summary>
         /// Retry privacy authorization — show a confirm dialog explaining why it's needed,
         /// then re-show the privacy dialog if user confirms.
         /// </summary>
         private async Task<bool> RetryPrivacyAsync()
         {
             // Show a confirm dialog asking the user to reconsider
+
             var confirmTcs = new TaskCompletionSource<bool>();
 
             var confirmData = new ConfirmDialogData
