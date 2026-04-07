@@ -87,6 +87,24 @@ bash Tools/setup_fairygui.sh
 3. 如果 `ThirdParty/YooAsset/` 为空或不存在，说明 Git clone 时可能遗漏了文件，尝试重新 clone 或从备份恢复
 4. 在 Unity 中执行 Window → Package Manager → 刷新，确认 YooAsset 2.3.18 已识别
 
+### Q: `The type or namespace name 'Spine' could not be found`
+
+**原因**：通常是 `FAIRYGUI_SPINE` 宏已开启，但 Spine 源码链接未完成。
+
+**解决**：
+```bash
+cd UnityProj
+# Windows
+Tools\setup_spine.bat
+# macOS / Linux
+bash Tools/setup_spine.sh
+```
+
+然后在 Unity 菜单执行：
+- `Tools -> MiniGame Template -> Integrations -> Spine -> Enable Spine (Current Target)`
+
+如果当前项目不需要 Spine，直接关闭该菜单项对应宏即可。
+
 ### Q: 导入纹理后发现尺寸被自动改了
 
 **这是预期行为**。`TextureImportEnforcer`（自动运行的 AssetPostprocessor）会强制执行以下规则：

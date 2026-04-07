@@ -132,22 +132,28 @@ public class MainMenuPanel : UIBase
 5. **在线更新**：Play Mode 选 `Host`，填入 CDN 服务器地址
 6. YooAsset Bundle 构建：通过 `YooAsset → AssetBundle Builder` 窗口操作
 
-## Step 12: FairyGUI Git Submodule 设置
+## Step 12: UI 运行时源码链接设置（FairyGUI + 可选 Spine）
 
-clone 新项目后需要初始化 FairyGUI SDK：
+clone 新项目后先初始化子模块，再建立目录链接：
 
 ```bash
 # 在仓库根目录执行
 git submodule update --init --recursive
 
-# 建立目录链接（Windows）
+# FairyGUI（必做）
 cd UnityProj
 Tools\setup_fairygui.bat
+# 或 bash Tools/setup_fairygui.sh
 
-# 建立目录链接（macOS/Linux）
-cd UnityProj
-bash Tools/setup_fairygui.sh
+# Spine（可选，仅当项目需要 FairyGUI 显示 Spine）
+Tools\setup_spine.bat
+# 或 bash Tools/setup_spine.sh
 ```
+
+如果启用 Spine，需要在 Unity 菜单执行：
+- `Tools -> MiniGame Template -> Integrations -> Spine -> Enable Spine (Current Target)`
+
+这会启用 `FAIRYGUI_SPINE`（以及模板级 `ENABLE_SPINE`）宏；未启用时不会编译/加载 Spine。
 
 ## Step 13: Luban 配置表新增表流程
 
@@ -180,6 +186,7 @@ Tools → MiniGame Template → Build → Open Build Folder
 - [ ] 修改了 GameConfig（名称、版本）
 - [ ] 修改了 Player Settings（Bundle ID、WebGL 配置）
 - [ ] 初始化了 FairyGUI git submodule 并执行 setup 脚本
+- [ ] （可选）若项目使用 Spine：执行 setup_spine 脚本并启用 FAIRYGUI_SPINE
 - [ ] 创建了游戏场景并配置为 Initial Scene
 - [ ] Boot 场景在 Build Settings 中排第一
 - [ ] 清理了 _Example（如不需要）

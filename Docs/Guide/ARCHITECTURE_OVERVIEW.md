@@ -185,10 +185,13 @@ Game ── _Game/ _Example/        ← 可以引用所有框架模块
 
 | 库 | 引入方式 | 路径 |
 |----|----------|------|
-| FairyGUI | Git submodule + Junction 链接 | `ThirdParty/FairyGUI-unity/` → `Assets/FairyGUI/`（Junction） |
+| FairyGUI | Git submodule + Junction 链接 | `ThirdParty/FairyGUI-unity/` -> `Assets/FairyGUI/`（Junction） |
+| Spine（可选） | Git submodule + Junction 链接 + define 开关 | `ThirdParty/spine-runtimes/` -> `Assets/Spine/` + `Assets/SpineCSharp/` |
 | YooAsset | 本地源码 UPM 包 | `ThirdParty/YooAsset/`（`manifest.json` 中 `file:` 引用） |
 
 > 💡 FairyGUI 没有 `package.json`（不是 UPM 包），所以通过目录 Junction/符号链接让 Unity 识别。首次克隆后需运行 `Tools/setup_fairygui.bat`（Windows）或 `setup_fairygui.sh`（macOS/Linux）创建链接。
+>
+> 💡 Spine 为可选依赖。需要 FairyGUI 显示 Spine 时，运行 `Tools/setup_spine.bat`/`setup_spine.sh`，并启用 `FAIRYGUI_SPINE`。未启用时不参与编译和加载。
 
 ## 程序集定义
 

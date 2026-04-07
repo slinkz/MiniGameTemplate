@@ -11,6 +11,7 @@
 | `UIBase` | 所有UI面板的基类 |
 | `UIDialogBase` | 弹窗/对话框基类（在UIBase上增加遮罩和关闭逻辑） |
 | `UIConstants` | UI常量定义（包名、组件名），避免魔法字符串 |
+| `FairySpineHelper` | FairyGUI 的 Spine（GLoader3D）播放辅助，统一开关与调用方式 |
 
 ## 使用方式
 ```csharp
@@ -34,6 +35,18 @@ UIManager.Instance.ClosePanel<MainMenuPanel>();
 
 ## FairyGUI 工程
 FairyGUI 编辑器工程在仓库根目录 `UIProject/`，导出资源到 `Assets/_Game/FairyGUI_Export/`。
+
+## Spine（可选）
+- 集成模式：源码子模块（`ThirdParty/spine-runtimes`）+ 目录链接（`Assets/Spine` 与 `Assets/SpineCSharp`）
+- 开关方式：`FAIRYGUI_SPINE`（同时建议保留 `ENABLE_SPINE` 作为模板级标识）
+- 菜单工具：`Tools -> MiniGame Template -> Integrations -> Spine`
+- 关闭面板时会由 FairyGUI 生命周期自动释放 GLoader3D 挂载对象
+
+示例：
+```csharp
+// root 为当前面板的 GComponent
+FairySpineHelper.TryPlaySpine(root, "role3d", "idle", loop: true);
+```
 
 ## 注意
 - 面板类与 FairyGUI 包/组件的映射通过 `UIConstants` 管理

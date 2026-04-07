@@ -38,10 +38,12 @@ MiniGameTemplate/               ← Git 仓库根
 ├── .codebuddy/skills/          ← AI Agent Skills（luban-config, fairygui-tools）
 └── UnityProj/                  ← Unity 工程（用 Unity 打开此目录）
     ├── Assets/FairyGUI/        # Junction → ThirdParty/FairyGUI-unity/Assets/
+    ├── Assets/Spine/           # Optional Junction → ThirdParty/spine-runtimes/spine-unity/Assets/Spine
+    ├── Assets/SpineCSharp/     # Optional Junction → ThirdParty/spine-runtimes/spine-csharp/src
     ├── Assets/_Framework/      # 框架代码
     ├── Assets/_Game/           # 游戏业务代码
     ├── DataTables/             # Luban 配置表
-    ├── ThirdParty/             # FairyGUI submodule + YooAsset 源码
+    ├── ThirdParty/             # FairyGUI + Spine 子模块，YooAsset 源码
     └── Tools/                  # 构建脚本
 ```
 
@@ -116,6 +118,11 @@ FairyGUI 编辑器（UIProject/）
   └→ 导出到 UnityProj/Assets/_Game/FairyGUI_Export/
       └→ UIPackageLoader 加载 FairyGUI 包
           └→ UIManager 管理面板生命周期
+
+Spine（可选）接入：
+  setup_spine.* 建立源码链接（Assets/Spine + Assets/SpineCSharp）
+    └→ Unity 菜单启用 FAIRYGUI_SPINE（并保留 ENABLE_SPINE）
+        └→ FairyGUI 的 GLoader3D 可直接渲染 Spine PackageItem
 ```
 
 ### 6. UI 层级系统（SortingOrder）

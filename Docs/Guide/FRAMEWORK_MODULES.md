@@ -341,6 +341,20 @@ UIPackageLoader.RemovePackage("CommonUI");
 
 > ⚠️ WebGL 环境下**禁止**使用同步 `AddPackage()`，因为它走 `Resources.Load`，不走 YooAsset。
 
+### FairyGUI 显示 Spine（可选）
+
+前置条件：
+1. 运行 `UnityProj/Tools/setup_spine.bat` 或 `.sh`（创建 `Assets/Spine` / `Assets/SpineCSharp` 链接）
+2. 在 Unity 菜单启用 `Tools -> MiniGame Template -> Integrations -> Spine -> Enable Spine (Current Target)`
+
+如果以上条件未满足，模板仍可正常运行，只是不会编译/播放 Spine。
+
+示例：
+```csharp
+// root 为当前面板 GComponent，"role3d" 是 FairyGUI 里一个 GLoader3D 的名字
+FairySpineHelper.TryPlaySpine(root, "role3d", "idle", loop: true);
+```
+
 ### UIDialogBase
 
 弹窗的基类，在 UIBase 基础上增加了半透明遮罩和点击遮罩关闭的功能。

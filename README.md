@@ -20,6 +20,7 @@ Unity 小游戏开发模板 — 基于 ScriptableObject 驱动的模块化架构
 | 配置表 | Luban |
 | 目标平台 | 微信小游戏 |
 | 资源管理 | YooAsset 2.3.18（本地源码） |
+| Spine（可选） | spine-runtimes 4.2（源码子模块，按需启用） |
 
 ## 📁 项目结构
 
@@ -66,10 +67,11 @@ MiniGameTemplate/               ← Git 仓库根
 │   │   └── ScriptTemplates/    # C# 脚本模板
 │   ├── DataTables/             # Luban 配置表源数据
 │   ├── Packages/               # Unity Package Manager 配置
-│   ├── ThirdParty/             # 第三方库（FairyGUI submodule + YooAsset 源码）
+│   ├── ThirdParty/             # 第三方库（FairyGUI + Spine 子模块，YooAsset 源码）
 │   └── Tools/                  # 构建 & 生成脚本
 │       ├── gen_config.bat/sh   # Luban 配置表生成
 │       ├── setup_fairygui.*    # FairyGUI SDK 链接脚本
+│       ├── setup_spine.*       # Spine 运行时源码链接脚本（可选）
 │       └── Luban/              # Luban 工具说明
 ├── README.md                   ← 本文件
 ├── CHANGELOG.md                ← 版本变更记录
@@ -87,8 +89,9 @@ MiniGameTemplate/               ← Git 仓库根
    ```
 2. 用 Unity 2022 LTS 打开 `UnityProj/` 目录
 3. 运行 `UnityProj/Tools/setup_fairygui.bat`（Windows）或 `.sh`（macOS/Linux）
-4. 阅读 [环境搭建与首次运行](Docs/Guide/GETTING_STARTED.md) 了解详细步骤
-5. 在 `UnityProj/Assets/_Game/` 中开始开发你的游戏
+4. （可选）需要 FairyGUI 显示 Spine 时，运行 `UnityProj/Tools/setup_spine.bat` 或 `.sh`，并在 Unity 菜单启用 `FAIRYGUI_SPINE`
+5. 阅读 [环境搭建与首次运行](Docs/Guide/GETTING_STARTED.md) 了解详细步骤
+6. 在 `UnityProj/Assets/_Game/` 中开始开发你的游戏
 
 ## 📖 文档
 

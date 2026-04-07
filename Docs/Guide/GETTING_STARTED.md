@@ -27,7 +27,7 @@ git clone --recursive <仓库地址>
 cd MiniGameTemplate
 ```
 
-> ⚠️ **必须加 `--recursive`**。项目使用 Git submodule 引入 FairyGUI SDK。如果你忘了加，运行：
+> ⚠️ **必须加 `--recursive`**。项目使用 Git submodule 引入 FairyGUI（以及可选的 Spine）源码。如果你忘了加，运行：
 > ```bash
 > git submodule update --init --recursive
 > ```
@@ -57,6 +57,43 @@ bash Tools/setup_fairygui.sh
 Done! FairyGUI SDK is ready.
 ```
 
+如果你在 CI 或需要无交互执行：
+- Windows：`Tools\setup_fairygui.bat --force --no-pause`
+- macOS / Linux：`bash Tools/setup_fairygui.sh --force`
+
+
+## Step 2.5（可选）：接入 Spine 源码
+
+仅当你需要在 FairyGUI 中显示 Spine 动画时执行：
+
+**Windows：**
+```bash
+cd UnityProj
+Tools\setup_spine.bat
+```
+
+**macOS / Linux：**
+```bash
+cd UnityProj
+bash Tools/setup_spine.sh
+```
+
+脚本会创建两个链接：
+1. `Assets/Spine` → `ThirdParty/spine-runtimes/spine-unity/Assets/Spine`
+2. `Assets/SpineCSharp` → `ThirdParty/spine-runtimes/spine-csharp/src`
+
+然后在 Unity 菜单执行：
+- `Tools -> MiniGame Template -> Integrations -> Spine -> Enable Spine (Current Target)`
+
+这一步会启用 `FAIRYGUI_SPINE`（以及模板级 `ENABLE_SPINE`）脚本宏。
+
+如果你在 CI 或需要无交互执行：
+- Windows：`Tools\setup_spine.bat --force --no-pause`
+- macOS / Linux：`bash Tools/setup_spine.sh --force`
+
+> 不启用宏或不运行 setup_spine 脚本时，Spine 不参与编译与加载，模板可正常运行。
+
+
 ## Step 3：打开 Unity 工程
 
 1. 启动 Unity Hub
@@ -72,6 +109,7 @@ Done! FairyGUI SDK is ready.
 |------|------|----------|
 | `The type or namespace name 'FairyGUI' could not be found` | FairyGUI 目录链接未建立 | 回到 Step 2 执行 setup 脚本 |
 | `The type or namespace name 'YooAsset' could not be found` | YooAsset 本地包路径无效 | 确认 `ThirdParty/YooAsset/` 目录存在且含 `package.json` |
+| `The type or namespace name 'Spine' could not be found` | 启用了 `FAIRYGUI_SPINE` 但未完成 Spine 链接 | 运行 Step 2.5 的 setup_spine 脚本，或在 Unity 菜单禁用 Spine 宏 |
 
 ## Step 4：运行示例游戏
 
@@ -101,6 +139,8 @@ Done! FairyGUI SDK is ready.
 ```
 Assets/
 ├── FairyGUI/ → Junction     ← ThirdParty/FairyGUI-unity/Assets/（setup 脚本自动创建）
+├── Spine/ → Junction        ← ThirdParty/spine-runtimes/spine-unity/Assets/Spine（可选）
+├── SpineCSharp/ → Junction  ← ThirdParty/spine-runtimes/spine-csharp/src（可选）
 ├── _Framework/              ← 框架代码（一般不改）
 │   ├── AssetSystem/         ← YooAsset 资源管理封装
 │   ├── AudioSystem/         ← 音频管理（BGM + SFX）

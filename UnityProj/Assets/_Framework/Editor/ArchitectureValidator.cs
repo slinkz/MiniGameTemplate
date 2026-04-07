@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -53,7 +54,7 @@ namespace MiniGameTemplate.EditorTools
 
         // Max recommended file length (SRP indicator)
         private const int MAX_FILE_LINES = 200;
-        private const int IDEAL_FILE_LINES = 150;
+
 
         // Comment stripping regex
         private static readonly Regex LineCommentRegex = new Regex(@"//.*$", RegexOptions.Multiline);
@@ -83,7 +84,18 @@ namespace MiniGameTemplate.EditorTools
                 if (scriptPath.Contains("ThirdParty/") || scriptPath.Contains("ThirdParty\\"))
                     continue;
 
-                var rawContent = File.ReadAllText(scriptPath);
+                string rawContent;
+                try
+                {
+                    rawContent = File.ReadAllText(scriptPath);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[Architecture] WARNING: Skip unreadable file {scriptPath}. Reason: {ex.Message}");
+                    warningCount++;
+                    continue;
+                }
+
                 filesScanned++;
 
                 // Strip comments before pattern matching to avoid false positives
@@ -120,10 +132,14 @@ namespace MiniGameTemplate.EditorTools
                     Debug.LogWarning($"[Architecture] WARNING: {scriptPath} is {lineCount} lines (limit: {MAX_FILE_LINES}). Consider splitting.");
                     warningCount++;
                 }
+
             }
 
             // Check for MODULE_README.md presence
             CheckModuleReadmes(ref warningCount);
+
+            // Check optional Spine integration consistency
+            CheckSpineSetupConsistency(ref warningCount);
 
             // Summary
             Debug.Log("──────────────────────────────────────────────");
@@ -162,12 +178,58 @@ namespace MiniGameTemplate.EditorTools
             }
         }
 
+        private static void CheckSpineSetupConsistency(ref int warningCount)
+        {
+            var group = EditorUserBuildSettings.selectedBuildTargetGroup;
+            if (group == BuildTargetGroup.Unknown)
+                return;
+
+#if UNITY_2021_2_OR_NEWER
+            var named = NamedBuildTarget.FromBuildTargetGroup(group);
+            var definesRaw = PlayerSettings.GetScriptingDefineSymbols(named);
+#else
+            var definesRaw = PlayerSettings.GetScriptingDefineSymbolsForGroup(group);
+#endif
+
+            var defineSet = new HashSet<string>(
+                (definesRaw ?? string.Empty)
+                .Split(';')
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrEmpty(x)));
+
+            bool fairyGuiSpineEnabled = defineSet.Contains("FAIRYGUI_SPINE");
+            bool projectSpineEnabled = defineSet.Contains("ENABLE_SPINE");
+            bool anySpineDefineEnabled = fairyGuiSpineEnabled || projectSpineEnabled;
+
+            if (fairyGuiSpineEnabled != projectSpineEnabled)
+            {
+                Debug.LogWarning("[Architecture] WARNING: FAIRYGUI_SPINE and ENABLE_SPINE are inconsistent. Keep them enabled/disabled together.");
+                warningCount++;
+            }
+
+            if (!anySpineDefineEnabled)
+                return;
+
+            bool hasSpineUnity = AssetDatabase.IsValidFolder("Assets/Spine")
+                                 && File.Exists("Assets/Spine/Runtime/spine-unity.asmdef");
+            bool hasSpineCSharp = AssetDatabase.IsValidFolder("Assets/SpineCSharp")
+                                  && File.Exists("Assets/SpineCSharp/spine-csharp.asmdef");
+
+            if (!hasSpineUnity || !hasSpineCSharp)
+            {
+                Debug.LogWarning("[Architecture] WARNING: Spine define(s) are enabled, but Spine source links are incomplete. Run UnityProj/Tools/setup_spine.* or disable FAIRYGUI_SPINE/ENABLE_SPINE.");
+                warningCount++;
+            }
+
+        }
+
         private static string StripComments(string code)
         {
             code = BlockCommentRegex.Replace(code, m => new string(' ', m.Length));
             code = LineCommentRegex.Replace(code, m => new string(' ', m.Length));
             return code;
         }
+
 
         private static int FindOriginalIndex(string original, string stripped, int strippedIndex)
         {

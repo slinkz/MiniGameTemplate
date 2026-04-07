@@ -2,6 +2,29 @@
 
 All notable changes to MiniGameTemplate will be documented in this file.
 
+## [0.5.2] - 2026-04-07
+
+### Added
+- **Spine source integration (optional)**
+  - Added git submodule: `UnityProj/ThirdParty/spine-runtimes` (branch `4.2`)
+  - Added setup scripts: `UnityProj/Tools/setup_spine.bat` / `setup_spine.sh`
+  - Setup creates source links:
+    - `Assets/Spine` -> `ThirdParty/spine-runtimes/spine-unity/Assets/Spine`
+    - `Assets/SpineCSharp` -> `ThirdParty/spine-runtimes/spine-csharp/src`
+- **Spine integration editor tools** (`Tools -> MiniGame Template -> Integrations -> Spine`)
+  - Enable/Disable defines for current target: `FAIRYGUI_SPINE`, `ENABLE_SPINE`
+  - Validate integration status (source links, asmdef readiness, define consistency)
+- **FairyGUI Spine helper**: `FairySpineHelper` for controlling `GLoader3D` playback via framework API
+
+### Changed
+- **Setup scripts hardening** (`setup_fairygui.*`, `setup_spine.*`)
+  - Added source existence checks before deleting existing directories
+  - Added explicit failure handling for submodule init / link creation
+  - Added non-interactive flags for automation (`--force`, Windows also supports `--no-pause`)
+- **ArchitectureValidator**: added optional Spine consistency check when `FAIRYGUI_SPINE` is enabled
+- Updated docs (README / GETTING_STARTED / FAQ / FRAMEWORK_MODULES / ARCHITECTURE / NEWGAME_GUIDE / UISystem MODULE_README) for optional Spine workflow
+
+
 ## [0.5.1] - 2026-04-07
 
 ### Changed
