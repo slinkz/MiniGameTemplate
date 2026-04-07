@@ -85,14 +85,20 @@ namespace Game.UI
 
         protected override void OnClose()
         {
+            // Safety net: if dialog closes by external path (e.g. CloseAllPanels),
+            // treat it as cancel so awaiting logic can always complete.
+            var pendingCancel = _onCancel;
             _onConfirm = null;
             _onCancel = null;
+            pendingCancel?.Invoke();
             base.OnClose();
         }
 
         private void OnConfirmClicked()
         {
             var callback = _onConfirm;
+            _onConfirm = null;
+            _onCancel = null;
             Close();
             callback?.Invoke();
         }
@@ -100,8 +106,11 @@ namespace Game.UI
         private void OnCancelClicked()
         {
             var callback = _onCancel;
+            _onConfirm = null;
+            _onCancel = null;
             Close();
             callback?.Invoke();
         }
+
     }
 }

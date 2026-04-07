@@ -31,14 +31,31 @@ namespace Game.UI
         [Tooltip("Simulated progress speed per second (0..1 range).")]
         [SerializeField] private float _progressSpeed = 0.4f;
 
+        [Header("WeChat Ads (Optional)")]
+        [Tooltip("Rewarded video ad unit id. Leave empty to fallback to stub behavior.")]
+        [SerializeField] private string _rewardedAdUnitId = "";
+
+        [Tooltip("Banner ad unit id. Leave empty to fallback to stub behavior.")]
+        [SerializeField] private string _bannerAdUnitId = "";
+
+        [Tooltip("Interstitial ad unit id. Leave empty to fallback to stub behavior.")]
+        [SerializeField] private string _interstitialAdUnitId = "";
+
+        [Tooltip("Whether main menu should display banner ads.")]
+        [SerializeField] private bool _enableBannerAdInMainMenu = true;
+
         // Resolved at runtime
         private IWeChatBridge _weChatBridge;
+
 
         public async Task RunAsync(GameConfig gameConfig)
         {
             GameLog.Log($"[StartupFlow] Starting UI flow for {gameConfig.GameName} v{gameConfig.Version}...");
 
+            WeChatBridgeFactory.SetAdUnitIds(_rewardedAdUnitId, _bannerAdUnitId, _interstitialAdUnitId);
             _weChatBridge = WeChatBridgeFactory.Create();
+            _weChatBridge.PreloadRewardedAd();
+
 
             // --- Phase 1: Loading screen ---
             LoadingPanel loadingPanel;
@@ -112,7 +129,8 @@ namespace Game.UI
                 var menuData = new MainMenuPanelData
                 {
                     StartGameEvent = _startGameEvent,
-                    WeChatBridge = _weChatBridge
+                    WeChatBridge = _weChatBridge,
+                    EnableBannerAd = _enableBannerAdInMainMenu
                 };
                 await UIManager.Instance.OpenPanelAsync<MainMenuPanel>(menuData);
                 GameLog.Log("[StartupFlow] Main menu opened. Startup flow complete.");
@@ -147,8 +165,12 @@ namespace Game.UI
             GameLog.Log("[StartupFlow] Privacy authorization required. Showing dialog...");
             bool agreed = await PrivacyDialog.ShowAndWaitAsync();
             GameLog.Log($"[StartupFlow] Privacy dialog result: {(agreed ? "agreed" : "rejected")}");
-            return agreed;
+            if (!agreed)
+                return false;
+
+            return await RequestPrivacyAuthorizeAsync();
         }
+
 
         /// <summary>
         /// Retry privacy authorization — show a confirm dialog explaining why it's needed,
@@ -187,7 +209,11 @@ namespace Game.UI
             // Re-show privacy dialog
             bool agreed = await PrivacyDialog.ShowAndWaitAsync();
             GameLog.Log($"[StartupFlow] Privacy retry result: {(agreed ? "agreed" : "rejected")}");
-            return agreed;
+            if (!agreed)
+                return false;
+
+            return await RequestPrivacyAuthorizeAsync();
         }
+
     }
 }

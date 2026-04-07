@@ -678,14 +678,19 @@ _gameFSM.OnStateChanged += (previousState, newState) => {
 
 ## 10. WeChatBridge — 微信 SDK 桥接
 
-**用途**：统一的微信小游戏 SDK 接口，开发/测试时使用桩实现，发布时替换为真实实现。
+**用途**：统一微信小游戏 SDK 接口层。模板默认提供：
+- Editor / 非 WebGL：`WeChatBridgeStub`
+- WebGL：`WeChatBridgeWebGL`（广告能力已落地）
 
 **位置**：`Assets/_Framework/WeChatBridge/`
 
 ### 使用方式
 
 ```csharp
-// 获取桥接实例（工厂自动选择桩/真实实现）
+// 启动时注入广告位（推荐在 GameStartupFlow 调用）
+WeChatBridgeFactory.SetAdUnitIds(rewardedId, bannerId, interstitialId);
+
+// 获取桥接实例（工厂自动选择实现）
 var wx = WeChatBridgeFactory.Create();
 
 // 广告
@@ -693,42 +698,15 @@ wx.PreloadRewardedAd();
 wx.ShowRewardedAd(success => {
     if (success) GiveReward();
 });
+wx.ShowBannerAd();
+wx.HideBannerAd();
+wx.ShowInterstitialAd();
 
 // 分享
 wx.Share("我的小游戏", imageUrl, "score=100");
-
-// 排行榜
-wx.SubmitScore(playerScore);
-wx.ShowRankingPanel();
-
-// 登录
-wx.Login((success, code) => {
-    if (success) SendCodeToServer(code);
-});
-
-// 前后台切换
-wx.OnShow(query => HandleResume());
-wx.OnHide(() => PauseGame());
-
-// 系统工具
-wx.Vibrate();
-wx.SetClipboardData("复制的文本");
-
-// 隐私授权
-wx.CheckPrivacyAuthorize(needAuthorize => {
-    if (needAuthorize)
-    {
-        wx.RequirePrivacyAuthorize(success => {
-            if (success) Debug.Log("用户已授权");
-        });
-    }
-});
-
-// 获取隐私设置名称（用于 UI 显示）
-string settingName = wx.GetPrivacySettingName();
 ```
 
-### 桩实现的行为
+### 桩实现行为
 
 在 Editor 中运行时，`WeChatBridgeStub` 模拟所有 SDK 调用：
 - 广告回调延迟 1.5 秒后返回 true
@@ -736,13 +714,14 @@ string settingName = wx.GetPrivacySettingName();
 - 隐私授权首次调用 `CheckPrivacyAuthorize` 返回 `needAuthorize=true`，`RequirePrivacyAuthorize` 后标记为已授权
 - 其他调用打印日志
 
-### 接入真实 SDK
+### WebGL 行为
 
-详见 [Docs/Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)。简要步骤：
+- WebGL + 微信环境 + 已配置广告位：走 jslib 真实广告调用
+- WebGL 但非微信环境 / 广告位为空：自动回退桩行为（保证可运行）
 
-1. 导入微信 WX-WASM-SDK-V2
-2. 创建 `WeChatBridgeImpl` 实现 `IWeChatBridge`
-3. 在 `WeChatBridgeFactory` 中注册
+### 详细接入文档
+
+详见 [Docs/Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)。
 
 ---
 

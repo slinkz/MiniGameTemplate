@@ -8,6 +8,8 @@
    - 启动后进入 `MainMenuPanel`
    - 若 `GameStartupFlow._startGameEvent` 未配置，主菜单自动启用内置 ClickCounter 回退玩法
    - 支持：开始、点击加分、倒计时、结算、重开、返回、分享、最高分本地保存
+   - 广告演示：结算触发插屏，结算态“激励重开”走激励视频（配置广告位后生效）
+
 
 2. **独立面板模式（推荐）**
    - 已新增 FairyGUI 组件源文件：`UIProject/assets/Example/ClickCounterPanel.xml`

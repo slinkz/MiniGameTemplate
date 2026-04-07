@@ -14,7 +14,9 @@ namespace Game.UI
     {
         public GameEvent StartGameEvent;
         public IWeChatBridge WeChatBridge;
+        public bool EnableBannerAd = true;
     }
+
 
     /// <summary>
     /// Main menu / lobby panel — the player's hub after loading completes.
@@ -43,9 +45,14 @@ namespace Game.UI
 
         private GameEvent _startGameEvent;
         private IWeChatBridge _weChatBridge;
+        private bool _enableBannerAd = true;
 
         private bool _isLocalRoundRunning;
         private bool _isResultState;
+        private bool _isWaitingRewardedAd;
+        private int _lifecycleVersion;
+
+
         private int _score;
         private int _highScore;
         private float _remainingTime;
@@ -71,12 +78,19 @@ namespace Game.UI
         protected override void OnOpen(object data)
         {
             base.OnOpen(data);
+            _lifecycleVersion++;
 
             var menuData = data as MainMenuPanelData;
+
             if (menuData != null)
             {
                 _startGameEvent = menuData.StartGameEvent;
                 _weChatBridge = menuData.WeChatBridge;
+                _enableBannerAd = menuData.EnableBannerAd;
+            }
+            else
+            {
+                _enableBannerAd = true;
             }
 
             LoadHighScore();
@@ -85,11 +99,17 @@ namespace Game.UI
 
         protected override void OnClose()
         {
+            _lifecycleVersion++;
             CancelRoundTimer();
+            if (_enableBannerAd)
+                _weChatBridge?.HideBannerAd();
+
+            _isWaitingRewardedAd = false;
             _startGameEvent = null;
             _weChatBridge = null;
             base.OnClose();
         }
+
 
         private void LoadHighScore()
         {
@@ -152,14 +172,21 @@ namespace Game.UI
         private void OnRankingClicked()
         {
             // In fallback ClickCounter mode: acts as "Restart".
-            if (_isLocalRoundRunning || _isResultState)
+            if (_isLocalRoundRunning)
             {
                 StartLocalRound();
                 return;
             }
 
+            if (_isResultState)
+            {
+                StartRoundViaRewardedAd();
+                return;
+            }
+
             _weChatBridge?.ShowRankingPanel();
         }
+
 
         private void OnShareClicked()
         {
@@ -177,6 +204,8 @@ namespace Game.UI
             CancelRoundTimer();
             _isLocalRoundRunning = false;
             _isResultState = false;
+            _isWaitingRewardedAd = false;
+
 
             RefreshPlayerInfo();
 
@@ -189,15 +218,23 @@ namespace Game.UI
             if (_btnSettings != null) _btnSettings.title = "设置";
             if (_btnRanking != null) _btnRanking.title = "排行";
             if (_btnShare != null) _btnShare.title = "分享";
+
+            if (_enableBannerAd)
+                _weChatBridge?.ShowBannerAd();
         }
 
-        private void StartLocalRound()
+
+        private void StartLocalRound(int startBonusScore = 0)
         {
             CancelRoundTimer();
 
+            if (_enableBannerAd)
+                _weChatBridge?.HideBannerAd();
+
+            _isWaitingRewardedAd = false;
             _isLocalRoundRunning = true;
             _isResultState = false;
-            _score = 0;
+            _score = startBonusScore;
             _remainingTime = DefaultRoundDuration;
 
             if (_btnStart != null) _btnStart.title = "点击 +1";
@@ -206,14 +243,42 @@ namespace Game.UI
             if (_btnShare != null) _btnShare.title = "晒分";
 
             if (_txtNickname != null)
-                _txtNickname.text = "疯狂点击开始！";
+                _txtNickname.text = startBonusScore > 0 ? "奖励生效：开局加分" : "疯狂点击开始！";
 
             RefreshLocalHud();
 
             _countdownTimer = TimerService.Instance.Repeat(TickInterval, OnLocalRoundTick);
         }
 
+        private void StartRoundViaRewardedAd()
+        {
+            if (_isWaitingRewardedAd)
+                return;
+
+            if (_weChatBridge == null)
+            {
+                StartLocalRound();
+                return;
+            }
+
+            _isWaitingRewardedAd = true;
+            int requestVersion = _lifecycleVersion;
+            if (_txtNickname != null)
+                _txtNickname.text = "正在加载激励广告...";
+
+            _weChatBridge.ShowRewardedAd(success =>
+            {
+                if (requestVersion != _lifecycleVersion)
+                    return;
+
+                int bonusScore = success ? 3 : 0;
+                StartLocalRound(bonusScore);
+            });
+        }
+
+
         private void OnLocalRoundTick()
+
         {
             if (!_isLocalRoundRunning)
                 return;
@@ -254,9 +319,12 @@ namespace Game.UI
 
             if (_btnStart != null) _btnStart.title = "再来一局";
             if (_btnSettings != null) _btnSettings.title = "返回";
-            if (_btnRanking != null) _btnRanking.title = "重开";
+            if (_btnRanking != null) _btnRanking.title = "激励重开";
             if (_btnShare != null) _btnShare.title = "晒分";
+
+            _weChatBridge?.ShowInterstitialAd();
         }
+
 
         private void RefreshLocalHud()
         {

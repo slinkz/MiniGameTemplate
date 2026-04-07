@@ -2,7 +2,32 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [0.5.5] - 2026-04-07
+
+### 新增
+- **微信广告 WebGL 落地实现**
+  - 新增 `WeChatBridgeWebGL`（`IWeChatBridge` 实现）与 `WeChatBridgeWebGLCallbackHost`
+  - 新增 `WeChatBridge.jslib`（`Assets/_Framework/WeChatBridge/Plugins/WebGL/`）
+  - 打通激励视频、Banner、插屏广告 JS 调用链与 Unity 回调链
+- **广告配置注入机制**
+  - `WeChatBridgeFactory` 新增 `SetAdUnitIds(rewarded, banner, interstitial)`
+  - `GameStartupFlow` 新增广告位序列化字段与启动时激励广告预加载
+
+### 变更
+- **工厂平台分派升级**
+  - `UNITY_WEBGL && !UNITY_EDITOR` 自动使用 `WeChatBridgeWebGL`
+  - 其他平台默认使用 `WeChatBridgeStub`
+- **示例玩法广告接入**
+  - `MainMenuPanel`：主菜单态支持 Banner 显示/隐藏；结算触发插屏；结算态“激励重开”可获得开局奖励分
+  - `ClickCounterPanel`：结算触发插屏；重开改为激励广告驱动并支持奖励开局分
+- **文档同步**
+  - 更新 `Docs/Agent/WECHAT_INTEGRATION.md`
+  - 更新 `Docs/Guide/FRAMEWORK_MODULES.md`
+  - 更新 `Assets/_Framework/WeChatBridge/MODULE_README.md`
+  - 更新 `Assets/_Example/README.md`
+
 ## [0.5.4] - 2026-04-07
+
 
 ### 变更
 - **ClickCounterPanel 包拆分**
