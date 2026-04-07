@@ -89,7 +89,66 @@ namespace MiniGameTemplate.Game
 - 注释用英文撰写，一句话说明 **做什么**，不是 **怎么做**
 - `[SerializeField]` 字段如果用途不直观，加 `[Tooltip("...")]`
 
+## [AGENT] FairyGUI 面板分层规范（强制）
+
+### 目标
+保证 FairyGUI 重新导出时只覆盖“界面绑定代码”，不覆盖手写业务逻辑。
+
+### 强制规则
+1. 每个 FairyGUI 面板必须拆成两个文件：
+   - `XXXPanel.FUI.cs`：仅放 **`PackageName`、`ComponentName` 两个 override + UI 字段声明 + OnInit 绑定**
+   - `XXXPanel.cs`：放 **其余 override（如 `SortOrder`、`CloseOnClickOutside`）+ 业务状态 + 交互逻辑 + OnOpen/OnClose + 业务方法**
+2. 两个文件必须使用同一个 `partial class XXXPanel`。
+3. `XXXPanel.FUI.cs` 只允许保留 `PackageName` 与 `ComponentName` 两个 override，禁止放其他 override。
+4. `PackageName` / `ComponentName` 必须直接使用字符串字面量（例如 `"MainMenu"`、`"MainMenuPanel"`），禁止引用 `UIConstants`、枚举或其他中间常量。
+5. `XXXPanel.FUI.cs` 可被导出流程覆盖；`XXXPanel.cs` 禁止放任何导出相关绑定代码。
+6. 禁止回退为“单文件混合模式”（UI 初始化和业务逻辑写在同一个 `.cs`）。
+7. 对话框/加载页/提示类面板同样必须遵守该分层规则（不仅限 `*Panel`）。
+
+
+### 推荐模板
+```csharp
+// XXXPanel.FUI.cs
+public partial class XXXPanel : UIBase
+{
+    protected override string PackageName => "MainMenu";
+    protected override string ComponentName => "MainMenuPanel";
+
+    private GTextField _txtTitle;
+    private GButton _btnConfirm;
+
+    protected override void OnInit()
+    {
+        base.OnInit();
+        _txtTitle = ContentPane.GetChild("txtTitle") as GTextField;
+        _btnConfirm = ContentPane.GetChild("btnConfirm") as GButton;
+        AddEvents();
+    }
+}
+
+// XXXPanel.cs
+public partial class XXXPanel
+{
+    protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_NORMAL;
+
+    protected void AddEvents()
+    {
+        if (_btnConfirm != null) _btnConfirm.onClick.Add(OnConfirmClicked);
+    }
+
+    protected override void OnOpen(object data)
+    {
+        base.OnOpen(data);
+        // 业务逻辑
+    }
+
+    private void OnConfirmClicked() { }
+}
+```
+
+
 ## 🚫 禁止事项
+
 
 | 禁止 | 替代方案 |
 |------|---------|
@@ -593,5 +652,7 @@ Agent 在完成代码编写后，提交前必须自检以下项目：
 - [ ] **安全**: 无 PII 日志、文件名已验证、URL 使用 HTTPS
 - [ ] **命名**: 遵循命名规范表
 - [ ] **行数**: MonoBehaviour ≤ 150 行
+- [ ] **FairyGUI 分层**: `*.FUI.cs` 仅含 `PackageName`/`ComponentName`（字符串字面量）与 UI 绑定，其余 override 在业务 `*.cs`
+
 - [ ] **依赖方向**: 不违反层级依赖图
 - [ ] **MODULE_README**: 新模块目录包含 `MODULE_README.md`

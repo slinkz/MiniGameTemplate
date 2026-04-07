@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using FairyGUI;
 using UnityEngine;
 
 namespace Game.UI
@@ -10,27 +9,12 @@ namespace Game.UI
     ///
     /// Belongs to Common package so it can be loaded with minimal overhead.
     /// </summary>
-    public class LoadingPanel : MiniGameTemplate.UI.UIBase
+    public partial class LoadingPanel
     {
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_COMMON;
-        protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_LOADING_PANEL;
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_LOADING;
 
-        private GProgressBar _progressBar;
-        private GTextField _txtPercent;
-        private GTextField _txtHint;
-        private GTextField _txtTitle;
-
-        protected override void OnInit()
-        {
-            base.OnInit();
-            _progressBar = ContentPane.GetChild("progressBar") as GProgressBar;
-            _txtPercent = _progressBar?.GetChild("title")?.asTextField;
-            _txtHint = ContentPane.GetChild("txtHint") as GTextField;
-            _txtTitle = ContentPane.GetChild("txtTitle") as GTextField;
-        }
-
         protected override void OnOpen(object data)
+
         {
             base.OnOpen(data);
             // Reset alpha in case a previous FadeOutAndCloseAsync set it to 0

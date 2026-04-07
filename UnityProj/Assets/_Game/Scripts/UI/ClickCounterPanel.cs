@@ -1,9 +1,7 @@
 using System;
-using FairyGUI;
 using MiniGameTemplate.Core;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.Timing;
-using MiniGameTemplate.Utils;
 
 namespace Game.UI
 {
@@ -17,30 +15,16 @@ namespace Game.UI
     /// Standalone ClickCounter gameplay panel.
     /// Requires FairyGUI component Example/ClickCounterPanel to be exported.
     /// </summary>
-
-    public class ClickCounterPanel : MiniGameTemplate.UI.UIBase
+    public partial class ClickCounterPanel
     {
         private const string HighScoreKey = "example_high_score";
         private const float RoundDuration = 10f;
         private const float TickInterval = 0.1f;
 
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_EXAMPLE;
-
-        protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_CLICK_COUNTER_PANEL;
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_NORMAL + 10;
 
-        private GTextField _txtTitle;
-        private GTextField _txtHighScore;
-        private GTextField _txtScore;
-        private GTextField _txtTimer;
-        private GTextField _txtHint;
-
-        private GButton _btnTap;
-        private GButton _btnBack;
-        private GButton _btnRestart;
-        private GButton _btnShare;
-
         private IWeChatBridge _weChatBridge;
+
         private Action _onBackToMenu;
 
         private int _score;
@@ -51,23 +35,8 @@ namespace Game.UI
         private int _lifecycleVersion;
         private TimerHandle _timer = TimerHandle.Invalid;
 
-
-
-        protected override void OnInit()
+        protected void AddEvents()
         {
-            base.OnInit();
-
-            _txtTitle = ContentPane.GetChild("txtTitle") as GTextField;
-            _txtHighScore = ContentPane.GetChild("txtHighScore") as GTextField;
-            _txtScore = ContentPane.GetChild("txtScore") as GTextField;
-            _txtTimer = ContentPane.GetChild("txtTimer") as GTextField;
-            _txtHint = ContentPane.GetChild("txtHint") as GTextField;
-
-            _btnTap = ContentPane.GetChild("btnTap") as GButton;
-            _btnBack = ContentPane.GetChild("btnBack") as GButton;
-            _btnRestart = ContentPane.GetChild("btnRestart") as GButton;
-            _btnShare = ContentPane.GetChild("btnShare") as GButton;
-
             if (_btnTap != null) _btnTap.onClick.Add(OnTapClicked);
             if (_btnBack != null) _btnBack.onClick.Add(OnBackClicked);
             if (_btnRestart != null) _btnRestart.onClick.Add(OnRestartClicked);
@@ -80,7 +49,6 @@ namespace Game.UI
             _lifecycleVersion++;
 
             var panelData = data as ClickCounterPanelData;
-
             _weChatBridge = panelData?.WeChatBridge;
             _onBackToMenu = panelData?.OnBackToMenu;
 
@@ -98,7 +66,6 @@ namespace Game.UI
             base.OnClose();
         }
 
-
         private void StartRound(int startBonusScore = 0)
         {
             CancelTimer();
@@ -112,10 +79,8 @@ namespace Game.UI
             if (_txtHint != null) _txtHint.text = startBonusScore > 0 ? "奖励生效：开局加分" : "疯狂点击中央按钮";
 
             RefreshHud();
-
             _timer = TimerService.Instance.Repeat(TickInterval, OnTick);
         }
-
 
         private void OnTick()
         {
@@ -155,7 +120,6 @@ namespace Game.UI
             RefreshHud();
         }
 
-
         private void OnTapClicked()
         {
             if (!_isRoundRunning)
@@ -171,7 +135,6 @@ namespace Game.UI
             MiniGameTemplate.UI.UIManager.Instance.ClosePanel<ClickCounterPanel>();
             onBackToMenu?.Invoke();
         }
-
 
         private void OnRestartClicked()
         {
@@ -203,8 +166,6 @@ namespace Game.UI
                 StartRound(bonusScore);
             });
         }
-
-
 
         private void OnShareClicked()
         {

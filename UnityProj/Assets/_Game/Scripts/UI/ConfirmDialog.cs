@@ -1,5 +1,4 @@
 using System;
-using FairyGUI;
 
 namespace Game.UI
 {
@@ -21,31 +20,19 @@ namespace Game.UI
     /// Generic confirm dialog — modal popup with title, content, and one or two buttons.
     /// Reusable across all game features.
     /// </summary>
-    public class ConfirmDialog : MiniGameTemplate.UI.UIDialogBase
+    public partial class ConfirmDialog
     {
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_COMMON;
-        protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_CONFIRM_DIALOG;
         protected override bool CloseOnClickOutside => false;
 
         // Must be above LAYER_LOADING (600) so the dialog is visible when invoked during startup.
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_LOADING + 100;
 
-        private GTextField _txtTitle;
-        private GTextField _txtContent;
-        private GButton _btnConfirm;
-        private GButton _btnCancel;
-
         private Action _onConfirm;
         private Action _onCancel;
 
-        protected override void OnInit()
-        {
-            base.OnInit();
-            _txtTitle = ContentPane.GetChild("txtTitle") as GTextField;
-            _txtContent = ContentPane.GetChild("txtContent") as GTextField;
-            _btnConfirm = ContentPane.GetChild("btnConfirm") as GButton;
-            _btnCancel = ContentPane.GetChild("btnCancel") as GButton;
+        protected void AddEvents()
 
+        {
             if (_btnConfirm != null)
                 _btnConfirm.onClick.Add(OnConfirmClicked);
             if (_btnCancel != null)
@@ -53,6 +40,7 @@ namespace Game.UI
         }
 
         protected override void OnOpen(object data)
+
         {
             base.OnOpen(data);
 

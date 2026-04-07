@@ -51,27 +51,52 @@ UnityProj/Assets/_Example/  ← 删除整个目录
 2. 创建你的 UI 包
 3. FairyGUI 导出目标已配置为 `UnityProj/Assets/_Game/FairyGUI_Export/`
 4. 更新 `UIConstants.cs` 中的包名和组件名常量
-5. 创建 Panel 类继承 `UIBase`：
+5. **按强制分层规则创建面板代码（禁止单文件混写）**：
+   - `XXXPanel.FUI.cs`：仅放 `PackageName` / `ComponentName`（字符串字面量）+ UI 绑定与初始化（可被 FairyGUI 重新导出覆盖）
+   - `XXXPanel.cs`：放其余 override（如 `SortOrder`、`CloseOnClickOutside`）+ 业务逻辑（手写，禁止放导出绑定代码）
+
 
 ```csharp
+// MainMenuPanel.FUI.cs
+using FairyGUI;
 using MiniGameTemplate.UI;
 
-public class MainMenuPanel : UIBase
+public partial class MainMenuPanel : UIBase
 {
-    protected override string PackageName => UIConstants.PKG_MAIN_MENU;
-    protected override string ComponentName => UIConstants.COMP_MAIN_PANEL;
+    protected override string PackageName => "MainMenu";
+    protected override string ComponentName => "MainMenuPanel";
+
+    private GButton _btnStart;
 
     protected override void OnInit()
     {
-        // 绑定 UI 元素
+        base.OnInit();
+        _btnStart = ContentPane.GetChild("btnStart") as GButton;
+        AddEvents();
+    }
+}
+
+// MainMenuPanel.cs
+public partial class MainMenuPanel
+{
+    protected override int SortOrder => UIConstants.LAYER_NORMAL;
+
+    protected void AddEvents()
+    {
+        if (_btnStart != null) _btnStart.onClick.Add(OnStartClicked);
     }
 
     protected override void OnOpen(object data)
     {
-        // 显示时的逻辑
+        base.OnOpen(data);
+        // 显示时的业务逻辑
     }
+
+    private void OnStartClicked() { }
 }
 ```
+
+
 
 ## Step 6: 创建游戏 SO 资产
 

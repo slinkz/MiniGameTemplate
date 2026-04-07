@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using FairyGUI;
 
 namespace Game.UI
 {
@@ -8,32 +7,23 @@ namespace Game.UI
     /// Privacy authorization dialog — required by WeChat for first launch or policy updates.
     /// Modal popup that prompts the user to agree or reject the privacy policy.
     /// </summary>
-    public class PrivacyDialog : MiniGameTemplate.UI.UIDialogBase
+    public partial class PrivacyDialog
     {
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_COMMON;
-        protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_PRIVACY_DIALOG;
         protected override bool CloseOnClickOutside => false;
 
         // Must be above LAYER_LOADING (600) so the dialog is visible over the loading screen.
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_LOADING + 100;
 
-        private GButton _btnAgree;
-        private GButton _btnReject;
-        private GTextField _txtPrivacyLink;
-
         private Action<bool> _onResult;
 
-        protected override void OnInit()
-        {
-            base.OnInit();
-            _btnAgree = ContentPane.GetChild("btnAgree") as GButton;
-            _btnReject = ContentPane.GetChild("btnReject") as GButton;
-            _txtPrivacyLink = ContentPane.GetChild("txtPrivacyLink") as GTextField;
+        protected void AddEvents()
 
+        {
             if (_btnAgree != null) _btnAgree.onClick.Add(OnAgreeClicked);
             if (_btnReject != null) _btnReject.onClick.Add(OnRejectClicked);
             if (_txtPrivacyLink != null) _txtPrivacyLink.onClick.Add(OnPrivacyLinkClicked);
         }
+
 
         protected override void OnOpen(object data)
         {

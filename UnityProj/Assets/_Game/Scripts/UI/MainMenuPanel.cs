@@ -1,4 +1,3 @@
-using FairyGUI;
 using MiniGameTemplate.Core;
 using MiniGameTemplate.Events;
 using MiniGameTemplate.Platform;
@@ -17,7 +16,6 @@ namespace Game.UI
         public bool EnableBannerAd = true;
     }
 
-
     /// <summary>
     /// Main menu / lobby panel — the player's hub after loading completes.
     /// Displays player info, start button, and utility shortcuts.
@@ -25,25 +23,16 @@ namespace Game.UI
     /// If StartGameEvent is not configured in Boot scene, this panel runs a built-in
     /// ClickCounter fallback mode so the template remains playable out of the box.
     /// </summary>
-    public class MainMenuPanel : MiniGameTemplate.UI.UIBase
+    public partial class MainMenuPanel
     {
         private const string HighScoreKey = "example_high_score";
         private const float DefaultRoundDuration = 10f;
         private const float TickInterval = 0.1f;
 
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_MAIN_MENU;
-        protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_MAIN_MENU_PANEL;
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_NORMAL;
 
-        private GTextField _txtNickname;
-        private GTextField _txtGameTitle;
-        private GTextField _txtVersion;
-        private GButton _btnStart;
-        private GButton _btnSettings;
-        private GButton _btnRanking;
-        private GButton _btnShare;
-
         private GameEvent _startGameEvent;
+
         private IWeChatBridge _weChatBridge;
         private bool _enableBannerAd = true;
 
@@ -52,28 +41,19 @@ namespace Game.UI
         private bool _isWaitingRewardedAd;
         private int _lifecycleVersion;
 
-
         private int _score;
         private int _highScore;
         private float _remainingTime;
         private TimerHandle _countdownTimer = TimerHandle.Invalid;
 
-        protected override void OnInit()
+        protected void AddEvents()
         {
-            base.OnInit();
-            _txtNickname = ContentPane.GetChild("txtNickname") as GTextField;
-            _txtGameTitle = ContentPane.GetChild("txtGameTitle") as GTextField;
-            _txtVersion = ContentPane.GetChild("txtVersion") as GTextField;
-            _btnStart = ContentPane.GetChild("btnStart") as GButton;
-            _btnSettings = ContentPane.GetChild("btnSettings") as GButton;
-            _btnRanking = ContentPane.GetChild("btnRanking") as GButton;
-            _btnShare = ContentPane.GetChild("btnShare") as GButton;
-
             if (_btnStart != null) _btnStart.onClick.Add(OnStartClicked);
             if (_btnSettings != null) _btnSettings.onClick.Add(OnSettingsClicked);
             if (_btnRanking != null) _btnRanking.onClick.Add(OnRankingClicked);
             if (_btnShare != null) _btnShare.onClick.Add(OnShareClicked);
         }
+
 
         protected override void OnOpen(object data)
         {

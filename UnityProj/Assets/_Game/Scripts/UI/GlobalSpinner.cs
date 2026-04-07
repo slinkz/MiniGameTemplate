@@ -9,21 +9,14 @@ namespace Game.UI
     /// Displays at LAYER_TOAST to stay above normal UI but below dialogs.
     /// Auto-hides after a configurable timeout to prevent stuck spinners.
     /// </summary>
-    public class GlobalSpinner : MiniGameTemplate.UI.UIBase
+    public partial class GlobalSpinner
     {
-        protected override string PackageName => MiniGameTemplate.UI.UIConstants.PKG_COMMON;
-        protected override string ComponentName => MiniGameTemplate.UI.UIConstants.COMP_GLOBAL_SPINNER;
         protected override int SortOrder => MiniGameTemplate.UI.UIConstants.LAYER_TOAST;
 
-        private GTextField _txtHint;
         private float _timeout;
+
         private float _openTime;
 
-        protected override void OnInit()
-        {
-            base.OnInit();
-            _txtHint = ContentPane.GetChild("txtHint") as GTextField;
-        }
 
         protected override void OnOpen(object data)
         {
