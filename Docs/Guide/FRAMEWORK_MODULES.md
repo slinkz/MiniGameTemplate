@@ -278,6 +278,8 @@ void LoadGameScene()
 
 ### 架构概述
 
+> 📐 Agent/AI 开发者请参见 [Agent/CONVENTIONS.md — FairyGUI 面板规范](../Agent/CONVENTIONS.md#agent-fairygui-面板规范强制--extension--iuipanel-模式)，包含强制规则清单和提交检查项。
+
 1. FairyGUI 编辑器启用 `genCode="true"` 自动导出 C# 代码（`XXXPanel.cs` + `XXXBinder.cs`）
 2. 手写 `XXXPanel.Logic.cs` 作为 `partial class`，实现 `IUIPanel` 接口
 3. UIManager 通过 Binder 注册 Extension，`OpenPanelAsync` 创建面板实例
@@ -406,17 +408,9 @@ namespace Common
 
 ### UI 层级系统
 
-所有 UI 面板通过 `PanelSortOrder` 属性控制显示层级，常量定义在 `UIConstants.cs`：
+> 📐 完整的 UI 层级常量表参见 [Agent/ARCHITECTURE.md — UI 层级系统](../Agent/ARCHITECTURE.md#6-ui-层级系统sortingorder)。
 
-| 层级常量 | 值 | 用途 |
-|---------|-----|------|
-| `LAYER_BACKGROUND` | 0 | 背景面板 |
-| `LAYER_NORMAL` | 100 | 普通面板（游戏 HUD） |
-| `LAYER_POPUP` | 200 | 弹出面板 |
-| `LAYER_DIALOG` | 300 | 对话框 |
-| `LAYER_TOAST` | 400 | Toast 提示 |
-| `LAYER_GUIDE` | 500 | 新手引导 |
-| `LAYER_LOADING` | 600 | 加载界面 |
+所有 UI 面板通过 `PanelSortOrder` 属性控制显示层级，常量定义在 `UIConstants.cs`，范围从 `LAYER_BACKGROUND(0)` 到 `LAYER_LOADING(600)`。
 
 > ⚠️ **常见坑**：如果需要在 LoadingPanel 显示期间弹出对话框（如启动时的隐私授权），对话框的 `PanelSortOrder` 必须 > 600。否则对话框被 LoadingPanel 遮挡，界面看起来卡死。
 
@@ -702,6 +696,8 @@ _gameFSM.OnStateChanged += (previousState, newState) => {
 
 ## 10. WeChatBridge — 微信 SDK 桥接
 
+> 📐 完整接口清单、构建配置表、隐私授权流程图参见 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)。
+
 **用途**：统一微信小游戏 SDK 接口层。模板默认提供：
 - Editor / 非 WebGL：`WeChatBridgeStub`
 - WebGL：`WeChatBridgeWebGL`（广告能力已落地）
@@ -820,6 +816,15 @@ Debug.LogError("[MySystem] FATAL: Initialization failed");
 ## 14. DanmakuSystem（弹幕系统）
 
 > 位置：`Assets/_Framework/DanmakuSystem/`
+>
+> 📐 **详细文档**已拆分为专题页面，按需查阅：
+> | 文档 | 内容 |
+> |------|------|
+> | [DANMAKU_SYSTEM.md](DANMAKU_SYSTEM.md) | 系统总览、架构图、设计决策汇总 |
+> | [DANMAKU_DATA.md](DANMAKU_DATA.md) | 数据结构（BulletCore/Trail/Modifier、Laser/Spray/Obstacle） |
+> | [DANMAKU_CONFIG.md](DANMAKU_CONFIG.md) | SO 配置体系（12 种 SO、发射模式、难度系统） |
+> | [DANMAKU_RENDERING.md](DANMAKU_RENDERING.md) | 渲染管线（双 Mesh、拖尾、爆炸、飘字） |
+> | [DANMAKU_COLLISION.md](DANMAKU_COLLISION.md) | 碰撞系统（7 阶段、障碍物、运行时入口） |
 
 纯数据驱动弹幕系统，专为微信小游戏 WebGL 优化。支持弹丸/激光/喷雾三种武器类型 + 障碍物交互，零 GC 分配。
 
@@ -909,6 +914,8 @@ int sprayIdx = DanmakuSystem.Instance.FireSpray(
 折射路径由 `LaserSegmentSolver` 每帧解算，产生 `LaserSegment[]` 数组，渲染器按段绘制。
 
 ### SO 配置体系
+
+> 📐 所有 SO 类型（含弹幕系统和其他模块）的完整清单参见 [Agent/SO_CATALOG.md](../Agent/SO_CATALOG.md)。
 
 | SO | 说明 |
 |----|------|

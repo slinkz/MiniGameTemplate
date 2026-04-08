@@ -2,6 +2,22 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [0.7.1] - 2026-04-09
+
+### 文档
+- **弹幕系统文档拆分**：`DANMAKU_SYSTEM.md`（2550行）拆分为 5 个聚焦文件
+  - `DANMAKU_SYSTEM.md` — 概览 + 入口（~200行）
+  - `DANMAKU_DATA.md` — 数据结构（~435行）
+  - `DANMAKU_CONFIG.md` — SO 配置体系（~310行）
+  - `DANMAKU_RENDERING.md` — 渲染管线（~170行）
+  - `DANMAKU_COLLISION.md` — 碰撞 + 障碍物 + 运行时入口（~310行）
+- **Agent/Guide 文档去重**：消除两套文档间的内容重叠
+  - 架构图、模块依赖表、UI 层级表、项目结构树等精确数据建立单一信息源
+  - Guide 文档保留解释性叙事，通过交叉引用指向 Agent 文档中的权威数据
+  - 涉及文件：`ARCHITECTURE_OVERVIEW.md`、`FRAMEWORK_MODULES.md`、`Guide/README.md`
+- `Guide/README.md` 文档导航新增弹幕系统文档入口
+- `FRAMEWORK_MODULES.md` §14 新增弹幕子文档导航表
+
 ## [0.7.0] - 2026-04-08
 
 ### 新增
