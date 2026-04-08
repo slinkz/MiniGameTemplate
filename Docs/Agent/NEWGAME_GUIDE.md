@@ -47,6 +47,8 @@ UnityProj/Assets/_Example/  ← 删除整个目录
 
 ## Step 5: 创建游戏 UI
 
+> 💡 涉及 FairyGUI UI 开发时，先加载 `fairygui-tools` Skill（包含 XML 白模生成 + C# 代码架构规范的完整 SOP）。
+
 1. 用 FairyGUI 编辑器打开 `UIProject/` 目录中的 `.fairy` 工程文件
 2. 创建你的 UI 包（在 `package.xml` 中确保 `<publish>` 节点含 `genCode="true"`）
 3. FairyGUI 导出目标已配置为 `UnityProj/Assets/_Game/FairyGUI_Export/`

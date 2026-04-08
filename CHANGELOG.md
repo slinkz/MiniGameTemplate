@@ -32,6 +32,15 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
 - 更新 ARCHITECTURE.md：UI 层级系统说明对齐新接口
 - 重写 UISystem MODULE_README.md
 
+### Skill
+- **`fairygui-tools` Skill 扩展**（流程 D: C# 代码架构规范）
+  - 新增完整的 Extension + IUIPanel + Logic.cs 架构规范
+  - 包含普通面板和对话框两套 Logic.cs 模板
+  - 包含命名空间规则、Binder 注册机制、强制规则清单、新建面板完整流程
+  - 更新 Skill description 元数据以反映 C# 代码架构能力
+  - 更新工作流决策树增加流程 D 入口
+- 同步更新 GETTING_STARTED.md、NEWGAME_GUIDE.md、ARCHITECTURE.md 中 fairygui-tools 相关描述
+
 ## [0.5.5] - 2026-04-07
 
 ### 新增

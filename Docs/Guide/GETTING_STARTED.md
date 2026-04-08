@@ -234,7 +234,7 @@ bash Tools/gen_config.sh
 | Skill | 路径 | 功能 |
 |-------|------|------|
 | `luban-config` | `.codebuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
-| `fairygui-tools` | `.codebuddy/skills/fairygui-tools/` | FairyGUI UI 开发自动化：从效果图/自然语言生成白模 XML、解析 FairyGUI 工程结构、UI 结构分析 |
+| `fairygui-tools` | `.codebuddy/skills/fairygui-tools/` | FairyGUI UI 全链路开发：从效果图/自然语言生成白模 XML、解析工程结构、生成 Unity C# 面板代码（Extension + IUIPanel + Logic.cs 架构） |
 
 ### 如何使用
 
@@ -248,10 +248,12 @@ bash Tools/gen_config.sh
    - 分析 UI 需求，生成白模示意图
    - 生成符合 FairyGUI 规范的 XML 文件（含 package.xml 和组件 XML）
    - 遵循"组件闭环原则"确保所有子组件引用完整
+   - 生成对应的 `XXXPanel.Logic.cs` 业务逻辑代码（Extension + IUIPanel 架构）
+   - 在 `GameStartupFlow` 中注册 Binder
 4. Skill 内含踩坑记录和最佳实践，确保 AI 不会犯已知错误
 
 ### 想了解更多？
 
 - 查看 `.codebuddy/skills/luban-config/SKILL.md` 了解 Luban 配置表 Skill 的完整 SOP 和技术细节
-- 查看 `.codebuddy/skills/fairygui-tools/SKILL.md` 了解 FairyGUI UI 开发 Skill 的工作流和白模规范
+- 查看 `.codebuddy/skills/fairygui-tools/SKILL.md` 了解 FairyGUI UI 开发 Skill 的工作流、白模规范和 C# 代码架构规范
 - Skill 的格式遵循 CodeBuddy Skill 标准，你也可以为项目创建自定义 Skill
