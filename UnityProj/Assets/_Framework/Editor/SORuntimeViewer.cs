@@ -77,14 +77,9 @@ namespace MiniGameTemplate.EditorTools
                 EditorGUILayout.BeginHorizontal("box");
                 EditorGUILayout.LabelField(evt.name, EditorStyles.boldLabel);
 
-                // Use reflection to get listener count
-                var listenersField = typeof(GameEvent).GetField("_listeners", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (listenersField != null)
-                {
-                    var listeners = listenersField.GetValue(evt) as System.Collections.IList;
-                    int count = listeners?.Count ?? 0;
-                    EditorGUILayout.LabelField($"Listeners: {count}", GUILayout.Width(100));
-                }
+                // Use public ListenerCount property (UNITY_EDITOR only)
+                int count = evt.ListenerCount;
+                EditorGUILayout.LabelField($"Listeners: {count}", GUILayout.Width(100));
 
                 if (GUILayout.Button("Raise", GUILayout.Width(50)))
                     evt.Raise();

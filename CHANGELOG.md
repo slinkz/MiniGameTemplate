@@ -2,6 +2,35 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [0.7.0] - 2026-04-08
+
+### 新增
+- **弹幕系统（DanmakuSystem）**
+  - 纯数据驱动弹幕系统，专为微信小游戏 WebGL 优化
+  - 三种武器类型：弹丸（2048）、激光（16）、喷雾（8）+ 障碍物（64）
+  - SoA 三层分离：BulletCore(36B) + BulletTrail(28B) + BulletModifier(16B)
+  - 双 Mesh 渲染（Normal + Additive），交错顶点格式，每帧单次上传
+  - 5 阶段碰撞系统：弹丸vs目标/障碍物/屏幕边缘 + 激光vs玩家 + 喷雾vs玩家
+  - 碰撞响应系统：Die/ReduceHP/Pierce/BounceBack/Reflect/RecycleOnDistance
+  - PatternScheduler 64 槽调度器（Burst 连射 + PatternGroup 组合编排）
+  - DamageNumberSystem 伤害飘字（128 环形缓冲区 + 数字精灵 Mesh 合批）
+  - TrailPool 重量拖尾曲线池（64 条 × 20 点/条）
+  - 12 种 ScriptableObject 配置类型
+  - 3 个自定义 Shader（Bullet/BulletAdditive/Laser）
+  - DontDestroyOnLoad + ClearAll() 清场策略
+  - 零 GC 分配，2048 弹丸 ≤ 5.7ms/帧
+
+### 修复
+- **AssetImportEnforcer（P4-1）**：`OnPostprocessAudio` 中的 `ImportAsset` 调用改为 `EditorApplication.delayCall`，避免 AssetPostprocessor 回调内重入
+- **SORuntimeViewer（P8-1）**：移除反射硬编码 `_listeners` 字段名，改用 `GameEvent.ListenerCount` 公开属性
+
+### 改进
+- **SOCreationWizard**：新增 12 种弹幕系统 SO 类型快捷创建
+
+### 文档
+- FRAMEWORK_MODULES.md：新增 DanmakuSystem 章节
+- DanmakuSystem/MODULE_README.md：完整模块文档
+
 ## [0.6.0] - 2026-04-08
 
 ### 重大变更（Breaking）

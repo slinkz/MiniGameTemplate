@@ -814,3 +814,75 @@ Debug.LogError("[MySystem] FATAL: Initialization failed");
 | 音频 | WebGL 平台强制 Vorbis 压缩、50% 质量、短音效强制 Mono |
 
 你不需要手动设置这些，导入资源时自动应用。
+
+---
+
+## 14. DanmakuSystem（弹幕系统）
+
+> 位置：`Assets/_Framework/DanmakuSystem/`
+
+纯数据驱动弹幕系统，专为微信小游戏 WebGL 优化。支持弹丸/激光/喷雾三种武器类型 + 障碍物交互，零 GC 分配。
+
+### 架构特点
+
+- **SoA 三层分离**：BulletCore(36B 热数据) + BulletTrail(28B 冷数据) + BulletModifier(16B 修饰数据)
+- **预分配池**：所有容器启动时预分配，运行时零 new/GC
+- **双 Mesh 渲染**：Normal(Alpha Blend) + Additive(发光) 各一个 Mesh，每帧单次 `SetVertexBufferData`
+- **5 阶段碰撞**：弹丸→目标 / 弹丸→障碍物 / 弹丸→屏幕边缘 / 激光→玩家 / 喷雾→玩家
+- **碰撞响应系统**：Die / ReduceHP / Pierce / BounceBack / Reflect / RecycleOnDistance
+- **DontDestroyOnLoad**：关卡切换调用 `ClearAll()` 清场
+
+### 容量配置
+
+| 类型 | 默认上限 | 容器 |
+|------|----------|------|
+| 弹丸 | 2048 | BulletWorld |
+| 激光 | 16 | LaserPool |
+| 喷雾 | 8 | SprayPool |
+| 障碍物 | 64 | ObstaclePool |
+| 调度任务 | 64 | PatternScheduler |
+| 伤害飘字 | 128 | DamageNumberSystem |
+| 拖尾曲线 | 64 | TrailPool |
+
+### 快速接入
+
+```csharp
+// 设置玩家
+DanmakuSystem.Instance.SetPlayer(playerTransform, 0.2f);
+
+// 发射弹幕
+DanmakuSystem.Instance.FireBullets(patternSO, spawnPosition, angleDeg);
+
+// 发射弹幕组合
+DanmakuSystem.Instance.FireGroup(groupSO, spawnPosition, angleDeg);
+
+// 清场
+DanmakuSystem.Instance.ClearAll();
+```
+
+### SO 配置体系
+
+| SO | 说明 |
+|----|------|
+| `BulletTypeSO` | 弹丸视觉类型（UV、碰撞、伤害、拖尾、爆炸、碰撞响应） |
+| `LaserTypeSO` | 激光类型（宽度曲线、阶段时长、伤害） |
+| `SprayTypeSO` | 喷雾类型（锥角、射程、伤害） |
+| `ObstacleTypeSO` | 障碍物类型 |
+| `BulletPatternSO` | 弹幕发射模式（数量、散布角、速度、延迟变速、追踪） |
+| `PatternGroupSO` | 弹幕组合编排（多层/延迟/重复/旋转） |
+| `SpawnerProfileSO` | 发射器配置（Boss/敌人用） |
+| `DifficultyProfileSO` | 难度乘数（数量/速度/生命周期） |
+| `DanmakuWorldConfig` | 世界配置（容量、边界、碰撞网格、无敌帧） |
+| `DanmakuRenderConfig` | 渲染配置（材质、贴图） |
+| `DanmakuTypeRegistry` | 类型注册表（集中管理所有类型 SO） |
+| `DanmakuTimeScaleSO` | 时间缩放（子弹时间） |
+
+### 性能预算（60fps）
+
+| 子系统 | 预算 |
+|--------|------|
+| BulletMover | ≤ 1.5ms |
+| CollisionSolver | ≤ 1.5ms |
+| BulletRenderer | ≤ 1.5ms |
+| 其他子系统 | ≤ 1.2ms |
+| **总计** | **≤ 5.7ms** |

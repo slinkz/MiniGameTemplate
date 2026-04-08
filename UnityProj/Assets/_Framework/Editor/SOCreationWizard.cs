@@ -26,6 +26,19 @@ namespace MiniGameTemplate.EditorTools
             SceneDefinition,
             AudioClip,
             AudioLibrary,
+            // ── Danmaku ──
+            DanmakuBulletType,
+            DanmakuLaserType,
+            DanmakuSprayType,
+            DanmakuObstacleType,
+            DanmakuBulletPattern,
+            DanmakuPatternGroup,
+            DanmakuSpawnerProfile,
+            DanmakuDifficultyProfile,
+            DanmakuWorldConfig,
+            DanmakuRenderConfig,
+            DanmakuTypeRegistry,
+            DanmakuTimeScale,
         }
 
         private SOType _selectedType = SOType.IntVariable;
@@ -82,6 +95,19 @@ namespace MiniGameTemplate.EditorTools
                 SOType.SceneDefinition => ScriptableObject.CreateInstance<Core.SceneDefinition>(),
                 SOType.AudioClip => ScriptableObject.CreateInstance<Audio.AudioClipSO>(),
                 SOType.AudioLibrary => ScriptableObject.CreateInstance<Audio.AudioLibrary>(),
+                // ── Danmaku ──
+                SOType.DanmakuBulletType => ScriptableObject.CreateInstance<Danmaku.BulletTypeSO>(),
+                SOType.DanmakuLaserType => ScriptableObject.CreateInstance<Danmaku.LaserTypeSO>(),
+                SOType.DanmakuSprayType => ScriptableObject.CreateInstance<Danmaku.SprayTypeSO>(),
+                SOType.DanmakuObstacleType => ScriptableObject.CreateInstance<Danmaku.ObstacleTypeSO>(),
+                SOType.DanmakuBulletPattern => ScriptableObject.CreateInstance<Danmaku.BulletPatternSO>(),
+                SOType.DanmakuPatternGroup => ScriptableObject.CreateInstance<Danmaku.PatternGroupSO>(),
+                SOType.DanmakuSpawnerProfile => ScriptableObject.CreateInstance<Danmaku.SpawnerProfileSO>(),
+                SOType.DanmakuDifficultyProfile => ScriptableObject.CreateInstance<Danmaku.DifficultyProfileSO>(),
+                SOType.DanmakuWorldConfig => ScriptableObject.CreateInstance<Danmaku.DanmakuWorldConfig>(),
+                SOType.DanmakuRenderConfig => ScriptableObject.CreateInstance<Danmaku.DanmakuRenderConfig>(),
+                SOType.DanmakuTypeRegistry => ScriptableObject.CreateInstance<Danmaku.DanmakuTypeRegistry>(),
+                SOType.DanmakuTimeScale => ScriptableObject.CreateInstance<Danmaku.DanmakuTimeScaleSO>(),
                 _ => null
             };
 

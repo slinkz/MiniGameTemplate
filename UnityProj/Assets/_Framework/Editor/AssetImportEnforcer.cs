@@ -170,16 +170,20 @@ namespace MiniGameTemplate.EditorTools
                     importer.forceToMono = true;
                     Debug.LogWarning($"[AudioEnforcer] Forced mono on short clip '{path}' ({clip.length:F1}s, was {clip.channels}ch).");
 
-                    // Trigger reimport with guard to prevent infinite recursion
-                    _reimportingPaths.Add(path);
-                    try
+                    // Defer reimport to next editor tick to avoid reentrance inside AssetPostprocessor
+                    string capturedPath = path;
+                    _reimportingPaths.Add(capturedPath);
+                    EditorApplication.delayCall += () =>
                     {
-                        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
-                    }
-                    finally
-                    {
-                        _reimportingPaths.Remove(path);
-                    }
+                        try
+                        {
+                            AssetDatabase.ImportAsset(capturedPath, ImportAssetOptions.ForceUpdate);
+                        }
+                        finally
+                        {
+                            _reimportingPaths.Remove(capturedPath);
+                        }
+                    };
                 }
             }
         }
