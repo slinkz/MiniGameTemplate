@@ -5,6 +5,7 @@ using MiniGameTemplate.Core;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;
+using MiniGameTemplate.Events;
 
 namespace Game
 {
