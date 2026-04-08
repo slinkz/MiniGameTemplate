@@ -149,7 +149,7 @@ void OnDisable() { _onGameOver.UnregisterListener(this); }
 
 ## 模块依赖图
 
-框架的 12 个模块分为 6 个层级，**只能向下依赖，不能向上**：
+框架的 13 个模块分为 6 个层级（+ DanmakuSystem 独立层），**只能向下依赖，不能向上**：
 
 ```
 L0 ── Utils                    ← 零依赖（Singleton、GameLog、CoroutineRunner）

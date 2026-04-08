@@ -828,8 +828,10 @@ Debug.LogError("[MySystem] FATAL: Initialization failed");
 - **SoA 三层分离**：BulletCore(36B 热数据) + BulletTrail(28B 冷数据) + BulletModifier(16B 修饰数据)
 - **预分配池**：所有容器启动时预分配，运行时零 new/GC
 - **双 Mesh 渲染**：Normal(Alpha Blend) + Additive(发光) 各一个 Mesh，每帧单次 `SetVertexBufferData`
-- **5 阶段碰撞**：弹丸→目标 / 弹丸→障碍物 / 弹丸→屏幕边缘 / 激光→玩家 / 喷雾→玩家
+- **7 阶段碰撞**：弹丸→目标 / 弹丸→障碍物 / 弹丸→屏幕边缘 / 激光→玩家 / 喷雾→玩家 / 激光→障碍物(折射/穿透) / 喷雾→屏幕边缘
 - **碰撞响应系统**：Die / ReduceHP / Pierce / BounceBack / Reflect / RecycleOnDistance
+- **激光折射系统**：`LaserSegmentSolver` 解算折射路径（射线 vs AABB/屏幕边缘），支持 Block/Pierce/Reflect 响应
+- **挂载跟踪（Attached 模式）**：激光/喷雾可挂载到 Transform，每帧自动同步位置和朝向
 - **DontDestroyOnLoad**：关卡切换调用 `ClearAll()` 清场
 
 ### 容量配置
@@ -840,6 +842,7 @@ Debug.LogError("[MySystem] FATAL: Initialization failed");
 | 激光 | 16 | LaserPool |
 | 喷雾 | 8 | SprayPool |
 | 障碍物 | 64 | ObstaclePool |
+| 挂载源 | 24 | AttachSourceRegistry |
 | 调度任务 | 64 | PatternScheduler |
 | 伤害飘字 | 128 | DamageNumberSystem |
 | 拖尾曲线 | 64 | TrailPool |
@@ -860,13 +863,58 @@ DanmakuSystem.Instance.FireGroup(groupSO, spawnPosition, angleDeg);
 DanmakuSystem.Instance.ClearAll();
 ```
 
+### 激光 API
+
+```csharp
+// Detached 模式（固定位置）
+int laserIdx = DanmakuSystem.Instance.FireLaser(
+    typeIndex, origin, angle,
+    length: 10f,        // 激光长度（世界单位）
+    lifetime: 0f);      // 0 = 使用 SO 的 TotalDuration
+
+// Attached 模式（跟随 Transform）
+int laserIdx = DanmakuSystem.Instance.FireLaser(
+    typeIndex, bossGunTransform,
+    length: 10f,
+    lifetime: 5f,       // 自定义持续时间
+    localOffset: new Vector2(0, 0.5f),
+    angleOffset: 0f);
+```
+
+### 喷雾 API
+
+```csharp
+// Detached 模式
+int sprayIdx = DanmakuSystem.Instance.FireSpray(
+    typeIndex, origin, direction,
+    coneAngle: 30f, range: 5f, lifetime: 3f);
+
+// Attached 模式
+int sprayIdx = DanmakuSystem.Instance.FireSpray(
+    typeIndex, bossTransform,
+    coneAngle: 30f, range: 5f, lifetime: 3f,
+    localOffset: default, angleOffset: 0f);
+```
+
+### 激光折射系统
+
+激光支持碰撞障碍物后的折射/穿透行为，通过 `LaserTypeSO` 配置：
+
+| 配置项 | 类型 | 说明 |
+|--------|------|------|
+| `OnHitObstacle` | `LaserObstacleResponse` | Block（截断+反射）/ Pierce（穿透）/ BlockAndDamage / PierceAndDamage |
+| `OnScreenEdge` | `LaserScreenEdgeResponse` | Clip（截断）/ Reflect（屏幕边缘反射） |
+| `MaxReflections` | `byte` | 最大折射/反射次数 |
+
+折射路径由 `LaserSegmentSolver` 每帧解算，产生 `LaserSegment[]` 数组，渲染器按段绘制。
+
 ### SO 配置体系
 
 | SO | 说明 |
 |----|------|
 | `BulletTypeSO` | 弹丸视觉类型（UV、碰撞、伤害、拖尾、爆炸、碰撞响应） |
-| `LaserTypeSO` | 激光类型（宽度曲线、阶段时长、伤害） |
-| `SprayTypeSO` | 喷雾类型（锥角、射程、伤害） |
+| `LaserTypeSO` | 激光类型（宽度曲线、阶段时长、伤害、折射/穿透响应） |
+| `SprayTypeSO` | 喷雾类型（锥角、射程、伤害、碰撞响应） |
 | `ObstacleTypeSO` | 障碍物类型 |
 | `BulletPatternSO` | 弹幕发射模式（数量、散布角、速度、延迟变速、追踪） |
 | `PatternGroupSO` | 弹幕组合编排（多层/延迟/重复/旋转） |
@@ -882,7 +930,7 @@ DanmakuSystem.Instance.ClearAll();
 | 子系统 | 预算 |
 |--------|------|
 | BulletMover | ≤ 1.5ms |
-| CollisionSolver | ≤ 1.5ms |
+| CollisionSolver（7 阶段） | ≤ 1.5ms |
 | BulletRenderer | ≤ 1.5ms |
 | 其他子系统 | ≤ 1.2ms |
 | **总计** | **≤ 5.7ms** |

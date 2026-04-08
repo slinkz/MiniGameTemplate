@@ -10,7 +10,7 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
   - 三种武器类型：弹丸（2048）、激光（16）、喷雾（8）+ 障碍物（64）
   - SoA 三层分离：BulletCore(36B) + BulletTrail(28B) + BulletModifier(16B)
   - 双 Mesh 渲染（Normal + Additive），交错顶点格式，每帧单次上传
-  - 5 阶段碰撞系统：弹丸vs目标/障碍物/屏幕边缘 + 激光vs玩家 + 喷雾vs玩家
+  - 7 阶段碰撞系统：弹丸vs目标/障碍物/屏幕边缘 + 激光vs玩家/障碍物 + 喷雾vs玩家/屏幕边缘
   - 碰撞响应系统：Die/ReduceHP/Pierce/BounceBack/Reflect/RecycleOnDistance
   - PatternScheduler 64 槽调度器（Burst 连射 + PatternGroup 组合编排）
   - DamageNumberSystem 伤害飘字（128 环形缓冲区 + 数字精灵 Mesh 合批）
@@ -19,17 +19,39 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
   - 3 个自定义 Shader（Bullet/BulletAdditive/Laser）
   - DontDestroyOnLoad + ClearAll() 清场策略
   - 零 GC 分配，2048 弹丸 ≤ 5.7ms/帧
+- **激光折射系统**
+  - `LaserSegmentSolver`：激光折射段解算器（直线/反射路径，射线 vs AABB + 屏幕边缘碰撞）
+  - `LaserSegment`：折射线段数据结构（Start/End/Normal，最多 `MaxReflections + 1` 段）
+  - `LaserTypeSO` 新增碰撞响应配置：`OnHitObstacle`（Block/Pierce/BlockAndDamage/PierceAndDamage）、`OnScreenEdge`（Clip/Reflect）
+  - `LaserData` 新增折射字段：`MaxReflections`、`SegmentCount`、`Segments[]`、`VisualLength`
+  - `LaserPool.Free()` 保留 `Segments` 数组引用避免回收时重分配
+  - `DanmakuEnums` 新增 `LaserObstacleResponse`、`LaserScreenEdgeResponse`、`SprayObstacleResponse`
+- **激光/喷雾挂载跟踪（Attached 模式）**
+  - `AttachSourceRegistry`：Transform 挂载源注册表（容量 24，固定数组 + 空闲栈 + 引用计数，零 GC）
+  - `FireLaser` / `FireSpray` 新增 Attached 模式重载，每帧自动同步挂载 Transform 的位置和朝向
+  - `LaserData` / `SprayData` 新增 `byte AttachId`（0 = Detached，>0 = Attached）
+  - `FreeLaser()` / `FreeSpray()` 统一回收（自动释放 AttachId 引用）
+- **激光/喷雾 API 签名改进**
+  - `FireLaser()` 新增 `float length`（激光长度）和 `float lifetime`（持续时间，0 = 使用 SO 默认值）参数
+  - `FireSpray()` 新增 `float lifetime`（持续时间）参数
+  - 碰撞系统升级为 7 阶段（新增 Phase 6 激光vs障碍物反射/穿透、Phase 7 喷雾vs屏幕边缘回收）
 
 ### 修复
 - **AssetImportEnforcer（P4-1）**：`OnPostprocessAudio` 中的 `ImportAsset` 调用改为 `EditorApplication.delayCall`，避免 AssetPostprocessor 回调内重入
 - **SORuntimeViewer（P8-1）**：移除反射硬编码 `_listeners` 字段名，改用 `GameEvent.ListenerCount` 公开属性
+- **LaserSegmentSolver 死代码**：折射模式中 `pos += dir * 0.01f + dir * hitDist` 被下一行赋值覆盖，已删除
+- **AttachSourceRegistry.Register 引用计数**：初始 `_refCounts = 0` 需外部 AddRef 的不安全语义，改为 `_refCounts = 1`（注册即持有），删除外部 AddRef 调用
+- **LaserSegmentSolver 折射无限循环风险**：穿透障碍物时 `bounce--` 可能导致无限循环，添加 `MAX_ITERATIONS = 32` 安全网
+- **激光生命周期判断不一致**：Fading/回收阶段及 Firing 阶段 normalizedTime 原使用 `type.TotalDuration`，但 `laser.Lifetime` 可自定义，统一改为 `laser.Lifetime`
 
 ### 改进
 - **SOCreationWizard**：新增 12 种弹幕系统 SO 类型快捷创建
 
 ### 文档
-- FRAMEWORK_MODULES.md：新增 DanmakuSystem 章节
-- DanmakuSystem/MODULE_README.md：完整模块文档
+- FRAMEWORK_MODULES.md：新增 DanmakuSystem 章节（含激光折射 + 挂载跟踪 + 新 API）
+- DanmakuSystem/MODULE_README.md：完整模块文档（含新文件清单）
+- ARCHITECTURE.md：补充 DanmakuSystem 子系统架构
+- SO_CATALOG.md：新增 DanmakuSystem SO 配置体系
 
 ## [0.6.0] - 2026-04-08
 

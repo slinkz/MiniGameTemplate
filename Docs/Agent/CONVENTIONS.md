@@ -663,6 +663,40 @@ for (int i = list.Count - 1; i >= 0; i--)
 
 ---
 
+## [AGENT] DanmakuSystem 编码规范
+
+### 激光/喷雾 API 调用
+```csharp
+// ✅ 正确：FireLaser 必须提供 length 参数
+DanmakuSystem.Instance.FireLaser(typeIndex, origin, angle, length: 10f);
+
+// ✅ 正确：FireSpray 必须提供 lifetime 参数
+DanmakuSystem.Instance.FireSpray(typeIndex, origin, dir, cone, range, lifetime: 3f);
+
+// ✅ Attached 模式——激光/喷雾跟随 Transform
+DanmakuSystem.Instance.FireLaser(typeIndex, source, length: 10f, lifetime: 5f);
+
+// ❌ 错误：LaserTypeSO 上没有 Length/Duration 字段，不能从 SO 读取
+// laser.Length = type.Length; // CS1061
+```
+
+### 引用计数
+- `AttachSourceRegistry.Register()` 初始引用计数为 1（注册即持有），**不需要额外 AddRef**
+- `FreeLaser()` / `FreeSpray()` 内部会自动 `Release(attachId)`，**不需要手动释放**
+- `ClearAll()` 调用 `_attachRegistry.FreeAll()` 全部重置
+
+### 碰撞系统
+- 碰撞系统为 **7 阶段**（不是 5 阶段），包含激光vs障碍物折射和喷雾vs屏幕边缘回收
+- `LaserSegmentSolver` 内置 `MAX_ITERATIONS = 32` 防止密集穿透障碍物导致无限循环
+- 激光生命周期判断统一使用 `laser.Lifetime`（不是 `type.TotalDuration`），支持自定义 lifetime
+
+### 零 GC 要求
+- DanmakuSystem 内所有热路径（Update 循环）禁止 new/LINQ/Lambda
+- `LaserPool.Free()` 保留 `Segments[]` 数组引用，不 new 新数组
+- `AttachSourceRegistry` 使用固定数组 + 空闲栈，零 GC
+
+---
+
 ## [AGENT] 代码提交检查清单
 
 Agent 在完成代码编写后，提交前必须自检以下项目：

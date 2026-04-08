@@ -153,6 +153,7 @@ Spine（可选）接入：
 | L3 (编排) | FSM, WeChatBridge | L1 |
 | L4 (入口) | GameLifecycle | L1 + L2 + L3 |
 | L5 (调试) | DebugTools | L1 |
+| L-Danmaku | DanmakuSystem | L0 + L1 (EventSystem, ObjectPool, AudioSystem) |
 | Game | _Example, _Game | 所有框架模块 |
 
 ## 关键设计决策
@@ -177,3 +178,49 @@ Spine（可选）接入：
 - Unity 工程（UnityProj/）是程序的工作区
 - FairyGUI 导出的资源直接输出到 UnityProj，实现单向数据流
 - 两个工程在同一个 Git 仓库中，保证版本一致性
+
+## DanmakuSystem 架构详解
+
+### 子系统组成
+
+```
+DanmakuSystem (MonoBehaviour, DontDestroyOnLoad)
+├── 数据容器
+│   ├── BulletWorld (SoA 2048)
+│   ├── LaserPool (16, 含 Segments[] 折射段)
+│   ├── SprayPool (8)
+│   ├── ObstaclePool (64)
+│   └── AttachSourceRegistry (24 挂载源, 引用计数)
+├── 更新逻辑
+│   ├── BulletMover / BulletSpawner
+│   ├── LaserUpdater (Charging→Firing→Fading→回收)
+│   ├── SprayUpdater (Active→回收)
+│   ├── LaserSegmentSolver (折射段解算)
+│   └── CollisionSolver (7 阶段碰撞)
+├── 调度：PatternScheduler (64 槽)
+├── 渲染：BulletRenderer / DamageNumberSystem / TrailPool
+└── 配置：12 种 SO
+```
+
+### 7 阶段碰撞
+
+| Phase | 内容 | 碰撞响应 |
+|-------|------|----------|
+| 1 | 弹丸 vs 目标 | Die/ReduceHP/Pierce/BounceBack/Reflect |
+| 2 | 弹丸 vs 障碍物 | Die/RecycleOnDistance |
+| 3 | 弹丸 vs 屏幕边缘 | 回收 |
+| 4 | 激光 vs 玩家 | DamagePerTick |
+| 5 | 喷雾 vs 玩家 | DamagePerTick |
+| 6 | 激光 vs 障碍物 | Block/Pierce/BlockAndDamage/PierceAndDamage + 屏幕边缘 Clip/Reflect |
+| 7 | 喷雾 vs 屏幕边缘 | 回收 |
+
+### Attached 模式数据流
+
+```
+FireLaser/FireSpray(Attached 重载)
+  └→ AttachSourceRegistry.Register(Transform, offset, angle) → attachId
+       └→ 每帧 LaserUpdater/SprayUpdater:
+            ├→ GetWorldPosition(attachId) → 更新 origin
+            └→ GetWorldAngle(attachId) → 更新 angle/direction
+       └→ FreeLaser/FreeSpray 时 Release(attachId) → refCount-- → 归还空闲栈
+```

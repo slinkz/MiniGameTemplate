@@ -102,7 +102,7 @@ MiniGameTemplate/               ← Git 仓库根
 | [文档导航首页](Docs/Guide/README.md) | 文档总览、技术栈、阅读路线 |
 | [环境搭建与首次运行](Docs/Guide/GETTING_STARTED.md) | 从 clone 到运行起来（15 分钟） |
 | [架构设计解读](Docs/Guide/ARCHITECTURE_OVERVIEW.md) | SO 驱动架构、三层设计、模块依赖 |
-| [框架模块使用手册](Docs/Guide/FRAMEWORK_MODULES.md) | 12 个模块的 API、用法和注意事项 |
+| [框架模块使用手册](Docs/Guide/FRAMEWORK_MODULES.md) | 13 个模块的 API、用法和注意事项 |
 | [示例游戏代码解读](Docs/Guide/EXAMPLE_WALKTHROUGH.md) | 逐步理解示例游戏如何串联框架 |
 | [常见问题与排错](Docs/Guide/FAQ.md) | 常见报错、微信小游戏坑点、性能优化 |
 
