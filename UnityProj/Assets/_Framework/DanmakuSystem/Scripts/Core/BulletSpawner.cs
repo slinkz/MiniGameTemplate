@@ -95,7 +95,7 @@ namespace MiniGameTemplate.Danmaku
                 }
 
                 // SpeedOverLifetime 曲线（与延迟变速互斥）
-                if (!hasModifier && pattern.SpeedOverLifetime.keys.Length > 1)
+                if (!hasModifier && type.SpeedOverLifetime != null && type.SpeedOverLifetime.keys.Length > 1)
                     core.Flags |= BulletCore.FLAG_SPEED_CURVE;
             }
         }

@@ -26,6 +26,10 @@ namespace MiniGameTemplate.Danmaku
         [Header("碰撞")]
         public float CollisionRadius = 0.1f;
 
+        [Header("运动")]
+        [Tooltip("速度随生命周期的曲线（横轴 0-1 = 生命百分比，纵轴 = 速度倍率）")]
+        public AnimationCurve SpeedOverLifetime = AnimationCurve.Constant(0, 1, 1);
+
         [Header("伤害")]
         [Tooltip("弹丸命中目标时造成的基础伤害值")]
         [Min(0)]
