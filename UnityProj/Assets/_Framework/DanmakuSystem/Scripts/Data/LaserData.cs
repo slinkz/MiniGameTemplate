@@ -42,5 +42,28 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>LaserTypeSO 在 DanmakuTypeRegistry 中的索引</summary>
         public byte LaserTypeIndex;
+
+        // ──── 挂载跟踪 ────
+
+        /// <summary>
+        /// AttachSourceRegistry 中的挂载源 ID。
+        /// 0 = 未挂载（Detached），激光发射后固定不动。
+        /// &gt;0 = 挂载（Attached），每帧自动同步 Origin 和 Angle。
+        /// </summary>
+        public byte AttachId;
+
+        // ──── 折射 ────
+
+        /// <summary>最大反射次数（来自 LaserTypeSO.MaxReflections）</summary>
+        public byte MaxReflections;
+
+        /// <summary>当前帧实际线段数（= 反射次数 + 1，最大 MaxReflections + 1）</summary>
+        public byte SegmentCount;
+
+        /// <summary>折射后的线段数组。长度 = MaxReflections + 1，分配时一次性创建。</summary>
+        public LaserSegment[] Segments;
+
+        /// <summary>截断/折射后的实际总视觉长度（所有线段长度之和）</summary>
+        public float VisualLength;
     }
 }

@@ -44,6 +44,22 @@ namespace MiniGameTemplate.Danmaku
         [Header("碰撞")]
         public float MaxWidth = 0.8f;
 
+        [Header("碰撞响应 — 障碍物")]
+        [Tooltip("激光碰到障碍物时的行为")]
+        public LaserObstacleResponse OnHitObstacle = LaserObstacleResponse.Ignore;
+
+        [Header("碰撞响应 — 屏幕边缘")]
+        [Tooltip("激光碰到屏幕边缘时的行为")]
+        public LaserScreenEdgeResponse OnHitScreenEdge = LaserScreenEdgeResponse.Clip;
+
+        [Tooltip("Origin 越界回收的边缘余量（世界单位）")]
+        public float ScreenEdgeRecycleMargin = 1f;
+
+        [Header("折射")]
+        [Tooltip("最大折射次数（0 = 直线不折射）。折射可由障碍物反射和屏幕边缘反射触发")]
+        [Range(0, 8)]
+        public byte MaxReflections = 0;
+
         /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
         [HideInInspector]
         public byte RuntimeIndex;

@@ -29,6 +29,7 @@ namespace MiniGameTemplate.Danmaku
         private LaserPool _laserPool;
         private SprayPool _sprayPool;
         private ObstaclePool _obstaclePool;
+        private AttachSourceRegistry _attachRegistry;
         private CollisionSolver _collisionSolver;
         private PatternScheduler _scheduler;
         private BulletRenderer _bulletRenderer;
@@ -57,6 +58,9 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>障碍物池</summary>
         public ObstaclePool ObstaclePool => _obstaclePool;
+
+        /// <summary>挂载源注册表（激光/喷雾跟随旋转物体）</summary>
+        public AttachSourceRegistry AttachRegistry => _attachRegistry;
 
         /// <summary>调度器（外部 Schedule 用）</summary>
         public PatternScheduler Scheduler => _scheduler;
@@ -102,11 +106,12 @@ namespace MiniGameTemplate.Danmaku
             // 2. 弹丸运动
             BulletMover.UpdateAll(_bulletWorld, _typeRegistry, playerPos, dt, this);
 
-            // 3. 激光更新
-            LaserUpdater.UpdateAll(_laserPool, _typeRegistry, dt);
+            // 3. 激光更新（含挂载同步 + 折射段解算）
+            LaserUpdater.UpdateAll(_laserPool, _typeRegistry, _obstaclePool,
+                _attachRegistry, _worldConfig.WorldBounds, dt);
 
-            // 4. 喷雾更新
-            SprayUpdater.UpdateAll(_sprayPool, dt);
+            // 4. 喷雾更新（含挂载同步）
+            SprayUpdater.UpdateAll(_sprayPool, _attachRegistry, dt);
 
             // 5. 碰撞检测
             CircleHitbox playerHitbox = new CircleHitbox(playerPos, _playerRadius);
@@ -119,7 +124,7 @@ namespace MiniGameTemplate.Danmaku
 
             var result = _collisionSolver.SolveAll(
                 _bulletWorld, _laserPool, _sprayPool, _obstaclePool,
-                _typeRegistry, in playerHitbox, _playerFaction, dt);
+                _typeRegistry, _attachRegistry, in playerHitbox, _playerFaction, dt);
 
             // 6. 处理碰撞结果
             if (result.HasPlayerHit && _invincibleTimer <= 0)
@@ -180,7 +185,132 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 清场——回收所有弹丸/激光/喷雾/障碍物/调度任务。
+        /// 发射激光（Detached 模式——发射后固定不动）。
+        /// </summary>
+        /// <param name="typeIndex">LaserTypeSO 在 TypeRegistry 中的运行时索引</param>
+        /// <param name="origin">发射点（世界坐标）</param>
+        /// <param name="angle">角度（弧度）</param>
+        /// <param name="length">激光长度（世界单位）</param>
+        /// <param name="lifetime">持续时间（秒），0 = 使用 SO 的 TotalDuration</param>
+        /// <returns>池索引，-1 表示池满</returns>
+        public int FireLaser(byte typeIndex, Vector2 origin, float angle,
+            float length, float lifetime = 0f)
+        {
+            return FireLaserInternal(typeIndex, origin, angle, length, lifetime, 0);
+        }
+
+        /// <summary>
+        /// 发射激光（Attached 模式——每帧跟随挂载 Transform 的位置和朝向）。
+        /// </summary>
+        /// <param name="typeIndex">LaserTypeSO 在 TypeRegistry 中的运行时索引</param>
+        /// <param name="source">挂载的 Transform</param>
+        /// <param name="length">激光长度（世界单位）</param>
+        /// <param name="lifetime">持续时间（秒），0 = 使用 SO 的 TotalDuration</param>
+        /// <param name="localOffset">相对 Transform 的局部位置偏移</param>
+        /// <param name="angleOffset">角度偏移（弧度）</param>
+        /// <returns>池索引，-1 表示池满或挂载源注册失败</returns>
+        public int FireLaser(byte typeIndex, Transform source, float length,
+            float lifetime = 0f, Vector2 localOffset = default, float angleOffset = 0f)
+        {
+            byte attachId = _attachRegistry.Register(source, localOffset, angleOffset);
+            if (attachId == 0) return -1;
+
+            Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
+            float angle = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);
+
+            return FireLaserInternal(typeIndex, origin, angle, length, lifetime, attachId);
+        }
+
+        /// <summary>
+        /// 发射喷雾（Detached 模式——发射后固定不动）。
+        /// </summary>
+        /// <param name="lifetime">持续时间（秒），必须 &gt; 0</param>
+        public int FireSpray(byte typeIndex, Vector2 origin, float direction,
+            float coneAngle, float range, float lifetime)
+        {
+            return FireSprayInternal(typeIndex, origin, direction, coneAngle, range, lifetime, 0);
+        }
+
+        /// <summary>
+        /// 发射喷雾（Attached 模式——每帧跟随挂载 Transform）。
+        /// </summary>
+        /// <param name="lifetime">持续时间（秒），必须 &gt; 0</param>
+        public int FireSpray(byte typeIndex, Transform source,
+            float coneAngle, float range, float lifetime,
+            Vector2 localOffset = default, float angleOffset = 0f)
+        {
+            byte attachId = _attachRegistry.Register(source, localOffset, angleOffset);
+            if (attachId == 0) return -1;
+
+            Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
+            float direction = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);
+
+            return FireSprayInternal(typeIndex, origin, direction, coneAngle, range, lifetime, attachId);
+        }
+
+        private int FireLaserInternal(byte typeIndex, Vector2 origin, float angle,
+            float length, float lifetime, byte attachId)
+        {
+            int index = _laserPool.Allocate();
+            if (index < 0)
+            {
+                // 池满，释放挂载源
+                if (attachId != 0) _attachRegistry.Release(attachId);
+                return -1;
+            }
+
+            var type = _typeRegistry.LaserTypes[typeIndex];
+            ref var laser = ref _laserPool.Data[index];
+            laser.Origin = origin;
+            laser.Angle = angle;
+            laser.Length = length;
+            laser.MaxWidth = type.MaxWidth;
+            laser.Width = type.MaxWidth * 0.05f; // 初始 Charging 宽度
+            laser.Lifetime = lifetime > 0f ? lifetime : type.TotalDuration;
+            laser.TickInterval = type.TickInterval;
+            laser.DamagePerTick = type.DamagePerTick;
+            laser.Phase = 1; // Charging
+            laser.LaserTypeIndex = typeIndex;
+            laser.MaxReflections = type.MaxReflections;
+            laser.AttachId = attachId;
+            laser.Elapsed = 0f;
+            laser.TickTimer = 0f;
+            laser.SegmentCount = 0;
+            laser.VisualLength = 0f;
+
+            return index;
+        }
+
+        private int FireSprayInternal(byte typeIndex, Vector2 origin, float direction,
+            float coneAngle, float range, float lifetime, byte attachId)
+        {
+            int index = _sprayPool.Allocate();
+            if (index < 0)
+            {
+                if (attachId != 0) _attachRegistry.Release(attachId);
+                return -1;
+            }
+
+            var type = _typeRegistry.SprayTypes[typeIndex];
+            ref var spray = ref _sprayPool.Data[index];
+            spray.Origin = origin;
+            spray.Direction = direction;
+            spray.ConeAngle = coneAngle;
+            spray.Range = range;
+            spray.Lifetime = lifetime;
+            spray.TickInterval = type.TickInterval;
+            spray.DamagePerTick = type.DamagePerTick;
+            spray.Phase = 1; // Active
+            spray.SprayTypeIndex = typeIndex;
+            spray.AttachId = attachId;
+            spray.Elapsed = 0f;
+            spray.TickTimer = 0f;
+
+            return index;
+        }
+
+        /// <summary>
+        /// 清场——回收所有弹丸/激光/喷雾/障碍物/挂载源/调度任务。
         /// </summary>
         public void ClearAll()
         {
@@ -188,6 +318,7 @@ namespace MiniGameTemplate.Danmaku
             _laserPool.FreeAll();
             _sprayPool.FreeAll();
             _obstaclePool.FreeAll();
+            _attachRegistry.FreeAll();
             _scheduler.ClearAll();
             _trailPool.FreeAll();
         }
@@ -204,6 +335,7 @@ namespace MiniGameTemplate.Danmaku
             _laserPool = new LaserPool();
             _sprayPool = new SprayPool();
             _obstaclePool = new ObstaclePool();
+            _attachRegistry = new AttachSourceRegistry();
 
             // 碰撞
             _collisionSolver = new CollisionSolver();

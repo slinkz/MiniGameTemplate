@@ -26,6 +26,17 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("伤害间隔（秒）")]
         public float TickInterval = 0.5f;
 
+        [Header("碰撞响应 — 障碍物")]
+        [Tooltip("喷雾碰到障碍物时的行为")]
+        public SprayObstacleResponse OnHitObstacle = SprayObstacleResponse.Ignore;
+
+        [Header("碰撞响应 — 屏幕边缘")]
+        [Tooltip("Origin 越界时是否回收喷雾")]
+        public bool RecycleOnOriginOutOfBounds = true;
+
+        [Tooltip("Origin 越界回收的边缘余量（世界单位）")]
+        public float ScreenEdgeRecycleMargin = 1f;
+
         /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
         [HideInInspector]
         public byte RuntimeIndex;

@@ -39,5 +39,12 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>SprayTypeSO 在 DanmakuTypeRegistry 中的索引</summary>
         public byte SprayTypeIndex;
+
+        /// <summary>
+        /// AttachSourceRegistry 中的挂载源 ID。
+        /// 0 = 未挂载（Detached），喷雾发射后固定不动。
+        /// &gt;0 = 挂载（Attached），每帧自动同步 Origin 和 Direction。
+        /// </summary>
+        public byte AttachId;
     }
 }

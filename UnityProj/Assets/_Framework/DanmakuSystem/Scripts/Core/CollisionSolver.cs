@@ -16,7 +16,9 @@ namespace MiniGameTemplate.Danmaku
 
     /// <summary>
     /// 统一碰撞调度器。
-    /// 5 阶段碰撞：弹丸vs目标 → 弹丸vs障碍物 → 弹丸vs屏幕边缘 → 激光vs玩家 → 喷雾vs玩家。
+    /// 7 阶段碰撞：弹丸vs目标 → 弹丸vs障碍物 → 弹丸vs屏幕边缘
+    ///            → 激光vs玩家（多段） → 喷雾vs玩家 → 喷雾vs障碍物 → 喷雾vs屏幕边缘。
+    /// 激光 vs 障碍物/屏幕边缘的碰撞与折射由 LaserSegmentSolver 在 LaserUpdater 中处理。
     /// </summary>
     public class CollisionSolver
     {
@@ -36,6 +38,7 @@ namespace MiniGameTemplate.Danmaku
             SprayPool sprayPool,
             ObstaclePool obstaclePool,
             DanmakuTypeRegistry registry,
+            AttachSourceRegistry attachRegistry,
             in CircleHitbox player,
             BulletFaction playerFaction,
             float dt)
@@ -54,11 +57,17 @@ namespace MiniGameTemplate.Danmaku
             // Phase 3: 弹丸 vs 屏幕边缘
             SolveBulletVsScreenEdge(cores, capacity, registry, ref result);
 
-            // Phase 4: 激光 vs 玩家
+            // Phase 4: 激光 vs 玩家（多段折射线段 vs 圆）
             SolveLasers(laserPool, in player, dt, ref result);
 
             // Phase 5: 喷雾 vs 玩家
             SolveSprays(sprayPool, in player, dt, ref result);
+
+            // Phase 6: 喷雾 vs 障碍物
+            SolveSprayVsObstacle(sprayPool, obstaclePool, registry, dt, ref result);
+
+            // Phase 7: 喷雾 vs 屏幕边缘
+            SolveSprayVsScreenEdge(sprayPool, attachRegistry, registry);
 
             return result;
         }
@@ -187,7 +196,7 @@ namespace MiniGameTemplate.Danmaku
             }
         }
 
-        // ──── Phase 4: 激光 vs 玩家（线段 vs 圆） ────
+        // ──── Phase 4: 激光 vs 玩家（多段折射线段 vs 圆） ────
 
         private static void SolveLasers(
             LaserPool pool,
@@ -200,19 +209,25 @@ namespace MiniGameTemplate.Danmaku
                 ref var laser = ref pool.Data[i];
                 if (laser.Phase != 2) continue;  // 2 = Firing
 
-                // 线段 vs 圆
-                Vector2 dir = new Vector2(
-                    Mathf.Cos(laser.Angle),
-                    Mathf.Sin(laser.Angle));
-                Vector2 end = laser.Origin + dir * laser.Length;
-
-                float dist = PointToSegmentDistance(player.Center, laser.Origin, end);
-                float totalRadius = laser.Width * 0.5f + player.Radius;
-
-                if (dist >= totalRadius) continue;
-
-                // 伤害 tick 检查
+                // 伤害 tick 检查（先判断，避免遍历线段的开销）
                 if (laser.TickTimer < laser.TickInterval) continue;
+
+                float totalRadius = laser.Width * 0.5f + player.Radius;
+                bool hit = false;
+
+                // 遍历所有折射线段
+                for (int s = 0; s < laser.SegmentCount; s++)
+                {
+                    ref var seg = ref laser.Segments[s];
+                    float dist = PointToSegmentDistance(player.Center, seg.Start, seg.End);
+                    if (dist < totalRadius)
+                    {
+                        hit = true;
+                        break; // 一条激光只命中一次
+                    }
+                }
+
+                if (!hit) continue;
 
                 result.HasPlayerHit = true;
                 result.TotalDamage += (int)laser.DamagePerTick;
@@ -249,6 +264,89 @@ namespace MiniGameTemplate.Danmaku
 
                 result.HasPlayerHit = true;
                 result.TotalDamage += (int)spray.DamagePerTick;
+            }
+        }
+
+        // ──── Phase 6: 喷雾 vs 障碍物 ────
+
+        private void SolveSprayVsObstacle(
+            SprayPool sprayPool,
+            ObstaclePool obstaclePool,
+            DanmakuTypeRegistry registry,
+            float dt,
+            ref CollisionResult result)
+        {
+            var obstacles = obstaclePool.Data;
+
+            for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
+            {
+                ref var spray = ref sprayPool.Data[i];
+                if (spray.Phase == 0) continue;
+
+                var type = registry.SprayTypes[spray.SprayTypeIndex];
+                if (type.OnHitObstacle == SprayObstacleResponse.Ignore) continue;
+
+                // 伤害 tick 检查（PierceAndDamage 才需要 tick）
+                bool canDamage = type.OnHitObstacle == SprayObstacleResponse.PierceAndDamage
+                    && spray.TickTimer < spray.TickInterval;
+
+                for (int j = 0; j < ObstaclePool.MAX_OBSTACLES; j++)
+                {
+                    ref var obs = ref obstacles[j];
+                    if (obs.Phase != (byte)ObstaclePhase.Active) continue;
+
+                    // 扇形 vs AABB 近似检测：先圆 vs AABB（射程圆），再角度检查
+                    Vector2 center = (obs.Min + obs.Max) * 0.5f;
+                    Vector2 halfSize = (obs.Max - obs.Min) * 0.5f;
+                    Vector2 closest = ClampToAABB(spray.Origin, center, halfSize);
+
+                    float dx = spray.Origin.x - closest.x;
+                    float dy = spray.Origin.y - closest.y;
+                    float distSq = dx * dx + dy * dy;
+                    if (distSq > spray.Range * spray.Range) continue;
+
+                    // 角度检查——AABB 中心相对于喷雾方向
+                    Vector2 toObs = center - spray.Origin;
+                    float angle = Mathf.Atan2(toObs.y, toObs.x);
+                    float angleDiff = Mathf.Abs(Mathf.DeltaAngle(
+                        angle * Mathf.Rad2Deg,
+                        spray.Direction * Mathf.Rad2Deg));
+                    if (angleDiff > spray.ConeAngle * Mathf.Rad2Deg) continue;
+
+                    // 命中——对障碍物造成伤害
+                    if (canDamage && obs.HitPoints > 0)
+                    {
+                        obs.HitPoints = Mathf.Max(0, obs.HitPoints - (int)type.DamagePerTick);
+                        if (obs.HitPoints == 0)
+                            obs.Phase = (byte)ObstaclePhase.Destroyed;
+                    }
+                }
+            }
+        }
+
+        // ──── Phase 7: 喷雾 vs 屏幕边缘（Origin 越界回收） ────
+
+        private void SolveSprayVsScreenEdge(
+            SprayPool sprayPool,
+            AttachSourceRegistry attachRegistry,
+            DanmakuTypeRegistry registry)
+        {
+            for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
+            {
+                ref var spray = ref sprayPool.Data[i];
+                if (spray.Phase == 0) continue;
+
+                var type = registry.SprayTypes[spray.SprayTypeIndex];
+                if (!type.RecycleOnOriginOutOfBounds) continue;
+
+                float margin = type.ScreenEdgeRecycleMargin;
+                if (spray.Origin.x < _worldBounds.xMin - margin ||
+                    spray.Origin.x > _worldBounds.xMax + margin ||
+                    spray.Origin.y < _worldBounds.yMin - margin ||
+                    spray.Origin.y > _worldBounds.yMax + margin)
+                {
+                    SprayUpdater.FreeSpray(sprayPool, attachRegistry, i);
+                }
             }
         }
 

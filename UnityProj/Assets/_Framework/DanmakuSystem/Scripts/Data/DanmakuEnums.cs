@@ -99,4 +99,46 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>叠加发光（Additive Blend）</summary>
         Additive = 1,
     }
+
+    /// <summary>激光碰到障碍物时的行为</summary>
+    public enum LaserObstacleResponse : byte
+    {
+        /// <summary>忽略障碍物（穿透）</summary>
+        Ignore = 0,
+
+        /// <summary>被障碍物截断（不穿透）</summary>
+        Block = 1,
+
+        /// <summary>截断 + 对障碍物造成 Tick 伤害</summary>
+        BlockAndDamage = 2,
+
+        /// <summary>穿透 + 对障碍物造成 Tick 伤害</summary>
+        PierceAndDamage = 3,
+    }
+
+    /// <summary>激光碰到屏幕边缘时的行为</summary>
+    public enum LaserScreenEdgeResponse : byte
+    {
+        /// <summary>裁剪到屏幕边缘（默认）</summary>
+        Clip = 0,
+
+        /// <summary>沿法线反射（折射次数可配）</summary>
+        Reflect = 1,
+
+        /// <summary>Origin 越界时回收整条激光</summary>
+        RecycleOnOriginOut = 2,
+    }
+
+    /// <summary>喷雾碰到障碍物时的行为</summary>
+    public enum SprayObstacleResponse : byte
+    {
+        /// <summary>忽略障碍物（穿透）</summary>
+        Ignore = 0,
+
+        /// <summary>被障碍物遮挡（遮挡区域不判伤）</summary>
+        Block = 1,
+
+        /// <summary>穿透 + 对障碍物造成 Tick 伤害</summary>
+        PierceAndDamage = 2,
+    }
 }
