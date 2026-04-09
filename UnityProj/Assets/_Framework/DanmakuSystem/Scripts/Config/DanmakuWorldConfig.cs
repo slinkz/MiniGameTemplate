@@ -17,13 +17,6 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("弹幕活动区域（屏幕边缘判定用）")]
         public Rect WorldBounds = new(-6, -10, 12, 20);
 
-        [Header("碰撞网格")]
-        [Tooltip("均匀网格分区列数")]
-        public int GridCellsX = 12;
-
-        [Tooltip("均匀网格分区行数")]
-        public int GridCellsY = 20;
-
         [Header("无敌帧")]
         [Tooltip("受击后无敌时长（秒）。0=关闭。使用真实时间，不受弹幕 TimeScale 影响")]
         public float InvincibleDuration = 0f;

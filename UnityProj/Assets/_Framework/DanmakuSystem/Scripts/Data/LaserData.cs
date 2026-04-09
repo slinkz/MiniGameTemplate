@@ -52,6 +52,9 @@ namespace MiniGameTemplate.Danmaku
         /// </summary>
         public byte AttachId;
 
+        /// <summary>激光阵营（从 LaserTypeSO.Faction 拷贝）</summary>
+        public byte Faction;
+
         // ──── 折射 ────
 
         /// <summary>最大反射次数（来自 LaserTypeSO.MaxReflections）</summary>

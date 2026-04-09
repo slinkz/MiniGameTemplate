@@ -49,10 +49,8 @@ namespace MiniGameTemplate.Danmaku
                     float normalizedTime = laser.Elapsed / laser.Lifetime;
                     laser.Width = type.WidthOverLifetime.Evaluate(normalizedTime) * type.MaxWidth;
 
-                    // 伤害 tick
-                    laser.TickTimer += dt;
-                    if (laser.TickTimer >= laser.TickInterval)
-                        laser.TickTimer -= laser.TickInterval;
+                    // 注意：TickTimer 推进在 CollisionSolver.SolveLasers 中完成，
+                    // 避免与 tick 判断分处两地导致时序 bug。
 
                     // 折射段解算（Firing 阶段才与障碍物/边缘交互）
                     LaserSegmentSolver.Solve(ref laser, type, obstaclePool, in worldBounds);

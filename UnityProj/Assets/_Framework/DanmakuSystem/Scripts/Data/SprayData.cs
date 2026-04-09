@@ -46,5 +46,8 @@ namespace MiniGameTemplate.Danmaku
         /// &gt;0 = 挂载（Attached），每帧自动同步 Origin 和 Direction。
         /// </summary>
         public byte AttachId;
+
+        /// <summary>喷雾阵营（从 SprayTypeSO.Faction 拷贝）</summary>
+        public byte Faction;
     }
 }

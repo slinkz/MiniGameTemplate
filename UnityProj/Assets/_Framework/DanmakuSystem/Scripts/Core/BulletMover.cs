@@ -16,12 +16,14 @@ namespace MiniGameTemplate.Danmaku
         /// <param name="playerPos">玩家位置（追踪弹用）</param>
         /// <param name="dt">弹幕 deltaTime（已乘 TimeScale）</param>
         /// <param name="system">弹幕系统引用（子弹幕发射用）</param>
+        /// <param name="trailPool">重量拖尾池（FLAG_HEAVY_TRAIL 弹丸用）</param>
         public static void UpdateAll(
             BulletWorld world,
             DanmakuTypeRegistry registry,
             Vector2 playerPos,
             float dt,
-            DanmakuSystem system)
+            DanmakuSystem system,
+            TrailPool trailPool)
         {
             var cores = world.Cores;
             var trails = world.Trails;
@@ -62,6 +64,16 @@ namespace MiniGameTemplate.Danmaku
                 // 生命周期检查
                 if (core.Elapsed >= core.Lifetime || core.HitPoints == 0)
                 {
+                    // 释放重量拖尾
+                    if ((core.Flags & BulletCore.FLAG_HEAVY_TRAIL) != 0 && trailPool != null)
+                    {
+                        ref var trailData = ref trails[i];
+                        if (trailData.HeavyTrailHandle >= 0)
+                        {
+                            trailPool.Free(trailData.HeavyTrailHandle);
+                            trailData.HeavyTrailHandle = -1;
+                        }
+                    }
                     HandleBulletDeath(ref core, i, world, registry, system);
                     continue;
                 }
@@ -100,8 +112,9 @@ namespace MiniGameTemplate.Danmaku
                         {
                             float targetAngle = Mathf.Atan2(toPlayer.y, toPlayer.x);
                             float currentAngle = Mathf.Atan2(core.Velocity.y, core.Velocity.x);
-                            // 简化：直接用固定转向速度（rad/s）
-                            float maxTurn = 2f * Mathf.Deg2Rad * dt; // ~2°/frame
+                            // 从 Modifier 读取策划配置的转向速度（度/秒）
+                            float homingDegPerSec = modifiers[i].HomingStrength;
+                            float maxTurn = homingDegPerSec * Mathf.Deg2Rad * dt;
                             float angleDiff = Mathf.DeltaAngle(
                                 currentAngle * Mathf.Rad2Deg,
                                 targetAngle * Mathf.Rad2Deg) * Mathf.Deg2Rad;
@@ -127,6 +140,14 @@ namespace MiniGameTemplate.Danmaku
 
                 // 位置更新
                 core.Position += core.Velocity * speedMultiplier * dt;
+
+                // 重量拖尾记录
+                if ((core.Flags & BulletCore.FLAG_HEAVY_TRAIL) != 0 && trailPool != null)
+                {
+                    ref var trailRef = ref trails[i];
+                    if (trailRef.HeavyTrailHandle >= 0)
+                        trailPool.AddPoint(trailRef.HeavyTrailHandle, core.Position);
+                }
             }
         }
 

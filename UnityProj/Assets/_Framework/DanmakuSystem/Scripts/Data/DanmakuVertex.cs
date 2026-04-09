@@ -13,10 +13,10 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>顶点位置（世界坐标）</summary>
         public Vector3 Position;   // 12 bytes
 
-        /// <summary>纹理坐标（图集 UV）</summary>
-        public Vector2 UV;         // 8 bytes
-
         /// <summary>顶点颜色（Tint + Alpha 淡出）</summary>
         public Color32 Color;      // 4 bytes
+
+        /// <summary>纹理坐标（图集 UV）</summary>
+        public Vector2 UV;         // 8 bytes
     }
 }

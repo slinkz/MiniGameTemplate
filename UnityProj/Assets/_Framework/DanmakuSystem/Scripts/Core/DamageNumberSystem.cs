@@ -34,8 +34,8 @@ namespace MiniGameTemplate.Danmaku
         private static readonly VertexAttributeDescriptor[] VertexLayout = new[]
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
-            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
             new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
+            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
         };
 
         public void Initialize(DanmakuRenderConfig renderConfig)
@@ -68,8 +68,16 @@ namespace MiniGameTemplate.Danmaku
             _mesh.SetIndexBufferParams(indexCount, IndexFormat.UInt16);
             _mesh.SetIndices(_indices, MeshTopology.Triangles, 0, false);
 
-            // 复用 Normal 材质（飘字用 Alpha Blend）
-            _material = renderConfig.BulletMaterial;
+            // 使用 BulletMaterial 作为基础创建独立材质实例，绑定 NumberAtlas 纹理
+            if (renderConfig.BulletMaterial != null)
+            {
+                _material = new Material(renderConfig.BulletMaterial);
+                _material.name = "DamageNumber (Instance)";
+                if (_numberAtlas != null)
+                    _material.mainTexture = _numberAtlas;
+                else
+                    Debug.LogWarning("[Danmaku] DamageNumberSystem: NumberAtlas is null — damage numbers will display incorrect texture.");
+            }
         }
 
         /// <summary>
@@ -149,6 +157,7 @@ namespace MiniGameTemplate.Danmaku
         public void Dispose()
         {
             if (_mesh != null) Object.Destroy(_mesh);
+            if (_material != null) Object.Destroy(_material);
         }
 
         // ──── 内部方法 ────

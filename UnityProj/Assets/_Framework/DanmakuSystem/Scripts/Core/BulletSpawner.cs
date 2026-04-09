@@ -1,3 +1,4 @@
+using MiniGameTemplate.Audio;
 using MiniGameTemplate.Utils;
 using UnityEngine;
 
@@ -19,7 +20,8 @@ namespace MiniGameTemplate.Danmaku
             float baseAngleDeg,
             BulletWorld world,
             DanmakuTypeRegistry registry,
-            DifficultyProfileSO difficulty = null)
+            DifficultyProfileSO difficulty = null,
+            TrailPool trailPool = null)
         {
             var type = pattern.BulletType;
             if (type == null) return;
@@ -64,7 +66,7 @@ namespace MiniGameTemplate.Danmaku
                 core.HitPoints = type.InitialHitPoints;
                 core.Flags = BulletCore.FLAG_ACTIVE;
                 core.Faction = (byte)type.Faction;
-                core.LastHitId = 0;
+                core.PierceHitMask = 0;
 
                 // 条件标记
                 if (type.RotateToDirection)
@@ -81,9 +83,25 @@ namespace MiniGameTemplate.Danmaku
                 trail.TrailLength = (type.Trail == TrailMode.Ghost || type.Trail == TrailMode.Both)
                     ? type.GhostCount : (byte)0;
                 trail.PrevPos1 = trail.PrevPos2 = trail.PrevPos3 = origin;
+                trail.FlashTimer = 0;
 
-                // 写入 BulletModifier（如果有延迟变速/追踪延迟）
-                bool hasModifier = pattern.DelayBeforeAccel > 0 || pattern.HomingDelay > 0;
+                // 分配重量拖尾句柄
+                if ((core.Flags & BulletCore.FLAG_HEAVY_TRAIL) != 0 && trailPool != null)
+                {
+                    int handle = trailPool.Allocate(type);
+                    trail.HeavyTrailHandle = (short)handle;
+                    if (handle >= 0)
+                        trailPool.AddPoint(handle, origin);  // 初始点
+                }
+                else
+                {
+                    trail.HeavyTrailHandle = -1;
+                }
+
+                // 写入 BulletModifier（如果有延迟变速/追踪延迟/追踪）
+                bool hasModifier = pattern.DelayBeforeAccel > 0
+                    || pattern.HomingDelay > 0
+                    || pattern.IsHoming;
                 if (hasModifier)
                 {
                     core.Flags |= BulletCore.FLAG_HAS_MODIFIER;
@@ -92,12 +110,17 @@ namespace MiniGameTemplate.Danmaku
                     mod.DelaySpeedScale = pattern.DelaySpeedScale;
                     mod.AccelEndTime = pattern.DelayBeforeAccel + pattern.AccelDuration;
                     mod.HomingStartTime = pattern.HomingDelay;
+                    mod.HomingStrength = pattern.HomingStrength;
                 }
 
                 // SpeedOverLifetime 曲线（与延迟变速互斥）
                 if (!hasModifier && type.SpeedOverLifetime != null && type.SpeedOverLifetime.keys.Length > 1)
                     core.Flags |= BulletCore.FLAG_SPEED_CURVE;
             }
+
+            // 发射音效（每次 Fire 调用播放一次，不在循环内重复播放）
+            if (pattern.FireSFX != null)
+                AudioManager.Instance?.PlaySFX(pattern.FireSFX);
         }
     }
 }

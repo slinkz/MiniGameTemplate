@@ -20,5 +20,8 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>追踪开始时刻（0=立即追踪）</summary>
         public float HomingStartTime;
+
+        /// <summary>追踪转向速度（度/秒），由 BulletPatternSO.HomingStrength 写入</summary>
+        public float HomingStrength;
     }
 }

@@ -22,7 +22,10 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>残影数量：0=无, 1-3</summary>
         public byte TrailLength;
 
-        public byte _pad1;
-        public ushort _pad2;
+        /// <summary>受伤闪烁剩余帧数（0=不闪烁）。由 CollisionSolver 写入，BulletRenderer 读取并递减。</summary>
+        public byte FlashTimer;
+
+        /// <summary>TrailPool 句柄（FLAG_HEAVY_TRAIL 弹丸用）。-1 = 未分配。</summary>
+        public short HeavyTrailHandle;
     }
 }

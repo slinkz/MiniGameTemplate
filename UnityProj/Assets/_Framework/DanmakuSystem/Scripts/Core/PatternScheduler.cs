@@ -13,9 +13,17 @@ namespace MiniGameTemplate.Danmaku
 
         private readonly ScheduleTask[] _tasks = new ScheduleTask[MAX_TASKS];
         private int _activeTasks;
+        private int _peakTasks;
+        private int _totalScheduled;
 
         /// <summary>当前活跃调度任务数</summary>
         public int ActiveTasks => _activeTasks;
+
+        /// <summary>历史峰值活跃任务数（调试用）</summary>
+        public int PeakTasks => _peakTasks;
+
+        /// <summary>累计调度总次数（调试用）</summary>
+        public int TotalScheduled => _totalScheduled;
 
         /// <summary>
         /// 调度一个弹幕组合。
@@ -68,6 +76,8 @@ namespace MiniGameTemplate.Danmaku
                         task.Elapsed = 0f;
                         task.Active = true;
                         _activeTasks++;
+                        _totalScheduled++;
+                        if (_activeTasks > _peakTasks) _peakTasks = _activeTasks;
                     }
                 }
             }
@@ -100,6 +110,8 @@ namespace MiniGameTemplate.Danmaku
                 task.Elapsed = 0f;
                 task.Active = true;
                 _activeTasks++;
+                _totalScheduled++;
+                if (_activeTasks > _peakTasks) _peakTasks = _activeTasks;
             }
         }
 
@@ -107,7 +119,7 @@ namespace MiniGameTemplate.Danmaku
         /// 每帧由 DanmakuSystem 调用——推进时间，到期的任务触发发射。
         /// </summary>
         public void Tick(float dt, BulletWorld world, DanmakuTypeRegistry registry,
-            DifficultyProfileSO difficulty = null)
+            DifficultyProfileSO difficulty = null, TrailPool trailPool = null)
         {
             for (int i = 0; i < MAX_TASKS; i++)
             {
@@ -118,7 +130,7 @@ namespace MiniGameTemplate.Danmaku
                 if (task.Elapsed < task.Delay) continue;
 
                 // 到期——执行发射
-                BulletSpawner.Fire(task.Pattern, task.Origin, task.Angle, world, registry, difficulty);
+                BulletSpawner.Fire(task.Pattern, task.Origin, task.Angle, world, registry, difficulty, trailPool);
 
                 // 任务完成，释放槽位
                 task.Active = false;
@@ -132,6 +144,14 @@ namespace MiniGameTemplate.Danmaku
             for (int i = 0; i < MAX_TASKS; i++)
                 _tasks[i].Active = false;
             _activeTasks = 0;
+            _peakTasks = 0;
+        }
+
+        /// <summary>重置累计统计。</summary>
+        public void ResetStats()
+        {
+            _peakTasks = _activeTasks;
+            _totalScheduled = 0;
         }
 
         private int FindFreeSlot()

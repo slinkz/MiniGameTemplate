@@ -110,6 +110,9 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("Mesh 内爆炸帧数")]
         public int ExplosionFrameCount = 4;
 
+        [Tooltip("爆炸帧序列第一帧的 UV 矩形（图集中水平排列，每帧等宽）")]
+        public Rect ExplosionAtlasUV;
+
         [Tooltip("重特效预制件（PooledPrefab 模式）")]
         public PoolDefinition HeavyExplosionPrefab;
 

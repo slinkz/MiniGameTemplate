@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d916e560fa8b7aa4b9d0a08ff827c484, type: 3}
+  m_Name: Spawner_Demo
+  m_EditorClassIdentifier: 
+  PatternGroups:
+  - {fileID: 11400000, guid: 024bb7e33cdf0d540b0a246c14b0bc92, type: 2}
+  CooldownBetweenGroups: 2
+  SwitchMode: 0

@@ -39,13 +39,18 @@ namespace MiniGameTemplate.Danmaku
         private static readonly VertexAttributeDescriptor[] VertexLayout = new[]
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
-            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
             new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
+            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
         };
 
         public void Initialize(Material material)
         {
-            _material = material;
+            // 创建独立材质实例——拖尾使用纯白纹理，仅靠顶点颜色着色
+            if (material != null)
+            {
+                _material = new Material(material) { name = "DanmakuTrail (Instance)" };
+                _material.mainTexture = Texture2D.whiteTexture;
+            }
 
             // 每条拖尾 = (MAX_POINTS_PER_TRAIL-1) 段 × 2 三角形 × 3 顶点
             // 简化：每条拖尾 MAX_POINTS_PER_TRAIL × 2 顶点（TriangleStrip 展开为 TriangleList）
@@ -170,6 +175,7 @@ namespace MiniGameTemplate.Danmaku
         public void Dispose()
         {
             if (_mesh != null) Object.Destroy(_mesh);
+            if (_material != null) Object.Destroy(_material);
         }
 
         // ──── 内部 ────

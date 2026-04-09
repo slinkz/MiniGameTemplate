@@ -42,6 +42,9 @@ namespace MiniGameTemplate.Danmaku
         public float TickInterval = 0.1f;
 
         [Header("碰撞")]
+        [Tooltip("激光阵营（决定与哪些目标碰撞）")]
+        public BulletFaction Faction = BulletFaction.Enemy;
+
         public float MaxWidth = 0.8f;
 
         [Header("碰撞响应 — 障碍物")]

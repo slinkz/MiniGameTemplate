@@ -38,8 +38,8 @@ namespace MiniGameTemplate.Danmaku
         private static readonly VertexAttributeDescriptor[] VertexLayout = new[]
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
-            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
             new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
+            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
         };
 
         /// <summary>
@@ -48,8 +48,20 @@ namespace MiniGameTemplate.Danmaku
         public void Initialize(DanmakuRenderConfig renderConfig, int maxBullets)
         {
             _maxBullets = maxBullets;
-            _materialNormal = renderConfig.BulletMaterial;
-            _materialAdditive = renderConfig.BulletAdditiveMaterial;
+
+            // 创建材质实例并绑定 BulletAtlas 纹理到 _MainTex
+            _materialNormal = renderConfig.BulletMaterial != null
+                ? new Material(renderConfig.BulletMaterial) { name = "DanmakuBullet_Normal (Instance)" }
+                : null;
+            _materialAdditive = renderConfig.BulletAdditiveMaterial != null
+                ? new Material(renderConfig.BulletAdditiveMaterial) { name = "DanmakuBullet_Additive (Instance)" }
+                : null;
+
+            if (renderConfig.BulletAtlas != null)
+            {
+                if (_materialNormal != null) _materialNormal.mainTexture = renderConfig.BulletAtlas;
+                if (_materialAdditive != null) _materialAdditive.mainTexture = renderConfig.BulletAtlas;
+            }
 
             // 每个弹丸 = 1 Quad = 4 顶点，最多 maxBullets + 残影
             int maxQuads = maxBullets * 4;  // 预留残影空间（每颗最多 3 残影）
@@ -95,17 +107,52 @@ namespace MiniGameTemplate.Danmaku
                 var bulletType = registry.BulletTypes[core.TypeIndex];
                 bool isAdditive = bulletType.Layer == RenderLayer.Additive;
 
-                // 写入主弹丸 Quad
-                WriteQuad(ref core, bulletType, isAdditive, 1f);
-
-                // 残影 Quad（Ghost 模式）
+                // 受伤闪烁：FlashTimer > 0 时用 DamageFlashTint 替代 Tint
                 ref var trail = ref trails[i];
-                if (trail.TrailLength >= 1)
-                    WriteGhostQuad(trail.PrevPos1, bulletType, isAdditive, 0.6f);
-                if (trail.TrailLength >= 2)
-                    WriteGhostQuad(trail.PrevPos2, bulletType, isAdditive, 0.3f);
-                if (trail.TrailLength >= 3)
-                    WriteGhostQuad(trail.PrevPos3, bulletType, isAdditive, 0.15f);
+                Color tint = bulletType.Tint;
+                if (trail.FlashTimer > 0)
+                {
+                    tint = bulletType.DamageFlashTint;
+                    trail.FlashTimer--;
+                }
+
+                // 爆炸帧动画：Exploding 阶段用 ExplosionAtlasUV + 帧偏移
+                if (core.Phase == (byte)BulletPhase.Exploding
+                    && bulletType.Explosion == ExplosionMode.MeshFrame
+                    && bulletType.ExplosionFrameCount > 0)
+                {
+                    float frameDuration = 1f / 60f;  // 每帧时长（60fps）
+                    int frame = Mathf.Clamp(
+                        (int)(core.Elapsed / frameDuration),
+                        0, bulletType.ExplosionFrameCount - 1);
+
+                    Rect uv = bulletType.ExplosionAtlasUV;
+                    float frameWidth = uv.width;
+                    Rect frameUV = new Rect(
+                        uv.x + frame * frameWidth, uv.y,
+                        frameWidth, uv.height);
+
+                    // 爆炸帧渐隐
+                    float explosionAlpha = 1f - (float)frame / bulletType.ExplosionFrameCount;
+
+                    WriteQuadUV(ref core, bulletType, isAdditive, explosionAlpha, tint, frameUV);
+                }
+                else
+                {
+                    // 写入主弹丸 Quad
+                    WriteQuad(ref core, bulletType, isAdditive, 1f, tint);
+                }
+
+                // 残影 Quad（Ghost 模式——Exploding 阶段不画残影）
+                if (core.Phase == (byte)BulletPhase.Active)
+                {
+                    if (trail.TrailLength >= 1)
+                        WriteGhostQuad(trail.PrevPos1, bulletType, isAdditive, 0.6f);
+                    if (trail.TrailLength >= 2)
+                        WriteGhostQuad(trail.PrevPos2, bulletType, isAdditive, 0.3f);
+                    if (trail.TrailLength >= 3)
+                        WriteGhostQuad(trail.PrevPos3, bulletType, isAdditive, 0.15f);
+                }
             }
 
             // 上传顶点数据
@@ -118,11 +165,13 @@ namespace MiniGameTemplate.Danmaku
         {
             if (_meshNormal != null) Object.Destroy(_meshNormal);
             if (_meshAdditive != null) Object.Destroy(_meshAdditive);
+            if (_materialNormal != null) Object.Destroy(_materialNormal);
+            if (_materialAdditive != null) Object.Destroy(_materialAdditive);
         }
 
         // ──── 内部方法 ────
 
-        private void WriteQuad(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha)
+        private void WriteQuad(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha, Color tint)
         {
             DanmakuVertex[] verts;
             ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
@@ -146,13 +195,39 @@ namespace MiniGameTemplate.Danmaku
 
             // 4 个角点（逆时针）
             WriteVertex(ref verts[baseVertex + 0], core.Position, -halfW, -halfH, cos, sin,
-                type.AtlasUV.xMin, type.AtlasUV.yMin, type.Tint, alpha);
+                type.AtlasUV.xMin, type.AtlasUV.yMin, tint, alpha);
             WriteVertex(ref verts[baseVertex + 1], core.Position, halfW, -halfH, cos, sin,
-                type.AtlasUV.xMax, type.AtlasUV.yMin, type.Tint, alpha);
+                type.AtlasUV.xMax, type.AtlasUV.yMin, tint, alpha);
             WriteVertex(ref verts[baseVertex + 2], core.Position, halfW, halfH, cos, sin,
-                type.AtlasUV.xMax, type.AtlasUV.yMax, type.Tint, alpha);
+                type.AtlasUV.xMax, type.AtlasUV.yMax, tint, alpha);
             WriteVertex(ref verts[baseVertex + 3], core.Position, -halfW, halfH, cos, sin,
-                type.AtlasUV.xMin, type.AtlasUV.yMax, type.Tint, alpha);
+                type.AtlasUV.xMin, type.AtlasUV.yMax, tint, alpha);
+
+            quadCount++;
+        }
+
+        private void WriteQuadUV(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha, Color tint, Rect uv)
+        {
+            DanmakuVertex[] verts;
+            ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
+
+            verts = isAdditive ? _verticesAdditive : _verticesNormal;
+
+            int baseVertex = quadCount * 4;
+            if (baseVertex + 4 > verts.Length) return;
+
+            float halfW = type.Size.x * 0.5f;
+            float halfH = type.Size.y * 0.5f;
+
+            // 爆炸帧不旋转
+            WriteVertex(ref verts[baseVertex + 0], core.Position, -halfW, -halfH, 1, 0,
+                uv.xMin, uv.yMin, tint, alpha);
+            WriteVertex(ref verts[baseVertex + 1], core.Position, halfW, -halfH, 1, 0,
+                uv.xMax, uv.yMin, tint, alpha);
+            WriteVertex(ref verts[baseVertex + 2], core.Position, halfW, halfH, 1, 0,
+                uv.xMax, uv.yMax, tint, alpha);
+            WriteVertex(ref verts[baseVertex + 3], core.Position, -halfW, halfH, 1, 0,
+                uv.xMin, uv.yMax, tint, alpha);
 
             quadCount++;
         }

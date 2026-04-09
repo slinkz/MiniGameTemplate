@@ -69,7 +69,10 @@ namespace MiniGameTemplate.Danmaku
         {
             _freeTop = 0;
             for (int i = Capacity - 1; i >= 0; i--)
+            {
+                Cores[i].Flags = 0;
                 _freeSlots[_freeTop++] = i;
+            }
             ActiveCount = 0;
         }
     }

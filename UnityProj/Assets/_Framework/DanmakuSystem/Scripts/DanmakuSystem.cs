@@ -30,16 +30,16 @@ namespace MiniGameTemplate.Danmaku
         private SprayPool _sprayPool;
         private ObstaclePool _obstaclePool;
         private AttachSourceRegistry _attachRegistry;
+        private TargetRegistry _targetRegistry;
         private CollisionSolver _collisionSolver;
         private PatternScheduler _scheduler;
+        private SpawnerDriver _spawnerDriver;
         private BulletRenderer _bulletRenderer;
         private DamageNumberSystem _damageNumbers;
         private TrailPool _trailPool;
 
-        // ──── 玩家数据（外部设置） ────
-        private Transform _playerTransform;
-        private float _playerRadius = 0.2f;
-        private BulletFaction _playerFaction = BulletFaction.Player;
+        // ──── 内置 Player 目标适配器 ────
+        private PlayerCollisionTarget _builtinPlayerTarget;
 
         // ──── 无敌帧 ────
         private float _invincibleTimer;
@@ -62,11 +62,24 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>挂载源注册表（激光/喷雾跟随旋转物体）</summary>
         public AttachSourceRegistry AttachRegistry => _attachRegistry;
 
+        /// <summary>碰撞目标注册表</summary>
+        public TargetRegistry TargetRegistry => _targetRegistry;
+
         /// <summary>调度器（外部 Schedule 用）</summary>
         public PatternScheduler Scheduler => _scheduler;
 
+        /// <summary>发射器驱动器</summary>
+        public SpawnerDriver SpawnerDriver => _spawnerDriver;
+
         /// <summary>类型注册表</summary>
         public DanmakuTypeRegistry TypeRegistry => _typeRegistry;
+
+        /// <summary>当前难度配置</summary>
+        public DifficultyProfileSO Difficulty
+        {
+            get => _difficulty;
+            set => _difficulty = value;
+        }
 
         // ──── 生命周期 ────
 
@@ -95,28 +108,27 @@ namespace MiniGameTemplate.Danmaku
             if (_timeScale != null)
                 dt *= _timeScale.TimeScale;
 
-            // 获取玩家位置
-            Vector2 playerPos = _playerTransform != null
-                ? (Vector2)_playerTransform.position
+            // 1. 发射器驱动 Tick（SpawnerDriver 自动发射）
+            _spawnerDriver.Tick(dt, this);
+
+            // 2. 调度器 Tick（触发到期的发射任务）
+            _scheduler.Tick(dt, _bulletWorld, _typeRegistry, _difficulty, _trailPool);
+
+            // 3. 弹丸运动
+            Vector2 playerPos = _builtinPlayerTarget != null
+                ? _builtinPlayerTarget.Hitbox.Center
                 : Vector2.zero;
+            BulletMover.UpdateAll(_bulletWorld, _typeRegistry, playerPos, dt, this, _trailPool);
 
-            // 1. 调度器 Tick（触发到期的发射任务）
-            _scheduler.Tick(dt, _bulletWorld, _typeRegistry, _difficulty);
-
-            // 2. 弹丸运动
-            BulletMover.UpdateAll(_bulletWorld, _typeRegistry, playerPos, dt, this);
-
-            // 3. 激光更新（含挂载同步 + 折射段解算）
+            // 4. 激光更新（含挂载同步 + 折射段解算）
             LaserUpdater.UpdateAll(_laserPool, _typeRegistry, _obstaclePool,
                 _attachRegistry, _worldConfig.WorldBounds, dt);
 
-            // 4. 喷雾更新（含挂载同步）
+            // 5. 喷雾更新（含挂载同步）
             SprayUpdater.UpdateAll(_sprayPool, _attachRegistry, dt);
 
-            // 5. 碰撞检测
-            CircleHitbox playerHitbox = new CircleHitbox(playerPos, _playerRadius);
-
-            // 无敌帧检查
+            // 6. 碰撞检测
+            // 无敌帧递减
             if (_invincibleTimer > 0)
             {
                 _invincibleTimer -= Time.unscaledDeltaTime;  // 无敌帧用真实时间
@@ -124,17 +136,17 @@ namespace MiniGameTemplate.Danmaku
 
             var result = _collisionSolver.SolveAll(
                 _bulletWorld, _laserPool, _sprayPool, _obstaclePool,
-                _typeRegistry, _attachRegistry, in playerHitbox, _playerFaction, dt);
+                _typeRegistry, _attachRegistry, _targetRegistry, dt);
 
-            // 6. 处理碰撞结果
-            if (result.HasPlayerHit && _invincibleTimer <= 0)
+            // 7. 处理碰撞结果——仅在 Player 阵营目标被命中时触发事件 / 无敌帧 / 飘字
+            if (result.PlayerHit && _invincibleTimer <= 0)
             {
                 _onPlayerHit?.Raise();
-                if (result.TotalDamage > 0)
-                    _onDamageDealt?.Raise(result.TotalDamage);
+                if (result.PlayerDamage > 0)
+                    _onDamageDealt?.Raise(result.PlayerDamage);
 
-                // 伤害飘字
-                _damageNumbers.Spawn(playerPos, result.TotalDamage, result.TotalDamage >= 10);
+                // 伤害飘字——显示在被命中的玩家位置
+                _damageNumbers.Spawn(result.PlayerHitPosition, result.PlayerDamage, result.PlayerDamage >= 10);
 
                 // 启动无敌帧
                 if (_worldConfig.InvincibleDuration > 0)
@@ -157,12 +169,42 @@ namespace MiniGameTemplate.Danmaku
         // ──── 公开 API ────
 
         /// <summary>
-        /// 设置玩家碰撞体信息。
+        /// 设置玩家碰撞体信息（向后兼容便捷方法）。
+        /// 内部通过 PlayerCollisionTarget 适配器注册到 TargetRegistry。
         /// </summary>
         public void SetPlayer(Transform playerTransform, float radius)
         {
-            _playerTransform = playerTransform;
-            _playerRadius = radius;
+            if (_builtinPlayerTarget != null)
+            {
+                _targetRegistry.Unregister(_builtinPlayerTarget);
+            }
+
+            if (playerTransform != null)
+            {
+                _builtinPlayerTarget = new PlayerCollisionTarget(playerTransform, radius, _onPlayerHit, _onDamageDealt);
+                _targetRegistry.Register(_builtinPlayerTarget);
+            }
+            else
+            {
+                _builtinPlayerTarget = null;
+            }
+        }
+
+        /// <summary>
+        /// 注册一个碰撞目标到弹幕系统。
+        /// </summary>
+        /// <returns>注册是否成功</returns>
+        public bool RegisterTarget(ICollisionTarget target)
+        {
+            return _targetRegistry.Register(target) >= 0;
+        }
+
+        /// <summary>
+        /// 注销一个碰撞目标。
+        /// </summary>
+        public void UnregisterTarget(ICollisionTarget target)
+        {
+            _targetRegistry.Unregister(target);
         }
 
         /// <summary>
@@ -170,8 +212,11 @@ namespace MiniGameTemplate.Danmaku
         /// </summary>
         public void FireGroup(PatternGroupSO group, Vector2 origin, float baseAngle)
         {
-            Vector2 playerPos = _playerTransform != null
-                ? (Vector2)_playerTransform.position
+            // 难度替换查表
+            group = ResolvePatternOverride(group);
+
+            Vector2 playerPos = _builtinPlayerTarget != null
+                ? _builtinPlayerTarget.Hitbox.Center
                 : Vector2.zero;
             _scheduler.Schedule(group, origin, baseAngle, playerPos);
         }
@@ -273,6 +318,7 @@ namespace MiniGameTemplate.Danmaku
             laser.LaserTypeIndex = typeIndex;
             laser.MaxReflections = type.MaxReflections;
             laser.AttachId = attachId;
+            laser.Faction = (byte)type.Faction;
             laser.Elapsed = 0f;
             laser.TickTimer = 0f;
             laser.SegmentCount = 0;
@@ -303,6 +349,7 @@ namespace MiniGameTemplate.Danmaku
             spray.Phase = 1; // Active
             spray.SprayTypeIndex = typeIndex;
             spray.AttachId = attachId;
+            spray.Faction = (byte)type.Faction;
             spray.Elapsed = 0f;
             spray.TickTimer = 0f;
 
@@ -311,6 +358,7 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 清场——回收所有弹丸/激光/喷雾/障碍物/挂载源/调度任务。
+        /// 注意：不清除 TargetRegistry 的注册（目标对象的生命周期由外部管理）。
         /// </summary>
         public void ClearAll()
         {
@@ -320,10 +368,28 @@ namespace MiniGameTemplate.Danmaku
             _obstaclePool.FreeAll();
             _attachRegistry.FreeAll();
             _scheduler.ClearAll();
+            _spawnerDriver.ClearAll();
             _trailPool.FreeAll();
         }
 
         // ──── 内部 ────
+
+        /// <summary>
+        /// 根据当前难度配置查找 PatternOverride 替换。
+        /// 如果有匹配的 Override 则返回替换后的 group，否则返回原 group。
+        /// </summary>
+        private PatternGroupSO ResolvePatternOverride(PatternGroupSO group)
+        {
+            if (_difficulty == null || _difficulty.PatternOverrides == null) return group;
+
+            var overrides = _difficulty.PatternOverrides;
+            for (int i = 0; i < overrides.Length; i++)
+            {
+                if (overrides[i].Original == group && overrides[i].Replacement != null)
+                    return overrides[i].Replacement;
+            }
+            return group;
+        }
 
         private void InitializeSubsystems()
         {
@@ -336,6 +402,7 @@ namespace MiniGameTemplate.Danmaku
             _sprayPool = new SprayPool();
             _obstaclePool = new ObstaclePool();
             _attachRegistry = new AttachSourceRegistry();
+            _targetRegistry = new TargetRegistry();
 
             // 碰撞
             _collisionSolver = new CollisionSolver();
@@ -343,6 +410,9 @@ namespace MiniGameTemplate.Danmaku
 
             // 调度器
             _scheduler = new PatternScheduler();
+
+            // 发射器驱动
+            _spawnerDriver = new SpawnerDriver();
 
             // 渲染
             _bulletRenderer = new BulletRenderer();
@@ -364,6 +434,52 @@ namespace MiniGameTemplate.Danmaku
             _bulletRenderer?.Dispose();
             _damageNumbers?.Dispose();
             _trailPool?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// 内置 Player 碰撞目标适配器——将旧 SetPlayer API 适配到 ICollisionTarget 接口。
+    /// </summary>
+    internal class PlayerCollisionTarget : ICollisionTarget
+    {
+        private readonly Transform _transform;
+        private readonly float _radius;
+        private readonly GameEvent _onPlayerHit;
+        private readonly IntGameEvent _onDamageDealt;
+
+        public PlayerCollisionTarget(Transform transform, float radius,
+            GameEvent onPlayerHit, IntGameEvent onDamageDealt)
+        {
+            _transform = transform;
+            _radius = radius;
+            _onPlayerHit = onPlayerHit;
+            _onDamageDealt = onDamageDealt;
+        }
+
+        public CircleHitbox Hitbox
+        {
+            get
+            {
+                // Transform 被销毁后返回零大小 hitbox（不可被命中）
+                if (_transform == null) return new CircleHitbox(Vector2.zero, 0f);
+                return new CircleHitbox(_transform.position, _radius);
+            }
+        }
+        public BulletFaction Faction => BulletFaction.Player;
+
+        public void OnBulletHit(int damage, int bulletIndex)
+        {
+            // 事件通知由 DanmakuSystem.Update 统一处理
+        }
+
+        public void OnLaserHit(int damage, int laserIndex)
+        {
+            // 事件通知由 DanmakuSystem.Update 统一处理
+        }
+
+        public void OnSprayHit(int damage, int sprayIndex)
+        {
+            // 事件通知由 DanmakuSystem.Update 统一处理
         }
     }
 }

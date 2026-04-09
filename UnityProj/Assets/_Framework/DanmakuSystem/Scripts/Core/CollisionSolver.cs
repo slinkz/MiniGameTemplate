@@ -1,3 +1,5 @@
+using MiniGameTemplate.Audio;
+using MiniGameTemplate.Pool;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
@@ -7,22 +9,37 @@ namespace MiniGameTemplate.Danmaku
     /// </summary>
     public struct CollisionResult
     {
-        /// <summary>本帧是否有伤害源命中玩家</summary>
-        public bool HasPlayerHit;
+        /// <summary>本帧是否有任何目标被命中</summary>
+        public bool HasAnyHit;
 
-        /// <summary>本帧总伤害（用于飘字/事件）</summary>
+        /// <summary>本帧总伤害（所有目标累计）</summary>
         public int TotalDamage;
+
+        /// <summary>本帧被命中的目标数量</summary>
+        public int HitTargetCount;
+
+        /// <summary>本帧 Player 阵营目标是否被命中</summary>
+        public bool PlayerHit;
+
+        /// <summary>本帧 Player 阵营目标累计受到的伤害</summary>
+        public int PlayerDamage;
+
+        /// <summary>最后一个被命中的 Player 目标位置（用于飘字定位）</summary>
+        public Vector2 PlayerHitPosition;
     }
 
     /// <summary>
     /// 统一碰撞调度器。
     /// 7 阶段碰撞：弹丸vs目标 → 弹丸vs障碍物 → 弹丸vs屏幕边缘
-    ///            → 激光vs玩家（多段） → 喷雾vs玩家 → 喷雾vs障碍物 → 喷雾vs屏幕边缘。
+    ///            → 激光vs目标（多段） → 喷雾vs目标 → 喷雾vs障碍物 → 喷雾vs屏幕边缘。
     /// 激光 vs 障碍物/屏幕边缘的碰撞与折射由 LaserSegmentSolver 在 LaserUpdater 中处理。
     /// </summary>
     public class CollisionSolver
     {
         private Rect _worldBounds;
+
+        // Phase 5/6 共享：标记本帧哪些 spray 触发了 tick（避免 Phase 6 重复推进 TickTimer）
+        private static readonly bool[] _sprayTickedThisFrame = new bool[SprayPool.MAX_SPRAYS];
 
         public void Initialize(DanmakuWorldConfig config)
         {
@@ -39,8 +56,7 @@ namespace MiniGameTemplate.Danmaku
             ObstaclePool obstaclePool,
             DanmakuTypeRegistry registry,
             AttachSourceRegistry attachRegistry,
-            in CircleHitbox player,
-            BulletFaction playerFaction,
+            TargetRegistry targetRegistry,
             float dt)
         {
             var result = default(CollisionResult);
@@ -49,19 +65,19 @@ namespace MiniGameTemplate.Danmaku
             int capacity = bulletWorld.Capacity;
 
             // Phase 1: 弹丸 vs 目标对象
-            SolveBulletVsTarget(cores, capacity, registry, in player, playerFaction, ref result);
+            SolveBulletVsTarget(cores, bulletWorld.Trails, capacity, registry, targetRegistry, ref result);
 
             // Phase 2: 弹丸 vs 障碍物（圆 vs AABB）
-            SolveBulletVsObstacle(cores, capacity, obstaclePool, registry, ref result);
+            SolveBulletVsObstacle(cores, bulletWorld.Trails, capacity, obstaclePool, registry, ref result);
 
             // Phase 3: 弹丸 vs 屏幕边缘
-            SolveBulletVsScreenEdge(cores, capacity, registry, ref result);
+            SolveBulletVsScreenEdge(cores, bulletWorld.Trails, capacity, registry, ref result);
 
-            // Phase 4: 激光 vs 玩家（多段折射线段 vs 圆）
-            SolveLasers(laserPool, in player, dt, ref result);
+            // Phase 4: 激光 vs 目标（多段折射线段 vs 圆）
+            SolveLasers(laserPool, targetRegistry, dt, ref result);
 
-            // Phase 5: 喷雾 vs 玩家
-            SolveSprays(sprayPool, in player, dt, ref result);
+            // Phase 5: 喷雾 vs 目标
+            SolveSprays(sprayPool, targetRegistry, dt, ref result);
 
             // Phase 6: 喷雾 vs 障碍物
             SolveSprayVsObstacle(sprayPool, obstaclePool, registry, dt, ref result);
@@ -75,49 +91,117 @@ namespace MiniGameTemplate.Danmaku
         // ──── Phase 1: 弹丸 vs 目标对象（圆 vs 圆） ────
 
         private static void SolveBulletVsTarget(
-            BulletCore[] cores, int capacity,
+            BulletCore[] cores, BulletTrail[] trails, int capacity,
             DanmakuTypeRegistry registry,
-            in CircleHitbox player,
-            BulletFaction playerFaction,
+            TargetRegistry targetRegistry,
             ref CollisionResult result)
         {
+            var targets = targetRegistry.Targets;
+
             for (int i = 0; i < capacity; i++)
             {
                 ref var c = ref cores[i];
                 if ((c.Flags & BulletCore.FLAG_ACTIVE) == 0) continue;
                 if (c.Phase != (byte)BulletPhase.Active) continue;
 
-                // 阵营过滤：Enemy 弹丸 vs Player 目标
                 var bulletFaction = (BulletFaction)c.Faction;
-                if (bulletFaction == BulletFaction.Enemy && playerFaction != BulletFaction.Player) continue;
-                if (bulletFaction == BulletFaction.Player) continue; // 玩家弹丸不打自己
-                // Neutral 与所有碰撞
 
-                // Pierce 冷却检查
-                if ((c.Flags & BulletCore.FLAG_PIERCE_COOLDOWN) != 0 && c.LastHitId == 0)
-                    c.Flags &= unchecked((byte)~BulletCore.FLAG_PIERCE_COOLDOWN);
+                for (int t = 0; t < TargetRegistry.MAX_TARGETS; t++)
+                {
+                    var target = targets[t];
+                    if (target == null) continue;
 
-                // 圆 vs 圆
-                float dx = c.Position.x - player.Center.x;
-                float dy = c.Position.y - player.Center.y;
-                float distSq = dx * dx + dy * dy;
-                float radiusSum = c.Radius + player.Radius;
+                    // 阵营过滤
+                    if (!ShouldCollide(bulletFaction, target.Faction)) continue;
 
-                if (distSq >= radiusSum * radiusSum) continue;
+                    // Pierce 冷却检查（位掩码：每 bit 对应一个 target 槽位）
+                    ushort targetBit = (ushort)(1 << t);
+                    if ((c.Flags & BulletCore.FLAG_PIERCE_COOLDOWN) != 0
+                        && (c.PierceHitMask & targetBit) != 0)
+                        continue;
 
-                // 命中
-                result.HasPlayerHit = true;
-                var bulletType = registry.BulletTypes[c.TypeIndex];
-                result.TotalDamage += bulletType.Damage;
+                    // 圆 vs 圆
+                    var hitbox = target.Hitbox;
+                    float dx = c.Position.x - hitbox.Center.x;
+                    float dy = c.Position.y - hitbox.Center.y;
+                    float distSq = dx * dx + dy * dy;
+                    float radiusSum = c.Radius + hitbox.Radius;
 
-                ApplyCollisionResponse(ref c, bulletType, CollisionTarget.Target, 0, default);
+                    if (distSq >= radiusSum * radiusSum) continue;
+
+                    // 命中
+                    result.HasAnyHit = true;
+                    var bulletType = registry.BulletTypes[c.TypeIndex];
+                    int damage = bulletType.Damage;
+                    result.TotalDamage += damage;
+                    result.HitTargetCount++;
+
+                    // 记录 Player 阵营命中
+                    if (target.Faction == BulletFaction.Player)
+                    {
+                        result.PlayerHit = true;
+                        result.PlayerDamage += damage;
+                        result.PlayerHitPosition = hitbox.Center;
+                    }
+
+                    // 通知目标
+                    target.OnBulletHit(damage, i);
+
+                    ApplyCollisionResponse(ref c, ref trails[i], bulletType, CollisionTarget.Target, targetBit, default);
+
+                    // 如果弹丸已死（Die 响应），不再检测其他目标
+                    if (c.HitPoints == 0) break;
+                }
+
+                // Pierce 冷却清除：逐 bit 检查，如果弹丸不再与该目标重叠则清除对应 bit
+                if ((c.Flags & BulletCore.FLAG_PIERCE_COOLDOWN) != 0 && c.HitPoints > 0)
+                {
+                    ushort mask = c.PierceHitMask;
+                    for (int t = 0; t < TargetRegistry.MAX_TARGETS && mask != 0; t++)
+                    {
+                        ushort bit = (ushort)(1 << t);
+                        if ((mask & bit) == 0) continue;
+
+                        var target = targets[t];
+                        bool stillOverlapping = false;
+                        if (target != null)
+                        {
+                            var hitbox = target.Hitbox;
+                            float dx = c.Position.x - hitbox.Center.x;
+                            float dy = c.Position.y - hitbox.Center.y;
+                            float distSq = dx * dx + dy * dy;
+                            float radiusSum = c.Radius + hitbox.Radius;
+                            stillOverlapping = distSq < radiusSum * radiusSum;
+                        }
+
+                        if (!stillOverlapping)
+                        {
+                            c.PierceHitMask &= (ushort)~bit;
+                        }
+                    }
+
+                    // 如果所有冷却都清除了，移除 FLAG
+                    if (c.PierceHitMask == 0)
+                        c.Flags &= unchecked((byte)~BulletCore.FLAG_PIERCE_COOLDOWN);
+                }
             }
+        }
+
+        /// <summary>阵营碰撞判定</summary>
+        private static bool ShouldCollide(BulletFaction bulletFaction, BulletFaction targetFaction)
+        {
+            // 同阵营不碰撞
+            if (bulletFaction == targetFaction) return false;
+            // Neutral 弹丸 / Neutral 目标 → 与所有碰撞
+            if (bulletFaction == BulletFaction.Neutral || targetFaction == BulletFaction.Neutral) return true;
+            // 不同非 Neutral 阵营 → 碰撞
+            return true;
         }
 
         // ──── Phase 2: 弹丸 vs 障碍物（圆 vs AABB） ────
 
         private static void SolveBulletVsObstacle(
-            BulletCore[] cores, int capacity,
+            BulletCore[] cores, BulletTrail[] trails, int capacity,
             ObstaclePool obstaclePool,
             DanmakuTypeRegistry registry,
             ref CollisionResult result)
@@ -162,7 +246,7 @@ namespace MiniGameTemplate.Danmaku
                     }
 
                     // 碰撞响应
-                    ApplyCollisionResponse(ref c, registry.BulletTypes[c.TypeIndex],
+                    ApplyCollisionResponse(ref c, ref trails[i], registry.BulletTypes[c.TypeIndex],
                         CollisionTarget.Obstacle, (byte)j, normal);
                 }
             }
@@ -171,7 +255,7 @@ namespace MiniGameTemplate.Danmaku
         // ──── Phase 3: 弹丸 vs 屏幕边缘 ────
 
         private void SolveBulletVsScreenEdge(
-            BulletCore[] cores, int capacity,
+            BulletCore[] cores, BulletTrail[] trails, int capacity,
             DanmakuTypeRegistry registry,
             ref CollisionResult result)
         {
@@ -192,78 +276,133 @@ namespace MiniGameTemplate.Danmaku
                 if (!outsideBounds) continue;
 
                 Vector2 normal = GetScreenEdgeNormal(c.Position);
-                ApplyCollisionResponse(ref c, type, CollisionTarget.ScreenEdge, 0, normal);
+                ApplyCollisionResponse(ref c, ref trails[i], type, CollisionTarget.ScreenEdge, 0, normal);
             }
         }
 
-        // ──── Phase 4: 激光 vs 玩家（多段折射线段 vs 圆） ────
+        // ──── Phase 4: 激光 vs 目标（多段折射线段 vs 圆） ────
 
         private static void SolveLasers(
             LaserPool pool,
-            in CircleHitbox player,
+            TargetRegistry targetRegistry,
             float dt,
             ref CollisionResult result)
         {
+            var targets = targetRegistry.Targets;
+
             for (int i = 0; i < LaserPool.MAX_LASERS; i++)
             {
                 ref var laser = ref pool.Data[i];
                 if (laser.Phase != 2) continue;  // 2 = Firing
 
-                // 伤害 tick 检查（先判断，避免遍历线段的开销）
+                // 伤害 tick 推进 + 判断（推进和判断在同一处，避免时序 bug）
+                laser.TickTimer += dt;
                 if (laser.TickTimer < laser.TickInterval) continue;
+                laser.TickTimer -= laser.TickInterval;
 
-                float totalRadius = laser.Width * 0.5f + player.Radius;
-                bool hit = false;
-
-                // 遍历所有折射线段
-                for (int s = 0; s < laser.SegmentCount; s++)
+                for (int t = 0; t < TargetRegistry.MAX_TARGETS; t++)
                 {
-                    ref var seg = ref laser.Segments[s];
-                    float dist = PointToSegmentDistance(player.Center, seg.Start, seg.End);
-                    if (dist < totalRadius)
+                    var target = targets[t];
+                    if (target == null) continue;
+
+                    // 阵营过滤：读取激光实际阵营
+                    if (!ShouldCollide((BulletFaction)laser.Faction, target.Faction)) continue;
+
+                    var hitbox = target.Hitbox;
+                    float totalRadius = laser.Width * 0.5f + hitbox.Radius;
+                    bool hit = false;
+
+                    // 遍历所有折射线段
+                    for (int s = 0; s < laser.SegmentCount; s++)
                     {
-                        hit = true;
-                        break; // 一条激光只命中一次
+                        ref var seg = ref laser.Segments[s];
+                        float dist = PointToSegmentDistance(hitbox.Center, seg.Start, seg.End);
+                        if (dist < totalRadius)
+                        {
+                            hit = true;
+                            break; // 一条激光每个目标只命中一次
+                        }
                     }
+
+                    if (!hit) continue;
+
+                    result.HasAnyHit = true;
+                    int damage = (int)laser.DamagePerTick;
+                    result.TotalDamage += damage;
+                    result.HitTargetCount++;
+
+                    // 记录 Player 阵营命中
+                    if (target.Faction == BulletFaction.Player)
+                    {
+                        result.PlayerHit = true;
+                        result.PlayerDamage += damage;
+                        result.PlayerHitPosition = hitbox.Center;
+                    }
+
+                    target.OnLaserHit(damage, i);
                 }
-
-                if (!hit) continue;
-
-                result.HasPlayerHit = true;
-                result.TotalDamage += (int)laser.DamagePerTick;
             }
         }
 
-        // ──── Phase 5: 喷雾 vs 玩家（扇形 vs 圆） ────
+        // ──── Phase 5: 喷雾 vs 目标（扇形 vs 圆） ────
 
         private static void SolveSprays(
             SprayPool pool,
-            in CircleHitbox player,
+            TargetRegistry targetRegistry,
             float dt,
             ref CollisionResult result)
         {
+            var targets = targetRegistry.Targets;
+
             for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
             {
                 ref var spray = ref pool.Data[i];
+                _sprayTickedThisFrame[i] = false;
                 if (spray.Phase == 0) continue;
 
-                // 距离检查
-                Vector2 diff = player.Center - spray.Origin;
-                float dist = diff.magnitude;
-                if (dist > spray.Range + player.Radius) continue;
-
-                // 扇形角度检查
-                float angle = Mathf.Atan2(diff.y, diff.x);
-                float angleDiff = Mathf.Abs(Mathf.DeltaAngle(
-                    angle * Mathf.Rad2Deg,
-                    spray.Direction * Mathf.Rad2Deg));
-                if (angleDiff > spray.ConeAngle * Mathf.Rad2Deg) continue;
-
-                // 伤害 tick 检查
+                // 伤害 tick 推进 + 判断
+                spray.TickTimer += dt;
                 if (spray.TickTimer < spray.TickInterval) continue;
+                spray.TickTimer -= spray.TickInterval;
+                _sprayTickedThisFrame[i] = true;
 
-                result.HasPlayerHit = true;
-                result.TotalDamage += (int)spray.DamagePerTick;
+                for (int t = 0; t < TargetRegistry.MAX_TARGETS; t++)
+                {
+                    var target = targets[t];
+                    if (target == null) continue;
+
+                    // 阵营过滤：读取喷雾实际阵营
+                    if (!ShouldCollide((BulletFaction)spray.Faction, target.Faction)) continue;
+
+                    var hitbox = target.Hitbox;
+
+                    // 距离检查
+                    Vector2 diff = hitbox.Center - spray.Origin;
+                    float dist = diff.magnitude;
+                    if (dist > spray.Range + hitbox.Radius) continue;
+
+                    // 扇形角度检查
+                    float angle = Mathf.Atan2(diff.y, diff.x);
+                    float angleDiff = Mathf.Abs(Mathf.DeltaAngle(
+                        angle * Mathf.Rad2Deg,
+                        spray.Direction * Mathf.Rad2Deg));
+                    if (angleDiff > spray.ConeAngle * Mathf.Rad2Deg) continue;
+
+                    result.HasAnyHit = true;
+                    int damage = (int)spray.DamagePerTick;
+                    result.TotalDamage += damage;
+                    result.HitTargetCount++;
+
+                    // 记录 Player 阵营命中
+                    if (target.Faction == BulletFaction.Player)
+                    {
+                        result.PlayerHit = true;
+                        result.PlayerDamage += damage;
+                        result.PlayerHitPosition = hitbox.Center;
+                    }
+
+                    target.OnSprayHit(damage, i);
+                }
             }
         }
 
@@ -286,9 +425,9 @@ namespace MiniGameTemplate.Danmaku
                 var type = registry.SprayTypes[spray.SprayTypeIndex];
                 if (type.OnHitObstacle == SprayObstacleResponse.Ignore) continue;
 
-                // 伤害 tick 检查（PierceAndDamage 才需要 tick）
+                // 伤害 tick 检查（tick 推进已在 Phase 5 SolveSprays 完成，此处读取标记）
                 bool canDamage = type.OnHitObstacle == SprayObstacleResponse.PierceAndDamage
-                    && spray.TickTimer < spray.TickInterval;
+                    && _sprayTickedThisFrame[i];
 
                 for (int j = 0; j < ObstaclePool.MAX_OBSTACLES; j++)
                 {
@@ -354,9 +493,10 @@ namespace MiniGameTemplate.Danmaku
 
         private static void ApplyCollisionResponse(
             ref BulletCore core,
+            ref BulletTrail trail,
             BulletTypeSO type,
             CollisionTarget target,
-            byte targetId,
+            ushort targetBit,
             Vector2 normal)
         {
             CollisionResponse response;
@@ -388,18 +528,23 @@ namespace MiniGameTemplate.Danmaku
 
                 case CollisionResponse.ReduceHP:
                     core.HitPoints = (byte)Mathf.Max(0, core.HitPoints - hpCost);
+                    // 受伤闪烁（未死亡时）
+                    if (core.HitPoints > 0 && type.DamageFlashFrames > 0)
+                        trail.FlashTimer = type.DamageFlashFrames;
                     break;
 
                 case CollisionResponse.Pierce:
-                    // Pierce：不消耗 HP，记录 targetId 防多帧重复
-                    if ((core.Flags & BulletCore.FLAG_PIERCE_COOLDOWN) != 0 && core.LastHitId == targetId)
-                        return;  // 冷却中，跳过
+                    // Pierce：不消耗 HP，位掩码记录已命中的目标防多帧重复
                     core.Flags |= BulletCore.FLAG_PIERCE_COOLDOWN;
-                    core.LastHitId = targetId;
+                    core.PierceHitMask |= targetBit;
+                    // 穿透音效
+                    if (type.PierceSFX != null)
+                        AudioManager.Instance?.PlaySFX(type.PierceSFX);
                     break;
 
                 case CollisionResponse.BounceBack:
                     core.Velocity = -core.Velocity;
+                    PlayBounceEffects(type, core.Position);
                     break;
 
                 case CollisionResponse.Reflect:
@@ -413,12 +558,33 @@ namespace MiniGameTemplate.Danmaku
                     {
                         core.Velocity = -core.Velocity;  // fallback to bounce
                     }
+                    PlayBounceEffects(type, core.Position);
                     break;
 
                 case CollisionResponse.RecycleOnDistance:
                     // 超距回收——在屏幕边缘检测中已判断距离
                     core.HitPoints = 0;
                     break;
+            }
+        }
+
+        /// <summary>播放反弹/反射的视觉特效和音效</summary>
+        private static void PlayBounceEffects(BulletTypeSO type, Vector2 position)
+        {
+            // 反弹音效
+            if (type.BounceSFX != null)
+                AudioManager.Instance?.PlaySFX(type.BounceSFX);
+
+            // 反弹特效
+            if (type.BounceEffect != null)
+            {
+                var pool = PoolManager.Instance;
+                if (pool != null)
+                {
+                    var go = pool.Get(type.BounceEffect);
+                    if (go != null)
+                        go.transform.position = new Vector3(position.x, position.y, 0);
+                }
             }
         }
 

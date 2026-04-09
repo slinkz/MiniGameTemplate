@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6058d6d32cc63f24d9977857a92ace5a, type: 3}
+  m_Name: RenderConfig
+  m_EditorClassIdentifier: 
+  BulletMaterial: {fileID: 2100000, guid: 338b04647471acf4798172d25b7e2401, type: 2}
+  BulletAdditiveMaterial: {fileID: 2100000, guid: 34b01d8aceef7434d8264dc7a05a53ec, type: 2}
+  LaserMaterial: {fileID: 2100000, guid: 8c6b40ec91a1f2f4c9b8827ed6d26d78, type: 2}
+  BulletAtlas: {fileID: 2800000, guid: e54eb913c94973e459d58aadf797e5e4, type: 3}
+  NumberAtlas: {fileID: 2800000, guid: 22684307421e5d94780ff12840d3d197, type: 3}

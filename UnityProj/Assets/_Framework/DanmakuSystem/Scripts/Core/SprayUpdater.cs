@@ -29,10 +29,8 @@ namespace MiniGameTemplate.Danmaku
                     continue;
                 }
 
-                // 伤害 tick（碰撞检测在 CollisionSolver 中统一处理）
-                spray.TickTimer += dt;
-                if (spray.TickTimer >= spray.TickInterval)
-                    spray.TickTimer -= spray.TickInterval;
+                // 注意：TickTimer 推进在 CollisionSolver.SolveSprays 中完成，
+                // 避免与 tick 判断分处两地导致时序 bug。
             }
         }
 

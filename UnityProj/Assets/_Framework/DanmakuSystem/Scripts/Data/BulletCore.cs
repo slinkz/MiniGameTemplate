@@ -40,11 +40,8 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>阵营：0=Enemy, 1=Player, 2=Neutral</summary>
         public byte Faction;           // offset 33, size 1
 
-        /// <summary>Pierce 碰撞冷却：上次命中目标 ID</summary>
-        public byte LastHitId;         // offset 34, size 1
-
-        /// <summary>对齐填充</summary>
-        public byte _pad;              // offset 35, size 1
+        /// <summary>Pierce 碰撞冷却：位掩码，每 bit 对应 TargetRegistry 的一个槽位 (0-15)</summary>
+        public ushort PierceHitMask;   // offset 34, size 2
 
         // ──── Flags 位定义（byte，8 bits） ────
 
