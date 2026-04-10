@@ -46,6 +46,11 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
 - 重写 UISystem MODULE_README.md
 
 ### Skill
+- **新增 `task-tracker` Skill**（项目级任务追踪系统）
+  - 通过 `.tasks/` 目录将任务状态、计划文档、决策记录持久化到磁盘，解决 Agent 跨会话记忆丢失问题
+  - 定义完整工作流：新会话启动协议（读看板→汇报→等指令）、多阶段计划暂存、挂起/恢复协议、归档协议
+  - 包含 BOARD.md 格式规范和任务详情模板
+  - `.tasks/` 目录已加入 `.gitignore`（本地协作状态），Skill 定义跟仓库走
 - **`fairygui-tools` Skill 扩展**（流程 D: C# 代码架构规范）
   - 新增完整的 Extension + IUIPanel + Logic.cs 架构规范
   - 包含普通面板和对话框两套 Logic.cs 模板

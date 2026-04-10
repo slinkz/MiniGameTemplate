@@ -11,6 +11,9 @@ UnityProj/[Uu]ser[Ss]ettings/
 # Only ignore machine-specific files inside it
 UnityProj/ProjectSettings/Packages/
 
+# ===== Task Tracking (local agent collaboration state) =====
+.tasks/
+
 # ===== Memory & IDE =====
 .workbuddy/
 .codebuddy/*

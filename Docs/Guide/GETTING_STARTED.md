@@ -235,6 +235,17 @@ bash Tools/gen_config.sh
 |-------|------|------|
 | `luban-config` | `.codebuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
 | `fairygui-tools` | `.codebuddy/skills/fairygui-tools/` | FairyGUI UI 全链路开发：从效果图/自然语言生成白模 XML、解析工程结构、生成 Unity C# 面板代码（Extension + IUIPanel + Logic.cs 架构） |
+| `task-tracker` | `.codebuddy/skills/task-tracker/` | 项目任务追踪：跨会话任务状态持久化、多阶段计划管理、挂起/恢复协议、方案暂存 |
+
+### 为什么需要 task-tracker？
+
+AI Agent 的上下文窗口是有限的。当一个复杂任务（比如"四阶段弹幕系统开发"）跨越多个会话时，之前会话中的计划和进度可能在上下文压缩中丢失。这意味着：
+
+- Agent 记得"做了什么"，但忘了"还要做什么"
+- 中途被其他任务打断后，无法自动恢复到主线
+- Agent 生成的分析方案如果只存在临时上下文中，下一个会话就消失了
+
+`task-tracker` 通过将任务状态、计划文档、决策记录**持久化到磁盘文件**（`.tasks/` 目录）来解决这个问题。任何新会话只需读取 `.tasks/BOARD.md` 就能完整恢复项目进度——不依赖 AI 的记忆机制。
 
 ### 如何使用
 
@@ -250,10 +261,12 @@ bash Tools/gen_config.sh
    - 遵循"组件闭环原则"确保所有子组件引用完整
    - 生成对应的 `XXXPanel.Logic.cs` 业务逻辑代码（Extension + IUIPanel 架构）
    - 在 `GameStartupFlow` 中注册 Binder
-4. Skill 内含踩坑记录和最佳实践，确保 AI 不会犯已知错误
+4. 当 AI 启动新会话时，`task-tracker` Skill 会让它自动读取任务看板，恢复上次的工作进度，而不是从零开始
+5. Skill 内含踩坑记录和最佳实践，确保 AI 不会犯已知错误
 
 ### 想了解更多？
 
 - 查看 `.codebuddy/skills/luban-config/SKILL.md` 了解 Luban 配置表 Skill 的完整 SOP 和技术细节
 - 查看 `.codebuddy/skills/fairygui-tools/SKILL.md` 了解 FairyGUI UI 开发 Skill 的工作流、白模规范和 C# 代码架构规范
+- 查看 `.codebuddy/skills/task-tracker/SKILL.md` 了解任务追踪系统的目录规范和完整工作流
 - Skill 的格式遵循 CodeBuddy Skill 标准，你也可以为项目创建自定义 Skill

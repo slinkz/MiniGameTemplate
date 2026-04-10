@@ -75,7 +75,7 @@ MiniGameTemplate/               ← Git 仓库根
 │       └── Luban/              # Luban 工具说明
 ├── README.md                   ← 本文件
 ├── CHANGELOG.md                ← 版本变更记录
-├── .codebuddy/skills/          ← AI Agent Skills（luban-config, fairygui-tools）
+├── .codebuddy/skills/          ← AI Agent Skills（luban-config, fairygui-tools, task-tracker）
 ├── .gitignore
 ├── .gitattributes
 └── .gitmodules
