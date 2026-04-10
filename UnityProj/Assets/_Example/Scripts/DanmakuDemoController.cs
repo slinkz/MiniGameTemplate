@@ -52,6 +52,14 @@ namespace MiniGameTemplate.Example
         [Tooltip("拖入不同的 DifficultyProfileSO 即时切换难度")]
         [SerializeField] private DifficultyProfileSO _difficulty;
 
+        [Header("难度切换（数字键 1/2/3）")]
+        [Tooltip("简单难度（数字键 1）")]
+        [SerializeField] private DifficultyProfileSO _difficultyEasy;
+        [Tooltip("普通难度（数字键 2）")]
+        [SerializeField] private DifficultyProfileSO _difficultyNormal;
+        [Tooltip("困难难度（数字键 3）")]
+        [SerializeField] private DifficultyProfileSO _difficultyHard;
+
         // ──── 运行时状态 ────
         private DanmakuSystem _system;
         private int _spawnerSlot = -1;
@@ -156,6 +164,14 @@ namespace MiniGameTemplate.Example
                 else
                     _system.SpawnerDriver.Resume(_spawnerSlot);
             }
+
+            // 1/2/3 = 切换难度
+            if (Input.GetKeyDown(KeyCode.Alpha1) && _difficultyEasy != null)
+                _system.Difficulty = _difficultyEasy;
+            if (Input.GetKeyDown(KeyCode.Alpha2) && _difficultyNormal != null)
+                _system.Difficulty = _difficultyNormal;
+            if (Input.GetKeyDown(KeyCode.Alpha3) && _difficultyHard != null)
+                _system.Difficulty = _difficultyHard;
         }
         private bool _paused;
 

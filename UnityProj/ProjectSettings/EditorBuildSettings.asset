@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Game/Scenes/Game.unity
     guid: de25c8dcd4283254fb93c80c39e123c0
+  - enabled: 1
+    path: Assets/_Game/DanmakuDemo/Scenes/DanmakuDemo.unity
+    guid: 01840d2b2472a3c4589e5b50023327d9
   m_configObjects: {}
