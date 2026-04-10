@@ -55,7 +55,6 @@ namespace Game
             // Register all FairyGUI Binders before opening any panels
             UIManager.RegisterBinder("Common", Common.CommonBinder.BindAll);
             UIManager.RegisterBinder("MainMenu", MainMenu.MainMenuBinder.BindAll);
-            UIManager.RegisterBinder("Example", Example.ExampleBinder.BindAll);
 
             WeChatBridgeFactory.SetAdUnitIds(_rewardedAdUnitId, _bannerAdUnitId, _interstitialAdUnitId);
             _weChatBridge = WeChatBridgeFactory.Create();

@@ -144,6 +144,26 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
 - **文档同步**
   - 更新 `_Example/README.md` 与 `Docs/Guide/EXAMPLE_WALKTHROUGH.md` 中的面板路径与发布指引，发布目标由 MainMenu 包改为 Example 包
 
+## [未发布] - 2026-04-10
+
+### 变更
+- **示例工程重组**
+  - `DanmakuDemo` 从 `Assets/_Game/DanmakuDemo/` 迁移到 `Assets/_Example/DanmakuDemo/`
+  - `ClickGame` 相关场景、脚本、UI 代码收拢到 `Assets/_Example/ClickGame/`
+  - 主菜单改为双入口：`ClickGame` / `DanmakuDemo`
+  - 两个示例均支持返回主菜单；当前以 `Esc` 为统一兜底入口，返回时重载 `Boot` 场景
+- **示例命名收口**
+  - 主菜单进入 ClickGame 的场景加载名统一为 `ClickGame`
+  - `EditorBuildSettings.asset` 中 ClickGame 场景路径统一为 `Assets/_Example/ClickGame/Scenes/ClickGame.unity`
+  - ClickGame 面板运行时包名统一为 `ClickGame`
+- **文档同步**
+  - 更新 `Assets/_Example/README.md`
+  - 更新 `Docs/Guide/ARCHITECTURE_OVERVIEW.md`
+  - 更新 `Docs/Guide/EXAMPLE_WALKTHROUGH.md`
+  - 更新 `Docs/Agent/ARCHITECTURE.md`
+
+
+
 ## [0.5.3] - 2026-04-07
 
 

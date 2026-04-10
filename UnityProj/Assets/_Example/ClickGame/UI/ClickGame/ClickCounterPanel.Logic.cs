@@ -4,7 +4,7 @@ using MiniGameTemplate.Platform;
 using MiniGameTemplate.Timing;
 using MiniGameTemplate.UI;
 
-namespace Example
+namespace ClickGame
 {
     /// <summary>
     /// Data passed to ClickCounterPanel when opening.
@@ -17,13 +17,14 @@ namespace Example
 
     /// <summary>
     /// Standalone ClickCounter gameplay panel.
-    /// Requires FairyGUI component Example/ClickCounterPanel to be exported.
+    /// Requires FairyGUI component ClickGame/ClickCounterPanel to be exported.
     /// </summary>
     public partial class ClickCounterPanel : IUIPanel
     {
         public int PanelSortOrder => UIConstants.LAYER_NORMAL + 10;
         public bool IsFullScreen => true;
-        public string PanelPackageName => "Example";
+        public string PanelPackageName => "ClickGame";
+
 
         private const string HighScoreKey = "example_high_score";
         private const float RoundDuration = 10f;

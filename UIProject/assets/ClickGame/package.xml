@@ -4,7 +4,7 @@
     <component id="gen_01" name="ClickCounterPanel.xml" path="/" exported="true"/>
     <component id="gen_02" name="MenuIconButton.xml" path="/components/"/>
   </resources>
-  <publish name="Example" genCode="true">
+  <publish name="ClickGame" genCode="true" codePath="../UnityProj/Assets/_Example/ClickGame/UI">
     <atlas name="Default" index="0"/>
   </publish>
 </packageDescription>

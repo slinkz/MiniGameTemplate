@@ -42,7 +42,9 @@ MiniGameTemplate/               ← Git 仓库根
     ├── Assets/SpineCSharp/     # Optional Junction → ThirdParty/spine-runtimes/spine-csharp/src
     ├── Assets/_Framework/      # 框架代码
     ├── Assets/_Game/           # 游戏业务代码
+    ├── Assets/_Example/        # 示例代码（ClickGame / DanmakuDemo）
     ├── DataTables/             # Luban 配置表
+
     ├── ThirdParty/             # FairyGUI + Spine 子模块，YooAsset 源码
     └── Tools/                  # 构建脚本
 ```
@@ -113,11 +115,29 @@ DataTables/Datas/*.xlsx       ← 源数据（策划用 Excel 编辑）
 > `ConfigManager.IsTableLoaded(fileName)` 可查询某表是否已反序列化。
 
 ### 5. UI 工作流
-```
+```text
 FairyGUI 编辑器（UIProject/）
   └→ 导出到 UnityProj/Assets/_Game/FairyGUI_Export/
       └→ UIPackageLoader 加载 FairyGUI 包
           └→ UIManager 管理面板生命周期
+
+当前示例包：
+  - MainMenu    → 主菜单双入口（ClickGame / DanmakuDemo）
+  - ClickGame   → 点击计数器示例 UI
+
+当前示例场景流转：
+  Boot.unity
+    └→ MainMenuPanel
+         ├→ LoadScene("ClickGame")
+         │    └→ ClickGameSceneEntry 打开 ClickCounterPanel
+         └→ LoadScene("DanmakuDemo")
+              └→ DanmakuDemoController 驱动弹幕示例
+
+示例返回主菜单：
+  ClickGame / DanmakuDemo
+    └→ ExampleSceneNavigator.ReturnToMainMenu()
+         └→ 重载 Boot.unity 并重新打开 MainMenuPanel
+
 
 Spine（可选）接入：
   setup_spine.* 建立源码链接（Assets/Spine + Assets/SpineCSharp）

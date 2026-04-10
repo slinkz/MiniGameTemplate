@@ -9,9 +9,9 @@ EditorBuildSettings:
     path: Assets/_Framework/GameLifecycle/Boot.unity
     guid: 2c3f24e743b17224eaedf02cdd93b3d1
   - enabled: 1
-    path: Assets/_Game/Scenes/Game.unity
+    path: Assets/_Example/ClickGame/Scenes/ClickGame.unity
     guid: de25c8dcd4283254fb93c80c39e123c0
   - enabled: 1
-    path: Assets/_Game/DanmakuDemo/Scenes/DanmakuDemo.unity
+    path: Assets/_Example/DanmakuDemo/Scenes/DanmakuDemo.unity
     guid: 01840d2b2472a3c4589e5b50023327d9
   m_configObjects: {}

@@ -2,9 +2,9 @@
 
 using FairyGUI;
 
-namespace Example
+namespace ClickGame
 {
-    public class ExampleBinder
+    public class ClickGameBinder
     {
         public static void BindAll()
         {

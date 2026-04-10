@@ -172,6 +172,10 @@ namespace MiniGameTemplate.Example
                 _system.Difficulty = _difficultyNormal;
             if (Input.GetKeyDown(KeyCode.Alpha3) && _difficultyHard != null)
                 _system.Difficulty = _difficultyHard;
+
+            // Esc = 返回主菜单
+            if (Input.GetKeyDown(KeyCode.Escape))
+                ExampleSceneNavigator.ReturnToMainMenu();
         }
         private bool _paused;
 

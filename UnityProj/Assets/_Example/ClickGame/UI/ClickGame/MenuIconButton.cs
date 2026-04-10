@@ -3,7 +3,7 @@
 using FairyGUI;
 using FairyGUI.Utils;
 
-namespace Example
+namespace ClickGame
 {
     public partial class MenuIconButton : GButton
     {
@@ -14,7 +14,7 @@ namespace Example
 
         public static MenuIconButton CreateInstance()
         {
-            return (MenuIconButton)UIPackage.CreateObject("Example", "MenuIconButton");
+            return (MenuIconButton)UIPackage.CreateObject("ClickGame", "MenuIconButton");
         }
 
         public override void ConstructFromXML(XML xml)

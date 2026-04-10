@@ -8,10 +8,11 @@
 
 虽然简单，但它用到了模板的几乎所有核心模块：
 
-> **当前版本说明（2026-04-07）**
-> - 主菜单已内置 ClickCounter 回退玩法：即使 Boot 场景未配置 `StartGameEvent`，也可以直接开玩。
-> - 新增了独立 FairyGUI 组件源文件 `UIProject/assets/Example/ClickCounterPanel.xml` 与对应运行时代码 `ClickCounterPanel.cs`。
-> - 若要启用独立面板模式，请在 FairyGUI 编辑器重新发布 Example 包到 `Assets/_Game/FairyGUI_Export/`。
+> **当前版本说明（2026-04-10）**
+> - 示例入口已调整为主菜单双按钮：`ClickGame` 与 `DanmakuDemo`。
+> - ClickGame 的 FairyGUI 源文件位于 `UIProject/assets/ClickGame/`，运行时代码位于 `Assets/_Example/ClickGame/`。
+> - 若修改 ClickGame UI，请在 FairyGUI 编辑器重新发布 `ClickGame` 包到 `Assets/_Game/FairyGUI_Export/`。
+
 
 
 
@@ -26,19 +27,35 @@
 
 ## 目录结构
 
-```
+```text
 Assets/_Example/
-├── Example.asmdef          ← 独立程序集，引用 MiniGameFramework.Runtime
-├── README.md               ← 示例说明
-└── Scripts/
-    ├── ClickButton.cs       ← 按钮点击（纯输入处理）
-    ├── ClickGameManager.cs  ← 游戏主控制器
-    ├── CountdownDisplay.cs  ← 倒计时 UI 显示
-    ├── HighScoreSaver.cs    ← 最高分自动保存
-    └── ScoreDisplay.cs      ← 分数 UI 显示
+├── Example.asmdef
+├── README.md
+├── ClickGame/
+│   ├── Scenes/ClickGame.unity
+│   ├── Scripts/
+│   │   ├── ClickGameSceneEntry.cs
+│   │   ├── ExampleSceneNavigator.cs
+│   │   ├── ClickButton.cs
+│   │   ├── ClickGameManager.cs
+│   │   ├── CountdownDisplay.cs
+│   │   ├── HighScoreSaver.cs
+│   │   └── ScoreDisplay.cs
+│   └── UI/ClickGame/
+│       ├── ClickCounterPanel.cs
+│       ├── ClickCounterPanel.Logic.cs
+│       ├── ClickGameBinder.cs
+│       └── MenuIconButton.cs
+└── DanmakuDemo/
+    ├── Scenes/DanmakuDemo.unity
+    └── Scripts/
+        ├── DanmakuDemoController.cs
+        ├── DanmakuDebugHUD.cs
+        └── SimplePlayerMover.cs
 ```
 
-5 个脚本，每个职责单一，全部不到 50 行。下面逐个解读。
+本篇重点解读 ClickGame；DanmakuDemo 作为第二个示例，主要用于展示 DanmakuSystem 的集成方式与场景切换流程。
+
 
 ---
 
@@ -326,10 +343,23 @@ ClickButton ──→ ClickGameManager ──写→ PlayerScore.asset ──→ 
 | **WeChatBridgeFactory** | 平台无关的微信 SDK 调用 |
 | **单一职责组件** | 每个脚本只做一件事，都不超过 50 行 |
 
+## 入口与返回流程
+
+当前模板的示例流转如下：
+
+1. 从 `Boot.unity` 启动，进入主菜单
+2. 点击“进入 ClickGame”加载 `ClickGame.unity`
+3. `ClickGameSceneEntry` 注册 `ClickGameBinder` 并打开 `ClickCounterPanel`
+4. 在 ClickGame 内点击返回按钮，或按 `Esc`
+5. `ExampleSceneNavigator` 重载 `Boot` 场景并重新打开主菜单
+
+DanmakuDemo 复用相同的返回策略：在 `DanmakuDemo.unity` 中按 `Esc` 返回主菜单。
+
 ## 下一步
 
 现在你已经理解了框架的工作方式，可以：
 
-- 📚 查阅 [框架模块使用手册](FRAMEWORK_MODULES.md) 了解更多模块的详细 API
-- 🎯 在 `Assets/_Game/` 中开始开发你自己的游戏
-- 🔍 遇到问题看 [常见问题与排错](FAQ.md)
+- 查阅 [框架模块使用手册](FRAMEWORK_MODULES.md) 了解更多模块的详细 API
+- 在 `Assets/_Game/` 中开始开发你自己的游戏
+- 遇到问题看 [常见问题与排错](FAQ.md)
+

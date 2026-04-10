@@ -3,7 +3,7 @@
 using FairyGUI;
 using FairyGUI.Utils;
 
-namespace Example
+namespace ClickGame
 {
     public partial class ClickCounterPanel : GComponent
     {
@@ -25,7 +25,7 @@ namespace Example
 
         public static ClickCounterPanel CreateInstance()
         {
-            return (ClickCounterPanel)UIPackage.CreateObject("Example", "ClickCounterPanel");
+            return (ClickCounterPanel)UIPackage.CreateObject("ClickGame", "ClickCounterPanel");
         }
 
         public override void ConstructFromXML(XML xml)

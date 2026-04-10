@@ -1,42 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="720,1280">
   <displayList>
-    <graph id="gen_50" name="bg" xy="0,0" size="720,1280"
-           type="rect" fillColor="#ff16213e">
+    <graph id="gen_50" name="bg" xy="0,0" size="720,1280" type="rect" fillColor="#ff16213e">
       <relation target="" sidePair="width-width,height-height"/>
     </graph>
-    <graph id="gen_51" name="avatar" xy="30,60" size="64,64"
-           type="eclipse" fillColor="#ff666666"/>
-    <text id="gen_52" name="txtNickname" xy="110,70" size="200,40"
-          fontSize="18" color="#ffffffff"
-          align="left" vAlign="middle" autoSize="none" singleLine="true"
-          text="玩家昵称"/>
-    <text id="gen_53" name="txtGameTitle" xy="110,480" size="500,80"
-          fontSize="52" color="#ffffffff" bold="true"
-          align="center" vAlign="middle" autoSize="none" singleLine="true"
-          text="Mini Game"/>
-    <text id="gen_54" name="txtVersion" xy="210,565" size="300,30"
-          fontSize="14" color="#66ffffff"
-          align="center" vAlign="middle" autoSize="none" singleLine="true"
-          text="v0.1.0"/>
-    <component id="gen_55" name="btnStart" src="gen_02"
-               fileName="components/MenuIconButton.xml"
-               xy="210,900" size="300,70">
-      <Button title="开始游戏"/>
+    <graph id="gen_51" name="avatar" xy="30,60" size="64,64" type="eclipse" fillColor="#ff666666"/>
+    <text id="gen_52" name="txtNickname" xy="110,70" size="200,40" fontSize="18" color="#ffffff" vAlign="middle" autoSize="none" singleLine="true" text="玩家昵称"/>
+    <text id="gen_53" name="txtGameTitle" xy="110,480" size="500,80" fontSize="52" color="#ffffff" align="center" vAlign="middle" autoSize="none" bold="true" singleLine="true" text="Mini Game"/>
+    <text id="gen_54" name="txtVersion" xy="210,565" size="300,30" fontSize="14" color="#ffffff" align="center" vAlign="middle" autoSize="none" singleLine="true" text="v0.1.0"/>
+    <component id="n0_i69i" name="btnClickGame" src="gen_02" fileName="components/MenuIconButton.xml" xy="216,811" size="300,70">
+      <Button title="点击游戏"/>
     </component>
-    <component id="gen_56" name="btnSettings" src="gen_02"
-               fileName="components/MenuIconButton.xml"
-               xy="140,1050" size="80,80">
+    <component id="gen_55" name="btnDanmakuDemo" src="gen_02" fileName="components/MenuIconButton.xml" xy="210,900" size="300,70">
+      <Button title="弹幕Demo"/>
+    </component>
+    <component id="gen_56" name="btnSettings" src="gen_02" fileName="components/MenuIconButton.xml" xy="140,1050" size="80,80">
       <Button title="设置"/>
     </component>
-    <component id="gen_57" name="btnRanking" src="gen_02"
-               fileName="components/MenuIconButton.xml"
-               xy="320,1050" size="80,80">
+    <component id="gen_57" name="btnRanking" src="gen_02" fileName="components/MenuIconButton.xml" xy="320,1050" size="80,80">
       <Button title="排行"/>
     </component>
-    <component id="gen_58" name="btnShare" src="gen_02"
-               fileName="components/MenuIconButton.xml"
-               xy="500,1050" size="80,80">
+    <component id="gen_58" name="btnShare" src="gen_02" fileName="components/MenuIconButton.xml" xy="500,1050" size="80,80">
       <Button title="分享"/>
     </component>
   </displayList>
