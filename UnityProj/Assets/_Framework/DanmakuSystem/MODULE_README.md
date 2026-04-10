@@ -47,7 +47,8 @@ DanmakuSystem/
 │       ├── BulletMover.cs     # 弹丸运动
 │       ├── BulletSpawner.cs   # 弹丸发射
 │       ├── CollisionSolver.cs # 7 阶段碰撞检测（多目标）
-│       ├── BulletRenderer.cs  # Mesh 渲染
+│       ├── BulletRenderer.cs  # 弹丸 Mesh 渲染
+│       ├── LaserRenderer.cs  # 激光 Mesh 渲染（Quad 条带 + WidthProfile 驱动）
 │       ├── PatternScheduler.cs # 弹幕调度（含调试统计）
 │       ├── SpawnerDriver.cs   # 发射器驱动（驱动 SpawnerProfileSO 自动发射）
 │       ├── LaserUpdater.cs    # 激光更新（含 FreeLaser 统一回收）
@@ -66,6 +67,7 @@ DanmakuSystem/
 - **SoA 布局**: BulletCore(热) + BulletTrail(冷) + BulletModifier(修饰) 三层分离
 - **预分配池**: 所有容器启动时预分配，运行时零 new
 - **双 Mesh 渲染**: Normal + Additive 各一个 Mesh，每帧单次 SetVertexBufferData
+- **激光渲染**: LaserRenderer 独立 Mesh（144 Quad），WidthProfile 曲线驱动宽度，Phase alpha 闪烁/渐隐
 - **多目标碰撞**: 通过 ICollisionTarget + TargetRegistry（16 槽）支持任意数量碰撞目标，自动阵营过滤
 - **7 阶段碰撞**: 弹丸→目标 / 弹丸→障碍物 / 弹丸→屏幕边缘 / 激光→目标 / 喷雾→目标 / 喷雾→障碍物 / 喷雾→屏幕边缘
 - **碰撞响应**: Die / ReduceHP / Pierce / BounceBack / Reflect / RecycleOnDistance

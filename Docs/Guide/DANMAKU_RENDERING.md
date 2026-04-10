@@ -17,8 +17,8 @@
 struct DanmakuVertex
 {
     public Vector3 Position;   // 12 bytes
-    public Vector2 UV;         // 8 bytes
     public Color32 Color;      // 4 bytes
+    public Vector2 UV;         // 8 bytes
 }
 // sizeof = 24 bytes
 ```
@@ -36,8 +36,8 @@ public class BulletRenderer
     private VertexAttributeDescriptor[] _layout = new[]
     {
         new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
-        new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
         new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
+        new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
     };
 
     public void Initialize(int maxQuads, DanmakuRenderConfig renderConfig) { /* ... */ }
@@ -69,8 +69,55 @@ public class BulletRenderer
 │  Mesh Layer 0: 弹丸主体 + 残影     ── 1 DC      │  ← Alpha Blend
 │  Mesh Layer 1: 发光弹丸 + 残影     ── 1 DC      │  ← Additive
 │  Mesh Layer 2: 伤害飘字（数字精灵）── 1 DC       │  ← Number Atlas
-│  LaserPool:    激光                ── 1-2 DC     │
+│  LaserPool:    激光（LaserRenderer）── 1 DC   │
 │  TrailPool:    重量级拖尾          ── 1-3 DC     │
+
+...省略后续行...
+
+---
+
+## 激光渲染
+
+激光由独立的 `LaserRenderer` 负责渲染，与弹丸渲染完全解耦。
+
+### 渲染管线
+
+```
+LaserPool.Data[]
+  │  遍历活跃激光（Phase > 0 且 SegmentCount > 0）
+  │
+  ├→ GetPhaseAlpha() 计算阶段透明度
+  │    Charging(1): 正弦闪烁 0.3~0.8
+  │    Firing(2):   1.0 全亮
+  │    Fading(3):   线性衰减 → 0
+  │
+  └→ 每段 LaserSegment → WriteSegmentQuad()
+       ├→ 沿线段方向展开 Quad（4 顶点）
+       ├→ 宽度垂直于线段方向，由 WidthProfile 沿总长度归一化采样
+       ├→ UV.x: 0→1 横跨宽度（中心=0.5，Shader 用于 Core/Glow 渐变）
+       ├→ UV.y: 沿长度方向连续映射（多段折射时 UV 首尾衔接）
+       └→ Color32: CoreColor × Phase alpha
+```
+
+### Mesh 策略
+
+- **单 Mesh**：激光始终使用 Additive 混合（`DanmakuLaser.shader`），只需一个 Mesh
+- **容量**：16 条激光 × 9 段/条 = 144 Quad = 576 顶点（远小于 65535，使用 UInt16 索引）
+- **更新策略**：与弹丸一致——索引预填充一次，每帧只更新顶点数据
+
+### Shader（DanmakuLaser）
+
+```
+Blend: SrcAlpha One（叠加发光）
+ZTest: Always（不深度遮挡）
+UV.x → 横向渐变：中心白芯（CoreWidth）+ 外围辉光（GlowColor）
+UV.y → 纵向纹理滚动（可选 _MainTex 流动效果）
+顶点 Color → 整体 alpha 调制
+```
+
+### Draw Call 开销
+
+激光渲染固定 **1 Draw Call**（即使有 16 条激光 × 9 段折射也是单次 DrawMesh）。
 │  EffectPool:   中/重特效           ── 3-5 DC     │
 │  SprayVFX:     喷雾 ParticleSystem ── 1-3 DC     │
 │  FairyGUI:     低频文本/UI         ── 已合批      │

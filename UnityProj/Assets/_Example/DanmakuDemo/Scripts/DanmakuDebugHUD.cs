@@ -60,10 +60,10 @@ namespace MiniGameTemplate.Example
 
             InitStyles();
 
-            float w = 260f;
+            float w = 280f;
             float lineH = _fontSize + 4f;
             float padding = 6f;
-            int lineCount = 7;
+            int lineCount = 8;
             float h = lineH * lineCount + padding * 2;
 
             Rect boxRect = new Rect(8, 8, w, h);
@@ -83,6 +83,11 @@ namespace MiniGameTemplate.Example
             int activeBullets = CountActiveBullets();
             int maxBullets = _system.BulletWorld?.Capacity ?? 0;
             DrawLabel(x, y, $"Bullets: {activeBullets} / {maxBullets}");
+            y += lineH;
+
+            // 激光
+            var laserPool = _system.LaserPool;
+            DrawLabel(x, y, $"Lasers: {laserPool?.ActiveCount ?? 0} / {LaserPool.MAX_LASERS}");
             y += lineH;
 
             // 调度器
@@ -107,7 +112,7 @@ namespace MiniGameTemplate.Example
             y += lineH;
 
             // 快捷键提示
-            DrawLabel(x, y, "<color=#888888>F1=Toggle R=Clear P=Pause 1/2/3=Diff</color>");
+            DrawLabel(x, y, "<color=#888888>F1=Toggle R=Clear P=Pause L=Laser 1/2/3=Diff</color>");
         }
 
         private int CountActiveBullets()

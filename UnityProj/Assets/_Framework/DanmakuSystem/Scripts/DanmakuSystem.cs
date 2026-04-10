@@ -35,6 +35,7 @@ namespace MiniGameTemplate.Danmaku
         private PatternScheduler _scheduler;
         private SpawnerDriver _spawnerDriver;
         private BulletRenderer _bulletRenderer;
+        private LaserRenderer _laserRenderer;
         private DamageNumberSystem _damageNumbers;
         private TrailPool _trailPool;
 
@@ -162,6 +163,7 @@ namespace MiniGameTemplate.Danmaku
 
             // 渲染
             _bulletRenderer.Rebuild(_bulletWorld, _bulletWorld.Trails, _typeRegistry);
+            _laserRenderer.Rebuild(_laserPool, _typeRegistry);
             _damageNumbers.UpdateAndRender(dt);
             _trailPool.Render();
         }
@@ -418,6 +420,9 @@ namespace MiniGameTemplate.Danmaku
             _bulletRenderer = new BulletRenderer();
             _bulletRenderer.Initialize(_renderConfig, _worldConfig.MaxBullets);
 
+            _laserRenderer = new LaserRenderer();
+            _laserRenderer.Initialize(_renderConfig);
+
             // 伤害飘字
             _damageNumbers = new DamageNumberSystem();
             _damageNumbers.Initialize(_renderConfig);
@@ -432,6 +437,7 @@ namespace MiniGameTemplate.Danmaku
         private void DisposeSubsystems()
         {
             _bulletRenderer?.Dispose();
+            _laserRenderer?.Dispose();
             _damageNumbers?.Dispose();
             _trailPool?.Dispose();
         }

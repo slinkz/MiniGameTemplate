@@ -218,7 +218,7 @@ DanmakuSystem (MonoBehaviour, DontDestroyOnLoad)
 │   ├── LaserSegmentSolver (折射段解算)
 │   └── CollisionSolver (7 阶段碰撞)
 ├── 调度：PatternScheduler (64 槽)
-├── 渲染：BulletRenderer / DamageNumberSystem / TrailPool
+├── 渲染：BulletRenderer / LaserRenderer / DamageNumberSystem / TrailPool
 └── 配置：12 种 SO
 ```
 

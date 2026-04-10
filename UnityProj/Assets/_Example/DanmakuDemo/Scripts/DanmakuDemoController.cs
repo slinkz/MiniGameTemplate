@@ -60,10 +60,19 @@ namespace MiniGameTemplate.Example
         [Tooltip("困难难度（数字键 3）")]
         [SerializeField] private DifficultyProfileSO _difficultyHard;
 
+        [Header("激光测试（L 键）")]
+        [Tooltip("激光类型在 TypeRegistry 中的索引（通常为 0）")]
+        [SerializeField] private byte _laserTypeIndex = 0;
+        [Tooltip("激光长度（世界单位）")]
+        [SerializeField] private float _laserLength = 12f;
+        [Tooltip("激光发射冷却（秒）")]
+        [SerializeField] private float _laserCooldown = 3f;
+
         // ──── 运行时状态 ────
         private DanmakuSystem _system;
         private int _spawnerSlot = -1;
         private float _manualCooldownTimer;
+        private float _laserCooldownTimer;
         private bool _initialized;
 
         public enum DemoMode
@@ -140,6 +149,28 @@ namespace MiniGameTemplate.Example
             }
 
             // ── 快捷键 ──
+
+            // L = 发射激光
+            _laserCooldownTimer -= Time.deltaTime;
+            if (Input.GetKeyDown(KeyCode.L) && _laserCooldownTimer <= 0f)
+            {
+                if (_system.TypeRegistry.LaserTypes != null &&
+                    _laserTypeIndex < _system.TypeRegistry.LaserTypes.Length)
+                {
+                    Vector2 origin = GetBossOrigin();
+                    // 朝下发射（270° = -π/2）
+                    float angle = -Mathf.PI * 0.5f;
+                    int slot = _system.FireLaser(_laserTypeIndex, origin, angle, _laserLength);
+                    if (slot >= 0)
+                        _laserCooldownTimer = _laserCooldown;
+                    else
+                        Debug.LogWarning("[DanmakuDemo] 激光池已满，无法发射。");
+                }
+                else
+                {
+                    Debug.LogWarning("[DanmakuDemo] TypeRegistry 中没有激光类型，请先注册 LaserTypeSO。");
+                }
+            }
 
             // R = 清场
             if (Input.GetKeyDown(KeyCode.R))

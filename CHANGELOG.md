@@ -2,101 +2,47 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
-## [0.7.1] - 2026-04-09
-
-### 文档
-- **弹幕系统文档拆分**：`DANMAKU_SYSTEM.md`（2550行）拆分为 5 个聚焦文件
-  - `DANMAKU_SYSTEM.md` — 概览 + 入口（~200行）
-  - `DANMAKU_DATA.md` — 数据结构（~435行）
-  - `DANMAKU_CONFIG.md` — SO 配置体系（~310行）
-  - `DANMAKU_RENDERING.md` — 渲染管线（~170行）
-  - `DANMAKU_COLLISION.md` — 碰撞 + 障碍物 + 运行时入口（~310行）
-- **Agent/Guide 文档去重**：消除两套文档间的内容重叠
-  - 架构图、模块依赖表、UI 层级表、项目结构树等精确数据建立单一信息源
-  - Guide 文档保留解释性叙事，通过交叉引用指向 Agent 文档中的权威数据
-  - 涉及文件：`ARCHITECTURE_OVERVIEW.md`、`FRAMEWORK_MODULES.md`、`Guide/README.md`
-- `Guide/README.md` 文档导航新增弹幕系统文档入口
-- `FRAMEWORK_MODULES.md` §14 新增弹幕子文档导航表
-
-## [0.7.0] - 2026-04-08
+## [未发布] - 2026-04-10
 
 ### 新增
-- **弹幕系统（DanmakuSystem）**
-  - 纯数据驱动弹幕系统，专为微信小游戏 WebGL 优化
-  - 三种武器类型：弹丸（2048）、激光（16）、喷雾（8）+ 障碍物（64）
-  - SoA 三层分离：BulletCore(36B) + BulletTrail(28B) + BulletModifier(16B)
-  - 双 Mesh 渲染（Normal + Additive），交错顶点格式，每帧单次上传
-  - 7 阶段碰撞系统：弹丸vs目标/障碍物/屏幕边缘 + 激光vs玩家/障碍物 + 喷雾vs玩家/屏幕边缘
-  - 碰撞响应系统：Die/ReduceHP/Pierce/BounceBack/Reflect/RecycleOnDistance
-  - PatternScheduler 64 槽调度器（Burst 连射 + PatternGroup 组合编排）
-  - DamageNumberSystem 伤害飘字（128 环形缓冲区 + 数字精灵 Mesh 合批）
-  - TrailPool 重量拖尾曲线池（64 条 × 20 点/条）
-  - 12 种 ScriptableObject 配置类型
-  - 3 个自定义 Shader（Bullet/BulletAdditive/Laser）
-  - DontDestroyOnLoad + ClearAll() 清场策略
-  - 零 GC 分配，2048 弹丸 ≤ 5.7ms/帧
-- **激光折射系统**
-  - `LaserSegmentSolver`：激光折射段解算器（直线/反射路径，射线 vs AABB + 屏幕边缘碰撞）
-  - `LaserSegment`：折射线段数据结构（Start/End/Normal，最多 `MaxReflections + 1` 段）
-  - `LaserTypeSO` 新增碰撞响应配置：`OnHitObstacle`（Block/Pierce/BlockAndDamage/PierceAndDamage）、`OnScreenEdge`（Clip/Reflect）
-  - `LaserData` 新增折射字段：`MaxReflections`、`SegmentCount`、`Segments[]`、`VisualLength`
-  - `LaserPool.Free()` 保留 `Segments` 数组引用避免回收时重分配
-  - `DanmakuEnums` 新增 `LaserObstacleResponse`、`LaserScreenEdgeResponse`、`SprayObstacleResponse`
-- **激光/喷雾挂载跟踪（Attached 模式）**
-  - `AttachSourceRegistry`：Transform 挂载源注册表（容量 24，固定数组 + 空闲栈 + 引用计数，零 GC）
-  - `FireLaser` / `FireSpray` 新增 Attached 模式重载，每帧自动同步挂载 Transform 的位置和朝向
-  - `LaserData` / `SprayData` 新增 `byte AttachId`（0 = Detached，>0 = Attached）
-  - `FreeLaser()` / `FreeSpray()` 统一回收（自动释放 AttachId 引用）
-- **激光/喷雾 API 签名改进**
-  - `FireLaser()` 新增 `float length`（激光长度）和 `float lifetime`（持续时间，0 = 使用 SO 默认值）参数
-  - `FireSpray()` 新增 `float lifetime`（持续时间）参数
-  - 碰撞系统升级为 7 阶段（新增 Phase 6 激光vs障碍物反射/穿透、Phase 7 喷雾vs屏幕边缘回收）
+- **激光渲染器（LaserRenderer）**
+  - 独立 Mesh 渲染所有活跃激光，每条激光的每段折射 → 1 Quad（4 顶点），固定 1 Draw Call
+  - WidthProfile 曲线驱动宽度：基于段端点在总 VisualLength 中的归一化位置采样，多段折射时宽度连续
+  - Phase alpha：Charging 正弦闪烁（0.3~0.8）、Firing 全亮（1.0）、Fading 线性衰减到 0
+  - UV.x 横跨宽度（中心=0.5，Shader 做 Core/Glow 渐变）；UV.y 沿长度方向连续映射
+  - 材质实例化 + Dispose 时销毁，无泄漏
+  - 集成到 `DanmakuSystem.LateUpdate` 渲染管线（Init/Rebuild/Dispose 三处覆盖）
+- **DanmakuDemoController 激光触发入口**
+  - 新增 `L` 键发射激光（朝下 270°），可配置 TypeIndex / Length / Cooldown
+  - 包含 TypeRegistry 空检查、池满提示、冷却机制
+- **DanmakuDebugHUD 激光信息**
+  - 新增 `Lasers: N / 16` 活跃激光计数行
+  - 快捷键提示追加 `L=Laser`
 
 ### 修复
-- **AssetImportEnforcer（P4-1）**：`OnPostprocessAudio` 中的 `ImportAsset` 调用改为 `EditorApplication.delayCall`，避免 AssetPostprocessor 回调内重入
-- **SORuntimeViewer（P8-1）**：移除反射硬编码 `_listeners` 字段名，改用 `GameEvent.ListenerCount` 公开属性
-- **LaserSegmentSolver 死代码**：折射模式中 `pos += dir * 0.01f + dir * hitDist` 被下一行赋值覆盖，已删除
-- **AttachSourceRegistry.Register 引用计数**：初始 `_refCounts = 0` 需外部 AddRef 的不安全语义，改为 `_refCounts = 1`（注册即持有），删除外部 AddRef 调用
-- **LaserSegmentSolver 折射无限循环风险**：穿透障碍物时 `bounce--` 可能导致无限循环，添加 `MAX_ITERATIONS = 32` 安全网
-- **激光生命周期判断不一致**：Fading/回收阶段及 Firing 阶段 normalizedTime 原使用 `type.TotalDuration`，但 `laser.Lifetime` 可自定义，统一改为 `laser.Lifetime`
-
-### 改进
-- **SOCreationWizard**：新增 12 种弹幕系统 SO 类型快捷创建
+- **WidthProfile 多段折射采样精度**：修复固定 0.1/0.9 采样为基于段在总长度中的归一化位置，多段折射时宽度变化连续
 
 ### 文档
-- FRAMEWORK_MODULES.md：新增 DanmakuSystem 章节（含激光折射 + 挂载跟踪 + 新 API）
-- DanmakuSystem/MODULE_README.md：完整模块文档（含新文件清单）
-- ARCHITECTURE.md：补充 DanmakuSystem 子系统架构
-- SO_CATALOG.md：新增 DanmakuSystem SO 配置体系
+- `DANMAKU_RENDERING.md`：新增"激光渲染"独立章节（渲染管线、Mesh 策略、Shader 说明、Draw Call 开销）
+- `DANMAKU_RENDERING.md`：修正顶点格式字段顺序（Position→Color→UV）和 VertexLayout 描述符
+- `ARCHITECTURE.md`：DanmakuSystem 渲染子系统列表新增 LaserRenderer
+- `MODULE_README.md`：目录结构新增 `LaserRenderer.cs`，架构要点补充激光渲染器说明
 
-## [0.6.0] - 2026-04-08
-
-### 重大变更（Breaking）
-- **UI 框架重构为 FairyGUI Extension 机制**
-  - 删除 `UIBase`、`UIDialogBase` 基类
-  - 新增 `IUIPanel` 接口（`OnOpen`/`OnClose`/`OnRefresh`/`PanelSortOrder`/`IsFullScreen`/`PanelPackageName`）
-  - 新增 `IModalDialog` 接口（`CloseOnClickOutside`），UIManager 自动管理遮罩
-  - `UIManager.OpenPanelAsync<T>()` 泛型约束从 `where T : UIBase` 改为 `where T : GComponent, IUIPanel`
-  - `UIConstants` 移除所有包名/组件名常量，仅保留层级常量
-- **面板代码结构变更**
-  - 启用 FairyGUI 编辑器 `genCode="true"` 导出 C# 代码（`XXXPanel.cs` + `XXXBinder.cs`）
-  - 手写业务逻辑统一使用 `XXXPanel.Logic.cs`（`partial class` + `IUIPanel`）
-  - 删除所有 `*.FUI.cs` 文件
-  - 面板按 FairyGUI 包名分目录（`UI/Common/`、`UI/MainMenu/`、`UI/Example/`）
-  - 命名空间 = FairyGUI 包名（`Common`、`MainMenu`、`Example`）
-- **Binder 注册机制**
-  - `UIManager.RegisterBinder()` + 懒激活模式（首次使用包时调用 `BindAll`）
-  - `GameStartupFlow` 启动时注册所有包 Binder
-
-### 修复
-- **事件双绑定 Bug（P0）**：所有面板 `OnRefresh` 不再调用 `OnOpen`，改为独立 `ApplyData` 方法，避免按钮事件重复绑定
-- **`CloseAllPanels` 迭代安全（P1）**：使用 `KeyValuePair<Type, GComponent>` 快照替代分离的 `types`/`panels` 列表，消除 Dictionary 枚举顺序不一致隐患
-- **`OpenPanelAsync` 并发安全（P1）**：新增 `_pendingOpens` HashSet 防止同一面板类型并发创建
-
-### 文档
-- 更新 CONVENTIONS.md：FairyGUI 面板规范改为 Extension + IUIPanel 模式
-- 更新 NEWGAME_GUIDE.md Step 5：新建面板流程对齐新架构
-- 更新 ARCHITECTURE.md：UI 层级系统说明对齐新接口
+### 变更
+- **示例工程重组**
+  - `DanmakuDemo` 从 `Assets/_Game/DanmakuDemo/` 迁移到 `Assets/_Example/DanmakuDemo/`
+  - `ClickGame` 相关场景、脚本、UI 代码收拢到 `Assets/_Example/ClickGame/`
+  - 主菜单改为双入口：`ClickGame` / `DanmakuDemo`
+  - 两个示例均支持返回主菜单；当前以 `Esc` 为统一兜底入口，返回时重载 `Boot` 场景
+- **示例命名收口**
+  - 主菜单进入 ClickGame 的场景加载名统一为 `ClickGame`
+  - `EditorBuildSettings.asset` 中 ClickGame 场景路径统一为 `Assets/_Example/ClickGame/Scenes/ClickGame.unity`
+  - ClickGame 面板运行时包名统一为 `ClickGame`
+- **文档同步**
+  - 更新 `Assets/_Example/README.md`
+  - 更新 `Docs/Guide/ARCHITECTURE_OVERVIEW.md`
+  - 更新 `Docs/Guide/EXAMPLE_WALKTHROUGH.md`
+  - 更新 `Docs/Agent/ARCHITECTURE.md`
 - 重写 UISystem MODULE_README.md
 
 ### Skill
@@ -143,26 +89,6 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
   - `UIConstants` 新增包常量：`PKG_EXAMPLE = "Example"`
 - **文档同步**
   - 更新 `_Example/README.md` 与 `Docs/Guide/EXAMPLE_WALKTHROUGH.md` 中的面板路径与发布指引，发布目标由 MainMenu 包改为 Example 包
-
-## [未发布] - 2026-04-10
-
-### 变更
-- **示例工程重组**
-  - `DanmakuDemo` 从 `Assets/_Game/DanmakuDemo/` 迁移到 `Assets/_Example/DanmakuDemo/`
-  - `ClickGame` 相关场景、脚本、UI 代码收拢到 `Assets/_Example/ClickGame/`
-  - 主菜单改为双入口：`ClickGame` / `DanmakuDemo`
-  - 两个示例均支持返回主菜单；当前以 `Esc` 为统一兜底入口，返回时重载 `Boot` 场景
-- **示例命名收口**
-  - 主菜单进入 ClickGame 的场景加载名统一为 `ClickGame`
-  - `EditorBuildSettings.asset` 中 ClickGame 场景路径统一为 `Assets/_Example/ClickGame/Scenes/ClickGame.unity`
-  - ClickGame 面板运行时包名统一为 `ClickGame`
-- **文档同步**
-  - 更新 `Assets/_Example/README.md`
-  - 更新 `Docs/Guide/ARCHITECTURE_OVERVIEW.md`
-  - 更新 `Docs/Guide/EXAMPLE_WALKTHROUGH.md`
-  - 更新 `Docs/Agent/ARCHITECTURE.md`
-
-
 
 ## [0.5.3] - 2026-04-07
 
