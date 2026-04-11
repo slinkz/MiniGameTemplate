@@ -15,3 +15,6 @@ MonoBehaviour:
   _types:
   - {fileID: 11400000, guid: 98cc34b769ac03c44976141a568496f7, type: 2}
   - {fileID: 11400000, guid: 2b7b5e7f1a4e4b8f9c2d6e3f4a5b6c7d, type: 2}
+  - {fileID: 11400000, guid: 6c2f3f4d9f1b4b0aa7d4d2a7e1c9f321, type: 2}
+  - {fileID: 11400000, guid: b84a4c8e7d4f4d7b8c1e2f3a4b5c6d7e, type: 2}
+  - {fileID: 11400000, guid: c91f7d53a6e94f6b8d2c3a4e5f607182, type: 2}

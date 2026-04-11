@@ -15,6 +15,9 @@ namespace MiniGameTemplate.Example.VFXDemo
         [SerializeField] private KeyCode _randomKey = KeyCode.Alpha2;
         [SerializeField] private KeyCode _fixedFirstKey = KeyCode.Alpha3;
         [SerializeField] private KeyCode _fixedSecondKey = KeyCode.Alpha4;
+        [SerializeField] private KeyCode _fixedThirdKey = KeyCode.Alpha5;
+        [SerializeField] private KeyCode _fixedFourthKey = KeyCode.Alpha6;
+        [SerializeField] private KeyCode _fixedFifthKey = KeyCode.Alpha7;
 
         private void Update()
         {
@@ -35,6 +38,15 @@ namespace MiniGameTemplate.Example.VFXDemo
 
             if (Input.GetKeyDown(_fixedSecondKey))
                 _spawner?.SetFixedTypeIndex(1);
+
+            if (Input.GetKeyDown(_fixedThirdKey))
+                _spawner?.SetFixedTypeIndex(2);
+
+            if (Input.GetKeyDown(_fixedFourthKey))
+                _spawner?.SetFixedTypeIndex(3);
+
+            if (Input.GetKeyDown(_fixedFifthKey))
+                _spawner?.SetFixedTypeIndex(4);
         }
     }
 }

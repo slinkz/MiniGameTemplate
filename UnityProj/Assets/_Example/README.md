@@ -19,7 +19,8 @@
    - 点击“特效Demo”会加载 `Assets/_Example/VFXDemo/Scenes/VFXDemo.unity`
    - 用于验证 Sprite Sheet VFX 阶段2闭环：共享图集、SO 配置、系统播放与渲染可见性
    - 场景内最小根对象：`Main Camera`、`Directional Light`、`SpriteSheetVFXSystemRoot`、`VFXDemoSpawnerRoot`、`VFXDemoUIRoot`
-   - 支持场景内快捷键：`R` 重播、`Space` 单发补播、`Esc` 返回主菜单
+   - 支持场景内快捷键：`1` 顺序模式、`2` 随机模式、`3` 固定默认爆炸、`4` 固定蓝色爆炸、`5` 固定治疗闪光验证版、`6` 固定烟雾 puff 验证版、`7` 固定消散残影验证版、`R` 重播、`Space` 单发补播、`Esc` 返回主菜单
+   - 其中 `Esc` 返回主菜单与左上角说明文字由 `Common/Scripts/ExampleSceneHotkeys.cs` 负责，类型切换与补播热键由 `VFXDemoInputHint.cs` 负责
    - 正式验证请使用独立 `VFXDemo` 场景，**不要在 `Boot` 场景直接堆测试对象**
    - 新增 VFX 示例时，建议沿用“系统根对象 / 播放根对象 / 交互根对象”三段式结构；其中返回主菜单与左上角说明文字可优先复用 `Common/Scripts/ExampleSceneHotkeys.cs`
 

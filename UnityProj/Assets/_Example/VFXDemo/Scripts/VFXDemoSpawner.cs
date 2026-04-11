@@ -100,7 +100,15 @@ namespace MiniGameTemplate.Example.VFXDemo
         {
             _selectionMode = TypeSelectionMode.Fixed;
             _fixedTypeIndex = Mathf.Max(0, index);
-            Debug.Log($"[VFXDemoSpawner] Selection mode -> Fixed index={_fixedTypeIndex}");
+
+            if (_types != null && _fixedTypeIndex < _types.Length)
+            {
+                var type = _types[_fixedTypeIndex];
+                Debug.Log($"[VFXDemoSpawner] Selection mode -> Fixed index={_fixedTypeIndex} type={(type == null ? "<null>" : type.name)} tint={(type == null ? "<null>" : type.Tint.ToString())} runtimeIndex={(type == null ? -1 : type.RuntimeIndex)}");
+                return;
+            }
+
+            Debug.Log($"[VFXDemoSpawner] Selection mode -> Fixed index={_fixedTypeIndex} type=<out-of-range>");
         }
 
         public void SpawnOneManual()

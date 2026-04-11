@@ -240,6 +240,9 @@ MonoBehaviour:
   _types:
   - {fileID: 11400000, guid: 98cc34b769ac03c44976141a568496f7, type: 2}
   - {fileID: 11400000, guid: 2b7b5e7f1a4e4b8f9c2d6e3f4a5b6c7d, type: 2}
+  - {fileID: 11400000, guid: 6c2f3f4d9f1b4b0aa7d4d2a7e1c9f321, type: 2}
+  - {fileID: 11400000, guid: b84a4c8e7d4f4d7b8c1e2f3a4b5c6d7e, type: 2}
+  - {fileID: 11400000, guid: c91f7d53a6e94f6b8d2c3a4e5f607182, type: 2}
   _selectionMode: 0
   _fixedTypeIndex: 0
   _interval: 0.2
@@ -435,7 +438,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _backKey: 27
   _title: VFX Demo
-  _instructions: "R = 重播整排爆炸\nSpace = 立即补一发\n1 = 顺序轮播类型\n2 = 随机播放类型\n3 = 固定第 1 个类型\n4 = 固定第 2 个类型\nEsc = 返回主菜单"
+  _instructions: "R = 重播整排爆炸\nSpace = 立即补一发\n1 = 顺序轮播类型\n2 = 随机播放类型\n3 = 固定第 1 个类型\n4 = 固定第 2 个类型\n5 = 固定第 3 个类型（治疗闪光）\n6 = 固定第 4 个类型（烟雾 puff）\n7 = 固定第 5 个类型（消散残影）\nEsc = 返回主菜单"
   _area:
     serializedVersion: 2
     x: 24
@@ -463,6 +466,9 @@ MonoBehaviour:
   _randomKey: 50
   _fixedFirstKey: 51
   _fixedSecondKey: 52
+  _fixedThirdKey: 53
+  _fixedFourthKey: 54
+  _fixedFifthKey: 55
 --- !u!4 &1900000003
 Transform:
   m_ObjectHideFlags: 0

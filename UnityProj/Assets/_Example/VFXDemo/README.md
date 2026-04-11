@@ -19,20 +19,28 @@
    - `Config/VFXRenderConfig_Demo.asset`
    - `Registry/VFXTypeRegistry_Demo.asset`
 5. 选中 `VFXDemoSpawnerRoot`，确认 `VFXDemoSpawner` 已绑定：
-   - `Type/VFXType_Explosion_Test.asset`
-   - `Type/VFXType_Explosion_Blue.asset`
-   - `SpriteSheetVFXSystemRoot` 上的 `SpriteSheetVFXSystem` 组件引用
+  - `Type/VFXType_Explosion_Test.asset`
+  - `Type/VFXType_Explosion_Blue.asset`
+  - `Type/VFXType_HealFlash_Test.asset`
+  - `Type/VFXType_SmokePuff_Test.asset`
+  - `Type/VFXType_DissolveAfterimage_Test.asset`
+  - `SpriteSheetVFXSystemRoot` 上的 `SpriteSheetVFXSystem` 组件引用
+
 6. 选中 `VFXDemoUIRoot`，确认 `VFXDemoInputHint` 已绑定：
    - `VFXDemoSpawnerRoot` 上的 `VFXDemoSpawner` 组件引用
 7. 确认 `Main Camera` 位置为 `(0, 0, -10)`
-8. 点击 Play，观察一排爆炸轮播，并验证：
+8. 点击 Play，观察一排特效轮播，并验证：
    - `R`：从第一列重新开始播放
    - `Space`：立即补一发
    - `1`：切到顺序轮播类型
    - `2`：切到随机播放类型
-   - `3`：固定播放第 1 个类型
-   - `4`：固定播放第 2 个类型
-   - `Esc`：返回主菜单
+   - `3`：固定播放第 1 个类型（默认爆炸）
+   - `4`：固定播放第 2 个类型（蓝色爆炸）
+  - `5`：固定播放第 3 个类型（治疗闪光验证版）
+  - `6`：固定播放第 4 个类型（烟雾 puff 验证版）
+  - `7`：固定播放第 5 个类型（消散残影验证版）
+  - `Esc`：返回主菜单
+
 
 
 ## 模板接入 SOP
