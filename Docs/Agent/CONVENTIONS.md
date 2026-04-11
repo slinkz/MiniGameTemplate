@@ -697,6 +697,30 @@ DanmakuSystem.Instance.FireLaser(typeIndex, source, length: 10f, lifetime: 5f);
 
 ---
 
+## [AGENT] 渲染/视觉问题排查顺序
+
+适用于多类型 VFX、换色、皮肤切换、材质切换、Blend Mode 差异等“日志说切对了，但肉眼看不出来”的问题。
+
+### 强制顺序
+1. **先检查可视化验证样本是否足够可区分**
+   - 至少满足以下一项强差异：颜色、尺寸、轮廓、混合层、贴图内容
+   - 如果当前差异只依赖轻微 Tint，且底图高亮/偏白/偏黄，优先怀疑样本设计失败，不要直接判定逻辑切换失败
+2. **再检查选择链路**
+   - 输入是否触发
+   - 模式是否切换成功
+   - 最终选中的类型名是否正确
+3. **再检查运行时映射**
+   - registry / runtime index / 入池数据是否正确
+   - 禁止把上下文相关运行时值（如 `RuntimeIndex`）持久化到 SO 资产
+4. **最后才检查渲染表现**
+   - 材质、Blend、Layer、贴图底色、Shader 对 Tint 的影响
+
+### 调试日志规则
+- 默认只打“用户主动操作”对应的低噪音日志
+- 不要一上来就开每帧日志
+- 自动轮播与手动触发分开日志入口
+- 输入层 → 选择层 → 系统层 → 渲染层，逐层打开，不要一次全开
+
 ## [AGENT] 代码提交检查清单
 
 Agent 在完成代码编写后，提交前必须自检以下项目：
@@ -715,3 +739,26 @@ Agent 在完成代码编写后，提交前必须自检以下项目：
 
 - [ ] **依赖方向**: 不违反层级依赖图
 - [ ] **MODULE_README**: 新模块目录包含 `MODULE_README.md`
+- [ ] **Review Skill**: 任何代码改动后必须执行 `code-review-checklist` Skill，修完 bug 后再复查一次
+- [ ] **Unity CLI 编译验证**: 代码评审与 bug 修复完成后，必须使用 Unity 编辑器命令行做 batchmode 编译检查，直到日志中无脚本编译错误为止
+- [ ] **可视化验证样本检查**: 涉及多类型渲染/换色/皮肤切换时，先确认验证样本在肉眼上可明显区分（颜色、尺寸、轮廓、混合层至少一项强差异）；如果日志已证明类型/状态切换正确，应优先检查素材与混合表现，而不是继续在输入链路和状态机上兜圈子
+
+### [AGENT] 强制编译验证流程
+1. 完成代码编写
+2. 加载并执行 `code-review-checklist` Skill
+3. 修复审查发现的问题
+4. 使用 Unity 编辑器命令行执行 batchmode 编译检查
+5. 如果日志中存在脚本编译错误，继续修复并重复步骤 2-4，直到编译通过
+6. 只有在 review + Unity CLI 编译都通过后，才通知用户进编辑器做运行验证
+
+### [AGENT] Unity CLI 编译命令（Windows）
+```powershell
+& "C:\UnityWin2021\Unity.exe" -batchmode -quit -projectPath "g:\Workspace\MiniGameTemplate\MiniGameTemplate\UnityProj" -logFile "g:\Workspace\MiniGameTemplate\MiniGameTemplate\UnityProj\Library\unity-batch-compile.log"
+```
+
+### [AGENT] Unity CLI 编译日志判定
+- 通过标志：`Tundra build success`，且无 `error CSxxxx` / `Compilation failed`
+- 常见误区：
+  - `.tasks/` 作为 `-logFile` 目录会被 Unity 视为非法目录名（Windows 下）
+  - 若有其他 Unity 编辑器实例打开，会报 `Multiple Unity instances cannot open the same project`
+
