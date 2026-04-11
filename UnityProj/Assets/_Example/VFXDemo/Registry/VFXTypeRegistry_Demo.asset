@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8fb01e0d2cce9043be1a8948252df96, type: 3}
+  m_Name: VFXTypeRegistry_Demo
+  m_EditorClassIdentifier: 
+  _types:
+  - {fileID: 11400000, guid: 98cc34b769ac03c44976141a568496f7, type: 2}
+  - {fileID: 11400000, guid: 2b7b5e7f1a4e4b8f9c2d6e3f4a5b6c7d, type: 2}

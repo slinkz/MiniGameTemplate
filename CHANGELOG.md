@@ -5,6 +5,33 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
 ## [未发布] - 2026-04-10
 
 ### 新增
+- **VFXDemo 正式示例入口**
+  - 新增独立场景 `Assets/_Example/VFXDemo/Scenes/VFXDemo.unity`，固化 Sprite Sheet VFX 阶段2验证结果
+  - 主菜单新增 `特效Demo` 入口，点击后加载 `VFXDemo` 场景
+  - `EditorBuildSettings.asset` 新增 `VFXDemo` 场景，确保构建后可正常 `LoadScene("VFXDemo")`
+
+### 变更
+- **主菜单 Demo 区域视觉统一**
+  - 主菜单新增 `示例 Demo` 分组标题
+  - `点击游戏` / `弹幕Demo` / `特效Demo` 三个入口改为统一宽度、统一左对齐、统一垂直间距
+- **VFXDemo 文档收口**
+  - 更新 `Assets/_Example/VFXDemo/README.md`，明确独立场景验证流程与禁止在 `Boot` 场景直接验证
+  - 更新 `Assets/_Example/README.md`、`Docs/Guide/EXAMPLE_WALKTHROUGH.md`、`Docs/Guide/ARCHITECTURE_OVERVIEW.md`，补充第三个示例入口与 VFXDemo 场景说明
+- **VFXDemo 场景内交互闭环**
+  - 新增 `VFXDemoInputHint`，在场景内直接显示操作提示并处理 `R/Space/Esc` 快捷键
+  - `VFXDemoSpawner` 拆分为纯播放控制组件，新增 `RestartLoop` / `StopLoop` 接口，避免输入逻辑继续堆进播放脚本
+  - VFXDemo 现在可在单场景内完成重播、单发补播与返回主菜单，不再只靠自动轮播做被动观察
+- **VFX 系统多类型播放**
+  - 新增第二个类型资产 `Assets/_Example/VFXDemo/Type/VFXType_Explosion_Blue.asset`，用于验证同一注册表下的特效变体播放
+  - `VFXTypeRegistry_Demo.asset` 现在包含两个 `VFXTypeSO`，不再只有单一爆炸类型
+  - `VFXDemoSpawner` 从单类型写死升级为多类型播放器，支持顺序/随机/固定三种类型选择模式
+  - `VFXDemoInputHint` 新增 `1/2/3/4` 快捷键，用于运行时切换多类型播放模式
+  - 修复 `VFXTypeSO.RuntimeIndex` 被序列化进 SO 资产导致的旧索引残留问题，改为纯运行时字段并清理示例资产中的持久化索引
+  - 蓝色变体改为高对比验证配置（更深蓝 Tint、更大尺寸、Normal 层），避免占位爆炸图集在 Additive 混合下视觉上仍接近黄白，导致把视觉验证问题误判成逻辑切换失败
+
+
+### 新增
+
 - **激光渲染器（LaserRenderer）**
   - 独立 Mesh 渲染所有活跃激光，每条激光的每段折射 → 1 Quad（4 顶点），固定 1 Draw Call
   - WidthProfile 曲线驱动宽度：基于段端点在总 VisualLength 中的归一化位置采样，多段折射时宽度连续
