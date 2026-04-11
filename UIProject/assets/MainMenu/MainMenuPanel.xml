@@ -8,19 +8,25 @@
     <text id="gen_52" name="txtNickname" xy="110,70" size="200,40" fontSize="18" color="#ffffff" vAlign="middle" autoSize="none" singleLine="true" text="玩家昵称"/>
     <text id="gen_53" name="txtGameTitle" xy="110,480" size="500,80" fontSize="52" color="#ffffff" align="center" vAlign="middle" autoSize="none" bold="true" singleLine="true" text="Mini Game"/>
     <text id="gen_54" name="txtVersion" xy="210,565" size="300,30" fontSize="14" color="#ffffff" align="center" vAlign="middle" autoSize="none" singleLine="true" text="v0.1.0"/>
-    <component id="n0_i69i" name="btnClickGame" src="gen_02" fileName="components/MenuIconButton.xml" xy="216,811" size="300,70">
+    <text id="gen_64" name="txtDemoSection" xy="210,748" size="300,32" fontSize="18" color="#ffb8c7ff" align="center" vAlign="middle" autoSize="none" bold="true" singleLine="true" text="示例 Demo">
+      <relation target="" sidePair="width-width"/>
+    </text>
+    <component id="n0_i69i" name="btnClickGame" src="gen_02" fileName="components/MenuIconButton.xml" xy="210,800" size="300,70">
       <Button title="点击游戏"/>
     </component>
-    <component id="gen_55" name="btnDanmakuDemo" src="gen_02" fileName="components/MenuIconButton.xml" xy="210,900" size="300,70">
+    <component id="gen_55" name="btnDanmakuDemo" src="gen_02" fileName="components/MenuIconButton.xml" xy="210,890" size="300,70">
       <Button title="弹幕Demo"/>
     </component>
-    <component id="gen_56" name="btnSettings" src="gen_02" fileName="components/MenuIconButton.xml" xy="140,1050" size="80,80">
+    <component id="gen_59" name="btnVFXDemo" src="gen_02" fileName="components/MenuIconButton.xml" xy="210,980" size="300,70">
+      <Button title="特效Demo"/>
+    </component>
+    <component id="gen_56" name="btnSettings" src="gen_02" fileName="components/MenuIconButton.xml" xy="140,1100" size="80,80">
       <Button title="设置"/>
     </component>
-    <component id="gen_57" name="btnRanking" src="gen_02" fileName="components/MenuIconButton.xml" xy="320,1050" size="80,80">
+    <component id="gen_57" name="btnRanking" src="gen_02" fileName="components/MenuIconButton.xml" xy="320,1100" size="80,80">
       <Button title="排行"/>
     </component>
-    <component id="gen_58" name="btnShare" src="gen_02" fileName="components/MenuIconButton.xml" xy="500,1050" size="80,80">
+    <component id="gen_58" name="btnShare" src="gen_02" fileName="components/MenuIconButton.xml" xy="500,1100" size="80,80">
       <Button title="分享"/>
     </component>
   </displayList>

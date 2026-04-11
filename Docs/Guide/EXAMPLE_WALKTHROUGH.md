@@ -8,10 +8,12 @@
 
 虽然简单，但它用到了模板的几乎所有核心模块：
 
-> **当前版本说明（2026-04-10）**
-> - 示例入口已调整为主菜单双按钮：`ClickGame` 与 `DanmakuDemo`。
+> **当前版本说明（2026-04-11）**
+> - 示例入口已调整为主菜单 `示例 Demo` 分组下的三个按钮：`点击游戏`、`弹幕Demo`、`特效Demo`。
 > - ClickGame 的 FairyGUI 源文件位于 `UIProject/assets/ClickGame/`，运行时代码位于 `Assets/_Example/ClickGame/`。
-> - 若修改 ClickGame UI，请在 FairyGUI 编辑器重新发布 `ClickGame` 包到 `Assets/_Game/FairyGUI_Export/`。
+> - VFXDemo 的正式验证场景位于 `Assets/_Example/VFXDemo/Scenes/VFXDemo.unity`，不要在 `Boot` 场景直接堆测试对象。
+> - 若修改主菜单 UI，请同步更新 FairyGUI 源文件 `UIProject/assets/MainMenu/MainMenuPanel.xml` 与导出代码。
+
 
 
 
@@ -46,15 +48,22 @@ Assets/_Example/
 │       ├── ClickCounterPanel.Logic.cs
 │       ├── ClickGameBinder.cs
 │       └── MenuIconButton.cs
-└── DanmakuDemo/
-    ├── Scenes/DanmakuDemo.unity
-    └── Scripts/
-        ├── DanmakuDemoController.cs
-        ├── DanmakuDebugHUD.cs
-        └── SimplePlayerMover.cs
+├── DanmakuDemo/
+│   ├── Scenes/DanmakuDemo.unity
+│   └── Scripts/
+│       ├── DanmakuDemoController.cs
+│       ├── DanmakuDebugHUD.cs
+│       └── SimplePlayerMover.cs
+└── VFXDemo/
+    ├── Scenes/VFXDemo.unity
+    ├── Scripts/VFXDemoSpawner.cs
+    ├── Config/VFXRenderConfig_Demo.asset
+    ├── Registry/VFXTypeRegistry_Demo.asset
+    └── Type/VFXType_Explosion_Test.asset
 ```
 
-本篇重点解读 ClickGame；DanmakuDemo 作为第二个示例，主要用于展示 DanmakuSystem 的集成方式与场景切换流程。
+本篇重点解读 ClickGame；DanmakuDemo 作为第二个示例，主要用于展示 DanmakuSystem 的集成方式与场景切换流程；VFXDemo 作为第三个示例，用于展示 Sprite Sheet VFX 的最小闭环与独立测试场景组织方式。
+
 
 
 ---
@@ -348,12 +357,27 @@ ClickButton ──→ ClickGameManager ──写→ PlayerScore.asset ──→ 
 当前模板的示例流转如下：
 
 1. 从 `Boot.unity` 启动，进入主菜单
-2. 点击“进入 ClickGame”加载 `ClickGame.unity`
-3. `ClickGameSceneEntry` 注册 `ClickGameBinder` 并打开 `ClickCounterPanel`
-4. 在 ClickGame 内点击返回按钮，或按 `Esc`
-5. `ExampleSceneNavigator` 重载 `Boot` 场景并重新打开主菜单
+2. 在主菜单的“示例 Demo”区域选择目标入口：`点击游戏` / `弹幕Demo` / `特效Demo`
+3. `ClickGame` 由 `ClickGameSceneEntry` 注册 `ClickGameBinder` 并打开 `ClickCounterPanel`
+4. `DanmakuDemo` 与 `VFXDemo` 分别加载各自独立场景，避免把示例对象直接堆在 `Boot`
+5. 示例内通过返回按钮或 `Esc` 重载 `Boot` 场景并重新打开主菜单
 
-DanmakuDemo 复用相同的返回策略：在 `DanmakuDemo.unity` 中按 `Esc` 返回主菜单。
+DanmakuDemo 复用统一返回策略；VFXDemo 则用于独立验证 Sprite Sheet VFX 的播放链与渲染链。
+
+## VFXDemo 模板化要点
+
+如果你要基于模板再加一个新的 VFX 示例，建议直接照着 VFXDemo 的三段式结构走：
+
+1. **系统根对象**：只挂 `SpriteSheetVFXSystem`，负责渲染配置与类型注册
+2. **播放根对象**：只挂播放控制脚本，负责触发某个 `VFXTypeSO`
+3. **交互根对象**：优先挂通用 `ExampleSceneHotkeys` 负责返回主菜单与说明文字，再叠加 Demo 专用输入脚本处理额外快捷键
+
+这样做的好处很直接：
+- 播放逻辑不和输入逻辑互相缠住
+- 场景结构一眼能看懂
+- 后续如果要把“返回主菜单 + 说明提示”抽成通用示例组件，不需要先拆烂代码
+
+> 📐 精确的场景最小根对象、必配资产和快捷键闭环，请直接看 `UnityProj/Assets/_Example/VFXDemo/README.md`。
 
 ## 下一步
 

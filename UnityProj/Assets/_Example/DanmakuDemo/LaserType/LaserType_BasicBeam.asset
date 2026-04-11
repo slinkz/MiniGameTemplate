@@ -12,18 +12,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b2b292474ed4aa4e952d81c3f3badff, type: 3}
   m_Name: LaserType_BasicBeam
   m_EditorClassIdentifier: 
-  LaserTexture: {fileID: 0}
+  LaserTexture: {fileID: 2800000, guid: e54eb913c94973e459d58aadf797e5e4, type: 3}
   UVScrollSpeed: 2
   CoreColor: {r: 1, g: 1, b: 1, a: 1}
   EdgeColor: {r: 0, g: 1, b: 1, a: 1}
   WidthProfile:
     serializedVersion: 3
-    m_Curve: []
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.3
+      inSlope: 1.4
+      outSlope: 1.4
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.3
+      inSlope: -1.4
+      outSlope: -1.4
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-    m_AclCompressedDataType: -1
-    m_AclCompressedDataSubType: -1
+    m_AclCompressedDataType: 0
+    m_AclCompressedDataSubType: 0
     MaxValue: 0
     MinValue: 0
   WidthOverLifetime:

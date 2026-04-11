@@ -1,5 +1,6 @@
 using MiniGameTemplate.Events;
 using MiniGameTemplate.Utils;
+using MiniGameTemplate.VFX;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
@@ -23,6 +24,16 @@ namespace MiniGameTemplate.Danmaku
 
         [Tooltip("造成伤害时触发（传递伤害值）")]
         [SerializeField] private IntGameEvent _onDamageDealt;
+
+        [Header("命中特效")]
+        [Tooltip("命中非玩家目标时播放的 Sprite Sheet VFX 系统")]
+        [SerializeField] private SpriteSheetVFXSystem _hitVfxSystem;
+
+        [Tooltip("命中非玩家目标时播放的特效类型")]
+        [SerializeField] private VFXTypeSO _hitVfxType;
+
+        [Tooltip("命中特效的统一缩放")]
+        [SerializeField, Min(0.01f)] private float _hitVfxScale = 1f;
 
         // ──── 子系统 ────
         private BulletWorld _bulletWorld;
@@ -148,10 +159,16 @@ namespace MiniGameTemplate.Danmaku
 
                 // 伤害飘字——显示在被命中的玩家位置
                 _damageNumbers.Spawn(result.PlayerHitPosition, result.PlayerDamage, result.PlayerDamage >= 10);
+                PlayHitVFX(result.PlayerHitPosition);
 
                 // 启动无敌帧
                 if (_worldConfig.InvincibleDuration > 0)
                     _invincibleTimer = _worldConfig.InvincibleDuration;
+            }
+
+            if (result.NonPlayerHit)
+            {
+                PlayHitVFX(result.NonPlayerHitPosition);
             }
         }
 
@@ -440,6 +457,17 @@ namespace MiniGameTemplate.Danmaku
             _laserRenderer?.Dispose();
             _damageNumbers?.Dispose();
             _trailPool?.Dispose();
+        }
+
+        private void PlayHitVFX(Vector2 position)
+        {
+            if (_hitVfxSystem == null || _hitVfxType == null)
+                return;
+
+            if (!_hitVfxSystem.CanPlay(_hitVfxType))
+                return;
+
+            _hitVfxSystem.PlayOneShot(_hitVfxType, new Vector3(position.x, position.y, 0f), _hitVfxScale);
         }
     }
 

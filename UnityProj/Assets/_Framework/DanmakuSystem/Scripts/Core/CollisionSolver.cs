@@ -18,6 +18,12 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>本帧被命中的目标数量</summary>
         public int HitTargetCount;
 
+        /// <summary>本帧是否发生了可用于播放命中特效的非玩家命中</summary>
+        public bool NonPlayerHit;
+
+        /// <summary>最后一个非玩家目标被命中的位置（用于播放命中特效）</summary>
+        public Vector2 NonPlayerHitPosition;
+
         /// <summary>本帧 Player 阵营目标是否被命中</summary>
         public bool PlayerHit;
 
@@ -136,12 +142,17 @@ namespace MiniGameTemplate.Danmaku
                     result.TotalDamage += damage;
                     result.HitTargetCount++;
 
-                    // 记录 Player 阵营命中
+                    // 记录命中位置
                     if (target.Faction == BulletFaction.Player)
                     {
                         result.PlayerHit = true;
                         result.PlayerDamage += damage;
                         result.PlayerHitPosition = hitbox.Center;
+                    }
+                    else
+                    {
+                        result.NonPlayerHit = true;
+                        result.NonPlayerHitPosition = hitbox.Center;
                     }
 
                     // 通知目标
@@ -331,12 +342,17 @@ namespace MiniGameTemplate.Danmaku
                     result.TotalDamage += damage;
                     result.HitTargetCount++;
 
-                    // 记录 Player 阵营命中
+                    // 记录命中位置
                     if (target.Faction == BulletFaction.Player)
                     {
                         result.PlayerHit = true;
                         result.PlayerDamage += damage;
                         result.PlayerHitPosition = hitbox.Center;
+                    }
+                    else
+                    {
+                        result.NonPlayerHit = true;
+                        result.NonPlayerHitPosition = hitbox.Center;
                     }
 
                     target.OnLaserHit(damage, i);
@@ -393,12 +409,17 @@ namespace MiniGameTemplate.Danmaku
                     result.TotalDamage += damage;
                     result.HitTargetCount++;
 
-                    // 记录 Player 阵营命中
+                    // 记录命中位置
                     if (target.Faction == BulletFaction.Player)
                     {
                         result.PlayerHit = true;
                         result.PlayerDamage += damage;
                         result.PlayerHitPosition = hitbox.Center;
+                    }
+                    else
+                    {
+                        result.NonPlayerHit = true;
+                        result.NonPlayerHitPosition = hitbox.Center;
                     }
 
                     target.OnSprayHit(damage, i);

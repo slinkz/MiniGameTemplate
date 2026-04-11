@@ -39,6 +39,7 @@ namespace MainMenu
             // Bind button events (only in OnOpen — never re-bind)
             if (btnClickGame != null) btnClickGame.onClick.Add(OnClickGameClicked);
             if (btnDanmakuDemo != null) btnDanmakuDemo.onClick.Add(OnDanmukuDemoClicked);
+            if (btnVFXDemo != null) btnVFXDemo.onClick.Add(OnVFXDemoClicked);
             if (btnSettings != null) btnSettings.onClick.Add(OnSettingsClicked);
             if (btnRanking != null) btnRanking.onClick.Add(OnRankingClicked);
             if (btnShare != null) btnShare.onClick.Add(OnShareClicked);
@@ -90,6 +91,11 @@ namespace MainMenu
             SceneManager.LoadScene("DanmakuDemo");
         }
 
+        private void OnVFXDemoClicked()
+        {
+            UIManager.Instance.ClosePanel<MainMenuPanel>();
+            SceneManager.LoadScene("VFXDemo");
+        }
 
         private void OnSettingsClicked()
         {
