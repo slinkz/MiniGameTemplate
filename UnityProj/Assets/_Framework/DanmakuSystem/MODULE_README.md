@@ -19,7 +19,7 @@ DanmakuSystem/
 │   │   ├── CircleHitbox.cs    # 圆形碰撞体
 │   │   ├── ICollisionTarget.cs # 碰撞目标接口（玩家/Boss/敌人等）
 │   │   ├── TargetRegistry.cs  # 碰撞目标注册表 (16 槽)
-│   │   ├── DanmakuVertex.cs   # 渲染顶点 (24B)
+│   │   ├── (已迁移)           # 渲染顶点已迁移至 _Framework/Rendering/RenderVertex.cs
 │   │   ├── LaserData.cs       # 激光运行时数据（含 Segments[], AttachId）
 │   │   ├── LaserSegment.cs    # 折射线段数据结构 (Start/End/Normal)
 │   │   ├── SprayData.cs       # 喷雾运行时数据（含 AttachId）

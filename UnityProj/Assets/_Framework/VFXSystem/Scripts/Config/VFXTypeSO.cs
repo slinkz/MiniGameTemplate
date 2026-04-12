@@ -1,4 +1,5 @@
 using UnityEngine;
+using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.VFX
 {
@@ -44,7 +45,7 @@ namespace MiniGameTemplate.VFX
         public Color Tint = Color.white;
 
         [Tooltip("渲染层。")]
-        public VFXRenderLayer Layer = VFXRenderLayer.Additive;
+        public RenderLayer Layer = RenderLayer.Additive;
 
         [Header("运行时")]
         [System.NonSerialized]

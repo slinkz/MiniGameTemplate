@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.IO;
 using MiniGameTemplate.VFX;
+using MiniGameTemplate.Rendering;
 using UnityEditor;
 using UnityEngine;
 
@@ -212,7 +213,7 @@ namespace MiniGameTemplate.EditorTools
                 AssetDatabase.CreateAsset(type, path);
             }
 
-            type.Layer = VFXRenderLayer.Additive;
+            type.Layer = RenderLayer.Additive;
             type.AtlasUV = new Rect(0f, 0f, 1f, 1f);
             type.Columns = 4;
             type.Rows = 4;

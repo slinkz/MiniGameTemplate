@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.Danmaku
 {
@@ -18,7 +19,7 @@ namespace MiniGameTemplate.Danmaku
         // 渲染
         private Mesh _mesh;
         private Material _material;
-        private DanmakuVertex[] _vertices;
+        private RenderVertex[] _vertices;
         private int[] _indices;
         private int _quadCount;
 
@@ -47,7 +48,7 @@ namespace MiniGameTemplate.Danmaku
             int vertexCount = maxQuads * 4;
             int indexCount = maxQuads * 6;
 
-            _vertices = new DanmakuVertex[vertexCount];
+            _vertices = new RenderVertex[vertexCount];
             _indices = new int[indexCount];
 
             // 预填充索引
@@ -190,25 +191,25 @@ namespace MiniGameTemplate.Danmaku
                 byte a = (byte)(alpha * data.Color.a);
                 var color = new Color32(data.Color.r, data.Color.g, data.Color.b, a);
 
-                _vertices[baseVertex + 0] = new DanmakuVertex
+                _vertices[baseVertex + 0] = new RenderVertex
                 {
                     Position = new Vector3(x - halfSize, data.Position.y - halfSize, 0),
                     UV = new Vector2(uvLeft, 0),
                     Color = color,
                 };
-                _vertices[baseVertex + 1] = new DanmakuVertex
+                _vertices[baseVertex + 1] = new RenderVertex
                 {
                     Position = new Vector3(x + halfSize, data.Position.y - halfSize, 0),
                     UV = new Vector2(uvRight, 0),
                     Color = color,
                 };
-                _vertices[baseVertex + 2] = new DanmakuVertex
+                _vertices[baseVertex + 2] = new RenderVertex
                 {
                     Position = new Vector3(x + halfSize, data.Position.y + halfSize, 0),
                     UV = new Vector2(uvRight, 1),
                     Color = color,
                 };
-                _vertices[baseVertex + 3] = new DanmakuVertex
+                _vertices[baseVertex + 3] = new RenderVertex
                 {
                     Position = new Vector3(x - halfSize, data.Position.y + halfSize, 0),
                     UV = new Vector2(uvLeft, 1),

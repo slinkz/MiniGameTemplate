@@ -90,15 +90,6 @@ namespace MiniGameTemplate.Danmaku
         PooledPrefab = 2,
     }
 
-    /// <summary>渲染层</summary>
-    public enum RenderLayer : byte
-    {
-        /// <summary>普通混合（Alpha Blend）</summary>
-        Normal = 0,
-
-        /// <summary>叠加发光（Additive Blend）</summary>
-        Additive = 1,
-    }
 
     /// <summary>激光碰到障碍物时的行为</summary>
     public enum LaserObstacleResponse : byte

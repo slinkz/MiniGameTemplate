@@ -12,6 +12,7 @@ namespace MiniGameTemplate.Danmaku
         public int MaxBullets = 2048;
         public int MaxLasers = 16;
         public int MaxSprays = 8;
+        public int MaxTrails = 64;
 
         [Header("世界边界")]
         [Tooltip("弹幕活动区域（屏幕边缘判定用）")]

@@ -1,5 +1,6 @@
 using MiniGameTemplate.Audio;
 using MiniGameTemplate.Pool;
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku

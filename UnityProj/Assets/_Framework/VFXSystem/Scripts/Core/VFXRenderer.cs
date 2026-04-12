@@ -1,4 +1,4 @@
-using MiniGameTemplate.Danmaku;
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -12,8 +12,8 @@ namespace MiniGameTemplate.VFX
     {
         private Mesh _meshNormal;
         private Mesh _meshAdditive;
-        private DanmakuVertex[] _verticesNormal;
-        private DanmakuVertex[] _verticesAdditive;
+        private RenderVertex[] _verticesNormal;
+        private RenderVertex[] _verticesAdditive;
         private int[] _indicesNormal;
         private int[] _indicesAdditive;
         private Material _materialNormal;
@@ -35,8 +35,8 @@ namespace MiniGameTemplate.VFX
             int vertexCount = maxInstances * 4;
             int indexCount = maxInstances * 6;
 
-            _verticesNormal = new DanmakuVertex[vertexCount];
-            _verticesAdditive = new DanmakuVertex[vertexCount];
+            _verticesNormal = new RenderVertex[vertexCount];
+            _verticesAdditive = new RenderVertex[vertexCount];
             _indicesNormal = new int[indexCount];
             _indicesAdditive = new int[indexCount];
 
@@ -99,7 +99,7 @@ namespace MiniGameTemplate.VFX
 
         private void WriteQuad(ref VFXInstance instance, VFXTypeSO type)
         {
-            bool isAdditive = type.Layer == VFXRenderLayer.Additive;
+            bool isAdditive = type.Layer == RenderLayer.Additive;
             var vertices = isAdditive ? _verticesAdditive : _verticesNormal;
             ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
 
@@ -141,7 +141,7 @@ namespace MiniGameTemplate.VFX
                 frameHeight);
         }
 
-        private static void WriteVertex(ref DanmakuVertex vertex, Vector3 center,
+        private static void WriteVertex(ref RenderVertex vertex, Vector3 center,
             float offsetX, float offsetY, float cos, float sin,
             float uvX, float uvY, Color32 color)
         {
@@ -153,7 +153,7 @@ namespace MiniGameTemplate.VFX
             vertex.Color = color;
         }
 
-        private static void UploadAndDraw(Mesh mesh, DanmakuVertex[] vertices, int quadCount,
+        private static void UploadAndDraw(Mesh mesh, RenderVertex[] vertices, int quadCount,
             Material material, MaterialPropertyBlock propertyBlock)
         {
             if (mesh == null || material == null || quadCount == 0)

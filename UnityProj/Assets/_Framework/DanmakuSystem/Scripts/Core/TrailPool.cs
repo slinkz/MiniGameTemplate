@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.Danmaku
 {
@@ -15,21 +16,26 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>每条拖尾最大点数</summary>
         public const int MAX_POINTS_PER_TRAIL = 20;
 
+        /// <summary>当前实例的容量（由构造参数决定）</summary>
+        public int Capacity { get; }
+
         private readonly TrailInstance[] _trails;
-        private readonly int[] _freeSlots = new int[MAX_TRAILS];
+        private readonly int[] _freeSlots;
         private int _freeTop;
 
-        public TrailPool()
+        public TrailPool(int maxTrails = MAX_TRAILS)
         {
-            _trails = new TrailInstance[MAX_TRAILS];
-            for (int i = 0; i < MAX_TRAILS; i++)
+            Capacity = maxTrails;
+            _trails = new TrailInstance[maxTrails];
+            _freeSlots = new int[maxTrails];
+            for (int i = 0; i < maxTrails; i++)
                 _trails[i] = new TrailInstance();
         }
 
         // 渲染
         private Mesh _mesh;
         private Material _material;
-        private DanmakuVertex[] _vertices;
+        private RenderVertex[] _vertices;
         private int[] _indices;
         private int _vertexCount;
         private int _indexCount;
@@ -54,10 +60,10 @@ namespace MiniGameTemplate.Danmaku
 
             // 每条拖尾 = (MAX_POINTS_PER_TRAIL-1) 段 × 2 三角形 × 3 顶点
             // 简化：每条拖尾 MAX_POINTS_PER_TRAIL × 2 顶点（TriangleStrip 展开为 TriangleList）
-            int maxVertices = MAX_TRAILS * MAX_POINTS_PER_TRAIL * 2;
-            int maxIndices = MAX_TRAILS * (MAX_POINTS_PER_TRAIL - 1) * 6;
+            int maxVertices = Capacity * MAX_POINTS_PER_TRAIL * 2;
+            int maxIndices = Capacity * (MAX_POINTS_PER_TRAIL - 1) * 6;
 
-            _vertices = new DanmakuVertex[maxVertices];
+            _vertices = new RenderVertex[maxVertices];
             _indices = new int[maxIndices];
 
             _mesh = new Mesh
@@ -70,7 +76,7 @@ namespace MiniGameTemplate.Danmaku
                 maxVertices > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16);
 
             // 初始化空闲栈
-            for (int i = MAX_TRAILS - 1; i >= 0; i--)
+            for (int i = Capacity - 1; i >= 0; i--)
                 _freeSlots[_freeTop++] = i;
         }
 
@@ -96,7 +102,7 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>归还拖尾。</summary>
         public void Free(int handle)
         {
-            if (handle < 0 || handle >= MAX_TRAILS) return;
+            if (handle < 0 || handle >= Capacity) return;
             _trails[handle].Active = false;
             _trails[handle].PointCount = 0;
             _freeSlots[_freeTop++] = handle;
@@ -107,7 +113,7 @@ namespace MiniGameTemplate.Danmaku
         public void FreeAll()
         {
             _freeTop = 0;
-            for (int i = MAX_TRAILS - 1; i >= 0; i--)
+            for (int i = Capacity - 1; i >= 0; i--)
             {
                 _trails[i].Active = false;
                 _trails[i].PointCount = 0;
@@ -121,7 +127,7 @@ namespace MiniGameTemplate.Danmaku
         /// </summary>
         public void AddPoint(int handle, Vector2 position)
         {
-            if (handle < 0 || handle >= MAX_TRAILS) return;
+            if (handle < 0 || handle >= Capacity) return;
             ref var trail = ref _trails[handle];
             if (!trail.Active) return;
 
@@ -147,7 +153,7 @@ namespace MiniGameTemplate.Danmaku
             _vertexCount = 0;
             _indexCount = 0;
 
-            for (int i = 0; i < MAX_TRAILS; i++)
+            for (int i = 0; i < Capacity; i++)
             {
                 ref var trail = ref _trails[i];
                 if (!trail.Active || trail.PointCount < 2) continue;
@@ -215,13 +221,13 @@ namespace MiniGameTemplate.Danmaku
                 // 两个顶点（左/右）
                 if (_vertexCount + 2 > _vertices.Length) return;
 
-                _vertices[_vertexCount] = new DanmakuVertex
+                _vertices[_vertexCount] = new RenderVertex
                 {
                     Position = new Vector3(pos.x + normal.x * halfWidth, pos.y + normal.y * halfWidth, 0),
                     UV = new Vector2(0, t),
                     Color = color,
                 };
-                _vertices[_vertexCount + 1] = new DanmakuVertex
+                _vertices[_vertexCount + 1] = new RenderVertex
                 {
                     Position = new Vector3(pos.x - normal.x * halfWidth, pos.y - normal.y * halfWidth, 0),
                     UV = new Vector2(1, t),

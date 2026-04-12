@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.Danmaku
 {
@@ -22,7 +23,7 @@ namespace MiniGameTemplate.Danmaku
 
         private Mesh _mesh;
         private Material _material;
-        private DanmakuVertex[] _vertices;
+        private RenderVertex[] _vertices;
         private int[] _indices;
         private int _quadCount;
 
@@ -55,7 +56,7 @@ namespace MiniGameTemplate.Danmaku
                 Debug.LogWarning("[LaserRenderer] RenderConfig.LaserMaterial 为 null，激光将不可见。");
             }
 
-            _vertices = new DanmakuVertex[MAX_VERTICES];
+            _vertices = new RenderVertex[MAX_VERTICES];
             _indices = new int[MAX_INDICES];
 
             // 预填充 Quad 索引（0,1,2 / 2,3,0）
@@ -227,7 +228,7 @@ namespace MiniGameTemplate.Danmaku
             int baseV = _quadCount * 4;
 
             // 左下（起点左，UV.x=0）
-            _vertices[baseV + 0] = new DanmakuVertex
+            _vertices[baseV + 0] = new RenderVertex
             {
                 Position = new Vector3(startLeft.x, startLeft.y, 0f),
                 Color = color,
@@ -235,7 +236,7 @@ namespace MiniGameTemplate.Danmaku
             };
 
             // 右下（起点右，UV.x=1）
-            _vertices[baseV + 1] = new DanmakuVertex
+            _vertices[baseV + 1] = new RenderVertex
             {
                 Position = new Vector3(startRight.x, startRight.y, 0f),
                 Color = color,
@@ -243,7 +244,7 @@ namespace MiniGameTemplate.Danmaku
             };
 
             // 右上（终点右，UV.x=1）
-            _vertices[baseV + 2] = new DanmakuVertex
+            _vertices[baseV + 2] = new RenderVertex
             {
                 Position = new Vector3(endRight.x, endRight.y, 0f),
                 Color = color,
@@ -251,7 +252,7 @@ namespace MiniGameTemplate.Danmaku
             };
 
             // 左上（终点左，UV.x=0）
-            _vertices[baseV + 3] = new DanmakuVertex
+            _vertices[baseV + 3] = new RenderVertex
             {
                 Position = new Vector3(endLeft.x, endLeft.y, 0f),
                 Color = color,

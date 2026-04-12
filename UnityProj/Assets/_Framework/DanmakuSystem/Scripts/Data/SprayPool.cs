@@ -7,17 +7,24 @@ namespace MiniGameTemplate.Danmaku
     {
         public const int MAX_SPRAYS = 8;
 
-        public readonly SprayData[] Data = new SprayData[MAX_SPRAYS];
+        /// <summary>当前实例的容量（由构造参数决定）</summary>
+        public int Capacity { get; }
+
+        public readonly SprayData[] Data;
 
         /// <summary>精确活跃喷雾数</summary>
         public int ActiveCount { get; private set; }
 
-        private readonly int[] _freeSlots = new int[MAX_SPRAYS];
+        private readonly int[] _freeSlots;
         private int _freeTop;
 
-        public SprayPool()
+        public SprayPool(int capacity = MAX_SPRAYS)
         {
-            for (int i = MAX_SPRAYS - 1; i >= 0; i--)
+            Capacity = capacity;
+            Data = new SprayData[capacity];
+            _freeSlots = new int[capacity];
+
+            for (int i = capacity - 1; i >= 0; i--)
                 _freeSlots[_freeTop++] = i;
         }
 
@@ -41,7 +48,7 @@ namespace MiniGameTemplate.Danmaku
         public void FreeAll()
         {
             _freeTop = 0;
-            for (int i = MAX_SPRAYS - 1; i >= 0; i--)
+            for (int i = Capacity - 1; i >= 0; i--)
                 _freeSlots[_freeTop++] = i;
             ActiveCount = 0;
         }

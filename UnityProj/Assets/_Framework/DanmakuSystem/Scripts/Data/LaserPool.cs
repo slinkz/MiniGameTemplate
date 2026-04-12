@@ -11,21 +11,28 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>每条激光最大支持的折射段数</summary>
         public const int MAX_SEGMENTS_PER_LASER = 9; // MaxReflections(8) + 1
 
-        public readonly LaserData[] Data = new LaserData[MAX_LASERS];
+        /// <summary>当前实例的容量（由构造参数决定）</summary>
+        public int Capacity { get; }
+
+        public readonly LaserData[] Data;
 
         /// <summary>精确活跃激光数</summary>
         public int ActiveCount { get; private set; }
 
-        private readonly int[] _freeSlots = new int[MAX_LASERS];
+        private readonly int[] _freeSlots;
         private int _freeTop;
 
-        public LaserPool()
+        public LaserPool(int capacity = MAX_LASERS)
         {
+            Capacity = capacity;
+            Data = new LaserData[capacity];
+            _freeSlots = new int[capacity];
+
             // 预分配 Segments 数组——所有槽位共享同尺寸数组，避免运行时 GC
-            for (int i = 0; i < MAX_LASERS; i++)
+            for (int i = 0; i < capacity; i++)
                 Data[i].Segments = new LaserSegment[MAX_SEGMENTS_PER_LASER];
 
-            for (int i = MAX_LASERS - 1; i >= 0; i--)
+            for (int i = capacity - 1; i >= 0; i--)
                 _freeSlots[_freeTop++] = i;
         }
 
@@ -50,14 +57,14 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>清场——回收所有激光。</summary>
         public void FreeAll()
         {
-            for (int i = 0; i < MAX_LASERS; i++)
+            for (int i = 0; i < Capacity; i++)
             {
                 var segments = Data[i].Segments;
                 Data[i] = default;
                 Data[i].Segments = segments;
             }
             _freeTop = 0;
-            for (int i = MAX_LASERS - 1; i >= 0; i--)
+            for (int i = Capacity - 1; i >= 0; i--)
                 _freeSlots[_freeTop++] = i;
             ActiveCount = 0;
         }

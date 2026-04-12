@@ -1,3 +1,4 @@
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -5,7 +6,7 @@ namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
     /// 弹幕 Mesh 渲染器——双 Mesh 方案（Normal + Additive），每帧单次顶点上传。
-    /// 交错顶点格式 DanmakuVertex (24 bytes) + SetVertexBufferData。
+    /// 交错顶点格式 RenderVertex (24 bytes) + SetVertexBufferData。
     /// 索引缓冲仅初始化时设置（固定 Quad 拓扑），每帧只更新顶点数据。
     /// </summary>
     public class BulletRenderer
@@ -13,8 +14,8 @@ namespace MiniGameTemplate.Danmaku
         private Mesh _meshNormal;
         private Mesh _meshAdditive;
 
-        private DanmakuVertex[] _verticesNormal;
-        private DanmakuVertex[] _verticesAdditive;
+        private RenderVertex[] _verticesNormal;
+        private RenderVertex[] _verticesAdditive;
 
         // 索引缓冲共享——所有弹丸都是 Quad
         private int[] _indicesNormal;
@@ -68,8 +69,8 @@ namespace MiniGameTemplate.Danmaku
             int vertexCount = maxQuads * 4;
             int indexCount = maxQuads * 6;
 
-            _verticesNormal = new DanmakuVertex[vertexCount];
-            _verticesAdditive = new DanmakuVertex[vertexCount];
+            _verticesNormal = new RenderVertex[vertexCount];
+            _verticesAdditive = new RenderVertex[vertexCount];
             _indicesNormal = new int[indexCount];
             _indicesAdditive = new int[indexCount];
 
@@ -173,7 +174,7 @@ namespace MiniGameTemplate.Danmaku
 
         private void WriteQuad(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha, Color tint)
         {
-            DanmakuVertex[] verts;
+            RenderVertex[] verts;
             ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
 
             verts = isAdditive ? _verticesAdditive : _verticesNormal;
@@ -208,7 +209,7 @@ namespace MiniGameTemplate.Danmaku
 
         private void WriteQuadUV(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha, Color tint, Rect uv)
         {
-            DanmakuVertex[] verts;
+            RenderVertex[] verts;
             ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
 
             verts = isAdditive ? _verticesAdditive : _verticesNormal;
@@ -234,7 +235,7 @@ namespace MiniGameTemplate.Danmaku
 
         private void WriteGhostQuad(Vector2 position, BulletTypeSO type, bool isAdditive, float alpha)
         {
-            DanmakuVertex[] verts;
+            RenderVertex[] verts;
             ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
 
             verts = isAdditive ? _verticesAdditive : _verticesNormal;
@@ -259,7 +260,7 @@ namespace MiniGameTemplate.Danmaku
         }
 
         private static void WriteVertex(
-            ref DanmakuVertex v,
+            ref RenderVertex v,
             Vector2 center, float offsetX, float offsetY,
             float cos, float sin,
             float uvX, float uvY,
@@ -278,7 +279,7 @@ namespace MiniGameTemplate.Danmaku
                 (byte)(alpha * tint.a * 255));
         }
 
-        private static void UploadAndDraw(Mesh mesh, DanmakuVertex[] vertices, int quadCount, Material material)
+        private static void UploadAndDraw(Mesh mesh, RenderVertex[] vertices, int quadCount, Material material)
         {
             if (quadCount == 0 || material == null) return;
 

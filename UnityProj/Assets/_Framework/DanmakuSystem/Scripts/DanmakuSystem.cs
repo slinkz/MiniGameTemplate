@@ -417,8 +417,8 @@ namespace MiniGameTemplate.Danmaku
 
             // 数据容器
             _bulletWorld = new BulletWorld(_worldConfig.MaxBullets);
-            _laserPool = new LaserPool();
-            _sprayPool = new SprayPool();
+            _laserPool = new LaserPool(_worldConfig.MaxLasers);
+            _sprayPool = new SprayPool(_worldConfig.MaxSprays);
             _obstaclePool = new ObstaclePool();
             _attachRegistry = new AttachSourceRegistry();
             _targetRegistry = new TargetRegistry();
@@ -445,10 +445,10 @@ namespace MiniGameTemplate.Danmaku
             _damageNumbers.Initialize(_renderConfig);
 
             // 重量拖尾
-            _trailPool = new TrailPool();
+            _trailPool = new TrailPool(_worldConfig.MaxTrails);
             _trailPool.Initialize(_renderConfig.BulletMaterial);
 
-            GameLog.Log($"[Danmaku] System initialized — bullets: {_worldConfig.MaxBullets}, lasers: {_worldConfig.MaxLasers}, sprays: {_worldConfig.MaxSprays}");
+            GameLog.Log($"[Danmaku] System initialized — bullets: {_worldConfig.MaxBullets}, lasers: {_worldConfig.MaxLasers}, sprays: {_worldConfig.MaxSprays}, trails: {_worldConfig.MaxTrails}");
         }
 
         private void DisposeSubsystems()
