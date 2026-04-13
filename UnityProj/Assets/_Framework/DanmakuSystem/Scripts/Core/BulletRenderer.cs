@@ -79,7 +79,10 @@ namespace MiniGameTemplate.Danmaku
                 var bulletType = registry.BulletTypes[core.TypeIndex];
 
                 // 确定贴图——优先 SourceTexture，fallback 到全局 Atlas（迁移兼容期）
-                var texture = bulletType.SourceTexture ?? _fallbackAtlas;
+                // 注意：Unity Object 的 ?? 运算符不走 Unity 的 == null 重载，
+                // 未赋值的序列化字段是 "fake null"（C# 引用非 null），必须用显式 != null
+                var srcTex = bulletType.SourceTexture;
+                var texture = (srcTex != null) ? srcTex : _fallbackAtlas;
                 if (texture == null) continue;
 
                 var bucketKey = new RenderBatchManager.BucketKey(bulletType.Layer, texture);

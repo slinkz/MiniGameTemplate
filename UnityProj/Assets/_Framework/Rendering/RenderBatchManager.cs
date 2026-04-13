@@ -250,6 +250,7 @@ namespace MiniGameTemplate.Rendering
             for (int i = 0; i < _bucketCount; i++)
             {
                 var bucket = _buckets[i];
+
                 if (bucket.QuadCount == 0) continue;
 
                 int vertexCount = bucket.QuadCount * 4;

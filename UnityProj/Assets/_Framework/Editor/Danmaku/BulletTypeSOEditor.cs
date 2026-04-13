@@ -1,45 +1,48 @@
-using MiniGameTemplate.Danmaku;
 using UnityEditor;
-using UnityEngine;
+using MiniGameTemplate.Danmaku;
 
 namespace MiniGameTemplate.Editor.Danmaku
 {
     [CustomEditor(typeof(BulletTypeSO))]
     public class BulletTypeSOEditor : UnityEditor.Editor
     {
-        // 视觉动画字段名（需与 BulletTypeSO 字段名完全一致）
-        private static readonly string[] AnimationFields =
-        {
-            "ScaleOverLifetime",
-            "AlphaOverLifetime",
-            "ColorOverLifetime"
-        };
+        // 仅在 UseVisualAnimation 勾选时显示的字段名
+        private static readonly System.Collections.Generic.HashSet<string> _animFields =
+            new System.Collections.Generic.HashSet<string>
+            {
+                "ScaleOverLifetime",
+                "AlphaOverLifetime",
+                "ColorOverLifetime",
+            };
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
-            SerializedProperty iterator = serializedObject.GetIterator();
+            var useAnim = serializedObject.FindProperty("UseVisualAnimation");
+            bool animEnabled = useAnim != null && useAnim.boolValue;
+
+            var iterator = serializedObject.GetIterator();
             bool enterChildren = true;
 
             while (iterator.NextVisible(enterChildren))
             {
                 enterChildren = false;
 
-                // 跳过脚本引用（默认绘制）
-                if (iterator.name == "m_Script")
+                // 跳过默认的 m_Script 字段以外的所有属性按需绘制
+                if (iterator.propertyPath == "m_Script")
                 {
                     using (new EditorGUI.DisabledScope(true))
-                        EditorGUILayout.PropertyField(iterator);
+                        EditorGUILayout.PropertyField(iterator, true);
                     continue;
                 }
 
-                // 如果是动画字段，检查 UseVisualAnimation
-                if (System.Array.IndexOf(AnimationFields, iterator.name) >= 0)
+                // 动画字段：仅在启用时显示
+                if (_animFields.Contains(iterator.name))
                 {
-                    SerializedProperty useAnim = serializedObject.FindProperty("UseVisualAnimation");
-                    if (useAnim != null && !useAnim.boolValue)
-                        continue; // 未勾选时跳过
+                    if (animEnabled)
+                        EditorGUILayout.PropertyField(iterator, true);
+                    continue;
                 }
 
                 EditorGUILayout.PropertyField(iterator, true);
