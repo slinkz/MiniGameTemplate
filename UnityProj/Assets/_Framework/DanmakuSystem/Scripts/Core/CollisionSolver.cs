@@ -43,13 +43,18 @@ namespace MiniGameTemplate.Danmaku
     public class CollisionSolver
     {
         private Rect _worldBounds;
+        private CollisionEventBuffer _eventBuffer;
 
         // Phase 5/6 共享：标记本帧哪些 spray 触发了 tick（避免 Phase 6 重复推进 TickTimer）
         private static readonly bool[] _sprayTickedThisFrame = new bool[SprayPool.MAX_SPRAYS];
 
-        public void Initialize(DanmakuWorldConfig config)
+        /// <summary>
+        /// 初始化碰撞求解器——设置世界边界和碰撞事件旁路 Buffer。
+        /// </summary>
+        public void Initialize(DanmakuWorldConfig config, CollisionEventBuffer eventBuffer)
         {
             _worldBounds = config.WorldBounds;
+            _eventBuffer = eventBuffer;
         }
 
         /// <summary>
@@ -63,6 +68,7 @@ namespace MiniGameTemplate.Danmaku
             DanmakuTypeRegistry registry,
             AttachSourceRegistry attachRegistry,
             TargetRegistry targetRegistry,
+            MiniGameTemplate.VFX.SpriteSheetVFXSystem sprayVfxSystem,
             float dt)
         {
             var result = default(CollisionResult);
@@ -71,7 +77,7 @@ namespace MiniGameTemplate.Danmaku
             int capacity = bulletWorld.Capacity;
 
             // Phase 1: 弹丸 vs 目标对象
-            SolveBulletVsTarget(cores, bulletWorld.Trails, capacity, registry, targetRegistry, ref result);
+            SolveBulletVsTarget(cores, bulletWorld.Trails, capacity, registry, targetRegistry, _eventBuffer, ref result);
 
             // Phase 2: 弹丸 vs 障碍物（圆 vs AABB）
             SolveBulletVsObstacle(cores, bulletWorld.Trails, capacity, obstaclePool, registry, ref result);
@@ -80,16 +86,16 @@ namespace MiniGameTemplate.Danmaku
             SolveBulletVsScreenEdge(cores, bulletWorld.Trails, capacity, registry, ref result);
 
             // Phase 4: 激光 vs 目标（多段折射线段 vs 圆）
-            SolveLasers(laserPool, targetRegistry, dt, ref result);
+            SolveLasers(laserPool, targetRegistry, dt, _eventBuffer, ref result);
 
             // Phase 5: 喷雾 vs 目标
-            SolveSprays(sprayPool, targetRegistry, dt, ref result);
+            SolveSprays(sprayPool, targetRegistry, dt, _eventBuffer, ref result);
 
             // Phase 6: 喷雾 vs 障碍物
             SolveSprayVsObstacle(sprayPool, obstaclePool, registry, dt, ref result);
 
             // Phase 7: 喷雾 vs 屏幕边缘
-            SolveSprayVsScreenEdge(sprayPool, attachRegistry, registry);
+            SolveSprayVsScreenEdge(sprayPool, attachRegistry, registry, sprayVfxSystem);
 
             return result;
         }
@@ -100,6 +106,7 @@ namespace MiniGameTemplate.Danmaku
             BulletCore[] cores, BulletTrail[] trails, int capacity,
             DanmakuTypeRegistry registry,
             TargetRegistry targetRegistry,
+            CollisionEventBuffer eventBuffer,
             ref CollisionResult result)
         {
             var targets = targetRegistry.Targets;
@@ -157,6 +164,22 @@ namespace MiniGameTemplate.Danmaku
 
                     // 通知目标
                     target.OnBulletHit(damage, i);
+
+                    // 写入旁路事件 Buffer
+                    if (eventBuffer != null)
+                    {
+                        var evt = new CollisionEvent
+                        {
+                            BulletIndex = i,
+                            TargetSlot = t,
+                            Position = hitbox.Center,
+                            Damage = damage,
+                            SourceFaction = bulletFaction,
+                            TargetFaction = target.Faction,
+                            EventType = CollisionEventType.BulletHit,
+                        };
+                        eventBuffer.TryWrite(ref evt);
+                    }
 
                     ApplyCollisionResponse(ref c, ref trails[i], bulletType, CollisionTarget.Target, targetBit, default);
 
@@ -297,6 +320,7 @@ namespace MiniGameTemplate.Danmaku
             LaserPool pool,
             TargetRegistry targetRegistry,
             float dt,
+            CollisionEventBuffer eventBuffer,
             ref CollisionResult result)
         {
             var targets = targetRegistry.Targets;
@@ -356,6 +380,22 @@ namespace MiniGameTemplate.Danmaku
                     }
 
                     target.OnLaserHit(damage, i);
+
+                    // 写入旁路事件 Buffer
+                    if (eventBuffer != null)
+                    {
+                        var evt = new CollisionEvent
+                        {
+                            BulletIndex = i,
+                            TargetSlot = t,
+                            Position = hitbox.Center,
+                            Damage = damage,
+                            SourceFaction = (BulletFaction)laser.Faction,
+                            TargetFaction = target.Faction,
+                            EventType = CollisionEventType.LaserHit,
+                        };
+                        eventBuffer.TryWrite(ref evt);
+                    }
                 }
             }
         }
@@ -366,6 +406,7 @@ namespace MiniGameTemplate.Danmaku
             SprayPool pool,
             TargetRegistry targetRegistry,
             float dt,
+            CollisionEventBuffer eventBuffer,
             ref CollisionResult result)
         {
             var targets = targetRegistry.Targets;
@@ -423,6 +464,22 @@ namespace MiniGameTemplate.Danmaku
                     }
 
                     target.OnSprayHit(damage, i);
+
+                    // 写入旁路事件 Buffer
+                    if (eventBuffer != null)
+                    {
+                        var evt = new CollisionEvent
+                        {
+                            BulletIndex = i,
+                            TargetSlot = t,
+                            Position = hitbox.Center,
+                            Damage = damage,
+                            SourceFaction = (BulletFaction)spray.Faction,
+                            TargetFaction = target.Faction,
+                            EventType = CollisionEventType.SprayHit,
+                        };
+                        eventBuffer.TryWrite(ref evt);
+                    }
                 }
             }
         }
@@ -489,7 +546,8 @@ namespace MiniGameTemplate.Danmaku
         private void SolveSprayVsScreenEdge(
             SprayPool sprayPool,
             AttachSourceRegistry attachRegistry,
-            DanmakuTypeRegistry registry)
+            DanmakuTypeRegistry registry,
+            MiniGameTemplate.VFX.SpriteSheetVFXSystem sprayVfxSystem)
         {
             for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
             {
@@ -505,7 +563,7 @@ namespace MiniGameTemplate.Danmaku
                     spray.Origin.y < _worldBounds.yMin - margin ||
                     spray.Origin.y > _worldBounds.yMax + margin)
                 {
-                    SprayUpdater.FreeSpray(sprayPool, attachRegistry, i);
+                    SprayUpdater.FreeSpray(sprayPool, attachRegistry, sprayVfxSystem, i);
                 }
             }
         }

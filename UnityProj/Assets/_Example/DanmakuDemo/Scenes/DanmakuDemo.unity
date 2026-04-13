@@ -412,6 +412,7 @@ GameObject:
   m_Component:
   - component: {fileID: 974252599}
   - component: {fileID: 974252598}
+  - component: {fileID: 974252600}
   m_Layer: 0
   m_Name: DanmakuSystem
   m_TagString: Untagged
@@ -438,9 +439,6 @@ MonoBehaviour:
   _difficulty: {fileID: 11400000, guid: a5cc13e81e3ef0747ad04eb5a7089d21, type: 2}
   _onPlayerHit: {fileID: 11400000, guid: c1a2b3d4e5f60001a1b2c3d4e5f60001, type: 2}
   _onDamageDealt: {fileID: 11400000, guid: c1a2b3d4e5f60002a1b2c3d4e5f60002, type: 2}
-  _hitVfxSystem: {fileID: 1589025272}
-  _hitVfxType: {fileID: 11400000, guid: 98cc34b769ac03c44976141a568496f7, type: 2}
-  _hitVfxScale: 1.8
 --- !u!4 &974252599
 Transform:
   m_ObjectHideFlags: 0
@@ -456,6 +454,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &974252600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 974252597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8d8bb3622a4dfd42983ba5919585173, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hitVfxSystem: {fileID: 1589025272}
+  _hitVfxType: {fileID: 11400000, guid: 98cc34b769ac03c44976141a568496f7, type: 2}
+  _hitVfxScale: 1
 --- !u!1 &987429908
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,13 +1,20 @@
+using MiniGameTemplate.VFX;
+
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
     /// 喷雾更新——纯 static 工具类。
     /// 负责：挂载源同步、Elapsed 推进、TickTimer 推进、生命周期回收。
-    /// 喷雾的视觉效果由对象池 ParticleSystem 驱动，Updater 只管逻辑。
+    /// Phase 3：集成 VFX 附着模式，喷雾可用 Sprite Sheet VFX 替代 ParticleSystem。
     /// </summary>
     public static class SprayUpdater
     {
-        public static void UpdateAll(SprayPool pool, AttachSourceRegistry attachRegistry, float dt)
+        public static void UpdateAll(
+            SprayPool pool,
+            AttachSourceRegistry attachRegistry,
+            DanmakuTypeRegistry typeRegistry,
+            SpriteSheetVFXSystem vfxSystem,
+            float dt)
         {
             for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
             {
@@ -25,8 +32,21 @@ namespace MiniGameTemplate.Danmaku
 
                 if (spray.Elapsed >= spray.Lifetime)
                 {
-                    FreeSpray(pool, attachRegistry, i);
+                    FreeSpray(pool, attachRegistry, vfxSystem, i);
                     continue;
+                }
+
+                // ── VFX 启动（首帧，VfxSlot == -1 时尝试启动） ──
+                if (spray.VfxSlot < 0 && vfxSystem != null && typeRegistry != null)
+                {
+                    var sprayType = typeRegistry.SprayTypes[spray.SprayTypeIndex];
+                    if (sprayType != null && sprayType.SprayVFXType != null)
+                    {
+                        spray.VfxSlot = vfxSystem.PlayAttached(
+                            sprayType.SprayVFXType,
+                            spray.AttachId,
+                            1f);
+                    }
                 }
 
                 // 注意：TickTimer 推进在 CollisionSolver.SolveSprays 中完成，
@@ -35,11 +55,24 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 回收喷雾——先释放挂载源引用，再归还池槽位。
+        /// 回收喷雾——先停止附着 VFX，再释放挂载源引用，最后归还池槽位。
         /// </summary>
-        public static void FreeSpray(SprayPool pool, AttachSourceRegistry attachRegistry, int index)
+        public static void FreeSpray(
+            SprayPool pool,
+            AttachSourceRegistry attachRegistry,
+            SpriteSheetVFXSystem vfxSystem,
+            int index)
         {
-            byte attachId = pool.Data[index].AttachId;
+            ref var spray = ref pool.Data[index];
+
+            // 停止附着 VFX
+            if (spray.VfxSlot >= 0 && vfxSystem != null)
+            {
+                vfxSystem.StopAttached(spray.VfxSlot);
+                spray.VfxSlot = -1;
+            }
+
+            byte attachId = spray.AttachId;
             if (attachId != 0)
                 attachRegistry.Release(attachId);
             pool.Free(index);

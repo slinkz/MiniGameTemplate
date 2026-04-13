@@ -214,7 +214,7 @@ namespace MiniGameTemplate.EditorTools
             }
 
             type.Layer = RenderLayer.Additive;
-            type.AtlasUV = new Rect(0f, 0f, 1f, 1f);
+            type.UVRect = new Rect(0f, 0f, 1f, 1f);
             type.Columns = 4;
             type.Rows = 4;
             type.FramesPerSecond = 24f;

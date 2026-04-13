@@ -49,5 +49,8 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>喷雾阵营（从 SprayTypeSO.Faction 拷贝）</summary>
         public byte Faction;
+
+        /// <summary>附着 VFX 的 slot index（-1=无）</summary>
+        public int VfxSlot;
     }
 }

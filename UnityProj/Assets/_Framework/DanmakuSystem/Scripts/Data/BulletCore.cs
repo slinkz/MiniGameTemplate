@@ -4,8 +4,9 @@ using UnityEngine;
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 弹丸热数据（运动 + 碰撞 + 生命周期）。
-    /// 每帧必遍历，sizeof = 36 bytes，2048 颗 × 36 = 72 KB，可完整放入 L2 缓存。
+    /// 弹丸热数据（运动 + 碰撞 + 生命周期 + 视觉动画）。
+    /// 每帧必遍历，sizeof = 48 bytes，2048 颗 × 48 = 96 KB，可完整放入 L2 缓存。
+    /// DEC-005=C：Mover 每帧写入 AnimScale/AnimAlpha/AnimColor，Renderer 直接读取，零查表。
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct BulletCore
@@ -42,6 +43,18 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>Pierce 碰撞冷却：位掩码，每 bit 对应 TargetRegistry 的一个槽位 (0-15)</summary>
         public ushort PierceHitMask;   // offset 34, size 2
+
+        // ──── 视觉动画值（DEC-005=C：Mover 写入，Renderer 读取） ────
+
+        /// <summary>动画缩放倍率（默认 1 = 无缩放变化）</summary>
+        public float AnimScale;        // offset 36, size 4
+
+        /// <summary>动画透明度倍率（默认 1 = 不透明）</summary>
+        public float AnimAlpha;        // offset 40, size 4
+
+        /// <summary>动画颜色叠加（默认白色 = 无变化）</summary>
+        public Color32 AnimColor;      // offset 44, size 4
+                                       // Total: 48 bytes = 16 × 3
 
         // ──── Flags 位定义（byte，8 bits） ────
 

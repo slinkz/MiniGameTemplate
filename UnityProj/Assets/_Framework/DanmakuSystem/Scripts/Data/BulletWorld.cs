@@ -48,8 +48,16 @@ namespace MiniGameTemplate.Danmaku
         public int Allocate()
         {
             if (_freeTop == 0) return -1;
+            int index = _freeSlots[--_freeTop];
             ActiveCount++;
-            return _freeSlots[--_freeTop];
+
+            // DEV-005 fix：初始化视觉动画默认值，避免 Renderer 端防御性分支
+            ref var core = ref Cores[index];
+            core.AnimScale = 1f;
+            core.AnimAlpha = 1f;
+            core.AnimColor = new Color32(255, 255, 255, 255);
+
+            return index;
         }
 
         /// <summary>

@@ -2,6 +2,7 @@ using MiniGameTemplate.Audio;
 using MiniGameTemplate.Pool;
 using MiniGameTemplate.Rendering;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MiniGameTemplate.Danmaku
 {
@@ -11,9 +12,38 @@ namespace MiniGameTemplate.Danmaku
     [CreateAssetMenu(menuName = "MiniGameTemplate/Danmaku/Bullet Type")]
     public class BulletTypeSO : ScriptableObject
     {
+        // ──── 统一资源描述（Phase 1.4） ────
+
+        [Header("资源描述（统一）")]
+        [Tooltip("源贴图——每个弹丸类型可引用独立贴图")]
+        public Texture2D SourceTexture;
+
+        [Tooltip("静态弹丸的 UV 区域（归一化到 SourceTexture）")]
+        [FormerlySerializedAs("AtlasUV")]
+        public Rect UVRect = new Rect(0, 0, 1, 1);
+
+        [Header("采样模式")]
+        public BulletSamplingMode SamplingMode = BulletSamplingMode.Static;
+
+        [Header("序列帧配置（SamplingMode = SpriteSheet 时有效）")]
+        [Min(1)] public int SheetColumns = 1;
+        [Min(1)] public int SheetRows = 1;
+        [Min(1)] public int SheetTotalFrames = 1;
+        public BulletPlaybackMode PlaybackMode = BulletPlaybackMode.StretchToLifetime;
+        [Min(0.001f)] public float FixedFps = 12f;
+
+        /// <summary>资源描述版本号，用于迁移器</summary>
+        [HideInInspector] public int SchemaVersion = 1;
+
+        // ──── 旧字段（迁移兼容） ────
+
+        /// <summary>已弃用——旧图集 UV，已重命名为 UVRect + FormerlySerializedAs</summary>
+        [HideInInspector, SerializeField]
+        private Rect _legacyAtlasUV;
+
+        // ──── 视觉 ────
+
         [Header("视觉")]
-        [Tooltip("在弹丸图集中的 UV 矩形")]
-        public Rect AtlasUV;
 
         [Tooltip("颜色叠加")]
         public Color Tint = Color.white;
@@ -28,8 +58,24 @@ namespace MiniGameTemplate.Danmaku
         public float CollisionRadius = 0.1f;
 
         [Header("运动")]
+        [Tooltip("运动策略类型（Default=标准运动, SineWave=正弦波, Spiral=螺旋）")]
+        public MotionType MotionType = MotionType.Default;
+
         [Tooltip("速度随生命周期的曲线（横轴 0-1 = 生命百分比，纵轴 = 速度倍率）")]
         public AnimationCurve SpeedOverLifetime = AnimationCurve.Constant(0, 1, 1);
+
+        [Header("视觉动画（DEC-005=C）")]
+        [Tooltip("勾选后 Mover 才会每帧采样动画曲线写入 BulletCore（不勾=跳过采样，性能更好）")]
+        public bool UseVisualAnimation;
+
+        [Tooltip("缩放随生命周期的曲线（横轴 0-1 = 生命百分比，纵轴 = 缩放倍率，默认常量 1）")]
+        public AnimationCurve ScaleOverLifetime = AnimationCurve.Constant(0, 1, 1);
+
+        [Tooltip("透明度随生命周期的曲线（横轴 0-1 = 生命百分比，纵轴 = Alpha 倍率 0-1，默认常量 1）")]
+        public AnimationCurve AlphaOverLifetime = AnimationCurve.Constant(0, 1, 1);
+
+        [Tooltip("颜色随生命周期的渐变（默认白色→白色=无变化）")]
+        public Gradient ColorOverLifetime;
 
         [Header("伤害")]
         [Tooltip("弹丸命中目标时造成的基础伤害值")]
@@ -131,5 +177,32 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
         [HideInInspector]
         public ushort RuntimeIndex;
+
+        // ──── 序列帧辅助方法 ────
+
+        /// <summary>
+        /// 序列帧总有效帧数。
+        /// </summary>
+        public int MaxFrameCount => Mathf.Max(1, Mathf.Min(SheetTotalFrames, SheetColumns * SheetRows));
+
+        /// <summary>
+        /// 根据帧索引计算该帧在 UVRect 内的子区域。
+        /// Static 模式直接返回 UVRect。
+        /// SpriteSheet 模式按列行切分。
+        /// </summary>
+        public Rect GetFrameUV(int frameIndex)
+        {
+            if (SamplingMode == BulletSamplingMode.Static)
+                return UVRect;
+
+            int cols = Mathf.Max(1, SheetColumns);
+            int rows = Mathf.Max(1, SheetRows);
+            int clampedFrame = Mathf.Clamp(frameIndex, 0, MaxFrameCount - 1);
+            int x = clampedFrame % cols;
+            int y = clampedFrame / cols;
+            float fw = UVRect.width / cols;
+            float fh = UVRect.height / rows;
+            return new Rect(UVRect.x + x * fw, UVRect.y + y * fh, fw, fh);
+        }
     }
 }

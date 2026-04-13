@@ -18,6 +18,10 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("弹幕活动区域（屏幕边缘判定用）")]
         public Rect WorldBounds = new(-6, -10, 12, 20);
 
+        [Header("碰撞事件缓冲")]
+        [Tooltip("碰撞事件 Buffer 容量（旁路表现通道，溢出不影响主逻辑）")]
+        public int CollisionEventBufferCapacity = 256;
+
         [Header("无敌帧")]
         [Tooltip("受击后无敌时长（秒）。0=关闭。使用真实时间，不受弹幕 TimeScale 影响")]
         public float InvincibleDuration = 0f;

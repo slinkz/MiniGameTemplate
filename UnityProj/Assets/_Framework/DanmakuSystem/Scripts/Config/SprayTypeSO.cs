@@ -1,4 +1,5 @@
 using MiniGameTemplate.Pool;
+using MiniGameTemplate.VFX;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
@@ -12,6 +13,9 @@ namespace MiniGameTemplate.Danmaku
         [Header("视觉")]
         [Tooltip("对象池 ParticleSystem 预制件")]
         public PoolDefinition ParticleEffectPrefab;
+
+        [Tooltip("Sprite Sheet VFX 类型（与 ParticleEffectPrefab 二选一，DEC-006）")]
+        public VFXTypeSO SprayVFXType;
 
         [Header("判定")]
         [Tooltip("喷雾阵营（决定与哪些目标碰撞）")]

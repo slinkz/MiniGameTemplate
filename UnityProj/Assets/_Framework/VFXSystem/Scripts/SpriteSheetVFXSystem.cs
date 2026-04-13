@@ -15,6 +15,8 @@ namespace MiniGameTemplate.VFX
 
         private VFXPool _pool;
         private VFXBatchRenderer _renderer;
+        private IVFXPositionResolver _positionResolver;
+        private float _timeScale = 1f;
 
         public int ActiveCount => _pool?.ActiveCount ?? 0;
 
@@ -30,7 +32,7 @@ namespace MiniGameTemplate.VFX
 
         private void Update()
         {
-            Tick(Time.deltaTime);
+            Tick(Time.deltaTime * _timeScale);
         }
 
         private void LateUpdate()
@@ -46,7 +48,7 @@ namespace MiniGameTemplate.VFX
             RebuildRegistryRuntimeIndices();
             _pool = new VFXPool(_capacity);
             _renderer = new VFXBatchRenderer();
-            _renderer.Initialize(_renderConfig, _pool.Capacity);
+            _renderer.Initialize(_renderConfig, _typeRegistry, _pool.Capacity);
         }
 
         public void Dispose()
@@ -111,6 +113,70 @@ namespace MiniGameTemplate.VFX
                 _pool.Free(slot);
         }
 
+        // ──── 附着式 VFX API（ADR-027 §8 三阶段语义） ────
+
+        /// <summary>设置位置解析器（由 Danmaku 桥接层注入）</summary>
+        public void SetPositionResolver(IVFXPositionResolver resolver)
+        {
+            _positionResolver = resolver;
+        }
+
+        /// <summary>设置 VFX 时间缩放（与弹幕 TimeScale 联动）</summary>
+        public void SetTimeScale(float timeScale)
+        {
+            _timeScale = Mathf.Max(0f, timeScale);
+        }
+
+        /// <summary>
+        /// 播放附着式 VFX（绑定到附着源，每帧自动同步位置）。
+        /// 重复调用同一 slot 会先 Stop 旧的再创建新的（ADR-027 §8）。
+        /// </summary>
+        /// <param name="type">VFX 类型</param>
+        /// <param name="attachSourceId">附着源 ID（AttachSourceRegistry）</param>
+        /// <param name="scale">缩放</param>
+        /// <param name="colorOverride">颜色覆盖</param>
+        /// <returns>VFX slot index，-1=失败</returns>
+        public int PlayAttached(VFXTypeSO type, byte attachSourceId, float scale = 1f, Color? colorOverride = null)
+        {
+            if (type == null || attachSourceId == 0) return -1;
+
+            Initialize();
+            RebuildRegistryRuntimeIndices();
+
+            if (!CanPlay(type)) return -1;
+
+            int slot = _pool.Allocate();
+            if (slot < 0) return -1;
+
+            // 尝试解析初始位置
+            Vector3 initPos = Vector3.zero;
+            _positionResolver?.TryResolvePosition(attachSourceId, out initPos);
+
+            Color finalColor = colorOverride ?? type.Tint;
+            _pool.Instances[slot] = new VFXInstance
+            {
+                Position = initPos,
+                Color = finalColor,
+                RotationDegrees = 0f,
+                Scale = Mathf.Max(0.01f, scale),
+                Elapsed = 0f,
+                TypeIndex = type.RuntimeIndex,
+                CurrentFrame = 0,
+                Flags = (byte)(VFXInstance.FLAG_ACTIVE | (type.Loop ? 0 : VFXInstance.FLAG_PLAY_ONCE)),
+                AttachSourceId = attachSourceId,
+            };
+
+            return slot;
+        }
+
+        /// <summary>
+        /// 停止附着式 VFX（幂等——重复调用、无效 handle 均安全）。
+        /// </summary>
+        public void StopAttached(int slot)
+        {
+            Stop(slot);  // 复用已有 Stop 逻辑
+        }
+
         public void Tick(float deltaTime)
         {
             if (_pool == null || _typeRegistry == null)
@@ -130,6 +196,22 @@ namespace MiniGameTemplate.VFX
                 }
 
                 instance.Elapsed += deltaTime;
+
+                // ── 附着位置同步（ADR-021） ──
+                if (instance.AttachSourceId > 0 && (instance.Flags & VFXInstance.FLAG_FROZEN) == 0)
+                {
+                    if (_positionResolver != null && _positionResolver.TryResolvePosition(instance.AttachSourceId, out var resolvedPos))
+                    {
+                        instance.Position = resolvedPos;
+                    }
+                    else
+                    {
+                        // 源失效——冻结在最后有效位置，播放到结束
+                        instance.Flags |= VFXInstance.FLAG_FROZEN;
+                        instance.AttachSourceId = 0;  // 解除绑定，不再尝试解析
+                    }
+                }
+
                 int frame = Mathf.FloorToInt(instance.Elapsed * Mathf.Max(1f, type.FramesPerSecond));
 
                 if (type.Loop)

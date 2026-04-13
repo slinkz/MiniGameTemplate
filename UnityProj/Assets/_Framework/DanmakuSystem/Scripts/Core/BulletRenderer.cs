@@ -1,101 +1,72 @@
 using MiniGameTemplate.Rendering;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 弹幕 Mesh 渲染器——双 Mesh 方案（Normal + Additive），每帧单次顶点上传。
-    /// 交错顶点格式 RenderVertex (24 bytes) + SetVertexBufferData。
-    /// 索引缓冲仅初始化时设置（固定 Quad 拓扑），每帧只更新顶点数据。
+    /// 弹幕渲染器——通过 RenderBatchManager 按 (RenderLayer, Texture) 分桶渲染。
+    /// 支持多贴图弹丸和 Static/SpriteSheet 两种采样模式。
     /// </summary>
     public class BulletRenderer
     {
-        private Mesh _meshNormal;
-        private Mesh _meshAdditive;
+        private RenderBatchManager _batchManager;
+        private Texture2D _fallbackAtlas; // 旧资产 SourceTexture 为空时的 fallback
+        private int _totalQuadCount;
 
-        private RenderVertex[] _verticesNormal;
-        private RenderVertex[] _verticesAdditive;
-
-        // 索引缓冲共享——所有弹丸都是 Quad
-        private int[] _indicesNormal;
-        private int[] _indicesAdditive;
-
-        private int _normalQuadCount;
-        private int _additiveQuadCount;
-
-        private Material _materialNormal;
-        private Material _materialAdditive;
-
-        private int _maxBullets;
-
-        /// <summary>上帧 Normal 层绘制的弹丸数</summary>
-        public int NormalDrawCount => _normalQuadCount;
-
-        /// <summary>上帧 Additive 层绘制的弹丸数</summary>
-        public int AdditiveDrawCount => _additiveQuadCount;
-
-        // VertexAttributeDescriptor 缓存（避免 GC）
-        private static readonly VertexAttributeDescriptor[] VertexLayout = new[]
-        {
-            new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
-            new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
-            new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
-        };
+        /// <summary>上帧绘制的弹丸总 Quad 数（含残影）</summary>
+        public int TotalDrawCount => _totalQuadCount;
 
         /// <summary>
-        /// 初始化渲染器——创建 Mesh、分配顶点缓冲。
+        /// 初始化渲染器——从 TypeRegistry 收集所有 (Layer, SourceTexture) 组合预热桶。
         /// </summary>
-        public void Initialize(DanmakuRenderConfig renderConfig, int maxBullets)
+        public void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
         {
-            _maxBullets = maxBullets;
+            _batchManager = new RenderBatchManager();
+            _fallbackAtlas = renderConfig.BulletAtlas;
 
-            // 创建材质实例并绑定 BulletAtlas 纹理到 _MainTex
-            _materialNormal = renderConfig.BulletMaterial != null
-                ? new Material(renderConfig.BulletMaterial) { name = "DanmakuBullet_Normal (Instance)" }
-                : null;
-            _materialAdditive = renderConfig.BulletAdditiveMaterial != null
-                ? new Material(renderConfig.BulletAdditiveMaterial) { name = "DanmakuBullet_Additive (Instance)" }
-                : null;
+            // 收集所有唯一的 (Layer, SourceTexture) 组合
+            var keys = new System.Collections.Generic.List<RenderBatchManager.BucketKey>();
 
-            if (renderConfig.BulletAtlas != null)
+            if (registry.BulletTypes != null)
             {
-                if (_materialNormal != null) _materialNormal.mainTexture = renderConfig.BulletAtlas;
-                if (_materialAdditive != null) _materialAdditive.mainTexture = renderConfig.BulletAtlas;
+                for (int i = 0; i < registry.BulletTypes.Length; i++)
+                {
+                    var bt = registry.BulletTypes[i];
+                    if (bt == null) continue;
+
+                    // 优先使用 SourceTexture，否则 fallback 到全局 Atlas
+                    var tex = bt.SourceTexture != null ? bt.SourceTexture : _fallbackAtlas;
+                    if (tex == null) continue;
+
+                    var key = new RenderBatchManager.BucketKey(bt.Layer, tex);
+                    if (!keys.Contains(key))
+                        keys.Add(key);
+                }
             }
 
-            // 每个弹丸 = 1 Quad = 4 顶点，最多 maxBullets + 残影
-            int maxQuads = maxBullets * 4;  // 预留残影空间（每颗最多 3 残影）
-            int vertexCount = maxQuads * 4;
-            int indexCount = maxQuads * 6;
+            // 兼容：如果没有任何桶被收集（所有 BulletType 都无有效贴图），
+            // 但全局 Atlas 存在，至少建两个 fallback 桶
+            if (keys.Count == 0 && _fallbackAtlas != null)
+            {
+                keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas));
+                keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Additive, _fallbackAtlas));
+            }
 
-            _verticesNormal = new RenderVertex[vertexCount];
-            _verticesAdditive = new RenderVertex[vertexCount];
-            _indicesNormal = new int[indexCount];
-            _indicesAdditive = new int[indexCount];
-
-            // 预填充索引（0,1,2, 2,3,0 Quad 拓扑）
-            FillQuadIndices(_indicesNormal, maxQuads);
-            FillQuadIndices(_indicesAdditive, maxQuads);
-
-            _meshNormal = CreateMesh("DanmakuMesh_Normal", vertexCount, indexCount);
-            _meshAdditive = CreateMesh("DanmakuMesh_Additive", vertexCount, indexCount);
-
-            // 设置索引缓冲（一次性，运行时不再更新）
-            _meshNormal.SetIndices(_indicesNormal, MeshTopology.Triangles, 0, false);
-            _meshAdditive.SetIndices(_indicesAdditive, MeshTopology.Triangles, 0, false);
+            _batchManager.Initialize(
+                keys,
+                renderConfig.BulletMaterial,
+                renderConfig.BulletAdditiveMaterial,
+                maxQuadsPerBucket,
+                GetSortingOrder);
         }
 
         /// <summary>
-        /// 每帧由 DanmakuSystem.LateUpdate 调用——收集弹丸 → 填充顶点 → 上传 → DrawMesh。
+        /// 每帧由 DanmakuSystem.LateUpdate 调用——收集弹丸 -> 填充顶点 -> 上传 -> DrawMesh。
         /// </summary>
-        public void Rebuild(
-            BulletWorld world,
-            BulletTrail[] trails,
-            DanmakuTypeRegistry registry)
+        public void Rebuild(BulletWorld world, BulletTrail[] trails, DanmakuTypeRegistry registry)
         {
-            _normalQuadCount = 0;
-            _additiveQuadCount = 0;
+            _batchManager.ResetAll();
+            _totalQuadCount = 0;
 
             var cores = world.Cores;
             int capacity = world.Capacity;
@@ -106,9 +77,15 @@ namespace MiniGameTemplate.Danmaku
                 if ((core.Flags & BulletCore.FLAG_ACTIVE) == 0) continue;
 
                 var bulletType = registry.BulletTypes[core.TypeIndex];
-                bool isAdditive = bulletType.Layer == RenderLayer.Additive;
 
-                // 受伤闪烁：FlashTimer > 0 时用 DamageFlashTint 替代 Tint
+                // 确定贴图——优先 SourceTexture，fallback 到全局 Atlas（迁移兼容期）
+                var texture = bulletType.SourceTexture ?? _fallbackAtlas;
+                if (texture == null) continue;
+
+                var bucketKey = new RenderBatchManager.BucketKey(bulletType.Layer, texture);
+                if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
+
+                // 受伤闪烁
                 ref var trail = ref trails[i];
                 Color tint = bulletType.Tint;
                 if (trail.FlashTimer > 0)
@@ -117,12 +94,12 @@ namespace MiniGameTemplate.Danmaku
                     trail.FlashTimer--;
                 }
 
-                // 爆炸帧动画：Exploding 阶段用 ExplosionAtlasUV + 帧偏移
+                // 爆炸帧动画
                 if (core.Phase == (byte)BulletPhase.Exploding
                     && bulletType.Explosion == ExplosionMode.MeshFrame
                     && bulletType.ExplosionFrameCount > 0)
                 {
-                    float frameDuration = 1f / 60f;  // 每帧时长（60fps）
+                    float frameDuration = 1f / 60f;
                     int frame = Mathf.Clamp(
                         (int)(core.Elapsed / frameDuration),
                         0, bulletType.ExplosionFrameCount - 1);
@@ -133,59 +110,112 @@ namespace MiniGameTemplate.Danmaku
                         uv.x + frame * frameWidth, uv.y,
                         frameWidth, uv.height);
 
-                    // 爆炸帧渐隐
                     float explosionAlpha = 1f - (float)frame / bulletType.ExplosionFrameCount;
 
-                    WriteQuadUV(ref core, bulletType, isAdditive, explosionAlpha, tint, frameUV);
+                    WriteQuadUV(bucket, ref core, bulletType, explosionAlpha, tint, frameUV);
                 }
                 else
                 {
-                    // 写入主弹丸 Quad
-                    WriteQuad(ref core, bulletType, isAdditive, 1f, tint);
+                    // 解析 UV：Static 或 SpriteSheet
+                    Rect uv = ResolveUV(bulletType, ref core);
+
+                    WriteQuadUV(bucket, ref core, bulletType, 1f, tint, uv);
                 }
 
-                // 残影 Quad（Ghost 模式——Exploding 阶段不画残影）
+                // 残影 Quad
                 if (core.Phase == (byte)BulletPhase.Active)
                 {
+                    Rect ghostUV = bulletType.SamplingMode == BulletSamplingMode.Static
+                        ? bulletType.UVRect
+                        : bulletType.GetFrameUV(0); // 残影用第一帧
+
                     if (trail.TrailLength >= 1)
-                        WriteGhostQuad(trail.PrevPos1, bulletType, isAdditive, 0.6f);
+                        WriteGhostQuad(bucket, trail.PrevPos1, bulletType, 0.6f, ghostUV);
                     if (trail.TrailLength >= 2)
-                        WriteGhostQuad(trail.PrevPos2, bulletType, isAdditive, 0.3f);
+                        WriteGhostQuad(bucket, trail.PrevPos2, bulletType, 0.3f, ghostUV);
                     if (trail.TrailLength >= 3)
-                        WriteGhostQuad(trail.PrevPos3, bulletType, isAdditive, 0.15f);
+                        WriteGhostQuad(bucket, trail.PrevPos3, bulletType, 0.15f, ghostUV);
                 }
             }
 
-            // 上传顶点数据
-            UploadAndDraw(_meshNormal, _verticesNormal, _normalQuadCount, _materialNormal);
-            UploadAndDraw(_meshAdditive, _verticesAdditive, _additiveQuadCount, _materialAdditive);
+            _batchManager.UploadAndDrawAll();
         }
 
-        /// <summary>释放 Mesh 资源。</summary>
+        /// <summary>释放 BatchManager 资源。</summary>
         public void Dispose()
         {
-            if (_meshNormal != null) Object.Destroy(_meshNormal);
-            if (_meshAdditive != null) Object.Destroy(_meshAdditive);
-            if (_materialNormal != null) Object.Destroy(_materialNormal);
-            if (_materialAdditive != null) Object.Destroy(_materialAdditive);
+            _batchManager?.Dispose();
         }
 
-        // ──── 内部方法 ────
+        // ──── 序列帧 UV 解析 ────
 
-        private void WriteQuad(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha, Color tint)
+        /// <summary>
+        /// 解析弹丸当前帧的 UV。
+        /// Static 模式返回 UVRect，SpriteSheet 模式按生命周期或固定 FPS 计算帧索引。
+        /// </summary>
+        private static Rect ResolveUV(BulletTypeSO type, ref BulletCore core)
         {
-            RenderVertex[] verts;
-            ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
+            if (type.SamplingMode == BulletSamplingMode.Static)
+                return type.UVRect;
 
-            verts = isAdditive ? _verticesAdditive : _verticesNormal;
+            // SpriteSheet 模式：计算帧索引
+            int frameIndex = 0;
+            int maxFrame = type.MaxFrameCount;
 
-            int baseVertex = quadCount * 4;
-            if (baseVertex + 4 > verts.Length) return;  // 溢出保护
+            switch (type.PlaybackMode)
+            {
+                case BulletPlaybackMode.StretchToLifetime:
+                {
+                    // 弹丸生命周期归一化时间 -> 帧
+                    float t = core.Lifetime > 0f
+                        ? Mathf.Clamp01(core.Elapsed / core.Lifetime)
+                        : 0f;
+                    frameIndex = Mathf.Min((int)(t * maxFrame), maxFrame - 1);
+                    break;
+                }
 
-            float halfW = type.Size.x * 0.5f;
-            float halfH = type.Size.y * 0.5f;
+                case BulletPlaybackMode.FixedFpsLoop:
+                {
+                    float fps = Mathf.Max(0.001f, type.FixedFps);
+                    frameIndex = (int)(core.Elapsed * fps) % maxFrame;
+                    break;
+                }
 
-            // 旋转（如果启用 RotateToDirection）
+                case BulletPlaybackMode.FixedFpsOnce:
+                {
+                    float fps = Mathf.Max(0.001f, type.FixedFps);
+                    frameIndex = Mathf.Min((int)(core.Elapsed * fps), maxFrame - 1);
+                    break;
+                }
+            }
+
+            return type.GetFrameUV(frameIndex);
+        }
+
+        // ──── Quad 写入 ────
+
+        private void WriteQuadUV(RenderBatchManager.RenderBucket bucket,
+            ref BulletCore core, BulletTypeSO type, float alpha, Color tint, Rect uv)
+        {
+            int baseVertex = bucket.AllocateQuad();
+            if (baseVertex < 0) return;
+
+            _totalQuadCount++;
+
+            // DEC-005=C：从 Core 读取动画值（Mover 每帧写入，Allocate 初始化默认值）
+            float halfW = type.Size.x * 0.5f * core.AnimScale;
+            float halfH = type.Size.y * 0.5f * core.AnimScale;
+
+            // 动画透明度叠加
+            float finalAlpha = alpha * core.AnimAlpha;
+
+            // 动画颜色叠加
+            Color finalTint = new Color(
+                tint.r * (core.AnimColor.r / 255f),
+                tint.g * (core.AnimColor.g / 255f),
+                tint.b * (core.AnimColor.b / 255f),
+                tint.a * (core.AnimColor.a / 255f));
+
             float cos = 1f, sin = 0f;
             if ((core.Flags & BulletCore.FLAG_ROTATE_TO_DIR) != 0)
             {
@@ -194,69 +224,37 @@ namespace MiniGameTemplate.Danmaku
                 sin = Mathf.Sin(angle);
             }
 
-            // 4 个角点（逆时针）
+            var verts = bucket.Vertices;
             WriteVertex(ref verts[baseVertex + 0], core.Position, -halfW, -halfH, cos, sin,
-                type.AtlasUV.xMin, type.AtlasUV.yMin, tint, alpha);
+                uv.xMin, uv.yMin, finalTint, finalAlpha);
             WriteVertex(ref verts[baseVertex + 1], core.Position, halfW, -halfH, cos, sin,
-                type.AtlasUV.xMax, type.AtlasUV.yMin, tint, alpha);
+                uv.xMax, uv.yMin, finalTint, finalAlpha);
             WriteVertex(ref verts[baseVertex + 2], core.Position, halfW, halfH, cos, sin,
-                type.AtlasUV.xMax, type.AtlasUV.yMax, tint, alpha);
+                uv.xMax, uv.yMax, finalTint, finalAlpha);
             WriteVertex(ref verts[baseVertex + 3], core.Position, -halfW, halfH, cos, sin,
-                type.AtlasUV.xMin, type.AtlasUV.yMax, tint, alpha);
-
-            quadCount++;
+                uv.xMin, uv.yMax, finalTint, finalAlpha);
         }
 
-        private void WriteQuadUV(ref BulletCore core, BulletTypeSO type, bool isAdditive, float alpha, Color tint, Rect uv)
+        private void WriteGhostQuad(RenderBatchManager.RenderBucket bucket,
+            Vector2 position, BulletTypeSO type, float alpha, Rect uv)
         {
-            RenderVertex[] verts;
-            ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
+            int baseVertex = bucket.AllocateQuad();
+            if (baseVertex < 0) return;
 
-            verts = isAdditive ? _verticesAdditive : _verticesNormal;
-
-            int baseVertex = quadCount * 4;
-            if (baseVertex + 4 > verts.Length) return;
+            _totalQuadCount++;
 
             float halfW = type.Size.x * 0.5f;
             float halfH = type.Size.y * 0.5f;
 
-            // 爆炸帧不旋转
-            WriteVertex(ref verts[baseVertex + 0], core.Position, -halfW, -halfH, 1, 0,
-                uv.xMin, uv.yMin, tint, alpha);
-            WriteVertex(ref verts[baseVertex + 1], core.Position, halfW, -halfH, 1, 0,
-                uv.xMax, uv.yMin, tint, alpha);
-            WriteVertex(ref verts[baseVertex + 2], core.Position, halfW, halfH, 1, 0,
-                uv.xMax, uv.yMax, tint, alpha);
-            WriteVertex(ref verts[baseVertex + 3], core.Position, -halfW, halfH, 1, 0,
-                uv.xMin, uv.yMax, tint, alpha);
-
-            quadCount++;
-        }
-
-        private void WriteGhostQuad(Vector2 position, BulletTypeSO type, bool isAdditive, float alpha)
-        {
-            RenderVertex[] verts;
-            ref int quadCount = ref (isAdditive ? ref _additiveQuadCount : ref _normalQuadCount);
-
-            verts = isAdditive ? _verticesAdditive : _verticesNormal;
-
-            int baseVertex = quadCount * 4;
-            if (baseVertex + 4 > verts.Length) return;
-
-            float halfW = type.Size.x * 0.5f;
-            float halfH = type.Size.y * 0.5f;
-
-            // 残影不旋转
+            var verts = bucket.Vertices;
             WriteVertex(ref verts[baseVertex + 0], position, -halfW, -halfH, 1, 0,
-                type.AtlasUV.xMin, type.AtlasUV.yMin, type.Tint, alpha);
+                uv.xMin, uv.yMin, type.Tint, alpha);
             WriteVertex(ref verts[baseVertex + 1], position, halfW, -halfH, 1, 0,
-                type.AtlasUV.xMax, type.AtlasUV.yMin, type.Tint, alpha);
+                uv.xMax, uv.yMin, type.Tint, alpha);
             WriteVertex(ref verts[baseVertex + 2], position, halfW, halfH, 1, 0,
-                type.AtlasUV.xMax, type.AtlasUV.yMax, type.Tint, alpha);
+                uv.xMax, uv.yMax, type.Tint, alpha);
             WriteVertex(ref verts[baseVertex + 3], position, -halfW, halfH, 1, 0,
-                type.AtlasUV.xMin, type.AtlasUV.yMax, type.Tint, alpha);
-
-            quadCount++;
+                uv.xMin, uv.yMax, type.Tint, alpha);
         }
 
         private static void WriteVertex(
@@ -266,7 +264,6 @@ namespace MiniGameTemplate.Danmaku
             float uvX, float uvY,
             Color tint, float alpha)
         {
-            // 旋转偏移
             float rx = offsetX * cos - offsetY * sin;
             float ry = offsetX * sin + offsetY * cos;
 
@@ -279,57 +276,14 @@ namespace MiniGameTemplate.Danmaku
                 (byte)(alpha * tint.a * 255));
         }
 
-        private static void UploadAndDraw(Mesh mesh, RenderVertex[] vertices, int quadCount, Material material)
+        private static int GetSortingOrder(RenderLayer layer)
         {
-            if (quadCount == 0 || material == null) return;
-
-            int vertexCount = quadCount * 4;
-            int indexCount = quadCount * 6;
-
-            mesh.SetVertexBufferData(vertices, 0, 0, vertexCount, 0,
-                MeshUpdateFlags.DontValidateIndices |
-                MeshUpdateFlags.DontRecalculateBounds |
-                MeshUpdateFlags.DontNotifyMeshUsers);
-
-            // 更新子网格范围（索引已预填充，只需告知绘制多少）
-            mesh.SetSubMesh(0, new SubMeshDescriptor(0, indexCount, MeshTopology.Triangles),
-                MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontRecalculateBounds);
-
-            // 设置足够大的 bounds 避免被剔除
-            mesh.bounds = new Bounds(Vector3.zero, new Vector3(100, 100, 1));
-
-            Graphics.DrawMesh(mesh, Matrix4x4.identity, material, 0);
-        }
-
-        private static Mesh CreateMesh(string name, int maxVertices, int maxIndices)
-        {
-            var mesh = new Mesh
+            return layer switch
             {
-                name = name,
-                indexFormat = maxVertices > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16,
+                RenderLayer.Normal => RenderSortingOrder.BulletNormal,
+                RenderLayer.Additive => RenderSortingOrder.BulletAdditive,
+                _ => 0,
             };
-
-            // 设置顶点布局
-            mesh.SetVertexBufferParams(maxVertices, VertexLayout);
-            mesh.SetIndexBufferParams(maxIndices,
-                maxVertices > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16);
-
-            return mesh;
-        }
-
-        private static void FillQuadIndices(int[] indices, int maxQuads)
-        {
-            for (int q = 0; q < maxQuads; q++)
-            {
-                int vi = q * 4;
-                int ii = q * 6;
-                indices[ii + 0] = vi + 0;
-                indices[ii + 1] = vi + 1;
-                indices[ii + 2] = vi + 2;
-                indices[ii + 3] = vi + 2;
-                indices[ii + 4] = vi + 3;
-                indices[ii + 5] = vi + 0;
-            }
         }
     }
 }

@@ -10,15 +10,19 @@
 DanmakuSystem/
 ├── MODULE_README.md          # 本文件
 ├── Scripts/
-│   ├── DanmakuSystem.cs      # 唯一 MonoBehaviour 入口
+│   ├── DanmakuSystem.cs            # Facade MonoBehaviour 入口（partial class 主文件：单例/Awake/Update/LateUpdate）
+│   ├── DanmakuSystem.Runtime.cs    # [Phase 2] 子系统引用持有、InitializeSubsystems/DisposeSubsystems
+│   ├── DanmakuSystem.API.cs        # [Phase 2] 公开 API：Fire/Register/Clear/ClearAllBulletsWithEffect
+│   ├── DanmakuSystem.UpdatePipeline.cs # [Phase 2] 逐帧驱动管线（9步 Update + LateUpdate 渲染）
 │   ├── Data/                  # 纯数据结构 + 容器
 │   │   ├── BulletCore.cs      # 弹丸热数据 (36B)
 │   │   ├── BulletTrail.cs     # 弹丸冷数据 (28B)
-│   │   ├── BulletModifier.cs  # 修饰数据 (16B)
-│   │   ├── DanmakuEnums.cs    # 所有枚举（含 LaserObstacleResponse, LaserScreenEdgeResponse, SprayObstacleResponse）
+│   │   ├── BulletModifier.cs  # 修饰数据 (20B)
+│   │   ├── DanmakuEnums.cs    # 所有枚举（含 MotionType, CollisionEventType, BulletSamplingMode, BulletPlaybackMode 等）
 │   │   ├── CircleHitbox.cs    # 圆形碰撞体
 │   │   ├── ICollisionTarget.cs # 碰撞目标接口（玩家/Boss/敌人等）
 │   │   ├── TargetRegistry.cs  # 碰撞目标注册表 (16 槽)
+│   │   ├── CollisionEventBuffer.cs # [Phase 2] 零 GC 碰撞事件旁路缓冲（CollisionEvent struct + CollisionEventBuffer class）
 │   │   ├── (已迁移)           # 渲染顶点已迁移至 _Framework/Rendering/RenderVertex.cs
 │   │   ├── LaserData.cs       # 激光运行时数据（含 Segments[], AttachId）
 │   │   ├── LaserSegment.cs    # 折射线段数据结构 (Start/End/Normal)
@@ -31,7 +35,7 @@ DanmakuSystem/
 │   │   ├── SprayPool.cs       # 喷雾容器 (8)
 │   │   └── ObstaclePool.cs    # 障碍物容器 (64)
 │   ├── Config/                # ScriptableObject 配置
-│   │   ├── BulletTypeSO.cs    # 弹丸视觉类型
+│   │   ├── BulletTypeSO.cs    # 弹丸类型（含 MotionType, SourceTexture, SamplingMode, SchemaVersion）
 │   │   ├── LaserTypeSO.cs     # 激光类型（含折射/穿透响应）
 │   │   ├── SprayTypeSO.cs     # 喷雾类型（含碰撞响应）
 │   │   ├── ObstacleTypeSO.cs  # 障碍物类型
@@ -39,16 +43,22 @@ DanmakuSystem/
 │   │   ├── PatternGroupSO.cs  # 弹幕组合编排
 │   │   ├── SpawnerProfileSO.cs # 发射器配置
 │   │   ├── DifficultyProfileSO.cs # 难度乘数
-│   │   ├── DanmakuWorldConfig.cs  # 世界配置
+│   │   ├── DanmakuWorldConfig.cs  # 世界配置（含 CollisionEventBufferCapacity = 256）
 │   │   ├── DanmakuRenderConfig.cs # 渲染配置
 │   │   ├── DanmakuTypeRegistry.cs # 类型注册表
 │   │   └── DanmakuTimeScaleSO.cs  # 时间缩放
 │   └── Core/                  # 系统逻辑
-│       ├── BulletMover.cs     # 弹丸运动
+│       ├── BulletMover.cs     # 弹丸运动（通过 MotionRegistry 策略委托驱动，不含运动分支逻辑）
 │       ├── BulletSpawner.cs   # 弹丸发射
-│       ├── CollisionSolver.cs # 7 阶段碰撞检测（多目标）
-│       ├── BulletRenderer.cs  # 弹丸 Mesh 渲染
-│       ├── LaserRenderer.cs  # 激光 Mesh 渲染（Quad 条带 + WidthProfile 驱动）
+│       ├── CollisionSolver.cs # 7 阶段碰撞检测（含 CollisionEventBuffer 旁路写入）
+│       ├── MotionRegistry.cs  # [Phase 2] 运动策略受控注册表（MotionStrategy 委托 + 枚举索引）
+│       ├── DefaultMotionStrategy.cs  # [Phase 2] 默认运动策略（延迟变速 + 速度曲线 + 追踪）
+│       ├── SineWaveMotionStrategy.cs # [Phase 2] 正弦波运动策略
+│       ├── SpiralMotionStrategy.cs   # [Phase 2] 螺旋运动策略
+│       ├── IDanmakuEffectsBridge.cs  # [Phase 2] 特效桥接接口（解耦 Danmaku ↔ VFX）
+│       ├── DefaultDanmakuEffectsBridge.cs # [Phase 2] 默认桥接实现（消费事件 → 触发 VFX）
+│       ├── BulletRenderer.cs  # 弹丸 Mesh 渲染（BatchManager 分桶）
+│       ├── LaserRenderer.cs   # 激光 Mesh 渲染（Quad 条带 + WidthProfile + BatchManager）
 │       ├── PatternScheduler.cs # 弹幕调度（含调试统计）
 │       ├── SpawnerDriver.cs   # 发射器驱动（驱动 SpawnerProfileSO 自动发射）
 │       ├── LaserUpdater.cs    # 激光更新（含 FreeLaser 统一回收）
@@ -64,14 +74,51 @@ DanmakuSystem/
 
 ## 架构要点
 
+### 核心数据架构
 - **SoA 布局**: BulletCore(热) + BulletTrail(冷) + BulletModifier(修饰) 三层分离
 - **预分配池**: 所有容器启动时预分配，运行时零 new
-- **双 Mesh 渲染**: Normal + Additive 各一个 Mesh，每帧单次 SetVertexBufferData
-- **激光渲染**: LaserRenderer 独立 Mesh（144 Quad），WidthProfile 曲线驱动宽度，Phase alpha 闪烁/渐隐
+- **多贴图分桶渲染**: 通过 `RenderBatchManager`（共享 `_Framework/Rendering/`）按 `(RenderLayer, Texture2D)` 二元组分桶，每桶一个 DrawCall
+- **激光渲染**: LaserRenderer 使用 BatchManager，WidthProfile 曲线驱动宽度，Phase alpha 闪烁/渐隐
+
+### Facade 拆分 [Phase 2]
+
+`DanmakuSystem` 保留为单一 `MonoBehaviour` Facade 入口（DontDestroyOnLoad 单例），内部通过 `partial class` 拆分为 4 个职责文件：
+
+| 文件 | 行数 | 职责 |
+|------|------|------|
+| `DanmakuSystem.cs` | 112 | Facade 主文件：单例、Awake/Update/LateUpdate、序列化字段、`PlayerCollisionTarget` 内部适配器 |
+| `DanmakuSystem.Runtime.cs` | 94 | 子系统引用持有、`InitializeSubsystems()` / `DisposeSubsystems()`、`MotionRegistry.Initialize()` |
+| `DanmakuSystem.API.cs` | 261 | 公开 API：SetPlayer / RegisterTarget / Fire* / ClearAll / `ClearAllBulletsWithEffect` |
+| `DanmakuSystem.UpdatePipeline.cs` | 78 | 逐帧管线：9步 Update（SpawnerDriver→Scheduler→BulletMover→LaserUpdater→SprayUpdater→CollisionSolver→PlayerHit→EffectsBridge→BufferReset）+ LateUpdate 渲染 |
+
+### 碰撞系统
 - **多目标碰撞**: 通过 ICollisionTarget + TargetRegistry（16 槽）支持任意数量碰撞目标，自动阵营过滤
 - **7 阶段碰撞**: 弹丸→目标 / 弹丸→障碍物 / 弹丸→屏幕边缘 / 激光→目标 / 喷雾→目标 / 喷雾→障碍物 / 喷雾→屏幕边缘
 - **碰撞响应**: Die / ReduceHP / Pierce / BounceBack / Reflect / RecycleOnDistance
+- **碰撞事件 Buffer [Phase 2]**: `CollisionEventBuffer`（预分配 256 条，零 GC）作为旁路表现通道，溢出仅影响 VFX/飘字等表现，不影响伤害/击退/死亡主逻辑
 - **激光折射**: LaserSegmentSolver 解算反射/穿透路径，MAX_ITERATIONS=32 安全网
+
+### 运动策略 [Phase 2]
+
+通过 `MotionRegistry` 受控静态注册表 + `MotionStrategy` 委托实现可扩展运动：
+
+| MotionType | 策略类 | 行为 |
+|-----------|--------|------|
+| `Default` (0) | `DefaultMotionStrategy` | 延迟变速 + 速度曲线 + 追踪 |
+| `SineWave` (1) | `SineWaveMotionStrategy` | 垂直于飞行方向叠加正弦偏移 |
+| `Spiral` (2) | `SpiralMotionStrategy` | 持续角速度转向 + 速度曲线 |
+
+**扩展方式**：在 `MotionType` 枚举新增值 → 实现新策略类（static Execute 方法）→ 在 `MotionRegistry.Initialize()` 注册。无需修改 `BulletMover` 核心热路径。
+
+### 特效桥接 [Phase 2]
+
+- **`IDanmakuEffectsBridge`** 接口解耦 Danmaku ↔ VFX 命名空间依赖
+  - `OnCollisionEventsReady(CollisionEventBuffer)` — 碰撞后、Buffer Reset 前调用
+  - `OnBulletCleared(int, Vector2, BulletTypeSO)` — 清屏 API 逐弹丸调用
+- **`DefaultDanmakuEffectsBridge`** 是唯一包含 `using MiniGameTemplate.VFX` 的运行时类
+- DanmakuSystem Facade 仍持有 `_hitVfxSystem` / `_hitVfxType` 序列化字段（Phase 3 待迁移到桥接组件）
+
+### 其他架构要点
 - **挂载跟踪**: AttachSourceRegistry（24 槽，引用计数+空闲栈，注册即持有 refCount=1）
 - **PatternScheduler**: 64 槽调度器，驱动 Burst 连射 + PatternGroup 组合（含 PeakTasks/TotalScheduled 统计）
 - **SpawnerDriver**: 8 槽发射器驱动器，自动驱动 SpawnerProfileSO 的 Sequential/Random/External 模式
@@ -114,15 +161,73 @@ DanmakuSystem.Instance.SpawnerDriver.SetGroupIndex(spawnerId, 2);
 // 11. 运行时切换难度
 DanmakuSystem.Instance.Difficulty = harderDifficultySO;
 
-// 12. 清场
+// 12. 清场（回收全部弹丸/激光/喷雾/障碍物/挂载源/调度任务）
 DanmakuSystem.Instance.ClearAll();
+
+// 13. [Phase 2] 清屏转化（遍历每颗弹丸 → 通知 EffectsBridge 生成特效/得分 → 回收）
+DanmakuSystem.Instance.ClearAllBulletsWithEffect();
+```
+
+### 使用 BulletTypeSO 的 MotionType
+
+```csharp
+// 在 BulletTypeSO Inspector 中选择 MotionType：
+// Default  — 普通弹丸（延迟变速/速度曲线/追踪）
+// SineWave — 蛇形弹丸（振幅/频率通过 Modifier 空闲字段配置）
+// Spiral   — 螺旋弹丸（角速度通过 Modifier 空闲字段配置）
+```
+
+### 消费碰撞事件 Buffer
+
+```csharp
+// 自定义桥接——实现 IDanmakuEffectsBridge 消费碰撞事件
+public class MyEffectsBridge : IDanmakuEffectsBridge
+{
+    public void OnCollisionEventsReady(CollisionEventBuffer buffer)
+    {
+        var span = buffer.AsReadOnlySpan();
+        for (int i = 0; i < span.Length; i++)
+        {
+            ref readonly var evt = ref span[i];
+            // evt.Position / evt.Damage / evt.EventType / evt.SourceFaction ...
+        }
+    }
+
+    public void OnBulletCleared(int bulletIndex, Vector2 position, BulletTypeSO type)
+    {
+        // 清屏特效/得分
+    }
+}
 ```
 
 ## 依赖模块
 
+- **Rendering**: `_Framework/Rendering/`（RenderVertex / RenderLayer / RenderSortingOrder / RenderBatchManager）
 - **EventSystem**: GameEvent / IntGameEvent（玩家命中/伤害事件）
 - **ObjectPool**: PoolManager / PoolDefinition（重特效预制件）
 - **AudioSystem**: AudioClipSO（音效配置）
+- **VFXSystem**（仅通过 `DefaultDanmakuEffectsBridge` 间接依赖，主命名空间不引用 VFX）
+
+## 每帧更新管线 [Phase 2]
+
+```
+Update() → RunUpdatePipeline()
+  1. SpawnerDriver.Tick          — 发射器驱动 Tick
+  2. PatternScheduler.Tick       — 调度器执行到期任务
+  3. BulletMover.UpdateAll       — 弹丸运动（MotionRegistry 策略委托）
+  4. LaserUpdater.UpdateAll      — 激光更新（挂载同步 + 折射段解算）
+  5. SprayUpdater.UpdateAll      — 喷雾更新（挂载同步）
+  6. CollisionSolver.SolveAll    — 7 阶段碰撞（写入 CollisionEventBuffer）
+  7. PlayerHit 事件 + 飘字       — 无敌帧 + GameEvent
+  8. EffectsBridge.OnCollisionEventsReady — 桥接层消费事件 Buffer
+  9. CollisionEventBuffer.Reset  — 帧末清零
+
+LateUpdate() → RunLateUpdatePipeline()
+  1. BulletRenderer.Rebuild      — 弹丸 Mesh 重建
+  2. LaserRenderer.Rebuild       — 激光 Mesh 重建
+  3. DamageNumberSystem.UpdateAndRender — 飘字
+  4. TrailPool.Render             — 拖尾
+```
 
 ## 性能预算
 
@@ -130,7 +235,7 @@ DanmakuSystem.Instance.ClearAll();
 |--------|------|------|
 | BulletMover | ≤ 1.5ms | 2048 弹丸运动 |
 | CollisionSolver | ≤ 1.5ms | 7 阶段碰撞 |
-| BulletRenderer | ≤ 1.5ms | 双 Mesh 上传 |
+| BulletRenderer | ≤ 1.5ms | 分桶 Mesh 上传 |
 | PatternScheduler | ≤ 0.2ms | 64 任务遍历 |
 | LaserUpdater + SprayUpdater | ≤ 0.5ms | 24 实体 |
 | DamageNumberSystem | ≤ 0.3ms | 128 飘字 |
@@ -142,4 +247,14 @@ DanmakuSystem.Instance.ClearAll();
 - 无 Physics2D、无 Compute Shader
 - 单线程，不可使用 Jobs/Burst
 - Gamma 色彩空间
-- Draw Call 预算：7-11 DC（弹丸2 + 激光1 + 喷雾1 + 飘字1 + 拖尾1 + UI若干）
+- Draw Call 预算：按贴图分桶后随贴图数线性增长，基线约 7-15 DC
+
+## 重构进度
+
+| Phase | 目标 | 状态 |
+|-------|------|------|
+| Phase 0 | 基础设施层（共享渲染、容量配置化） | ✅ 已完成 |
+| Phase 1 | 渲染管线重构（多贴图分桶、序列帧子弹） | ✅ 已完成 |
+| Phase 2 | 事件与扩展性（碰撞事件 Buffer、运动策略、Facade 拆分、VFX 桥接、清屏 API） | ✅ 已完成 |
+| Phase 3 | 视觉增强（弹丸动画、Shader、预警线、喷雾可视化） | ⏳ 待开始 |
+| Phase 4 | 工作流与工具（Atlas 工具、热重载、调试 HUD、文档） | ⏳ 待开始 |

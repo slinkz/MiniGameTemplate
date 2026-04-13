@@ -4,7 +4,8 @@ namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
     /// 弹丸运动更新器——纯 static 工具类，每帧由 DanmakuSystem.Update 调用。
-    /// 负责：位置更新、速度曲线、延迟变速、追踪、残影记录、Phase 推进、子弹幕触发、回收。
+    /// 负责：通过 MotionRegistry 策略委托驱动位置更新、残影记录、Phase 推进、子弹幕触发、回收。
+    /// 运动分支逻辑已委托给 MotionRegistry 策略，BulletMover 只保留生命周期管理。
     /// </summary>
     public static class BulletMover
     {
@@ -78,57 +79,6 @@ namespace MiniGameTemplate.Danmaku
                     continue;
                 }
 
-                // 延迟变速（Modifier 冷数据）
-                float speedMultiplier = 1f;
-                if ((core.Flags & BulletCore.FLAG_HAS_MODIFIER) != 0)
-                {
-                    ref var mod = ref modifiers[i];
-                    speedMultiplier = CalculateModifierSpeed(core.Elapsed, ref mod);
-                }
-                // 速度曲线（与延迟变速互斥）
-                else if ((core.Flags & BulletCore.FLAG_SPEED_CURVE) != 0)
-                {
-                    var bulletType = registry.BulletTypes[core.TypeIndex];
-                    float normalizedTime = core.Elapsed / core.Lifetime;
-                    speedMultiplier = bulletType.SpeedOverLifetime.Evaluate(normalizedTime);
-                }
-
-                // 追踪（实时转向）
-                if ((core.Flags & BulletCore.FLAG_HOMING) != 0)
-                {
-                    // 检查追踪延迟
-                    bool shouldTrack = true;
-                    if ((core.Flags & BulletCore.FLAG_HAS_MODIFIER) != 0)
-                    {
-                        ref var mod = ref modifiers[i];
-                        if (core.Elapsed < mod.HomingStartTime)
-                            shouldTrack = false;
-                    }
-
-                    if (shouldTrack)
-                    {
-                        Vector2 toPlayer = playerPos - core.Position;
-                        if (toPlayer.sqrMagnitude > 0.001f)
-                        {
-                            float targetAngle = Mathf.Atan2(toPlayer.y, toPlayer.x);
-                            float currentAngle = Mathf.Atan2(core.Velocity.y, core.Velocity.x);
-                            // 从 Modifier 读取策划配置的转向速度（度/秒）
-                            float homingDegPerSec = modifiers[i].HomingStrength;
-                            float maxTurn = homingDegPerSec * Mathf.Deg2Rad * dt;
-                            float angleDiff = Mathf.DeltaAngle(
-                                currentAngle * Mathf.Rad2Deg,
-                                targetAngle * Mathf.Rad2Deg) * Mathf.Deg2Rad;
-                            float turn = Mathf.Clamp(angleDiff, -maxTurn, maxTurn);
-                            float newAngle = currentAngle + turn;
-                            // 使用 sqrMagnitude 避免冗余 sqrt
-                            float speedSq = core.Velocity.sqrMagnitude;
-                            float speed = speedSq > 0.001f ? Mathf.Sqrt(speedSq) : 0f;
-                            core.Velocity = new Vector2(
-                                Mathf.Cos(newAngle), Mathf.Sin(newAngle)) * speed;
-                        }
-                    }
-                }
-
                 // 残影记录（渲染前更新历史位置）
                 ref var trail = ref trails[i];
                 if (trail.TrailLength > 0)
@@ -138,8 +88,38 @@ namespace MiniGameTemplate.Danmaku
                     trail.PrevPos1 = core.Position;
                 }
 
-                // 位置更新
-                core.Position += core.Velocity * speedMultiplier * dt;
+                // 运动策略委托——通过 MotionRegistry 查表执行
+                var type = registry.BulletTypes[core.TypeIndex];
+                var strategy = MotionRegistry.Get(type.MotionType);
+                strategy(ref core, ref modifiers[i], type, playerPos, dt);
+
+                // ── 视觉动画采样（DEC-005=C：Mover 写入，Renderer 读取） ──
+                if (type.UseVisualAnimation)
+                {
+                    float t = core.Lifetime > 0f ? Mathf.Clamp01(core.Elapsed / core.Lifetime) : 0f;
+                    core.AnimScale = type.ScaleOverLifetime.Evaluate(t);
+                    core.AnimAlpha = type.AlphaOverLifetime.Evaluate(t);
+                    if (type.ColorOverLifetime != null)
+                    {
+                        Color gc = type.ColorOverLifetime.Evaluate(t);
+                        core.AnimColor = new Color32(
+                            (byte)(gc.r * 255),
+                            (byte)(gc.g * 255),
+                            (byte)(gc.b * 255),
+                            (byte)(gc.a * 255));
+                    }
+                    else
+                    {
+                        core.AnimColor = new Color32(255, 255, 255, 255);
+                    }
+                }
+                else
+                {
+                    // 无动画——写入默认值（确保 Renderer 读到有效值）
+                    core.AnimScale = 1f;
+                    core.AnimAlpha = 1f;
+                    core.AnimColor = new Color32(255, 255, 255, 255);
+                }
 
                 // 重量拖尾记录
                 if ((core.Flags & BulletCore.FLAG_HEAVY_TRAIL) != 0 && trailPool != null)
@@ -148,26 +128,6 @@ namespace MiniGameTemplate.Danmaku
                     if (trailRef.HeavyTrailHandle >= 0)
                         trailPool.AddPoint(trailRef.HeavyTrailHandle, core.Position);
                 }
-            }
-        }
-
-        /// <summary>计算延迟变速倍率</summary>
-        private static float CalculateModifierSpeed(float elapsed, ref BulletModifier mod)
-        {
-            if (elapsed < mod.DelayEndTime)
-            {
-                // 延迟期间——使用配置的速度倍率
-                return mod.DelaySpeedScale;
-            }
-            else if (elapsed < mod.AccelEndTime)
-            {
-                // 加速过渡期——线性插值
-                float t = (elapsed - mod.DelayEndTime) / (mod.AccelEndTime - mod.DelayEndTime);
-                return Mathf.Lerp(mod.DelaySpeedScale, 1f, t);
-            }
-            else
-            {
-                return 1f;
             }
         }
 
@@ -192,13 +152,12 @@ namespace MiniGameTemplate.Danmaku
             {
                 case ExplosionMode.MeshFrame:
                     core.Phase = (byte)BulletPhase.Exploding;
-                    core.Elapsed = 0;  // 复用 Elapsed 做爆炸计时
-                    return;  // 不回收，等爆炸帧播完
+                    core.Elapsed = 0;
+                    return;
 
                 case ExplosionMode.PooledPrefab:
                     if (bulletType.HeavyExplosionPrefab != null)
                     {
-                        // 从对象池取特效预制件（调用框架 PoolManager）
                         var pool = MiniGameTemplate.Pool.PoolManager.Instance;
                         if (pool != null)
                         {

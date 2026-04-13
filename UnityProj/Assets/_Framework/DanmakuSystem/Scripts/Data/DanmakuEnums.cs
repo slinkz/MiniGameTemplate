@@ -120,6 +120,55 @@ namespace MiniGameTemplate.Danmaku
         RecycleOnOriginOut = 2,
     }
 
+    /// <summary>弹丸采样模式（Static = 单帧, SpriteSheet = 序列帧动画）</summary>
+    public enum BulletSamplingMode : byte
+    {
+        /// <summary>静态单帧——使用 UVRect 直接采样</summary>
+        Static = 0,
+
+        /// <summary>Sprite Sheet 序列帧——按生命周期或固定 FPS 驱动帧切换</summary>
+        SpriteSheet = 1,
+    }
+
+    /// <summary>子弹序列帧播放模式</summary>
+    public enum BulletPlaybackMode : byte
+    {
+        /// <summary>拉伸到生命周期——整个生命周期播完一遍</summary>
+        StretchToLifetime = 0,
+
+        /// <summary>固定 FPS 循环——按 FixedFps 循环播放</summary>
+        FixedFpsLoop = 1,
+
+        /// <summary>固定 FPS 单次——播完停在最后一帧</summary>
+        FixedFpsOnce = 2,
+    }
+
+    /// <summary>碰撞事件类型（旁路 Buffer 用，区分弹丸/激光/喷雾命中）</summary>
+    public enum CollisionEventType : byte
+    {
+        /// <summary>弹丸命中目标</summary>
+        BulletHit = 0,
+
+        /// <summary>激光命中目标</summary>
+        LaserHit = 1,
+
+        /// <summary>喷雾命中目标</summary>
+        SprayHit = 2,
+    }
+
+    /// <summary>运动策略类型（MotionRegistry 枚举索引）</summary>
+    public enum MotionType : byte
+    {
+        /// <summary>默认运动——延迟变速 + 速度曲线 + 追踪</summary>
+        Default = 0,
+
+        /// <summary>正弦波运动——垂直于飞行方向叠加正弦偏移</summary>
+        SineWave = 1,
+
+        /// <summary>螺旋运动——持续转向 + 速度曲线</summary>
+        Spiral = 2,
+    }
+
     /// <summary>喷雾碰到障碍物时的行为</summary>
     public enum SprayObstacleResponse : byte
     {
