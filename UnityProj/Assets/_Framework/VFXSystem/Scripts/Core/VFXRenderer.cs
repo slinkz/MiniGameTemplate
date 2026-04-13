@@ -77,7 +77,9 @@ namespace MiniGameTemplate.VFX
                 if (!registry.TryGet(instance.TypeIndex, out var type)) continue;
 
                 // 优先 SourceTexture，fallback 到全局 Atlas（迁移兼容期）
-                var texture = type.SourceTexture ?? _fallbackAtlas;
+                // 注意：Unity Object 的 ?? 不走 Unity 的 == null 重载，必须用显式判断
+                var srcTex = type.SourceTexture;
+                var texture = (srcTex != null) ? srcTex : _fallbackAtlas;
                 if (texture == null) continue;
 
                 var bucketKey = new RenderBatchManager.BucketKey(type.Layer, texture);
