@@ -20,12 +20,22 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _DissolveTex:
+        m_Texture: {fileID: 2800000, guid: 0000000000000000d000000000000000, type: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: e54eb913c94973e459d58aadf797e5e4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
+    m_Floats:
+    - _DissolveAmount: 0
+    - _DissolveEdgeWidth: 0.05
+    - _GlowIntensity: 0
+    - _GlowWidth: 0.6
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DissolveEdgeColor: {r: 1, g: 0.5, b: 0, a: 1}
+    - _GlowColor: {r: 0, g: 1, b: 0, a: 1}
   m_BuildTextureStacks: []

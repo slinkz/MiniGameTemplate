@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8d1d8af588c48e0439d818c14ede8bb8, type: 3}
-  m_Name: VFXType_SmokePuff_Test
+  m_Name: VFXType_Spray
   m_EditorClassIdentifier: 
   SourceTexture: {fileID: 0}
   UVRect:
@@ -27,6 +27,6 @@ MonoBehaviour:
   Loop: 0
   RotateWithInstance: 0
   Size: {x: 3.2, y: 3.2}
-  Tint: {r: 0.45, g: 0.45, b: 0.45, a: 0.82}
+  Tint: {r: 0.6886792, g: 0, b: 0, a: 0.82}
   Layer: 0
-  AttachMode: 0
+  AttachMode: 1

@@ -157,6 +157,9 @@ namespace MiniGameTemplate.Rendering
                     mainTexture = key.Texture,
                 };
 
+
+
+
                 // sortingOrder
                 int sortingOrder = sortingOrderProvider != null
                     ? sortingOrderProvider(key.Layer)

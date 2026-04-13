@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：19 条（PIT-007, PIT-014 ~ PIT-031, PIT-034）
+> **当前条目数**：20 条（PIT-007, PIT-014 ~ PIT-031, PIT-034, PIT-035）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -253,6 +253,17 @@
 - **验证方法**: 全局搜索 `?? ` 和 `?.`，检查左侧操作数是否为 `UnityEngine.Object` 派生类型；凡是 Unity Object 一律使用 `!= null` / `== null` 显式判断
 - **严重度**: 🔴 运行时静默失败，无报错但功能完全不工作
 - **标记 [经典] 原因**: C# 语法糖在 Unity 中的最大陷阱，极易在编码时无意识使用；AI 和人类程序员同样容易犯
+
+---
+
+## PIT-035: 同一 VFX 系统多入口失败语义不一致 — Play / PlayAttached
+- **分类**: CL-6 渲染管线与 Mesh API
+- **日期**: 2026-04-14
+- **现象**: `SpriteSheetVFXSystem` 在 `VFXTypeSO` 未注册到 `VFXTypeRegistrySO` 时，`Play()` 会输出 `[SpriteSheetVFXSystem] Type not found in registry: ...`，但 `PlayAttached()` 直接 `return -1`，导致按 `K` 有 error、按 `J` 无 error，表面看像两条路径规则不同
+- **根因**: 同一运行时系统的多条播放入口没有复用统一失败处理逻辑，出现 API 语义漂移；一条路径显式报错，另一条路径静默失败
+- **修复**: 让 `PlayAttached()` 与 `Play()` 对齐：registry 未命中时统一 `Debug.LogError(...)`，并在日志中写明当前 registry 名称与修复步骤（把对应 `VFXTypeSO` 加入当前 `SpriteSheetVFXSystem` 使用的 `VFXTypeRegistrySO._types` 列表，或改回已注册的 VFXTypeSO）
+- **验证方法**: 审查所有并行入口（如 `Play` / `PlayOneShot` / `PlayAttached`）的失败分支，确认日志级别、返回值语义、修复指引完全一致；对白名单/Registry 型系统，未命中必须是 **Error**，不能是 Warning 或静默失败
+- **严重度**: 🔴 高误导性运行时问题，容易把同一根因误判成两套规则
 
 ---
 

@@ -1,4 +1,6 @@
 using MiniGameTemplate.VFX;
+using UnityEngine;
+
 
 namespace MiniGameTemplate.Danmaku
 {
@@ -42,12 +44,12 @@ namespace MiniGameTemplate.Danmaku
                     var sprayType = typeRegistry.SprayTypes[spray.SprayTypeIndex];
                     if (sprayType != null && sprayType.SprayVFXType != null)
                     {
-                        spray.VfxSlot = vfxSystem.PlayAttached(
-                            sprayType.SprayVFXType,
-                            spray.AttachId,
-                            1f);
+                        spray.VfxSlot = spray.AttachId != 0
+                            ? vfxSystem.PlayAttached(sprayType.SprayVFXType, spray.AttachId, 1f)
+                            : vfxSystem.Play(sprayType.SprayVFXType, spray.Origin, 1f, spray.Direction * Mathf.Rad2Deg);
                     }
                 }
+
 
                 // 注意：TickTimer 推进在 CollisionSolver.SolveSprays 中完成，
                 // 避免与 tick 判断分处两地导致时序 bug。

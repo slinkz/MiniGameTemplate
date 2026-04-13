@@ -13,6 +13,8 @@ Shader "MiniGameTemplate/Danmaku/BulletAdditive"
         [Header(Glow)]
         _GlowIntensity ("Glow Intensity", Range(0, 3)) = 0
         _GlowColor ("Glow Color", Color) = (1, 1, 1, 1)
+        _GlowWidth ("Glow Width", Range(0.02, 0.6)) = 0.2
+
     }
 
     SubShader
@@ -45,6 +47,8 @@ Shader "MiniGameTemplate/Danmaku/BulletAdditive"
             fixed4 _DissolveEdgeColor;
             float _GlowIntensity;
             fixed4 _GlowColor;
+            float _GlowWidth;
+
 
             struct appdata
             {
@@ -72,6 +76,10 @@ Shader "MiniGameTemplate/Danmaku/BulletAdditive"
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 tex = tex2D(_MainTex, i.uv);
+                fixed4 color = tex * i.color;
+                // Additive 层默认输出做 alpha 预乘补偿，避免 Glow=0 时材质预览被整体抬亮发粉
+                color.rgb *= tex.a;
+
 
                 // ── Dissolve（溶解效果） ──
                 float dissolve = _DissolveAmount;
@@ -80,16 +88,27 @@ Shader "MiniGameTemplate/Danmaku/BulletAdditive"
                     float noise = tex2D(_DissolveTex, i.uv).r;
                     clip(noise - dissolve);
                     float edge = saturate(1.0 - (noise - dissolve) / max(_DissolveEdgeWidth, 0.001));
-                    tex.rgb += _DissolveEdgeColor.rgb * edge * _DissolveEdgeColor.a;
+                    color.rgb += _DissolveEdgeColor.rgb * edge * _DissolveEdgeColor.a;
                 }
 
-                // ── Glow（发光叠加） ──
+                // ── Glow（覆盖型 rim glow：边缘向 GlowColor 插值，而非加法混色） ──
                 if (_GlowIntensity > 0.001)
                 {
-                    tex.rgb += _GlowColor.rgb * _GlowIntensity * tex.a;
+                    float alpha = color.a;
+                    float width = max(_GlowWidth, 0.02);
+                    float innerStart = saturate(0.5 - width);
+                    float innerEnd = saturate(0.5);
+                    float outerStart = saturate(0.5);
+                    float outerEnd = saturate(0.5 + width);
+                    float glowMask = smoothstep(innerStart, innerEnd, alpha) * (1.0 - smoothstep(outerStart, outerEnd, alpha));
+                    float glowBlend = saturate(_GlowIntensity * glowMask);
+
+                    color.rgb = lerp(color.rgb, _GlowColor.rgb, glowBlend);
                 }
 
-                return tex * i.color;
+
+
+                return color;
             }
             ENDCG
         }

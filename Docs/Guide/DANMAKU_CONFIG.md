@@ -143,7 +143,8 @@ public class LaserTypeSO : ScriptableObject
 }
 ```
 
-> **宽度驱动方式**：`LaserUpdater` 根据 `elapsed / TotalDuration` 采样 `WidthOverLifetime` 曲线，乘以 `MaxWidth` 得到当前宽度。Phase 仅控制碰撞开关。
+> **字段语义补充**：`CoreColor` = 激光主体主色，当前版本也作为 Charging 阶段预警线颜色；`EdgeColor` 设计意图是边缘色，但当前版本尚未完整接入为设计师直觉中的明显边缘渐变控制。\n> **宽度驱动方式**：`LaserUpdater` 根据 `elapsed / TotalDuration` 采样 `WidthOverLifetime` 曲线，乘以 `MaxWidth` 得到当前宽度；`WidthProfile` 负责沿激光长度方向的局部粗细分布。Phase 仅控制碰撞开关。
+
 
 ### SprayTypeSO
 
@@ -166,7 +167,8 @@ public class SprayTypeSO : ScriptableObject
 }
 ```
 
-> **校验机制**：CustomEditor 在 Scene View 绘制判定扇形 Gizmo，和 ParticleSystem 视觉范围叠加对比，偏差 > 5° 弹出黄色警告。
+> **运行时前置规则**：如果 `SprayVFXType` 已赋值，但未注册到当前 SpriteSheetVFXSystem 使用的 `VFXTypeRegistrySO`，运行时 `SpriteSheetVFXSystem.CanPlay()` 会返回 false，喷雾特效不会播放，并输出 **Error** 日志：`[SpriteSheetVFXSystem] Type not found in registry: ...`。\n> **修复步骤**：把对应 `VFXTypeSO` 加入当前 SpriteSheetVFXSystem 引用的 `VFXTypeRegistrySO._types` 列表，或改回已注册的 VFXType。
+
 
 ---
 

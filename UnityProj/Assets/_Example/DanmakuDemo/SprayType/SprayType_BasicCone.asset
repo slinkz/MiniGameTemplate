@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f4e9f4208334754294e7945e79ef0d5, type: 3}
+  m_Name: SprayType_BasicCone
+  m_EditorClassIdentifier: 
+  ParticleEffectPrefab: {fileID: 0}
+  SprayVFXType: {fileID: 11400000, guid: 100d1e8a650332d41902069cc53ec235, type: 2}
+  Faction: 0
+  ConeAngle: 30
+  Range: 5
+  DamagePerTick: 5
+  TickInterval: 0.5
+  OnHitObstacle: 0
+  RecycleOnOriginOutOfBounds: 1
+  ScreenEdgeRecycleMargin: 1
+  RuntimeIndex: 0

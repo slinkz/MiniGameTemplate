@@ -16,6 +16,10 @@ namespace MiniGameTemplate.Example
     /// - SpawnerDriver（自动循环发射，模拟 Boss）
     /// - 手动 FireGroup（按空格发射一组）
     /// - 混合（SpawnerDriver 自动 + 空格手动叠加）
+    /// 额外快捷键：L=激光，K=Detached Spray，J=Attached Spray（跟随 Boss），R=ClearAll
+    /// 验收辅助：Boss 可自动横向往返移动，用于验证 Attached Spray / FollowTarget 跟随效果
+
+
     /// </para>
     /// </summary>
     public class DanmakuDemoController : MonoBehaviour
@@ -26,8 +30,15 @@ namespace MiniGameTemplate.Example
 
         [Tooltip("Boss/发射点 Transform（如果没有则用 _bossPosition 固定点）")]
         [SerializeField] private Transform _bossTransform;
+        [Tooltip("是否让 Boss 自动横向往返移动（用于 FollowTarget / Attached Spray 验收）")]
+        [SerializeField] private bool _autoMoveBoss = true;
+        [Tooltip("Boss 自动横向移动振幅（相对初始位置，世界单位）")]
+        [SerializeField] private float _bossMoveAmplitude = 2.5f;
+        [Tooltip("Boss 自动横向移动速度")]
+        [SerializeField] private float _bossMoveSpeed = 1.5f;
 
         [Header("发射点（无 Boss Transform 时使用）")]
+
         [SerializeField] private Vector2 _bossPosition = new(0f, 4f);
 
         [Header("玩家碰撞")]
@@ -68,12 +79,29 @@ namespace MiniGameTemplate.Example
         [Tooltip("激光发射冷却（秒）")]
         [SerializeField] private float _laserCooldown = 3f;
 
+        [Header("喷雾测试（K 键 / J 键）")]
+        [Tooltip("喷雾类型在 TypeRegistry 中的索引（需先在 TypeRegistry 注册 SprayTypeSO）")]
+        [SerializeField] private byte _sprayTypeIndex = 0;
+        [Tooltip("喷雾寿命（秒），<= 0 时回退到 1 秒")]
+        [SerializeField] private float _sprayLifetime = 1f;
+        [Tooltip("Detached 喷雾射程（世界单位），<= 0 时使用 SprayTypeSO.Range")]
+        [SerializeField] private float _sprayRangeOverride = 0f;
+        [Tooltip("Detached 喷雾半角（度），<= 0 时使用 SprayTypeSO.ConeAngle")]
+        [SerializeField] private float _sprayConeAngleOverride = 0f;
+        [Tooltip("喷雾发射冷却（秒）")]
+        [SerializeField] private float _sprayCooldown = 1.5f;
+
+
         // ──── 运行时状态 ────
         private DanmakuSystem _system;
         private int _spawnerSlot = -1;
         private float _manualCooldownTimer;
         private float _laserCooldownTimer;
+        private float _sprayCooldownTimer;
         private bool _initialized;
+        private Vector3 _bossStartPosition;
+
+
 
         public enum DemoMode
         {
@@ -99,8 +127,12 @@ namespace MiniGameTemplate.Example
                 return;
             }
 
+            if (_bossTransform != null)
+                _bossStartPosition = _bossTransform.position;
+
             // 注册玩家
             if (_playerTransform != null)
+
             {
                 _system.SetPlayer(_playerTransform, _playerRadius);
             }
@@ -135,8 +167,18 @@ namespace MiniGameTemplate.Example
         {
             if (!_initialized) return;
 
+            if (_autoMoveBoss && _bossTransform != null)
+            {
+                float offsetX = Mathf.Sin(Time.time * _bossMoveSpeed) * _bossMoveAmplitude;
+                _bossTransform.position = new Vector3(
+                    _bossStartPosition.x + offsetX,
+                    _bossStartPosition.y,
+                    _bossStartPosition.z);
+            }
+
             // ── 手动发射（空格键） ──
             if (_mode == DemoMode.ManualFire || _mode == DemoMode.Mixed)
+
             {
                 _manualCooldownTimer -= Time.deltaTime;
 
@@ -172,7 +214,47 @@ namespace MiniGameTemplate.Example
                 }
             }
 
+            // K = 发射 Detached Spray；J = 发射 Attached Spray（跟随 Boss）
+            _sprayCooldownTimer -= Time.deltaTime;
+            if (_sprayCooldownTimer <= 0f && (Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.J)))
+            {
+                if (_system.TypeRegistry.SprayTypes != null &&
+                    _sprayTypeIndex < _system.TypeRegistry.SprayTypes.Length)
+                {
+                    var sprayType = _system.TypeRegistry.SprayTypes[_sprayTypeIndex];
+                    float coneAngle = _sprayConeAngleOverride > 0f ? _sprayConeAngleOverride : sprayType.ConeAngle;
+                    float range = _sprayRangeOverride > 0f ? _sprayRangeOverride : sprayType.Range;
+                    float lifetime = _sprayLifetime > 0f ? _sprayLifetime : 1f;
+
+                    int slot;
+                    if (Input.GetKeyDown(KeyCode.J) && _bossTransform != null)
+                    {
+                        slot = _system.FireSpray(_sprayTypeIndex, _bossTransform, coneAngle, range, lifetime);
+                    }
+                    else
+                    {
+                        Vector2 origin = GetBossOrigin();
+                        float direction = -Mathf.PI * 0.5f;
+                        slot = _system.FireSpray(_sprayTypeIndex, origin, direction, coneAngle, range, lifetime);
+                    }
+
+                    if (slot >= 0)
+                    {
+                        _sprayCooldownTimer = _sprayCooldown;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[DanmakuDemo] 喷雾池已满，无法发射。请检查 SprayPool 容量或等待回收。");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("[DanmakuDemo] TypeRegistry 中没有喷雾类型，请先注册 SprayTypeSO。");
+                }
+            }
+
             // R = 清场
+
             if (Input.GetKeyDown(KeyCode.R))
             {
                 _system.ClearAll();

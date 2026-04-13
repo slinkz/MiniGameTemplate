@@ -80,7 +80,10 @@ namespace MiniGameTemplate.VFX
 
             if (!CanPlay(type))
             {
-                Debug.LogWarning($"[SpriteSheetVFXSystem] Type not found in registry: {type.name}");
+                string registryName = _typeRegistry != null ? _typeRegistry.name : "<null>";
+                Debug.LogError(
+                    $"[SpriteSheetVFXSystem] Type not found in registry: {type.name}. " +
+                    $"Registry={registryName}. 修复：把该 VFXTypeSO 加入当前 SpriteSheetVFXSystem 使用的 VFXTypeRegistrySO._types 列表，或改回已注册的 VFXTypeSO。");
                 return -1;
             }
 
@@ -143,7 +146,14 @@ namespace MiniGameTemplate.VFX
             Initialize();
             RebuildRegistryRuntimeIndices();
 
-            if (!CanPlay(type)) return -1;
+            if (!CanPlay(type))
+            {
+                string registryName = _typeRegistry != null ? _typeRegistry.name : "<null>";
+                Debug.LogError(
+                    $"[SpriteSheetVFXSystem] Type not found in registry: {type.name}. " +
+                    $"Registry={registryName}. 修复：把该 VFXTypeSO 加入当前 SpriteSheetVFXSystem 使用的 VFXTypeRegistrySO._types 列表，或改回已注册的 VFXTypeSO。");
+                return -1;
+            }
 
             int slot = _pool.Allocate();
             if (slot < 0) return -1;

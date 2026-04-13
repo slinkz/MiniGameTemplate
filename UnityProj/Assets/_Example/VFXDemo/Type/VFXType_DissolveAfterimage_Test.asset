@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d1d8af588c48e0439d818c14ede8bb8, type: 3}
   m_Name: VFXType_DissolveAfterimage_Test
   m_EditorClassIdentifier: 
-  AtlasUV:
+  SourceTexture: {fileID: 0}
+  UVRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1
     height: 1
+  SchemaVersion: 1
   Columns: 4
   Rows: 4
   TotalFrames: 16
@@ -27,3 +29,4 @@ MonoBehaviour:
   Size: {x: 2.8, y: 1.6}
   Tint: {r: 0.62, g: 0.3, b: 1, a: 0.58}
   Layer: 0
+  AttachMode: 0

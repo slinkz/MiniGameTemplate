@@ -119,6 +119,8 @@ description: >
 - Unity 标准顺序：Position → Color → UV（**不是** Position → UV → Color）
 - 新建材质/Renderer 时必须确认纹理绑定（`material.mainTexture = ...` 或 `SetTexture("_MainTex", ...)`）
 - Shader 中的属性名必须与 C# 端的 SetXxx 调用匹配
+- 同一运行时系统如果暴露了多条播放入口（如 `Play` / `PlayAttached`），失败语义必须一致：不能一条路径 `Debug.LogError(...)`，另一条路径静默 `return -1`
+- 对依赖 Registry 白名单的系统（如 `VFXTypeRegistrySO`），未命中时必须输出 **Error**，并在日志里直接写明修复步骤，而不是只给 Warning 或静默失败
 
 **典型错误**：`DanmakuVertex` 字段顺序 Position→UV→Color，但 Unity 自动重排导致数据错位。
 
