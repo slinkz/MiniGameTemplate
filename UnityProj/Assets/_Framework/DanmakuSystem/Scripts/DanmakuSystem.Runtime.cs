@@ -26,8 +26,9 @@ namespace MiniGameTemplate.Danmaku
         // ──── 特效桥接 ────
         private IDanmakuEffectsBridge _effectsBridge;
 
-        // ──── 喷雾 VFX 系统（Phase 3 — DEC-006） ────
-        private MiniGameTemplate.VFX.SpriteSheetVFXSystem _sprayVfxSystem;
+        // ──── VFX 桥接运行时（Phase 4 — DEV-008） ────
+        private IDanmakuVFXRuntime _vfxRuntime;
+
 
         // ──── 内置 Player 目标适配器 ────
         private PlayerCollisionTarget _builtinPlayerTarget;
@@ -89,14 +90,15 @@ namespace MiniGameTemplate.Danmaku
             {
                 _effectsBridge = new DefaultDanmakuEffectsBridge(bridgeConfig.HitVfxSystem, bridgeConfig.HitVfxType, bridgeConfig.HitVfxScale);
 
-                // 喷雾 VFX 系统引用 + 位置解析器注入（Phase 3 — DEC-006 / ADR-021）
-                _sprayVfxSystem = bridgeConfig.HitVfxSystem;
-                _sprayVfxSystem?.SetPositionResolver(new DanmakuAttachSourceResolver(_attachRegistry));
+                _vfxRuntime = bridgeConfig.CreateRuntimeBridge(_attachRegistry);
+
             }
             else
             {
                 _effectsBridge = null;
+                _vfxRuntime = null;
             }
+
 
             GameLog.Log($"[Danmaku] System initialized — bullets: {_worldConfig.MaxBullets}, lasers: {_worldConfig.MaxLasers}, sprays: {_worldConfig.MaxSprays}, trails: {_worldConfig.MaxTrails}");
         }

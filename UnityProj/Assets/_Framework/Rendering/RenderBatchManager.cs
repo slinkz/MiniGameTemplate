@@ -250,11 +250,16 @@ namespace MiniGameTemplate.Rendering
         /// </summary>
         public void UploadAndDrawAll()
         {
+            int drawCalls = 0;
+            int activeBatches = 0;
+
             for (int i = 0; i < _bucketCount; i++)
             {
                 var bucket = _buckets[i];
 
                 if (bucket.QuadCount == 0) continue;
+
+                activeBatches++;
 
                 int vertexCount = bucket.QuadCount * 4;
                 int indexCount = bucket.QuadCount * 6;
@@ -270,8 +275,12 @@ namespace MiniGameTemplate.Rendering
                 bucket.Mesh.bounds = new Bounds(Vector3.zero, new Vector3(1000f, 1000f, 10f));
 
                 Graphics.DrawMesh(bucket.Mesh, Matrix4x4.identity, bucket.Material, 0);
+                drawCalls++;
             }
+
+            RenderBatchManagerRuntimeStats.RecordFrame(drawCalls, activeBatches, _unknownBucketErrorCount);
         }
+
 
         /// <summary>
         /// 释放所有 Mesh 和材质实例资源。

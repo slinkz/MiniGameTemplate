@@ -2,6 +2,45 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [未发布] - 2026-04-15
+
+### 新增（弹幕系统 Phase 4：工作流与工具）
+
+- **编辑器刷新协调器（DanmakuEditorRefreshCoordinator）**
+  - 固化 `标脏 → Registry 重建 → Batch 预热 → 结果报告` 四阶段编辑器刷新链路
+  - 所有 SO 的 `OnValidate` 统一接入 `MarkDirty()`，禁止在 Play 热路径隐式刷新
+  - Inspector 面板提供 "Run Controlled Refresh" 按钮 + 刷新报告（时间/脏资产数/重建数/预热桶数/成功/原因）
+- **碰撞可视化 Gizmos（DanmakuCollisionGizmosDrawer）**
+  - 仅在 DanmakuSystem 被选中时绘制（`GizmoType.Selected`）
+  - 弹丸半径线框球（红色半透明）+ 激光段线（青色半透明）
+- **渲染统计监控（RenderBatchManagerRuntimeStats）**
+  - 共享静态类，位于 `_Framework/Rendering/`
+  - 提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计，递增式均值算法
+- **VFX 运行时桥接接口（IDanmakuVFXRuntime + DanmakuVFXRuntimeBridge）**
+  - DEV-008 完成：DanmakuSystem 不再直接持有 `SpriteSheetVFXSystem`
+  - 接口定义 `SetTimeScale/StopAttached/PlayAttached` 三个方法
+  - 桥接实现委托 `SpriteSheetVFXSystem`，所有 VFX 调用统一走 `_vfxRuntime`
+
+### 变更
+
+- **DanmakuDebugHUD 扩展**
+  - 新增 DrawCalls 行：当前值 / 平均值 / 峰值
+  - 新增 Active Batches 行：当前值 / 平均值 / 峰值
+  - 新增 Unknown Buckets 计数行
+  - 新增 Collision Overflow 计数行
+- **UpdatePipeline/API/CollisionSolver/SprayUpdater 统一走桥接**
+  - 移除所有 `_sprayVfxSystem` 直接引用，改走 `IDanmakuVFXRuntime _vfxRuntime`
+  - `ClearAll()` 喷雾 VFX 停止改走 `_vfxRuntime.StopAttached()`
+
+### 修复
+
+- **5 个 SO/Registry 文件 Editor 命名空间泄漏**
+  - `BulletTypeSO`、`LaserTypeSO`、`SprayTypeSO`、`DanmakuTypeRegistry`、`VFXTypeRegistrySO` 移除顶层 `using MiniGameTemplate.Danmaku.Editor`
+  - `OnValidate` 内改为命名空间限定调用或全限定名，确保 `#if UNITY_EDITOR` 隔离
+- **Unity Object `?.` 空传播运算符误用（P0）**
+  - `DanmakuVFXRuntimeBridge`（3 处）、`CollisionSolver`（2 处）、`UpdatePipeline`（2 处）改为显式 `if (obj != null)` 模式
+  - 根因：Unity 重载了 `==` 但 C# `?.` 不走 Unity 的 null 检查
+
 ## [未发布] - 2026-04-10
 
 ### 新增

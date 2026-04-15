@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
 {
+
     /// <summary>
     /// 激光类型配置——视觉、宽度曲线、阶段时长、伤害。
     /// </summary>
@@ -69,5 +70,15 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>总时长（charge + fire + fade）</summary>
         public float TotalDuration => ChargeDuration + FiringDuration + FadeDuration;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (TickInterval < 0.001f) TickInterval = 0.001f;
+            if (ScreenEdgeRecycleMargin < 0f) ScreenEdgeRecycleMargin = 0f;
+            Editor.DanmakuEditorRefreshCoordinator.MarkDirty(this);
+        }
+#endif
     }
 }
+

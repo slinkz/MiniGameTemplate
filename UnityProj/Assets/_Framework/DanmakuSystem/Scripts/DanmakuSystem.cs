@@ -34,6 +34,10 @@ namespace MiniGameTemplate.Danmaku
         // ──── 单例 ────
         public static DanmakuSystem Instance { get; private set; }
 
+        /// <summary>碰撞事件旁路 Buffer（DebugHUD 等外部消费者用）</summary>
+        public CollisionEventBuffer CollisionEventBuffer => _collisionEventBuffer;
+
+
         // ──── 生命周期 ────
 
         private void Awake()
@@ -64,7 +68,35 @@ namespace MiniGameTemplate.Danmaku
         {
             RunLateUpdatePipeline();
         }
+
+        /// <summary>
+        /// Rebuilds registry indices and warms batch state through the controlled editor workflow entry.
+        /// </summary>
+        public void EditorWarmupBatches()
+        {
+#if UNITY_EDITOR
+            if (_typeRegistry == null || _renderConfig == null || _worldConfig == null)
+                throw new System.InvalidOperationException("DanmakuSystem missing config references for editor warmup.");
+
+            _typeRegistry.AssignRuntimeIndices();
+            _bulletRenderer?.Dispose();
+            _laserRenderer?.Dispose();
+            _laserWarningRenderer?.Dispose();
+
+            _bulletRenderer = new BulletRenderer();
+            _bulletRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxBullets * 4);
+
+            _laserRenderer = new LaserRenderer();
+            _laserRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers * LaserPool.MAX_SEGMENTS_PER_LASER);
+
+            _laserWarningRenderer = new LaserWarningRenderer();
+            _laserWarningRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers);
+#else
+            throw new System.InvalidOperationException("EditorWarmupBatches is editor only.");
+#endif
+        }
     }
+
 
     /// <summary>
     /// 内置 Player 碰撞目标适配器——将旧 SetPlayer API 适配到 ICollisionTarget 接口。

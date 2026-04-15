@@ -4,6 +4,7 @@ using MiniGameTemplate.Rendering;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
@@ -204,5 +205,17 @@ namespace MiniGameTemplate.Danmaku
             float fh = UVRect.height / rows;
             return new Rect(UVRect.x + x * fw, UVRect.y + y * fh, fw, fh);
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (SheetColumns < 1) SheetColumns = 1;
+            if (SheetRows < 1) SheetRows = 1;
+            if (SheetTotalFrames < 1) SheetTotalFrames = 1;
+            if (FixedFps < 0.001f) FixedFps = 0.001f;
+            Editor.DanmakuEditorRefreshCoordinator.MarkDirty(this);
+        }
+#endif
     }
 }
+

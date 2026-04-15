@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
 {
+
     /// <summary>
     /// 弹幕类型注册表——集中管理所有弹丸/激光/喷雾类型 SO，Awake 时分配运行时索引。
     /// </summary>
@@ -49,5 +50,13 @@ namespace MiniGameTemplate.Danmaku
                 }
             }
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            Editor.DanmakuEditorRefreshCoordinator.MarkDirty(this);
+        }
+#endif
+
     }
 }

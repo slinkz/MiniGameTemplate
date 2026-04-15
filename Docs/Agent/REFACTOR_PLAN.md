@@ -16,9 +16,9 @@
 1. 一个从未用过此模板的开发者，在**允许查阅 Guide 文档、基于模板现有 demo、且不修改代码只新增/修改 SO 资产**的前提下，能在 30 分钟内配置出一个包含 3 种独立贴图子弹 + 3 种独立贴图特效并可跑通指定示例场景的关卡；该目标的验收口径限定为：允许查阅 Guide、允许复制现有 `BulletTypeSO` / `VFXTypeSO` / Registry 等示例资产作为模板并修改其 Inspector 字段、允许使用 Inspector/已有 Editor 工具，但**不允许**修改运行时代码、临时写脚本、手工改 prefab/scene 序列化文本、依赖未文档化的场景内临时对象或隐藏入口、或引入额外构建步骤；验收完成定义为：基于公开文档描述的标准挂接步骤即可在指定 Demo 场景中运行
 2. 新增一种弹丸运动类型无需修改 `BulletMover` 等核心热路径，只修改受控扩展点（如 `MotionRegistry` / `MotionType` / 对应策略实现）
 3. 弹幕碰撞产生的爆炸特效可以通过 SO 配置一行搞定，且不要求先打 atlas
-4. 微信小游戏中 1000 颗子弹 + 10 个特效同屏时，在**固定 Demo 场景、Release/IL2CPP 构建、指定基线机型、持续 30 秒**的测试条件下，平均帧率 ≥ 55fps；性能统计口径按“预热完成后进入稳定运行窗口再计时”执行，不把编辑器刷新、Registry 重建、Batch 预热或首次资源冷启动成本计入该 30 秒平均帧率；同一窗口内还必须同时记录平均 FPS、平均/峰值 DrawCall、活跃 Batch 数、未知桶错误计数、`CollisionEventBuffer overflow count`，并以“未知桶错误计数 = 0、overflow count = 0、DrawCall ≤ 50、活跃 Batch ≤ 24”作为共同通过条件
+4. 微信小游戏中 1000 颗子弹 + 10 个特效同屏时，在**固定 Demo 场景、Release/IL2CPP 构建、指定基线机型、持续 30 秒**的测试条件下，平均帧率 ≥ 55fps；性能统计口径按"预热完成后进入稳定运行窗口再计时"执行，不把编辑器刷新、Registry 重建、Batch 预热或首次资源冷启动成本计入该 30 秒平均帧率；同一窗口内还必须同时记录平均 FPS、平均/峰值 DrawCall、活跃 Batch 数、未知桶错误计数、`CollisionEventBuffer overflow count`，并以"未知桶错误计数 = 0、overflow count = 0、DrawCall ≤ 50、活跃 Batch ≤ 24"作为共同通过条件
 5. 飘字系统默认使用共享数字图集，且 atlas 工具仅作为可选优化入口存在
-6. 所有 Phase 的验收统一按“**边界是否守住、契约是否单一、失败是否可判定且可回退**”执行，而不是按“功能是否先堆出来”执行
+6. 所有 Phase 的验收统一按"**边界是否守住、契约是否单一、失败是否可判定且可回退**"执行，而不是按"功能是否先堆出来"执行
 
 
 
@@ -48,14 +48,14 @@
 1. **RenderLayer 统一归属**：上收至 `_Framework/Rendering/RenderLayer.cs`，Danmaku/VFX 共用一套枚举
 2. **BatchManager 生命周期**：共享实现，不共享实例；Danmaku/VFX 各自持有实例，且实例生命周期跟随各自系统初始化/销毁，不引入全局渲染单例
 3. **CollisionEventBuffer 语义**：保留 `ICollisionTarget` 即时回调；Buffer 仅用于旁路消费、联动和观察，帧末统一清空，不承载伤害/击退/死亡等主事实
-4. **MotionRegistry 设计**：采用受控注册表，从 `BulletTypeSO.MotionType` 驱动，不做开放式插件系统；成功标准是“不改 BulletMover 等核心热路径，只改受控扩展点”
+4. **MotionRegistry 设计**：采用受控注册表，从 `BulletTypeSO.MotionType` 驱动，不做开放式插件系统；成功标准是"不改 BulletMover 等核心热路径，只改受控扩展点"
 5. **容量配置策略**：分层收拢，只先处理主链路容量，不做一次性全动态化
 6. **DanmakuSystem 拆分边界**：保留 MonoBehaviour Facade 入口，内部拆职责，不拆成多个碎系统；Facade 继续承担生命周期编排与对外 API 单一入口
 7. **Bullet 资源策略**：支持独立贴图输入并保留 UV 表达，atlas 仅为可选优化
 8. **VFX 资源策略**：支持独立贴图 SpriteSheet，atlas 仅为可选优化，不再强制单图集
 9. **DamageNumber 资源策略**：默认继续使用共享数字图集，不纳入本轮资源自由化主链路
 10. **Atlas 工具定位**：作为 Editor 可选优化工具设计，不得成为生产前置条件
-11. **sortingOrder 策略**：独立于 RenderLayer，使用共享渲染常量定义；架构原则是“sortingOrder 单一真相”，当前建议实现是 `RenderSortingOrder`
+11. **sortingOrder 策略**：独立于 RenderLayer，使用共享渲染常量定义；架构原则是"sortingOrder 单一真相"，当前建议实现是 `RenderSortingOrder`
 12. **VFX 索引重建时机**：仅初始化或 Registry 内容变化时重建，禁止在 Play 热路径重建
 13. **Danmaku × VFX 解耦**：通过桥接接口实现，不保留 `DanmakuSystem -> SpriteSheetVFXSystem` 的直接硬引用
 14. **旧 SO 迁移**：必须提供 Editor 迁移器，不接受手工迁移；迁移验收必须覆盖 prefab/scene 实例，不只看 SO 资产本体
@@ -67,9 +67,9 @@
 20. **容量配置化边界**：以显式范围表控制本轮纳入项，未列入项默认不在本轮范围内
 21. **OnValidate / 域重载边界**：`OnValidate` 只做校验、补默认值、版本补齐与标脏，不直接重建 Registry/Batch；关闭 Domain Reload 时必须显式重置静态运行时状态
 22. **统一资源描述版本化迁移**：`BulletTypeSO` / `VFXTypeSO` 等统一资源描述资产必须带 `SchemaVersion`，并通过正式迁移链路升级，运行时不承担迁移责任；迁移报告必须区分阻断错误与警告，阻断错误禁止进入 apply，警告允许 apply 但必须进入 report 归档
-23. **编辑器刷新工作流**：资源变更后统一走“标脏 → Registry 重建 → Batch 预热 → 结果报告”的固定链路，禁止在 `Play()`/渲染热路径顺手刷新
+23. **编辑器刷新工作流**：资源变更后统一走"标脏 → Registry 重建 → Batch 预热 → 结果报告"的固定链路，禁止在 `Play()`/渲染热路径顺手刷新
 24. **子弹序列帧能力**：Bullet 资源描述必须支持 `Static` 与 `SpriteSheet` 两种采样模式；序列帧子弹属于 Bullet 主链路能力，不外包给 VFX 替代
-25. **Attached VFX 语义**：attached VFX 不是“把 Transform 塞进 VFX 实例”，而是“VFX 消费 AttachSource 解析结果”；默认失效语义为冻结到最后有效位置并播完，只有显式配置才允许目标失效即结束；一旦进入“冻结到最后有效位置并播完”收尾态，旧 handle 不允许在目标恢复后自动恢复跟随，必须重新 `PlayAttached`
+25. **Attached VFX 语义**：attached VFX 不是"把 Transform 塞进 VFX 实例"，而是"VFX 消费 AttachSource 解析结果"；默认失效语义为冻结到最后有效位置并播完，只有显式配置才允许目标失效即结束；一旦进入"冻结到最后有效位置并播完"收尾态，旧 handle 不允许在目标恢复后自动恢复跟随，必须重新 `PlayAttached`
 
 
 
@@ -213,7 +213,7 @@
 
 ---
 
-### Phase 3: 视觉增强 ✅ 已完成（2026-04-13 编码+评审完成，待用户验收）
+### Phase 3: 视觉增强 ✅ 已完成（2026-04-13 用户验收通过）
 
 **目标**：弹丸视觉动画、Shader 增强、预警线、喷雾可视化。
 
@@ -230,7 +230,7 @@
 | 3.6 | 激光预警线渲染器 | 新建 146 行 | ✅ | ✅ 已完成 |
 | 3.7 | 喷雾可视化：基于 VFX 附着模式（World / FollowTarget）实现 SprayUpdater 联动 | 改 SprayUpdater + 新建 7 文件 | ✅ | ✅ 已完成 |
 | 3.8 | VFX 时间缩放联动 | 改 SpriteSheetVFXSystem | ✅ | ✅ 已完成 |
-| 3.9 | 编译验证 + Demo 全功能验证 | — | ✅ | 🔄 IDE lint 0 错误，待用户 Demo 回归 |
+| 3.9 | 编译验证 + Demo 全功能验证 | — | ✅ | ✅ 已完成（用户验收通过 2026-04-15） |
 
 **预估**：3~4 天 | **依赖决策**：DEC-005 ✅, DEC-006 ✅ | **用户参与**：打开 Demo 验证视觉效果
 
@@ -272,29 +272,66 @@
 
 ---
 
-### Phase 4: 工作流与工具
+### Phase 4: 工作流与工具 ✅ 已完成（2026-04-15）
 
 **目标**：策划配置效率、编辑器体验、文档完善。
 
-| 任务 | 描述 | 改动范围 | Agent 可独立完成 |
-|------|------|----------|-----------------|
-| 4.1 | Bullet/VFX Atlas 打包工具（可选优化，不是前置） | 新建 Editor 窗口 + 资产格式 | ✅ |
-| 4.2 | 弹丸/VFX 子图选择器与映射回写工具 | 新建 Editor 窗口 | ✅ |
-| 4.3 | SO 配置热重载（OnValidate + 运行时刷新） | 改多个 SO | ✅ |
-| 4.4 | 碰撞可视化 Gizmos | 改 DanmakuSystem Editor | ✅ |
-| 4.5 | ProfilerMarker 性能标记 + Batch/DC 监控 | 改多个核心文件 | ✅ |
-| 4.6 | 更新 MODULE_README / Guide 文档 | 多文件 | ✅ |
-| 4.7 | CHANGELOG 更新 | 1 文件 | ✅ |
+| 任务 | 描述 | 改动范围 | Agent 可独立完成 | 状态 |
+|------|------|----------|-----------------|------|
+| 4.1 | Bullet/VFX Atlas 打包工具（可选优化，不是前置） | 新建 Editor 窗口 + 资产格式 | ✅ | 🔲 推迟（Phase 4+ Backlog，非阻塞） |
+| 4.2 | 弹丸/VFX 子图选择器与映射回写工具 | 新建 Editor 窗口 | ✅ | 🔲 推迟（Phase 4+ Backlog，非阻塞） |
+| 4.3 | SO 配置热重载（OnValidate + 运行时刷新） | 改多个 SO | ✅ | ✅ 已完成 |
+| 4.4 | 碰撞可视化 Gizmos | 改 DanmakuSystem Editor | ✅ | ✅ 已完成 |
+| 4.5 | ProfilerMarker 性能标记 + Batch/DC 监控 | 改多个核心文件 | ✅ | ✅ 已完成 |
+| 4.6 | 更新 MODULE_README / Guide 文档 | 多文件 | ✅ | ✅ 已完成 |
+| 4.7 | CHANGELOG 更新 | 1 文件 | ✅ | ✅ 已完成 |
 
 
 **预估**：1~2 天 | **依赖决策**：无 | **用户参与**：评审文档
+
+**Phase 4 执行记录（2026-04-15）**：
+- 多智能体流水线：开发者 → 架构师评审 → 代码评审专家 → 文档工程师
+- **4.3 SO 配置热重载**：
+  - 新建 `DanmakuEditorRefreshCoordinator`（9.2 KB），固化 `标脏 → Registry 重建 → Batch 预热 → 结果报告` 四阶段链路
+  - `BulletTypeSO/LaserTypeSO/SprayTypeSO/DanmakuTypeRegistry/VFXTypeRegistrySO` 的 OnValidate 统一接入 `MarkDirty()`
+  - 新建 `DanmakuSystemEditor` Inspector 面板，提供 "Run Controlled Refresh" 按钮 + 刷新报告面板
+  - `DanmakuSystem.EditorWarmupBatches()` 提供受控预热入口
+- **4.4 碰撞可视化 Gizmos**：
+  - 新建 `DanmakuCollisionGizmosDrawer`，使用 `[DrawGizmo(GizmoType.Selected)]`
+  - 仅在 DanmakuSystem 被选中时绘制：弹丸半径线框球 + 激光段线
+- **4.5 Batch/DC 监控**：
+  - 新建 `RenderBatchManagerRuntimeStats`（Rendering/ 共享层），提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计
+  - `DanmakuDebugHUD` 扩展：显示 DrawCalls（当前/avg/peak）、Active Batches（当前/avg/peak）、Unknown Buckets、Collision Overflow
+- **DEV-008 VFX 桥接化**：
+  - 新建 `IDanmakuVFXRuntime` 接口（SetTimeScale/StopAttached/PlayAttached）
+  - 新建 `DanmakuVFXRuntimeBridge` 实现，委托 SpriteSheetVFXSystem
+  - `UpdatePipeline/API/CollisionSolver/SprayUpdater` 全部改走 `_vfxRuntime` 桥接，不再直接持有 `SpriteSheetVFXSystem`
+- **架构评审**：有条件通过后修复 5 个阻塞项
+  1. UpdatePipeline 残留 `_sprayVfxSystem` → 统一改走 `_vfxRuntime` ✅
+  2. API.ClearAll() 未走桥接 → 改走 `_vfxRuntime.StopAttached` ✅
+  3. Warmup 旁路按钮 → 删除，仅保留 Controlled Refresh ✅
+  4. Gizmos 范围过宽 → 缩为 `GizmoType.Selected` ✅
+  5. DebugHUD 缺平均/峰值 → 补齐 avg/peak DrawCall 与 ActiveBatch ✅
+- **代码评审**：P0/P1 修复
+  - 5 个 SO/Registry 文件顶层 `using MiniGameTemplate.Danmaku.Editor` 泄漏 → 移除，OnValidate 内改命名空间限定调用
+  - 7 处 Unity Object `?.` 误用（DanmakuVFXRuntimeBridge 3处 + CollisionSolver 2处 + UpdatePipeline 2处）→ 显式 null 检查
+  - IDE lint 全部 0 错误
+- **新建文件（5 个）**：
+  - `DanmakuEditorRefreshCoordinator.cs`
+  - `DanmakuSystemEditor.cs`
+  - `DanmakuCollisionGizmosDrawer.cs`
+  - `IDanmakuVFXRuntime.cs`
+  - `DanmakuVFXRuntimeBridge.cs`
+- **新增共享文件（1 个）**：`RenderBatchManagerRuntimeStats.cs`（Rendering/）
+- **修改文件（12 个）**：DanmakuSystem.cs、DanmakuSystem.Runtime.cs、DanmakuSystem.UpdatePipeline.cs、DanmakuSystem.API.cs、CollisionSolver.cs、SprayUpdater.cs、BulletTypeSO.cs、LaserTypeSO.cs、SprayTypeSO.cs、DanmakuTypeRegistry.cs、VFXTypeRegistrySO.cs、DanmakuDebugHUD.cs
+- **4.1/4.2 Atlas 打包工具与子图选择器**：推迟至 Phase 4+ Backlog。当前各 SO 已支持独立贴图 + UVRect 直接引用，atlas 仅为可选优化，不阻塞任何生产工作流。
 
 **Phase 4 执行约束补充**：
 - Atlas 工具必须输出显式映射资产，并保留回退到原始 `SourceTexture + UVRect` 的能力
 - Bullet/VFX/DamageNumber atlas 分域维护，不混打
 - 迁移器必须具备预检、缺失引用报告、迁移统计和人工处理清单，不能只提供直接改资产模式
 - 迁移器工作流统一为 `dry-run -> apply -> report`；其中 `dry-run` 必须输出待迁移资产数、风险项、缺失引用和 prefab/scene 实例扫描结果，`apply` 只处理已通过预检的数据集，`report` 作为验收归档产物
-- `OnValidate` / 热重载 / Registry 刷新 / Batch 预热必须统一走固定编辑器工作流，不允许任何工具各写各的捷径；刷新失败时必须保留旧运行时状态并显式报错，不允许“部分成功但静默继续”
+- `OnValidate` / 热重载 / Registry 刷新 / Batch 预热必须统一走固定编辑器工作流，不允许任何工具各写各的捷径；刷新失败时必须保留旧运行时状态并显式报错，不允许"部分成功但静默继续"
 - `RenderSortingOrder` 作为 sortingOrder 唯一代码来源；文档、调试 HUD、验收截图和实现代码都必须引用同一套命名，不再允许各系统私自定义排序常量；新增层位只能通过更新 `RenderSortingOrder` 进入系统，禁止在业务类中内联新的 sortingOrder 数值
 
 
@@ -330,7 +367,7 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 | GD-004 | 喷雾可视化 | Phase 3 | ✅ SprayUpdater + PlayAttached/StopAttached + VFXAttachMode |
 | GD-005 | 运动多样性 | Phase 2 | ✅ MotionRegistry + SineWave + Spiral |
 | GD-006 | 多阵营系统 | Phase 2（扩展碰撞过滤）| ✅ CollisionEventBuffer 含 SourceFaction/TargetFaction |
-| GD-007 | 编排工具 | Phase 4（基础版）| 🔲 |
+| GD-007 | 编排工具 | Phase 4（基础版）| ✅ DanmakuEditorRefreshCoordinator + DanmakuSystemEditor（Controlled Refresh + 报告面板）|
 | GD-008 | 清屏炸弹 | Phase 2 | ✅ ClearAllBulletsWithEffect API |
 | GD-009 | 弹丸×弹丸碰撞 | Phase 2（碰撞事件 Buffer 预留扩展点）| ✅ Buffer 已落地，扩展点已预留 |
 | GD-010 | 道具/收集物 | Phase 2（非伤害弹丸通过 Faction 区分）| ✅ Faction 过滤已在 CollisionSolver 中实现 |
@@ -340,8 +377,8 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 | GD-014 | 相机震动 | 不在本轮范围（可独立模块）| ➖ |
 | GD-015 | 音效分层 | 不在本轮范围（AudioManager 侧）| ➖ |
 | GD-016 | 粒子拖尾 | Phase 3（可选）| 🔲 |
-| GD-017 | 统计与调试 | Phase 4 | 🔲 |
-| GD-018 | 配置热重载 | Phase 4 | 🔲 |
+| GD-017 | 统计与调试 | Phase 4 | ✅ RenderBatchManagerRuntimeStats + DanmakuDebugHUD 扩展（DrawCall/Batch avg/peak + Gizmos） |
+| GD-018 | 配置热重载 | Phase 4 | ✅ DanmakuEditorRefreshCoordinator（标脏→Registry重建→Batch预热→报告） |
 | GD-019 | 容量可配置 | Phase 0 | ✅ 主链路已完成 |
 | GD-020 | VFX 类型丰富度 | Phase 3（附着特效）| ✅ PlayAttached/StopAttached + IVFXPositionResolver + ADR-021 冻结语义 |
 
@@ -384,40 +421,22 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 
 ## 七、下一步行动
 
-**决策与架构评审状态（2026-04-11 夜间更新）**：
+**重构计划执行状态（2026-04-15 最终更新）**：
 
-1. ✅ 六项决策已由用户逐项拍板
-2. ✅ 软件架构师 / Unity 架构师 / 落地审计口径已完成收敛
-3. ✅ 当前已无阻塞 Phase 0 启动的架构级未决项
-4. ✅ 后续实现必须严格守住：注册表预热、资源描述统一、AttachSource 句柄边界、迁移器验收口径；这些已从“评审建议”升级为“正式执行契约”
-5. ✅ 原先的执行契约缺口已全部补成正式条款：OnValidate/热重载边界、统一资源描述版本化迁移策略、资源变更→Registry 刷新→Batch 预热的编辑器工作流均已定稿
-6. ✅ 这是最后一次文档修改；后续不再做评审和修正，直接按正式文档进入实现与验收
+1. ✅ Phase 0 基础设施层 — 2026-04-12 用户验收通过
+2. ✅ Phase 1 渲染管线重构 — 2026-04-12 编译通过，1.8 待用户 Demo 回归（已在 Phase 3 验收中覆盖）
+3. ✅ Phase 2 事件与扩展性 — 2026-04-12 用户验收通过
+4. ✅ Phase 3 视觉增强 — 2026-04-15 用户验收通过（含 E-05/E-06 修复 + git commit `3d78267`）
+5. ✅ Phase 4 工作流与工具 — 2026-04-15 代码+评审+文档完成（4.1/4.2 Atlas 工具推迟至 Backlog）
 
+**遗留 Backlog**：
+- **4.1** Atlas 打包工具（可选优化，非阻塞）
+- **4.2** 子图选择器与映射回写工具（可选优化，非阻塞）
+- **DEV-003** CalculateModifierSpeed 重复（低优先级）
+- **DEV-004** Buffer overflow 累计计数边界测试（低优先级）
+- **DEV-007** PlayAttached 同源同类型去重（已文档化，非阻塞）
 
-
-### 7.1 软件架构师最终判断
-
-从软件架构师视角，这版计划已经从“方案讨论态”进入“执行约束态”：
-
-- **不是**继续扩展方案分支的时候
-- **是**按现有 ADR 和执行约束开始落地的时候
-
-当前剩余问题不再是架构边界未定，而是实现时是否严格遵守以下约束：
-
-1. `RenderBatchManager` 只能按显式注册表预热，禁止运行时隐式建桶
-2. Bullet / VFX 的统一资源描述必须落成代码级共享值对象，而不只是文档术语统一
-3. VFX FollowTarget 必须通过 `AttachSourceId + Resolver` 解析，不回退为直接持有 `Transform`
-4. Motion 扩展的成功标准应按“只改受控扩展点，不改核心热路径”验收
-5. 迁移器验收必须覆盖 prefab / scene 实例扫描，而不只看 SO 资产本体
-
-### 7.2 当前未决项状态
-
-- **架构级未决项：无**
-- **执行级待落文件项：无新的文档缺口**
-  - 上述条款已全部回写为正式执行契约
-  - 后续只剩代码实现与验收落地，不再保留“待补文档后再开工”的中间状态
-
-> 说明：原先被标记为“实现待落文件项”的内容，现已全部在本文档、ADR、软件架构评审文档与落地审计文档中统一定稿。后续检查只问“实现是否守约”，不再问“文档是否还要继续补”。
+> 本轮弹幕 & VFX 系统重构（Phase 0~4）已全部完成。剩余 Backlog 项均为可选优化或低优先级改进，不阻塞正常开发工作流。
 
 
 

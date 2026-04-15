@@ -23,5 +23,17 @@ namespace MiniGameTemplate.Danmaku
         public SpriteSheetVFXSystem HitVfxSystem => _hitVfxSystem;
         public VFXTypeSO HitVfxType => _hitVfxType;
         public float HitVfxScale => _hitVfxScale;
+
+        /// <summary>
+        /// Creates the runtime bridge used by DanmakuSystem.
+        /// </summary>
+        public IDanmakuVFXRuntime CreateRuntimeBridge(AttachSourceRegistry attachRegistry)
+        {
+            if (_hitVfxSystem == null)
+                return null;
+
+            return new DanmakuVFXRuntimeBridge(_hitVfxSystem, new DanmakuAttachSourceResolver(attachRegistry));
+        }
     }
 }
+

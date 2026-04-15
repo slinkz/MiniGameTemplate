@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace MiniGameTemplate.VFX
 {
+
     /// <summary>
     /// VFX 类型注册表。
     /// 用于给运行时分配稳定索引，避免跨系统硬编码查找。
@@ -40,5 +41,13 @@ namespace MiniGameTemplate.VFX
             type = null;
             return false;
         }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            MiniGameTemplate.Danmaku.Editor.DanmakuEditorRefreshCoordinator.MarkDirty(this);
+        }
+#endif
     }
 }
+

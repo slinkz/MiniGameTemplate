@@ -150,14 +150,14 @@ namespace MiniGameTemplate.Danmaku
         public void ClearAll()
         {
             // 先停止所有喷雾附着 VFX
-            if (_sprayVfxSystem != null)
+            if (_vfxRuntime != null)
             {
                 for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
                 {
                     ref var spray = ref _sprayPool.Data[i];
                     if (spray.Phase != 0 && spray.VfxSlot >= 0)
                     {
-                        _sprayVfxSystem.StopAttached(spray.VfxSlot);
+                        _vfxRuntime.StopAttached(spray.VfxSlot);
                         spray.VfxSlot = -1;
                     }
                 }

@@ -68,8 +68,9 @@ namespace MiniGameTemplate.Danmaku
             DanmakuTypeRegistry registry,
             AttachSourceRegistry attachRegistry,
             TargetRegistry targetRegistry,
-            MiniGameTemplate.VFX.SpriteSheetVFXSystem sprayVfxSystem,
+            IDanmakuVFXRuntime sprayVfxRuntime,
             float dt)
+
         {
             var result = default(CollisionResult);
 
@@ -95,7 +96,8 @@ namespace MiniGameTemplate.Danmaku
             SolveSprayVsObstacle(sprayPool, obstaclePool, registry, dt, ref result);
 
             // Phase 7: 喷雾 vs 屏幕边缘
-            SolveSprayVsScreenEdge(sprayPool, attachRegistry, registry, sprayVfxSystem);
+            SolveSprayVsScreenEdge(sprayPool, attachRegistry, registry, sprayVfxRuntime);
+
 
             return result;
         }
@@ -547,7 +549,8 @@ namespace MiniGameTemplate.Danmaku
             SprayPool sprayPool,
             AttachSourceRegistry attachRegistry,
             DanmakuTypeRegistry registry,
-            MiniGameTemplate.VFX.SpriteSheetVFXSystem sprayVfxSystem)
+            IDanmakuVFXRuntime sprayVfxRuntime)
+
         {
             for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
             {
@@ -563,7 +566,8 @@ namespace MiniGameTemplate.Danmaku
                     spray.Origin.y < _worldBounds.yMin - margin ||
                     spray.Origin.y > _worldBounds.yMax + margin)
                 {
-                    SprayUpdater.FreeSpray(sprayPool, attachRegistry, sprayVfxSystem, i);
+                    SprayUpdater.FreeSpray(sprayPool, attachRegistry, sprayVfxRuntime, i);
+
                 }
             }
         }
@@ -618,7 +622,11 @@ namespace MiniGameTemplate.Danmaku
                     core.PierceHitMask |= targetBit;
                     // 穿透音效
                     if (type.PierceSFX != null)
-                        AudioManager.Instance?.PlaySFX(type.PierceSFX);
+                    {
+                        var audioMgr = AudioManager.Instance;
+                        if (audioMgr != null)
+                            audioMgr.PlaySFX(type.PierceSFX);
+                    }
                     break;
 
                 case CollisionResponse.BounceBack:
@@ -652,7 +660,11 @@ namespace MiniGameTemplate.Danmaku
         {
             // 反弹音效
             if (type.BounceSFX != null)
-                AudioManager.Instance?.PlaySFX(type.BounceSFX);
+            {
+                var audioMgr = AudioManager.Instance;
+                if (audioMgr != null)
+                    audioMgr.PlaySFX(type.BounceSFX);
+            }
 
             // 反弹特效
             if (type.BounceEffect != null)

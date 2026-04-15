@@ -2,6 +2,7 @@ using MiniGameTemplate.Pool;
 using MiniGameTemplate.VFX;
 using UnityEngine;
 
+
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
@@ -47,5 +48,15 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
         [HideInInspector]
         public byte RuntimeIndex;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (TickInterval < 0.001f) TickInterval = 0.001f;
+            if (ScreenEdgeRecycleMargin < 0f) ScreenEdgeRecycleMargin = 0f;
+            Editor.DanmakuEditorRefreshCoordinator.MarkDirty(this);
+        }
+#endif
     }
 }
+

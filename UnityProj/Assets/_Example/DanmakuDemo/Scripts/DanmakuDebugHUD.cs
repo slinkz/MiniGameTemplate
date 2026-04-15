@@ -1,5 +1,7 @@
 using MiniGameTemplate.Danmaku;
+using MiniGameTemplate.Rendering;
 using UnityEngine;
+
 
 namespace MiniGameTemplate.Example
 {
@@ -16,6 +18,7 @@ namespace MiniGameTemplate.Example
 
         private bool _visible;
         private DanmakuSystem _system;
+
 
         // FPS 平滑
         private float _fpsTimer;
@@ -46,6 +49,7 @@ namespace MiniGameTemplate.Example
             // FPS 计算
             _fpsFrameCount++;
             _fpsTimer += Time.unscaledDeltaTime;
+
             if (_fpsTimer >= 0.5f)
             {
                 _currentFps = _fpsFrameCount / _fpsTimer;
@@ -60,10 +64,11 @@ namespace MiniGameTemplate.Example
 
             InitStyles();
 
-            float w = 280f;
+            float w = 320f;
             float lineH = _fontSize + 4f;
             float padding = 6f;
-            int lineCount = 8;
+            int lineCount = 12;
+
             float h = lineH * lineCount + padding * 2;
 
             Rect boxRect = new Rect(8, 8, w, h);
@@ -111,8 +116,24 @@ namespace MiniGameTemplate.Example
             DrawLabel(x, y, $"Difficulty: {diffLabel}");
             y += lineH;
 
+            DrawLabel(x, y, $"Render Layer Truth: {RenderSortingOrder.BulletNormal}/{RenderSortingOrder.BulletAdditive}");
+            y += lineH;
+
+            DrawLabel(x, y, $"DrawCalls: {RenderBatchManagerRuntimeStats.LastSubmittedDrawCalls} (avg {RenderBatchManagerRuntimeStats.AverageSubmittedDrawCalls:F1} / peak {RenderBatchManagerRuntimeStats.PeakSubmittedDrawCalls})");
+            y += lineH;
+
+            DrawLabel(x, y, $"Active Batches: {RenderBatchManagerRuntimeStats.LastActiveBatchCount} (avg {RenderBatchManagerRuntimeStats.AverageActiveBatchCount:F1} / peak {RenderBatchManagerRuntimeStats.PeakActiveBatchCount})");
+            y += lineH;
+
+            DrawLabel(x, y, $"Unknown Buckets: {RenderBatchManagerRuntimeStats.LastUnknownBucketErrorCount}");
+            y += lineH;
+
+            DrawLabel(x, y, $"Collision Overflow: {_system.CollisionEventBuffer?.OverflowCount ?? 0}");
+            y += lineH;
+
             // 快捷键提示
             DrawLabel(x, y, "<color=#888888>F1=Toggle R=Clear P=Pause L=Laser 1/2/3=Diff</color>");
+
         }
 
         private int CountActiveBullets()

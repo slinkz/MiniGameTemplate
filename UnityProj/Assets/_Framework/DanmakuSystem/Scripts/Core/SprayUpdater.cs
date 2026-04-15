@@ -1,9 +1,9 @@
 using MiniGameTemplate.VFX;
 using UnityEngine;
 
-
 namespace MiniGameTemplate.Danmaku
 {
+
     /// <summary>
     /// 喷雾更新——纯 static 工具类。
     /// 负责：挂载源同步、Elapsed 推进、TickTimer 推进、生命周期回收。
@@ -15,8 +15,9 @@ namespace MiniGameTemplate.Danmaku
             SprayPool pool,
             AttachSourceRegistry attachRegistry,
             DanmakuTypeRegistry typeRegistry,
-            SpriteSheetVFXSystem vfxSystem,
+            IDanmakuVFXRuntime vfxRuntime,
             float dt)
+
         {
             for (int i = 0; i < SprayPool.MAX_SPRAYS; i++)
             {
@@ -34,22 +35,24 @@ namespace MiniGameTemplate.Danmaku
 
                 if (spray.Elapsed >= spray.Lifetime)
                 {
-                    FreeSpray(pool, attachRegistry, vfxSystem, i);
+                    FreeSpray(pool, attachRegistry, vfxRuntime, i);
                     continue;
                 }
 
                 // ── VFX 启动（首帧，VfxSlot == -1 时尝试启动） ──
-                if (spray.VfxSlot < 0 && vfxSystem != null && typeRegistry != null)
+                if (spray.VfxSlot < 0 && vfxRuntime != null && typeRegistry != null)
                 {
                     var sprayType = typeRegistry.SprayTypes[spray.SprayTypeIndex];
                     if (sprayType != null && sprayType.SprayVFXType != null)
                     {
                         bool followTarget = sprayType.SprayVFXType.AttachMode == VFXAttachMode.FollowTarget && spray.AttachId != 0;
-                        spray.VfxSlot = followTarget
-                            ? vfxSystem.PlayAttached(sprayType.SprayVFXType, spray.AttachId, 1f)
-                            : vfxSystem.Play(sprayType.SprayVFXType, spray.Origin, 1f, spray.Direction * Mathf.Rad2Deg);
+                        if (followTarget)
+                        {
+                            spray.VfxSlot = vfxRuntime.PlayAttached(sprayType.SprayVFXType, spray.AttachId, 1f);
+                        }
                     }
                 }
+
 
 
                 // 注意：TickTimer 推进在 CollisionSolver.SolveSprays 中完成，
@@ -63,17 +66,19 @@ namespace MiniGameTemplate.Danmaku
         public static void FreeSpray(
             SprayPool pool,
             AttachSourceRegistry attachRegistry,
-            SpriteSheetVFXSystem vfxSystem,
+            IDanmakuVFXRuntime vfxRuntime,
             int index)
+
         {
             ref var spray = ref pool.Data[index];
 
             // 停止附着 VFX
-            if (spray.VfxSlot >= 0 && vfxSystem != null)
+            if (spray.VfxSlot >= 0 && vfxRuntime != null)
             {
-                vfxSystem.StopAttached(spray.VfxSlot);
+                vfxRuntime.StopAttached(spray.VfxSlot);
                 spray.VfxSlot = -1;
             }
+
 
             byte attachId = spray.AttachId;
             if (attachId != 0)
