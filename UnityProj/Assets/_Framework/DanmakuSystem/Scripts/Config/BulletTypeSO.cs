@@ -33,6 +33,10 @@ namespace MiniGameTemplate.Danmaku
         public BulletPlaybackMode PlaybackMode = BulletPlaybackMode.StretchToLifetime;
         [Min(0.001f)] public float FixedFps = 12f;
 
+        [Header("Atlas 绑定（可选优化）")]
+        [Tooltip("绑定的 Atlas 映射。null = 使用 SourceTexture 独立模式。ADR-017：Atlas 为可逆派生产物。")]
+        public AtlasMappingSO AtlasBinding;
+
         /// <summary>资源描述版本号，用于迁移器</summary>
         [HideInInspector] public int SchemaVersion = 1;
 
@@ -187,23 +191,54 @@ namespace MiniGameTemplate.Danmaku
         public int MaxFrameCount => Mathf.Max(1, Mathf.Min(SheetTotalFrames, SheetColumns * SheetRows));
 
         /// <summary>
-        /// 根据帧索引计算该帧在 UVRect 内的子区域。
-        /// Static 模式直接返回 UVRect。
+        /// 解析实际使用的贴图。优先级：AtlasBinding.AtlasTexture > SourceTexture。
+        /// 不含 fallback 全局 Atlas，那层由 Renderer 负责。
+        /// </summary>
+        public Texture2D GetResolvedTexture()
+        {
+            if (AtlasBinding != null && AtlasBinding.AtlasTexture != null)
+                return AtlasBinding.AtlasTexture;
+            return SourceTexture;
+        }
+
+        /// <summary>
+        /// 解析基础 UV 区域。当使用 AtlasBinding 时，从映射表查找源贴图的 UVRect。
+        /// </summary>
+        public Rect GetResolvedBaseUV()
+        {
+            if (AtlasBinding != null && AtlasBinding.AtlasTexture != null)
+                return AtlasBinding.GetUVRectForSource(SourceTexture);
+            return UVRect;
+        }
+
+        /// <summary>
+        /// 根据帧索引计算该帧在 baseUV 内的子区域。
+        /// Static 模式直接返回 baseUV。
         /// SpriteSheet 模式按列行切分。
         /// </summary>
-        public Rect GetFrameUV(int frameIndex)
+        public Rect GetFrameUV(int frameIndex, Rect baseUV)
         {
             if (SamplingMode == BulletSamplingMode.Static)
-                return UVRect;
+                return baseUV;
 
             int cols = Mathf.Max(1, SheetColumns);
             int rows = Mathf.Max(1, SheetRows);
             int clampedFrame = Mathf.Clamp(frameIndex, 0, MaxFrameCount - 1);
             int x = clampedFrame % cols;
             int y = clampedFrame / cols;
-            float fw = UVRect.width / cols;
-            float fh = UVRect.height / rows;
-            return new Rect(UVRect.x + x * fw, UVRect.y + y * fh, fw, fh);
+            float fw = baseUV.width / cols;
+            float fh = baseUV.height / rows;
+            return new Rect(baseUV.x + x * fw, baseUV.y + y * fh, fw, fh);
+        }
+
+        /// <summary>
+        /// 根据帧索引计算该帧在 UVRect 内的子区域（无 Atlas 绑定的兼容方法）。
+        /// Static 模式直接返回 UVRect。
+        /// SpriteSheet 模式按列行切分。
+        /// </summary>
+        public Rect GetFrameUV(int frameIndex)
+        {
+            return GetFrameUV(frameIndex, UVRect);
         }
 
 #if UNITY_EDITOR

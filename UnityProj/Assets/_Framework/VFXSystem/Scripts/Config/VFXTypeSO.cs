@@ -24,6 +24,10 @@ namespace MiniGameTemplate.VFX
         /// <summary>资源描述版本号，用于迁移器</summary>
         [HideInInspector] public int SchemaVersion = 1;
 
+        [Header("Atlas 绑定（可选优化）")]
+        [Tooltip("绑定的 Atlas 映射。null = 使用 SourceTexture 独立模式。ADR-017：Atlas 为可逆派生产物。")]
+        public AtlasMappingSO AtlasBinding;
+
         // ──── Sprite Sheet 配置 ────
 
         [Header("Sprite Sheet")]
@@ -71,21 +75,51 @@ namespace MiniGameTemplate.VFX
         public int MaxFrameCount => Mathf.Max(1, Mathf.Min(TotalFrames, Columns * Rows));
         public float Duration => MaxFrameCount / Mathf.Max(1f, FramesPerSecond);
 
+        // ──── Atlas 解析辅助 ────
+
+        /// <summary>
+        /// 解析实际使用的贴图。优先级：AtlasBinding.AtlasTexture > SourceTexture。
+        /// </summary>
+        public Texture2D GetResolvedTexture()
+        {
+            if (AtlasBinding != null && AtlasBinding.AtlasTexture != null)
+                return AtlasBinding.AtlasTexture;
+            return SourceTexture;
+        }
+
+        /// <summary>
+        /// 解析基础 UV 区域。当使用 AtlasBinding 时，从映射表查找源贴图的 UVRect。
+        /// </summary>
+        public Rect GetResolvedBaseUV()
+        {
+            if (AtlasBinding != null && AtlasBinding.AtlasTexture != null)
+                return AtlasBinding.GetUVRectForSource(SourceTexture);
+            return UVRect;
+        }
+
         // ──── 序列帧辅助方法 ────
 
         /// <summary>
-        /// 根据帧索引计算该帧在 UVRect 内的子区域。
+        /// 根据帧索引计算该帧在指定 baseUV 内的子区域。
         /// </summary>
-        public Rect GetFrameUV(int frameIndex)
+        public Rect GetFrameUV(int frameIndex, Rect baseUV)
         {
             int cols = Mathf.Max(1, Columns);
             int rows = Mathf.Max(1, Rows);
             int clampedFrame = Mathf.Clamp(frameIndex, 0, MaxFrameCount - 1);
             int x = clampedFrame % cols;
             int y = clampedFrame / cols;
-            float fw = UVRect.width / cols;
-            float fh = UVRect.height / rows;
-            return new Rect(UVRect.x + x * fw, UVRect.y + y * fh, fw, fh);
+            float fw = baseUV.width / cols;
+            float fh = baseUV.height / rows;
+            return new Rect(baseUV.x + x * fw, baseUV.y + y * fh, fw, fh);
+        }
+
+        /// <summary>
+        /// 根据帧索引计算该帧在 UVRect 内的子区域（无 Atlas 绑定的兼容方法）。
+        /// </summary>
+        public Rect GetFrameUV(int frameIndex)
+        {
+            return GetFrameUV(frameIndex, UVRect);
         }
     }
 }

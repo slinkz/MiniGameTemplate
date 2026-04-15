@@ -34,8 +34,9 @@ namespace MiniGameTemplate.Danmaku
                     var bt = registry.BulletTypes[i];
                     if (bt == null) continue;
 
-                    // 优先使用 SourceTexture，否则 fallback 到全局 Atlas
-                    var tex = bt.SourceTexture != null ? bt.SourceTexture : _fallbackAtlas;
+                    // 优先 AtlasBinding.AtlasTexture > SourceTexture > fallback
+                    var tex = bt.GetResolvedTexture();
+                    if (tex == null) tex = _fallbackAtlas;
                     if (tex == null) continue;
 
                     var key = new RenderBatchManager.BucketKey(bt.Layer, tex);
@@ -78,12 +79,14 @@ namespace MiniGameTemplate.Danmaku
 
                 var bulletType = registry.BulletTypes[core.TypeIndex];
 
-                // 确定贴图——优先 SourceTexture，fallback 到全局 Atlas（迁移兼容期）
-                // 注意：Unity Object 的 ?? 运算符不走 Unity 的 == null 重载，
-                // 未赋值的序列化字段是 "fake null"（C# 引用非 null），必须用显式 != null
-                var srcTex = bulletType.SourceTexture;
-                var texture = (srcTex != null) ? srcTex : _fallbackAtlas;
+                // 确定贴图——优先 AtlasBinding > SourceTexture > fallback（ADR-017）
+                // 注意：Unity Object 的 ?? 运算符不走 Unity 的 == null 重载，必须用显式 != null
+                var resolvedTex = bulletType.GetResolvedTexture();
+                var texture = (resolvedTex != null) ? resolvedTex : _fallbackAtlas;
                 if (texture == null) continue;
+
+                // 解析基础 UV——Atlas 绑定时从 AtlasMappingSO 查子区域
+                Rect baseUV = bulletType.GetResolvedBaseUV();
 
                 var bucketKey = new RenderBatchManager.BucketKey(bulletType.Layer, texture);
                 if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
@@ -119,8 +122,8 @@ namespace MiniGameTemplate.Danmaku
                 }
                 else
                 {
-                    // 解析 UV：Static 或 SpriteSheet
-                    Rect uv = ResolveUV(bulletType, ref core);
+                    // 解析 UV：Static 或 SpriteSheet（基于 Atlas 解析后的 baseUV）
+                    Rect uv = ResolveUV(bulletType, ref core, baseUV);
 
                     WriteQuadUV(bucket, ref core, bulletType, 1f, tint, uv);
                 }
@@ -129,8 +132,8 @@ namespace MiniGameTemplate.Danmaku
                 if (core.Phase == (byte)BulletPhase.Active)
                 {
                     Rect ghostUV = bulletType.SamplingMode == BulletSamplingMode.Static
-                        ? bulletType.UVRect
-                        : bulletType.GetFrameUV(0); // 残影用第一帧
+                        ? baseUV
+                        : bulletType.GetFrameUV(0, baseUV); // 残影用第一帧
 
                     if (trail.TrailLength >= 1)
                         WriteGhostQuad(bucket, trail.PrevPos1, bulletType, 0.6f, ghostUV);
@@ -154,12 +157,13 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 解析弹丸当前帧的 UV。
-        /// Static 模式返回 UVRect，SpriteSheet 模式按生命周期或固定 FPS 计算帧索引。
+        /// Static 模式返回 baseUV，SpriteSheet 模式按生命周期或固定 FPS 计算帧索引。
+        /// baseUV 已经过 Atlas 解析，可能是 Atlas 子区域而非 TypeSO.UVRect。
         /// </summary>
-        private static Rect ResolveUV(BulletTypeSO type, ref BulletCore core)
+        private static Rect ResolveUV(BulletTypeSO type, ref BulletCore core, Rect baseUV)
         {
             if (type.SamplingMode == BulletSamplingMode.Static)
-                return type.UVRect;
+                return baseUV;
 
             // SpriteSheet 模式：计算帧索引
             int frameIndex = 0;
@@ -192,7 +196,7 @@ namespace MiniGameTemplate.Danmaku
                 }
             }
 
-            return type.GetFrameUV(frameIndex);
+            return type.GetFrameUV(frameIndex, baseUV);
         }
 
         // ──── Quad 写入 ────

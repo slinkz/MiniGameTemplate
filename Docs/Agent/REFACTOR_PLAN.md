@@ -278,8 +278,8 @@
 
 | 任务 | 描述 | 改动范围 | Agent 可独立完成 | 状态 |
 |------|------|----------|-----------------|------|
-| 4.1 | Bullet/VFX Atlas 打包工具（可选优化，不是前置） | 新建 Editor 窗口 + 资产格式 | ✅ | 🔲 推迟（Phase 4+ Backlog，非阻塞） |
-| 4.2 | 弹丸/VFX 子图选择器与映射回写工具 | 新建 Editor 窗口 | ✅ | 🔲 推迟（Phase 4+ Backlog，非阻塞） |
+| 4.1 | Bullet/VFX Atlas 打包工具（可选优化，不是前置） | 新建 Editor 窗口 + 资产格式 | ✅ | ✅ 已完成 |
+| 4.2 | 弹丸/VFX 子图选择器与映射回写工具 | 新建 Editor 窗口 | ✅ | ✅ 已完成 |
 | 4.3 | SO 配置热重载（OnValidate + 运行时刷新） | 改多个 SO | ✅ | ✅ 已完成 |
 | 4.4 | 碰撞可视化 Gizmos | 改 DanmakuSystem Editor | ✅ | ✅ 已完成 |
 | 4.5 | ProfilerMarker 性能标记 + Batch/DC 监控 | 改多个核心文件 | ✅ | ✅ 已完成 |
@@ -324,7 +324,18 @@
   - `DanmakuVFXRuntimeBridge.cs`
 - **新增共享文件（1 个）**：`RenderBatchManagerRuntimeStats.cs`（Rendering/）
 - **修改文件（12 个）**：DanmakuSystem.cs、DanmakuSystem.Runtime.cs、DanmakuSystem.UpdatePipeline.cs、DanmakuSystem.API.cs、CollisionSolver.cs、SprayUpdater.cs、BulletTypeSO.cs、LaserTypeSO.cs、SprayTypeSO.cs、DanmakuTypeRegistry.cs、VFXTypeRegistrySO.cs、DanmakuDebugHUD.cs
-- **4.1/4.2 Atlas 打包工具与子图选择器**：推迟至 Phase 4+ Backlog。当前各 SO 已支持独立贴图 + UVRect 直接引用，atlas 仅为可选优化，不阻塞任何生产工作流。
+- **4.1/4.2 Atlas 打包工具与子图选择器**：已完成（Phase 4 子任务，2026-04-15）
+  - 新建 `AtlasMappingSO.cs`（`_Framework/Rendering/`）：Atlas 映射数据模型，双键查找（引用+GUID），ADR-019 可逆派生产物
+  - 新建 `DanmakuAtlasPackerWindow.cs`（`_Framework/Editor/Rendering/`）：Atlas 打包 Editor 窗口，域分离（Bullet/VFX），拖拽/文件夹导入，利用率预览
+  - 新建 `AtlasSubSpritePopup.cs`（`_Framework/Editor/Rendering/`）：子图选择器弹出窗口，Atlas 条目模式 + Grid 模式
+  - 新建 `AtlasMappingSOEditor.cs`（`_Framework/Editor/Rendering/`）：回写工具自定义 Inspector，dry-run → 确认 → apply → report 四阶段
+  - 修改 `BulletTypeSO.cs`：新增 `AtlasBinding` 字段 + `GetResolvedTexture()` / `GetResolvedBaseUV()` 方法
+  - 修改 `VFXTypeSO.cs`：新增 `AtlasBinding` 字段 + `GetResolvedTexture()` / `GetResolvedBaseUV()` 方法
+  - 修改 `BulletRenderer.cs`：桶预热和渲染改用 `GetResolvedTexture()` / `GetResolvedBaseUV()`
+  - 修改 `VFXRenderer.cs`：桶预热和渲染改用 `GetResolvedTexture()` / `GetResolvedBaseUV()`
+  - 修改 `BulletTypeSOEditor.cs`：新增 "🔍 选择子图" / "🔍 选择爆炸子图" 按钮
+  - 架构评审：修复 ARCH-001（ReferenceEquals→Unity ==）、ARCH-002（冗余 #if）、ARCH-003（VFXRenderer 死代码）
+  - Unity batchmode 编译通过：0 errors, 0 warnings
 
 **Phase 4 执行约束补充**：
 - Atlas 工具必须输出显式映射资产，并保留回退到原始 `SourceTexture + UVRect` 的能力
@@ -427,16 +438,14 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 2. ✅ Phase 1 渲染管线重构 — 2026-04-12 编译通过，1.8 待用户 Demo 回归（已在 Phase 3 验收中覆盖）
 3. ✅ Phase 2 事件与扩展性 — 2026-04-12 用户验收通过
 4. ✅ Phase 3 视觉增强 — 2026-04-15 用户验收通过（含 E-05/E-06 修复 + git commit `3d78267`）
-5. ✅ Phase 4 工作流与工具 — 2026-04-15 代码+评审+文档完成（4.1/4.2 Atlas 工具推迟至 Backlog）
+5. ✅ Phase 4 工作流与工具 — 2026-04-15 全部完成（含 4.1/4.2 Atlas 工具子任务）
 
 **遗留 Backlog**：
-- **4.1** Atlas 打包工具（可选优化，非阻塞）
-- **4.2** 子图选择器与映射回写工具（可选优化，非阻塞）
 - **DEV-003** CalculateModifierSpeed 重复（低优先级）
 - **DEV-004** Buffer overflow 累计计数边界测试（低优先级）
 - **DEV-007** PlayAttached 同源同类型去重（已文档化，非阻塞）
 
-> 本轮弹幕 & VFX 系统重构（Phase 0~4）已全部完成。剩余 Backlog 项均为可选优化或低优先级改进，不阻塞正常开发工作流。
+> 本轮弹幕 & VFX 系统重构（Phase 0~4）已全部完成，包括 4.1/4.2 Atlas 工具。剩余 Backlog 项均为低优先级改进，不阻塞正常开发工作流。
 
 
 

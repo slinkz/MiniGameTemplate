@@ -12,6 +12,47 @@
 | `RenderLayer.cs` | — | 渲染层枚举（`Normal = 0`, `Additive = 1`） |
 | `RenderSortingOrder.cs` | — | 渲染排序常量（BulletNormal=100, BulletAdditive=110, LaserDefault=120, VFXNormal=200, VFXAdditive=210, DamageNumber=300） |
 | `RenderBatchManager.cs` | 306 | [Phase 1] 渲染批次管理器——按 `(RenderLayer, Texture2D)` 二元组分桶，每桶一个 Mesh + 一个 DrawCall |
+| `RenderBatchManagerRuntimeStats.cs` | — | [Phase 4] 渲染统计共享静态类，提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计 |
+| `AtlasMappingSO.cs` | 108 | [Phase 4.1] Atlas 映射 ScriptableObject——记录图集贴图 + 源贴图映射（双键查找），ADR-019 可逆派生产物 |
+
+## AtlasMappingSO（Phase 4.1 新增）
+
+Atlas 映射资产——记录打包后的图集贴图与每张源贴图的 UV 映射。
+
+### 核心类型
+
+```
+AtlasMappingSO : ScriptableObject
+├── AtlasTexture (Texture2D)      — 打包生成的图集贴图
+├── Padding (int)                  — 像素间距
+├── Entries (AtlasEntry[])         — 子图映射数组
+├── SchemaVersion (int)            — 版本号（迁移用）
+└── API
+    ├── TryFindEntry(source, out entry) → bool  — 双键查找（引用优先 → GUID 兜底）
+    └── GetUVRectForSource(source) → Rect       — 快捷查找，未找到返回 (0,0,1,1)
+
+AtlasEntry (struct)
+├── SourceTexture (Texture2D)      — 原始独立贴图引用（保持可逆）
+├── SourceGUID (string)            — 原始贴图 GUID（引用丢失时兜底）
+├── UVRect (Rect)                  — 归一化 UV 区域
+└── PixelRect (RectInt)            — 像素区域（调试/预览用）
+```
+
+### 设计原则（ADR-019）
+
+1. **Atlas 为可逆派生产物**：源事实仍是原始 `SourceTexture + UVRect`
+2. **双键查找**：优先按 Texture2D 引用匹配，引用丢失时按 GUID 兜底
+3. **删除即回退**：删除 AtlasMappingSO 后，TypeSO 的 `AtlasBinding = null`，自动回退到独立贴图模式
+4. **域分离**：Bullet/VFX/DamageNumber atlas 分域维护，不混打
+
+### 与 TypeSO 的集成
+
+```csharp
+// BulletTypeSO / VFXTypeSO 的 Atlas 解析优先级：
+// AtlasBinding.AtlasTexture > SourceTexture > Renderer fallback
+Texture2D tex = bulletType.GetResolvedTexture();     // 解析实际贴图
+Rect baseUV   = bulletType.GetResolvedBaseUV();      // 解析基础 UV（Atlas 子区域或 UVRect）
+```
 
 ## RenderBatchManager
 

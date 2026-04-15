@@ -32,8 +32,9 @@ namespace MiniGameTemplate.VFX
                 {
                     if (!registry.TryGet((ushort)i, out var vfxType)) continue;
 
-                    // 优先使用 SourceTexture，否则 fallback 到全局 Atlas
-                    var tex = vfxType.SourceTexture != null ? vfxType.SourceTexture : _fallbackAtlas;
+                    // 优先 AtlasBinding.AtlasTexture > SourceTexture > fallback
+                    var tex = vfxType.GetResolvedTexture();
+                    if (tex == null) tex = _fallbackAtlas;
                     if (tex == null) continue;
 
                     var key = new RenderBatchManager.BucketKey(vfxType.Layer, tex);
@@ -76,16 +77,18 @@ namespace MiniGameTemplate.VFX
                 if (!instance.IsActive) continue;
                 if (!registry.TryGet(instance.TypeIndex, out var type)) continue;
 
-                // 优先 SourceTexture，fallback 到全局 Atlas（迁移兼容期）
-                // 注意：Unity Object 的 ?? 不走 Unity 的 == null 重载，必须用显式判断
-                var srcTex = type.SourceTexture;
-                var texture = (srcTex != null) ? srcTex : _fallbackAtlas;
+                // 优先 AtlasBinding > SourceTexture > fallback（ADR-017）
+                var resolvedTex = type.GetResolvedTexture();
+                var texture = (resolvedTex != null) ? resolvedTex : _fallbackAtlas;
                 if (texture == null) continue;
+
+                // 解析基础 UV
+                Rect baseUV = type.GetResolvedBaseUV();
 
                 var bucketKey = new RenderBatchManager.BucketKey(type.Layer, texture);
                 if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
 
-                WriteQuad(bucket, ref instance, type);
+                WriteQuad(bucket, ref instance, type, baseUV);
             }
 
             _batchManager.UploadAndDrawAll();
@@ -99,14 +102,14 @@ namespace MiniGameTemplate.VFX
 
         // ──── Quad 写入 ────
 
-        private void WriteQuad(RenderBatchManager.RenderBucket bucket, ref VFXInstance instance, VFXTypeSO type)
+        private void WriteQuad(RenderBatchManager.RenderBucket bucket, ref VFXInstance instance, VFXTypeSO type, Rect baseUV)
         {
             int baseVertex = bucket.AllocateQuad();
             if (baseVertex < 0) return;
 
             _totalQuadCount++;
 
-            Rect frameUV = type.GetFrameUV(instance.CurrentFrame);
+            Rect frameUV = type.GetFrameUV(instance.CurrentFrame, baseUV);
             float halfW = type.Size.x * instance.Scale * 0.5f;
             float halfH = type.Size.y * instance.Scale * 0.5f;
             float radians = type.RotateWithInstance ? instance.RotationDegrees * Mathf.Deg2Rad : 0f;

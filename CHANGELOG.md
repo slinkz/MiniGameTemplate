@@ -4,6 +4,33 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
 ## [未发布] - 2026-04-15
 
+### 新增（弹幕系统 Phase 4 子任务：Atlas 打包工具 4.1/4.2）
+
+- **Atlas 映射数据模型（AtlasMappingSO）**
+  - 新建 `_Framework/Rendering/AtlasMappingSO.cs`，ScriptableObject 记录图集 + 源贴图映射
+  - `AtlasEntry` 结构体：双键查找（Texture2D 引用 + GUID 兜底）
+  - ADR-019 合规：Atlas 为可逆派生产物，删除 AtlasMappingSO 即回退到独立贴图模式
+- **Atlas 打包 Editor 工具（DanmakuAtlasPackerWindow）**
+  - 菜单入口 `Tools/弹幕系统/Atlas 打包工具`
+  - 域分离（Bullet/VFX 不混打）、最大尺寸 512~4096、Padding 配置
+  - 拖拽/Object Picker/文件夹批量导入、已有 Mapping 重新打包
+  - 输出 PNG + AtlasMappingSO，显示利用率百分比和图集预览
+- **子图选择器弹出窗口（AtlasSubSpritePopup）**
+  - Atlas 条目模式：可视化显示命名子区域 + 点击选择 UVRect
+  - Grid 模式：按 columns×rows 网格显示（SpriteSheet 用）
+  - 绿色高亮当前选中区域 + 半透明填充
+- **Atlas 映射回写工具（AtlasMappingSOEditor）**
+  - AtlasMappingSO 自定义 Inspector，"📝 回写 UVRect 到关联 TypeSO" 按钮
+  - dry-run → 用户确认 → apply（Undo 支持）→ report 四阶段工作流
+  - 回写后自动触发 DanmakuEditorRefreshCoordinator 编辑器刷新链路
+- **BulletTypeSO / VFXTypeSO Atlas 绑定集成**
+  - 新增 `AtlasBinding` 可选字段（null = 独立贴图模式，非 null = Atlas 优化模式）
+  - `GetResolvedTexture()` / `GetResolvedBaseUV()` 三级优先解析
+  - BulletRenderer / VFXBatchRenderer 桶预热和渲染统一走解析方法
+- **BulletTypeSOEditor 子图选择按钮**
+  - UVRect 字段下方新增 "🔍 选择子图" 按钮
+  - ExplosionAtlasUV 字段下方新增 "🔍 选择爆炸子图" 按钮
+
 ### 新增（弹幕系统 Phase 4：工作流与工具）
 
 - **编辑器刷新协调器（DanmakuEditorRefreshCoordinator）**
