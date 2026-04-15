@@ -24,7 +24,7 @@ MonoBehaviour:
   Rows: 4
   TotalFrames: 16
   FramesPerSecond: 10
-  Loop: 0
+  Loop: 1
   RotateWithInstance: 0
   Size: {x: 3.2, y: 3.2}
   Tint: {r: 0.6886792, g: 0, b: 0, a: 0.82}

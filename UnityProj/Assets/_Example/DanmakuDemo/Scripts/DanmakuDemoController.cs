@@ -16,8 +16,8 @@ namespace MiniGameTemplate.Example
     /// - SpawnerDriver（自动循环发射，模拟 Boss）
     /// - 手动 FireGroup（按空格发射一组）
     /// - 混合（SpawnerDriver 自动 + 空格手动叠加）
-    /// 额外快捷键：L=激光，K=Detached Spray，J=Attached Spray（跟随 Boss），R=ClearAll
-    /// 验收辅助：Boss 可自动横向往返移动，用于验证 Attached Spray / FollowTarget 跟随效果
+    /// 额外快捷键：L=Attached 激光（跟随 Boss），K=Detached Spray，J=Attached Spray（跟随 Boss），R=ClearAll，D=销毁Boss
+    /// 验收辅助：Boss 可自动横向往返移动，用于验证 Attached Laser / Spray / FollowTarget 跟随效果
 
 
     /// </para>
@@ -36,6 +36,8 @@ namespace MiniGameTemplate.Example
         [SerializeField] private float _bossMoveAmplitude = 2.5f;
         [Tooltip("Boss 自动横向移动速度")]
         [SerializeField] private float _bossMoveSpeed = 1.5f;
+        [Tooltip("Boss 逆时针旋转速度（度/秒），0 = 不旋转")]
+        [SerializeField] private float _bossRotateSpeed = 45f;
 
         [Header("发射点（无 Boss Transform 时使用）")]
 
@@ -99,6 +101,7 @@ namespace MiniGameTemplate.Example
         private float _laserCooldownTimer;
         private float _sprayCooldownTimer;
         private bool _initialized;
+        private bool _bossDestroyed;
         private Vector3 _bossStartPosition;
 
 
@@ -167,6 +170,26 @@ namespace MiniGameTemplate.Example
         {
             if (!_initialized) return;
 
+            // ── 防御：Boss 被销毁后自动停止 SpawnerDriver ──
+            if (!_bossDestroyed && _bossTransform == null)
+            {
+                _bossDestroyed = true;
+                if (_spawnerSlot >= 0)
+                {
+                    _system.SpawnerDriver.Stop(_spawnerSlot);
+                    _spawnerSlot = -1;
+                }
+                Debug.Log("[DanmakuDemo] Boss 已销毁，SpawnerDriver 已停止。");
+            }
+
+            // X = 销毁 Boss（E-06 验收用）
+            if (Input.GetKeyDown(KeyCode.X) && _bossTransform != null)
+            {
+                Debug.Log("[DanmakuDemo] X 键：销毁 Boss GameObject。");
+                Destroy(_bossTransform.gameObject);
+                // _bossDestroyed 会在下一帧由上面的检测自动触发
+            }
+
             if (_autoMoveBoss && _bossTransform != null)
             {
                 float offsetX = Mathf.Sin(Time.time * _bossMoveSpeed) * _bossMoveAmplitude;
@@ -174,10 +197,14 @@ namespace MiniGameTemplate.Example
                     _bossStartPosition.x + offsetX,
                     _bossStartPosition.y,
                     _bossStartPosition.z);
+
+                // 逆时针旋转（Z 轴正方向）
+                if (_bossRotateSpeed > 0f)
+                    _bossTransform.Rotate(0f, 0f, _bossRotateSpeed * Time.deltaTime, Space.Self);
             }
 
             // ── 手动发射（空格键） ──
-            if (_mode == DemoMode.ManualFire || _mode == DemoMode.Mixed)
+            if (!_bossDestroyed && (_mode == DemoMode.ManualFire || _mode == DemoMode.Mixed))
 
             {
                 _manualCooldownTimer -= Time.deltaTime;
@@ -190,19 +217,29 @@ namespace MiniGameTemplate.Example
                 }
             }
 
-            // ── 快捷键 ──
+            // ── 快捷键（Boss 存活时才可发射） ──
 
-            // L = 发射激光
+            // L = 发射激光（Attached 模式——跟随 Boss）
             _laserCooldownTimer -= Time.deltaTime;
-            if (Input.GetKeyDown(KeyCode.L) && _laserCooldownTimer <= 0f)
+            if (!_bossDestroyed && Input.GetKeyDown(KeyCode.L) && _laserCooldownTimer <= 0f)
             {
                 if (_system.TypeRegistry.LaserTypes != null &&
                     _laserTypeIndex < _system.TypeRegistry.LaserTypes.Length)
                 {
-                    Vector2 origin = GetBossOrigin();
-                    // 朝下发射（270° = -π/2）
-                    float angle = -Mathf.PI * 0.5f;
-                    int slot = _system.FireLaser(_laserTypeIndex, origin, angle, _laserLength);
+                    int slot;
+                    if (_bossTransform != null)
+                    {
+                        // Attached：每帧跟随 Boss 位置
+                        slot = _system.FireLaser(_laserTypeIndex, _bossTransform, _laserLength);
+                    }
+                    else
+                    {
+                        // Fallback Detached：Boss 不存在时用固定坐标
+                        Vector2 origin = GetBossOrigin();
+                        float angle = -Mathf.PI * 0.5f;
+                        slot = _system.FireLaser(_laserTypeIndex, origin, angle, _laserLength);
+                    }
+
                     if (slot >= 0)
                         _laserCooldownTimer = _laserCooldown;
                     else
@@ -216,7 +253,7 @@ namespace MiniGameTemplate.Example
 
             // K = 发射 Detached Spray；J = 发射 Attached Spray（跟随 Boss）
             _sprayCooldownTimer -= Time.deltaTime;
-            if (_sprayCooldownTimer <= 0f && (Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.J)))
+            if (!_bossDestroyed && _sprayCooldownTimer <= 0f && (Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.J)))
             {
                 if (_system.TypeRegistry.SprayTypes != null &&
                     _sprayTypeIndex < _system.TypeRegistry.SprayTypes.Length)

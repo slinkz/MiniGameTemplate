@@ -105,12 +105,15 @@ namespace MiniGameTemplate.Danmaku
             ActiveCount--;
         }
 
-        /// <summary>清场——回收所有障碍物。</summary>
+        /// <summary>清场——回收所有障碍物。必须清零 Data，否则碰撞检测可能命中幽灵障碍物。</summary>
         public void FreeAll()
         {
             _freeTop = 0;
             for (int i = MAX_OBSTACLES - 1; i >= 0; i--)
+            {
+                Data[i] = default;
                 _freeSlots[_freeTop++] = i;
+            }
             ActiveCount = 0;
         }
     }

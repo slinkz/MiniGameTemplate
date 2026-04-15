@@ -25,6 +25,12 @@ namespace MiniGameTemplate.Danmaku
                 // ── 挂载源同步：每帧回写 Origin + Angle ──
                 if (laser.AttachId != 0)
                 {
+                    if (attachRegistry.Transforms[laser.AttachId] == null)
+                    {
+                        // 挂载源已销毁 → 立即回收激光
+                        FreeLaser(pool, attachRegistry, i);
+                        continue;
+                    }
                     laser.Origin = attachRegistry.GetWorldPosition(laser.AttachId, laser.Origin);
                     laser.Angle = attachRegistry.GetWorldAngle(laser.AttachId, laser.Angle);
                 }

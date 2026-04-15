@@ -44,7 +44,8 @@ namespace MiniGameTemplate.Danmaku
                     var sprayType = typeRegistry.SprayTypes[spray.SprayTypeIndex];
                     if (sprayType != null && sprayType.SprayVFXType != null)
                     {
-                        spray.VfxSlot = spray.AttachId != 0
+                        bool followTarget = sprayType.SprayVFXType.AttachMode == VFXAttachMode.FollowTarget && spray.AttachId != 0;
+                        spray.VfxSlot = followTarget
                             ? vfxSystem.PlayAttached(sprayType.SprayVFXType, spray.AttachId, 1f)
                             : vfxSystem.Play(sprayType.SprayVFXType, spray.Origin, 1f, spray.Direction * Mathf.Rad2Deg);
                     }

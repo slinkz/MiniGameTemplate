@@ -44,12 +44,15 @@ namespace MiniGameTemplate.Danmaku
             ActiveCount--;
         }
 
-        /// <summary>清场——回收所有喷雾。</summary>
+        /// <summary>清场——回收所有喷雾。必须清零 Data，否则 SprayUpdater 会看到幽灵 Phase 并重启 VFX。</summary>
         public void FreeAll()
         {
             _freeTop = 0;
             for (int i = Capacity - 1; i >= 0; i--)
+            {
+                Data[i] = default;
                 _freeSlots[_freeTop++] = i;
+            }
             ActiveCount = 0;
         }
     }

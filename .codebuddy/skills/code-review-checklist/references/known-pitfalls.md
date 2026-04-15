@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：20 条（PIT-007, PIT-014 ~ PIT-031, PIT-034, PIT-035）
+> **当前条目数**：22 条（PIT-007, PIT-014 ~ PIT-031, PIT-034, PIT-035, PIT-036, PIT-037）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -264,6 +264,28 @@
 - **修复**: 让 `PlayAttached()` 与 `Play()` 对齐：registry 未命中时统一 `Debug.LogError(...)`，并在日志中写明当前 registry 名称与修复步骤（把对应 `VFXTypeSO` 加入当前 `SpriteSheetVFXSystem` 使用的 `VFXTypeRegistrySO._types` 列表，或改回已注册的 VFXTypeSO）
 - **验证方法**: 审查所有并行入口（如 `Play` / `PlayOneShot` / `PlayAttached`）的失败分支，确认日志级别、返回值语义、修复指引完全一致；对白名单/Registry 型系统，未命中必须是 **Error**，不能是 Warning 或静默失败
 - **严重度**: 🔴 高误导性运行时问题，容易把同一根因误判成两套规则
+
+---
+
+## PIT-036: 数据层有 AttachMode，执行层却没消费 — Spray VFX 假开关
+- **分类**: CL-6 渲染管线与 Mesh API
+- **日期**: 2026-04-14
+- **现象**: `VFXTypeSO.AttachMode` 在 Inspector 中可选 `World / FollowTarget`，文档和验收也要求区分两种模式；但 `SprayUpdater` 启动 VFX 时只判断 `spray.AttachId != 0`，导致按 `J` 时即使 `AttachMode=World` 也持续跟随 Boss，肉眼完全体验不出 `FollowTarget` 的作用
+- **根因**: 数据层配置字段已经暴露，但运行时执行层没有真正消费该字段，实际行为仍由旧条件（`AttachId != 0`）硬编码决定，形成“配置存在但行为不分叉”的假开关
+- **修复**: 在 `SprayUpdater` 中按 `sprayType.SprayVFXType.AttachMode` 分支：`FollowTarget` 才走 `PlayAttached(...)`；`World` 走 `Play(...)`，仅在生成瞬间取一次 `spray.Origin` / `spray.Direction`
+- **验证方法**: 对每个暴露给设计师的枚举/布尔配置，必须做“行为分叉验收”——至少验证两个取值在运行时有肉眼可见或日志可证的差异；如果改配置前后表现完全一致，优先怀疑执行层没接线，而不是继续调参
+- **严重度**: 🔴 架构语义失真，设计师可配置项沦为摆设，验收容易被假通过
+
+---
+
+## PIT-037: Pool.FreeAll 只重置 free list 不清 Data — 幽灵实体复活 VFX
+- **分类**: CL-6 渲染管线与 Mesh API
+- **日期**: 2026-04-15
+- **现象**: 按 R 清场后子弹消失了，但 spray VFX（Loop 模式）仍在屏幕上播放。看起来像 VFX 系统没有响应清场，实际是喷雾系统的"幽灵"数据在下一帧把 VFX 重新启动了
+- **根因**: `SprayPool.FreeAll()` 只重置了 free list 和 ActiveCount，**没有清零 `Data[]`**。`ClearAll()` 先遍历 spray 停 VFX（`StopAttached`），再调 `FreeAll()`。但因为 Data 没清，`SprayUpdater.UpdateAll()` 在同一帧或下一帧看到 `Phase != 0` 的幽灵 spray，且 `VfxSlot == -1`（被 ClearAll 设为 -1），于是重新走"首帧 VFX 启动"逻辑，把刚 Stop 的 VFX 又播了一遍
+- **修复**: `SprayPool.FreeAll()` 循环内加 `Data[i] = default;`。同步排查 `ObstaclePool.FreeAll()` 也有相同问题，一并修复。对比 `BulletWorld.FreeAll()`（清 `Cores[i].Flags = 0`）和 `LaserPool.FreeAll()`（清 `Data[i] = default`），它们没有此问题
+- **验证方法**: 所有自定义对象池的 `FreeAll()` 必须让遍历逻辑（检查 Phase / Flags / IsActive）无法再命中已释放的槽位。最简单的规则：**`Free(index)` 怎么清数据，`FreeAll()` 就怎么清**——不能偷懒只重置 free list
+- **严重度**: 🔴 用户可见的运行时 bug，清场功能失效
 
 ---
 
