@@ -278,7 +278,7 @@ namespace MiniGameTemplate.Rendering
                 drawCalls++;
             }
 
-            RenderBatchManagerRuntimeStats.RecordFrame(drawCalls, activeBatches, _unknownBucketErrorCount);
+            RenderBatchManagerRuntimeStats.AccumulateBatch(drawCalls, activeBatches, _unknownBucketErrorCount);
         }
 
 

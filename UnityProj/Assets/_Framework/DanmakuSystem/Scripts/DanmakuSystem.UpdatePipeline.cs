@@ -1,3 +1,4 @@
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
@@ -73,12 +74,18 @@ namespace MiniGameTemplate.Danmaku
             if (_timeScale != null)
                 dt *= _timeScale.TimeScale;
 
+            // 渲染统计帧开始
+            RenderBatchManagerRuntimeStats.BeginFrame();
+
             // 渲染
             _bulletRenderer.Rebuild(_bulletWorld, _bulletWorld.Trails, _typeRegistry);
             _laserRenderer.Rebuild(_laserPool, _typeRegistry);
             _laserWarningRenderer.Rebuild(_laserPool, _typeRegistry);
             _damageNumbers.UpdateAndRender(dt);
             _trailPool.Render();
+
+            // 渲染统计帧结束
+            RenderBatchManagerRuntimeStats.EndFrame();
         }
     }
 }
