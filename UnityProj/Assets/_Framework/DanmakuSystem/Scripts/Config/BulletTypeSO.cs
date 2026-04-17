@@ -202,12 +202,18 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 解析基础 UV 区域。当使用 AtlasBinding 时，从映射表查找源贴图的 UVRect。
+        /// 解析基础 UV 区域。
+        /// Atlas 模式下优先从映射表查找 SourceTexture 的子区域；
+        /// 若 SourceTexture 为空或映射中找不到，则 fallback 到手动配置的 UVRect。
         /// </summary>
         public Rect GetResolvedBaseUV()
         {
-            if (AtlasBinding != null && AtlasBinding.AtlasTexture != null)
-                return AtlasBinding.GetUVRectForSource(SourceTexture);
+            if (AtlasBinding != null && AtlasBinding.AtlasTexture != null
+                && SourceTexture != null
+                && AtlasBinding.TryFindEntry(SourceTexture, out var entry))
+            {
+                return entry.UVRect;
+            }
             return UVRect;
         }
 

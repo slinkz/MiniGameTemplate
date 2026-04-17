@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BulletTypes:
   - {fileID: 11400000, guid: 3f1b7d86304b45e4d87abd88ef9737c1, type: 2}
+  - {fileID: 11400000, guid: b2c3d4e5f6a7b8c9b2c3d4e5f6a7b8c9, type: 2}
   LaserTypes:
   - {fileID: 11400000, guid: 695461ef1b495754491700e74588a238, type: 2}
   SprayTypes:

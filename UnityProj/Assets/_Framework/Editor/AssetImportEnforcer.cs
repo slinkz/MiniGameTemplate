@@ -71,7 +71,10 @@ namespace MiniGameTemplate.EditorTools
             }
 
             // --- Rule: Disable Read/Write (saves memory) ---
-            if (importer.isReadable)
+            // 跳过 Atlas 打包期间的临时可读标记——PackTextures 需要源贴图可读，
+            // 打包工具自己会在完成后恢复 isReadable。
+            if (importer.isReadable &&
+                !MiniGameTemplate.Editor.Rendering.DanmakuAtlasPackerWindow.IsPackingInProgress)
             {
                 importer.isReadable = false;
                 Debug.LogWarning($"[TextureEnforcer] Disabled Read/Write on '{path}' (memory optimization).");

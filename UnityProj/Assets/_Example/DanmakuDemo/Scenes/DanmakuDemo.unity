@@ -343,6 +343,8 @@ MonoBehaviour:
   _sprayRangeOverride: 0
   _sprayConeAngleOverride: 0
   _sprayCooldown: 1.5
+  _spriteSheetGroup: {fileID: 11400000, guid: d4e5f6a7b8c9d0e1d4e5f6a7b8c9d0e1, type: 2}
+  _spriteSheetCooldown: 1
 --- !u!4 &353605077
 Transform:
   m_ObjectHideFlags: 0

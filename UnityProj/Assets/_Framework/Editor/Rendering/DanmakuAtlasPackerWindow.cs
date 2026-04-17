@@ -12,6 +12,12 @@ namespace MiniGameTemplate.Editor.Rendering
     /// </summary>
     public class DanmakuAtlasPackerWindow : EditorWindow
     {
+        /// <summary>
+        /// 打包期间为 true，告诉 TextureImportEnforcer 跳过 isReadable 强制还原。
+        /// PackTextures 需要源贴图可读，打包完成后会自行恢复。
+        /// </summary>
+        internal static bool IsPackingInProgress { get; private set; }
+
         private enum AtlasDomain { Bullet, VFX }
 
         [MenuItem("Tools/弹幕系统/Atlas 打包工具")]
@@ -33,9 +39,15 @@ namespace MiniGameTemplate.Editor.Rendering
         // 预览
         private Texture2D _previewAtlas;
         private string _lastReport;
+        private Vector2 _windowScrollPos;
+        private bool _previewFoldout = true;
+        private const float PREVIEW_MAX_HEIGHT = 300f;
 
         private void OnGUI()
         {
+            // 整个窗口包在一个 ScrollView 中，避免内容溢出时挤压上方区域
+            _windowScrollPos = EditorGUILayout.BeginScrollView(_windowScrollPos);
+
             EditorGUILayout.Space(4);
             EditorGUILayout.LabelField("Atlas 打包工具", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
@@ -70,8 +82,13 @@ namespace MiniGameTemplate.Editor.Rendering
             EditorGUILayout.EndHorizontal();
 
             // 已有映射资产（重新打包）
+            EditorGUI.BeginChangeCheck();
             _existingMapping = (AtlasMappingSO)EditorGUILayout.ObjectField(
                 "已有 AtlasMappingSO（重新打包）", _existingMapping, typeof(AtlasMappingSO), false);
+            if (EditorGUI.EndChangeCheck() && _existingMapping != null)
+            {
+                RestoreFromMapping(_existingMapping);
+            }
 
             EditorGUILayout.Space(4);
             EditorGUILayout.LabelField("源贴图列表", EditorStyles.boldLabel);
@@ -113,8 +130,14 @@ namespace MiniGameTemplate.Editor.Rendering
                     _sourceTextures.Add(picked);
             }
 
-            // 贴图列表（带拖拽支持）
-            _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, GUILayout.MaxHeight(200));
+            // 贴图列表——高度自适应：少于 10 张时完全展开，超过时限高滚动
+            float listHeight = _sourceTextures.Count * EditorGUIUtility.singleLineHeight * 1.2f;
+            float maxListHeight = EditorGUIUtility.singleLineHeight * 12f; // ≈12 行
+            bool needsScroll = listHeight > maxListHeight;
+
+            if (needsScroll)
+                _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, GUILayout.Height(maxListHeight));
+
             int removeIndex = -1;
             for (int i = 0; i < _sourceTextures.Count; i++)
             {
@@ -127,7 +150,9 @@ namespace MiniGameTemplate.Editor.Rendering
             }
             if (removeIndex >= 0)
                 _sourceTextures.RemoveAt(removeIndex);
-            EditorGUILayout.EndScrollView();
+
+            if (needsScroll)
+                EditorGUILayout.EndScrollView();
 
             // 拖拽区域
             var dropRect = GUILayoutUtility.GetRect(0, 40, GUILayout.ExpandWidth(true));
@@ -152,18 +177,24 @@ namespace MiniGameTemplate.Editor.Rendering
                 EditorGUILayout.HelpBox(_lastReport, MessageType.None);
             }
 
-            // 预览
+            // 预览（可折叠 + 限制最大高度）
             if (_previewAtlas != null)
             {
                 EditorGUILayout.Space(4);
-                EditorGUILayout.LabelField("预览", EditorStyles.boldLabel);
-                float maxW = position.width - 20;
-                float ratio = (float)_previewAtlas.height / _previewAtlas.width;
-                float w = Mathf.Min(maxW, _previewAtlas.width);
-                float h = w * ratio;
-                var previewRect = GUILayoutUtility.GetRect(w, h);
-                GUI.DrawTexture(previewRect, _previewAtlas, ScaleMode.ScaleToFit);
+                _previewFoldout = EditorGUILayout.Foldout(_previewFoldout, "预览", true, EditorStyles.foldoutHeader);
+                if (_previewFoldout)
+                {
+                    float maxW = position.width - 40;
+                    float ratio = (float)_previewAtlas.height / _previewAtlas.width;
+                    float w = Mathf.Min(maxW, _previewAtlas.width);
+                    float h = Mathf.Min(w * ratio, PREVIEW_MAX_HEIGHT);
+                    w = h / ratio; // 保持宽高比
+                    var previewRect = GUILayoutUtility.GetRect(w, h);
+                    GUI.DrawTexture(previewRect, _previewAtlas, ScaleMode.ScaleToFit);
+                }
             }
+
+            EditorGUILayout.EndScrollView();
         }
 
         private void HandleDragDrop(Rect dropArea)
@@ -188,6 +219,69 @@ namespace MiniGameTemplate.Editor.Rendering
             }
         }
 
+        /// <summary>
+        /// 从已有 AtlasMappingSO 还原工具状态：源贴图列表、padding、输出目录、预览。
+        /// </summary>
+        private void RestoreFromMapping(AtlasMappingSO mapping)
+        {
+            // 还原源贴图列表
+            _sourceTextures.Clear();
+            if (mapping.Entries != null)
+            {
+                foreach (var entry in mapping.Entries)
+                {
+                    if (entry.SourceTexture != null)
+                        _sourceTextures.Add(entry.SourceTexture);
+                }
+            }
+
+            // 还原 padding
+            _padding = mapping.Padding;
+
+            // 还原输出目录——从 mapping 资产路径推断
+            string mappingPath = AssetDatabase.GetAssetPath(mapping);
+            if (!string.IsNullOrEmpty(mappingPath))
+            {
+                _outputDir = Path.GetDirectoryName(mappingPath).Replace('\\', '/') + "/";
+            }
+
+            // 还原预览
+            _previewAtlas = mapping.AtlasTexture;
+
+            // 还原域——从资产名或路径推断
+            string mappingName = mapping.name.ToLowerInvariant();
+            if (mappingName.Contains("vfx"))
+                _domain = AtlasDomain.VFX;
+            else
+                _domain = AtlasDomain.Bullet;
+
+            // 计算利用率
+            string sizeInfo = "";
+            string utilInfo = "";
+            if (mapping.AtlasTexture != null)
+            {
+                int aw = mapping.AtlasTexture.width;
+                int ah = mapping.AtlasTexture.height;
+                sizeInfo = $"Atlas 尺寸: {aw}×{ah}\n";
+
+                long totalSrc = 0;
+                foreach (var entry in mapping.Entries)
+                {
+                    if (entry.SourceTexture != null)
+                        totalSrc += (long)entry.SourceTexture.width * entry.SourceTexture.height;
+                }
+                long atlasPixels = (long)aw * ah;
+                float util = atlasPixels > 0 ? (float)totalSrc / atlasPixels * 100f : 0f;
+                utilInfo = $"利用率: {util:F1}%\n";
+            }
+
+            string mappingAssetPath = AssetDatabase.GetAssetPath(mapping);
+            _lastReport = $"📂 已从 {mapping.name} 还原\n" +
+                $"源贴图: {_sourceTextures.Count} 张\n" +
+                sizeInfo + utilInfo +
+                $"Mapping: {mappingAssetPath}";
+        }
+
         private void PackAtlas()
         {
             if (_sourceTextures.Count == 0) return;
@@ -199,14 +293,17 @@ namespace MiniGameTemplate.Editor.Rendering
             if (!Directory.Exists(fullOutputDir))
                 Directory.CreateDirectory(fullOutputDir);
 
-            // 确保所有源贴图可读
+            // 设置打包标志——通知 TextureImportEnforcer 跳过 isReadable 强制
+            IsPackingInProgress = true;
+
+            // 确保所有源贴图可读——必须先全部设置 isReadable，再统一 reimport，
+            // 最后重新加载引用，否则 PackTextures 拿到的仍是不可读的旧对象。
             var originalReadable = new Dictionary<string, bool>();
-            var texArray = new Texture2D[_sourceTextures.Count];
+            var texPaths = new string[_sourceTextures.Count];
             for (int i = 0; i < _sourceTextures.Count; i++)
             {
-                var tex = _sourceTextures[i];
-                texArray[i] = tex;
-                string path = AssetDatabase.GetAssetPath(tex);
+                string path = AssetDatabase.GetAssetPath(_sourceTextures[i]);
+                texPaths[i] = path;
                 if (!string.IsNullOrEmpty(path))
                 {
                     var importer = AssetImporter.GetAtPath(path) as TextureImporter;
@@ -219,6 +316,16 @@ namespace MiniGameTemplate.Editor.Rendering
                 }
             }
 
+            // 重新导入后必须重新加载贴图对象，旧引用的像素缓冲可能已失效
+            var texArray = new Texture2D[_sourceTextures.Count];
+            for (int i = 0; i < _sourceTextures.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(texPaths[i]))
+                    texArray[i] = AssetDatabase.LoadAssetAtPath<Texture2D>(texPaths[i]);
+                else
+                    texArray[i] = _sourceTextures[i];
+            }
+
             try
             {
                 // 打包
@@ -228,6 +335,16 @@ namespace MiniGameTemplate.Editor.Rendering
                 if (rects == null || rects.Length != texArray.Length)
                 {
                     EditorUtility.DisplayDialog("打包失败", "贴图打包失败，可能超过最大尺寸限制。", "确定");
+                    Object.DestroyImmediate(atlas);
+                    return;
+                }
+
+                // 安全校验：PackTextures 在源贴图不可读时不报错，只返回 2×2 白点
+                if (atlas.width <= 2 && atlas.height <= 2 && texArray.Length > 0)
+                {
+                    EditorUtility.DisplayDialog("打包失败",
+                        "Atlas 输出为 2×2，源贴图像素数据不可读。\n" +
+                        "请检查源贴图的 Read/Write Enabled 设置。", "确定");
                     Object.DestroyImmediate(atlas);
                     return;
                 }
@@ -320,6 +437,9 @@ namespace MiniGameTemplate.Editor.Rendering
             }
             finally
             {
+                // 清除打包标志
+                IsPackingInProgress = false;
+
                 // 恢复源贴图的 isReadable 设置
                 foreach (var kvp in originalReadable)
                 {

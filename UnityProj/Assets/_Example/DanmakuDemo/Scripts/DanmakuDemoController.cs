@@ -16,7 +16,7 @@ namespace MiniGameTemplate.Example
     /// - SpawnerDriver（自动循环发射，模拟 Boss）
     /// - 手动 FireGroup（按空格发射一组）
     /// - 混合（SpawnerDriver 自动 + 空格手动叠加）
-    /// 额外快捷键：L=Attached 激光（跟随 Boss），K=Detached Spray，J=Attached Spray（跟随 Boss），R=ClearAll，D=销毁Boss
+    /// 额外快捷键：L=Attached 激光（跟随 Boss），K=Detached Spray，J=Attached Spray（跟随 Boss），S=SpriteSheet弹幕，R=ClearAll，D=销毁Boss
     /// 验收辅助：Boss 可自动横向往返移动，用于验证 Attached Laser / Spray / FollowTarget 跟随效果
 
 
@@ -93,6 +93,12 @@ namespace MiniGameTemplate.Example
         [Tooltip("喷雾发射冷却（秒）")]
         [SerializeField] private float _sprayCooldown = 1.5f;
 
+        [Header("SpriteSheet 测试（S 键）")]
+        [Tooltip("SpriteSheet 弹幕组（拖入 Group_SpriteSheet）")]
+        [SerializeField] private PatternGroupSO _spriteSheetGroup;
+        [Tooltip("SpriteSheet 弹幕发射冷却（秒）")]
+        [SerializeField] private float _spriteSheetCooldown = 1f;
+
 
         // ──── 运行时状态 ────
         private DanmakuSystem _system;
@@ -100,6 +106,7 @@ namespace MiniGameTemplate.Example
         private float _manualCooldownTimer;
         private float _laserCooldownTimer;
         private float _sprayCooldownTimer;
+        private float _spriteSheetCooldownTimer;
         private bool _initialized;
         private bool _bossDestroyed;
         private Vector3 _bossStartPosition;
@@ -291,6 +298,16 @@ namespace MiniGameTemplate.Example
             }
 
             // R = 清场
+
+            // T = 发射 SpriteSheet 弹幕组
+            _spriteSheetCooldownTimer -= Time.deltaTime;
+            if (!_bossDestroyed && Input.GetKeyDown(KeyCode.T) && _spriteSheetCooldownTimer <= 0f
+                && _spriteSheetGroup != null)
+            {
+                Vector2 origin = GetBossOrigin();
+                _system.FireGroup(_spriteSheetGroup, origin, 270f);
+                _spriteSheetCooldownTimer = _spriteSheetCooldown;
+            }
 
             if (Input.GetKeyDown(KeyCode.R))
             {

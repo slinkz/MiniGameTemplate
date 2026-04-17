@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cf6c8c972e4d1a54db94c601aec6c0eb, type: 3}
-  m_Name: BulletType_BasicCircle
+  m_Name: BulletType_SpriteSheetDemo
   m_EditorClassIdentifier: 
-  SourceTexture: {fileID: 0}
+  SourceTexture: {fileID: 2800000, guid: a1b2c3d4e5f6a7b8a1b2c3d4e5f6a7b8, type: 3}
   UVRect:
     serializedVersion: 2
-    x: 0.515625
-    y: 0.12890625
-    width: 0.25
-    height: 0.125
+    x: 0
+    y: 0
+    width: 1
+    height: 1
   SamplingMode: 1
-  SheetColumns: 1
-  SheetRows: 1
-  SheetTotalFrames: 1
-  PlaybackMode: 0
-  FixedFps: 12
-  AtlasBinding: {fileID: 11400000, guid: 34dea8f4a8e554242abfedad1e5fc78c, type: 2}
+  SheetColumns: 4
+  SheetRows: 2
+  SheetTotalFrames: 8
+  PlaybackMode: 1
+  FixedFps: 8
+  AtlasBinding: {fileID: 0}
   SchemaVersion: 1
   _legacyAtlasUV:
     serializedVersion: 2
@@ -34,9 +34,9 @@ MonoBehaviour:
     width: 0
     height: 0
   Tint: {r: 1, g: 1, b: 1, a: 1}
-  Size: {x: 1, y: 1}
-  RotateToDirection: 1
-  CollisionRadius: 0.15
+  Size: {x: 0.5, y: 0.5}
+  RotateToDirection: 0
+  CollisionRadius: 0.2
   MotionType: 0
   SpeedOverLifetime:
     serializedVersion: 3
@@ -73,15 +73,15 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: 2
-      outSlope: 2
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 5
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -91,8 +91,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-    m_AclCompressedDataType: 0
-    m_AclCompressedDataSubType: 0
+    m_AclCompressedDataType: -1
+    m_AclCompressedDataSubType: -1
     MaxValue: 0
     MinValue: 0
   AlphaOverLifetime:
@@ -109,7 +109,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -119,14 +119,14 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-    m_AclCompressedDataType: 0
-    m_AclCompressedDataSubType: 0
+    m_AclCompressedDataType: -1
+    m_AclCompressedDataSubType: -1
     MaxValue: 0
     MinValue: 0
   ColorOverLifetime:
     serializedVersion: 2
-    key0: {r: 0, g: 1, b: 0.01650405, a: 1}
-    key1: {r: 0, g: 0.13845229, b: 1, a: 1}
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
     key2: {r: 0, g: 0, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -210,7 +210,7 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  Explosion: 1
+  Explosion: 0
   ExplosionFrameCount: 4
   ExplosionAtlasUV:
     serializedVersion: 2

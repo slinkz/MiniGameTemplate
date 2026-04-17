@@ -1,0 +1,161 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a2ceb0b3285b3d4c9e197d71910a3a7, type: 3}
+  m_Name: AtlasMapping_Bullet
+  m_EditorClassIdentifier: 
+  AtlasTexture: {fileID: 2800000, guid: 4ebe6b7ea5a577b479338ae21b22a6de, type: 3}
+  Padding: 2
+  Entries:
+  - SourceTexture: {fileID: 2800000, guid: a035b0f34c9b1ba4fa2a4391587c3ac7, type: 3}
+    SourceGUID: a035b0f34c9b1ba4fa2a4391587c3ac7
+    UVRect:
+      serializedVersion: 2
+      x: 0
+      y: 0
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 0
+      y: 0
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 44c55fef5c09ebe449fbfc0c95d57adb, type: 3}
+    SourceGUID: 44c55fef5c09ebe449fbfc0c95d57adb
+    UVRect:
+      serializedVersion: 2
+      x: 0.2578125
+      y: 0
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 66
+      y: 0
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 7163420d326b6d74694510883a5a218b, type: 3}
+    SourceGUID: 7163420d326b6d74694510883a5a218b
+    UVRect:
+      serializedVersion: 2
+      x: 0.515625
+      y: 0
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 132
+      y: 0
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 319278e3a41fe76489071398a4739a14, type: 3}
+    SourceGUID: 319278e3a41fe76489071398a4739a14
+    UVRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.12890625
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 0
+      y: 66
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: d59b3209d228e7a458afb18c2bc1da79, type: 3}
+    SourceGUID: d59b3209d228e7a458afb18c2bc1da79
+    UVRect:
+      serializedVersion: 2
+      x: 0.2578125
+      y: 0.12890625
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 66
+      y: 66
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 2c580c869842fe94ebb0ebf64f0544f7, type: 3}
+    SourceGUID: 2c580c869842fe94ebb0ebf64f0544f7
+    UVRect:
+      serializedVersion: 2
+      x: 0.515625
+      y: 0.12890625
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 132
+      y: 66
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: d6860508a8ef1bb44a46cfa96f365db8, type: 3}
+    SourceGUID: d6860508a8ef1bb44a46cfa96f365db8
+    UVRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.2578125
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 0
+      y: 132
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 48b26e283120bbc4796d0be972edd0a9, type: 3}
+    SourceGUID: 48b26e283120bbc4796d0be972edd0a9
+    UVRect:
+      serializedVersion: 2
+      x: 0.2578125
+      y: 0.2578125
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 66
+      y: 132
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 651dd480481c61744bd05ee371d8a526, type: 3}
+    SourceGUID: 651dd480481c61744bd05ee371d8a526
+    UVRect:
+      serializedVersion: 2
+      x: 0.515625
+      y: 0.2578125
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 132
+      y: 132
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: 70dc8a2dcd10a584995122cc3ec99da3, type: 3}
+    SourceGUID: 70dc8a2dcd10a584995122cc3ec99da3
+    UVRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.38671875
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 0
+      y: 198
+      width: 64
+      height: 64
+  - SourceTexture: {fileID: 2800000, guid: c2cf8d7059e170e42bd64d4aa13012c0, type: 3}
+    SourceGUID: c2cf8d7059e170e42bd64d4aa13012c0
+    UVRect:
+      serializedVersion: 2
+      x: 0.2578125
+      y: 0.38671875
+      width: 0.25
+      height: 0.125
+    PixelRect:
+      x: 66
+      y: 198
+      width: 64
+      height: 64
+  SchemaVersion: 1

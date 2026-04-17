@@ -17,5 +17,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e1f2a3b4c5d60001e1f2a3b4c5d60001, type: 2}
   - {fileID: 11400000, guid: e1f2a3b4c5d60002e1f2a3b4c5d60002, type: 2}
   - {fileID: 11400000, guid: e1f2a3b4c5d60003e1f2a3b4c5d60003, type: 2}
+  - {fileID: 11400000, guid: d4e5f6a7b8c9d0e1d4e5f6a7b8c9d0e1, type: 2}
   CooldownBetweenGroups: 1.5
   SwitchMode: 0
