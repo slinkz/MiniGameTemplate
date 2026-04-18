@@ -66,6 +66,12 @@ UnityProj/Bundles/
 UnityProj/Assets/FairyGUI/
 UnityProj/Assets/FairyGUI.meta
 
+# ===== Spine SDK (Junction → ThirdParty/spine-runtimes/..., do not track) =====
+UnityProj/Assets/Spine/
+UnityProj/Assets/Spine.meta
+UnityProj/Assets/SpineCSharp/
+UnityProj/Assets/SpineCSharp.meta
+
 # ===== FairyGUI UIProject output (generated, tracked in Unity) =====
 # UIProject 导出的 bytes/texture 在 UnityProj 中由 Unity 管理
 UIProject/.objs/
