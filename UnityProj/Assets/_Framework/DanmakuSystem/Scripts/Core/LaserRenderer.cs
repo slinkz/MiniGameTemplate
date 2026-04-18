@@ -47,7 +47,6 @@ namespace MiniGameTemplate.Danmaku
             _batchManager.Initialize(
                 keys,
                 renderConfig.LaserMaterial,
-                renderConfig.LaserMaterial, // 激光无 Additive 材质区分，用同一个
                 maxQuadsPerBucket,
                 _ => RenderSortingOrder.LaserDefault);
         }

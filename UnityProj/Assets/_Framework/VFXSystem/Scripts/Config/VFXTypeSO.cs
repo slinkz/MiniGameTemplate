@@ -1,6 +1,6 @@
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 using UnityEngine.Serialization;
-using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.VFX
 {
@@ -60,9 +60,6 @@ namespace MiniGameTemplate.VFX
 
         [Tooltip("默认颜色。")]
         public Color Tint = Color.white;
-
-        [Tooltip("渲染层。")]
-        public RenderLayer Layer = RenderLayer.Additive;
 
         [Header("附着模式（ADR-013）")]
         [Tooltip("World=世界空间固定位置, FollowTarget=跟随附着源")]

@@ -12,9 +12,6 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("弹丸 Alpha Blend 材质")]
         public Material BulletMaterial;
 
-        [Tooltip("发光弹丸 Additive 材质")]
-        public Material BulletAdditiveMaterial;
-
         [Tooltip("激光材质")]
         public Material LaserMaterial;
 

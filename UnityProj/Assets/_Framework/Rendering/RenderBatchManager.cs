@@ -6,12 +6,13 @@ using UnityEngine.Rendering;
 namespace MiniGameTemplate.Rendering
 {
     /// <summary>
-    /// 渲染批次管理器——按 (RenderLayer, Texture2D) 二元组分桶，每桶一个 Mesh + 一个 DrawCall。
+    /// 渲染批次管理器——按 Texture2D 分桶，每桶一个 Mesh + 一个 DrawCall。
     /// <para>
-    /// 设计原则（ADR-015）：
+    /// 设计原则（ADR-015 + ADR-029 v2）：
     /// 1. 只允许初始化时按注册表预热桶，运行时禁止隐式建桶
     /// 2. 共享实现，不共享实例：Danmaku 和 VFX 各自持有各自的 RenderBatchManager 实例
     /// 3. 对未知贴图：开发期报错计数，运行时跳过渲染
+    /// 4. 统一 Normal（Alpha Blend），不再区分 Additive（ADR-029 v2）
     /// </para>
     /// </summary>
     public class RenderBatchManager : IDisposable
@@ -103,16 +104,15 @@ namespace MiniGameTemplate.Rendering
 
         /// <summary>
         /// 初始化：预热所有桶。必须在渲染循环开始前调用。
+        /// ADR-029 v2：移除 additiveMaterial 参数，统一使用单一材质。
         /// </summary>
         /// <param name="keys">需要预热的所有桶标识</param>
-        /// <param name="normalMaterial">Normal 层的模板材质</param>
-        /// <param name="additiveMaterial">Additive 层的模板材质</param>
+        /// <param name="material">模板材质（Normal / Alpha Blend）</param>
         /// <param name="maxQuadsPerBucket">每个桶的最大 Quad 数</param>
-        /// <param name="sortingOrderProvider">根据 RenderLayer 返回 sortingOrder 的委托，null 时使用 RenderSortingOrder 默认值</param>
+        /// <param name="sortingOrderProvider">根据 RenderLayer 返回 sortingOrder 的委托，null 时使用默认值</param>
         public void Initialize(
             IReadOnlyList<BucketKey> keys,
-            Material normalMaterial,
-            Material additiveMaterial,
+            Material material,
             int maxQuadsPerBucket,
             Func<RenderLayer, int> sortingOrderProvider = null)
         {
@@ -142,11 +142,11 @@ namespace MiniGameTemplate.Rendering
                 if (_bucketIndex.ContainsKey(key))
                     continue;
 
-                // 选择模板材质
-                Material templateMat = key.Layer == RenderLayer.Additive ? additiveMaterial : normalMaterial;
+                // 选择模板材质（ADR-029 v2：统一 Normal）
+                Material templateMat = material;
                 if (templateMat == null)
                 {
-                    Debug.LogWarning($"[RenderBatchManager] Template material is null for Layer={key.Layer}, Texture={key.Texture.name}. Skipping.");
+                    Debug.LogWarning($"[RenderBatchManager] Template material is null for Texture={key.Texture.name}. Skipping.");
                     continue;
                 }
 
@@ -307,12 +307,8 @@ namespace MiniGameTemplate.Rendering
 
         private static int GetDefaultSortingOrder(RenderLayer layer)
         {
-            return layer switch
-            {
-                RenderLayer.Normal => RenderSortingOrder.BulletNormal,
-                RenderLayer.Additive => RenderSortingOrder.BulletAdditive,
-                _ => 0,
-            };
+            // ADR-029 v2：只有 Normal 一种，直接返回
+            return RenderSortingOrder.Bullet;
         }
     }
 }

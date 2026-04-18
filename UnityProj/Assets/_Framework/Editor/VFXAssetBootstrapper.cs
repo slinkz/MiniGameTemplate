@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
 using MiniGameTemplate.VFX;
-using MiniGameTemplate.Rendering;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,8 +26,7 @@ namespace MiniGameTemplate.EditorTools
 
             Texture2D atlas = CreateExplosionAtlas();
             Material normalMat = CreateMaterial("Mat_VFX_Normal", "MiniGameTemplate/Danmaku/Bullet", atlas);
-            Material additiveMat = CreateMaterial("Mat_VFX_Additive", "MiniGameTemplate/Danmaku/BulletAdditive", atlas);
-            VFXRenderConfig renderConfig = CreateRenderConfig(normalMat, additiveMat, atlas);
+            VFXRenderConfig renderConfig = CreateRenderConfig(normalMat, atlas);
             VFXTypeSO type = CreateExplosionType();
             VFXTypeRegistrySO registry = CreateRegistry(type);
 
@@ -186,7 +184,7 @@ namespace MiniGameTemplate.EditorTools
             return material;
         }
 
-        private static VFXRenderConfig CreateRenderConfig(Material normalMat, Material additiveMat, Texture2D atlas)
+        private static VFXRenderConfig CreateRenderConfig(Material normalMat, Texture2D atlas)
         {
             string path = ConfigFolder + "/VFXRenderConfig_Demo.asset";
             VFXRenderConfig config = AssetDatabase.LoadAssetAtPath<VFXRenderConfig>(path);
@@ -197,7 +195,6 @@ namespace MiniGameTemplate.EditorTools
             }
 
             config.NormalMaterial = normalMat;
-            config.AdditiveMaterial = additiveMat;
             config.AtlasTexture = atlas;
             EditorUtility.SetDirty(config);
             return config;
@@ -213,7 +210,6 @@ namespace MiniGameTemplate.EditorTools
                 AssetDatabase.CreateAsset(type, path);
             }
 
-            type.Layer = RenderLayer.Additive;
             type.UVRect = new Rect(0f, 0f, 1f, 1f);
             type.Columns = 4;
             type.Rows = 4;

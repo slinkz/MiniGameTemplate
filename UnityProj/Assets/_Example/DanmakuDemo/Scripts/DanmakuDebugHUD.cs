@@ -116,7 +116,7 @@ namespace MiniGameTemplate.Example
             DrawLabel(x, y, $"Difficulty: {diffLabel}");
             y += lineH;
 
-            DrawLabel(x, y, $"Render Layer Truth: {RenderSortingOrder.BulletNormal}/{RenderSortingOrder.BulletAdditive}");
+            DrawLabel(x, y, $"Render Sort: Bullet={RenderSortingOrder.Bullet} VFX={RenderSortingOrder.VFX}");
             y += lineH;
 
             DrawLabel(x, y, $"DrawCalls: {RenderBatchManagerRuntimeStats.LastSubmittedDrawCalls} (avg {RenderBatchManagerRuntimeStats.AverageSubmittedDrawCalls:F1} / peak {RenderBatchManagerRuntimeStats.PeakSubmittedDrawCalls})");

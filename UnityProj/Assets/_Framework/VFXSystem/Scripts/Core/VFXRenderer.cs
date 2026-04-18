@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MiniGameTemplate.VFX
 {
     /// <summary>
-    /// VFX Sprite Sheet 合批渲染器——通过 RenderBatchManager 按 (RenderLayer, Texture) 分桶渲染。
+    /// VFX Sprite Sheet 合批渲染器——通过 RenderBatchManager 按 Texture 分桶渲染（ADR-029 v2：统一 Normal）。
     /// 支持每个 VFXTypeSO 引用独立贴图。
     /// </summary>
     public class VFXBatchRenderer
@@ -17,7 +17,7 @@ namespace MiniGameTemplate.VFX
         public int TotalDrawCount => _totalQuadCount;
 
         /// <summary>
-        /// 初始化渲染器——从 VFXTypeRegistrySO 收集所有 (Layer, SourceTexture) 组合预热桶。
+        /// 初始化渲染器——从 VFXTypeRegistrySO 收集所有 Texture 预热桶。
         /// </summary>
         public void Initialize(VFXRenderConfig renderConfig, VFXTypeRegistrySO registry, int maxQuadsPerBucket)
         {
@@ -37,23 +37,21 @@ namespace MiniGameTemplate.VFX
                     if (tex == null) tex = _fallbackAtlas;
                     if (tex == null) continue;
 
-                    var key = new RenderBatchManager.BucketKey(vfxType.Layer, tex);
+                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, tex);
                     if (!keys.Contains(key))
                         keys.Add(key);
                 }
             }
 
-            // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建两个 fallback 桶
+            // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建一个 fallback 桶
             if (keys.Count == 0 && _fallbackAtlas != null)
             {
                 keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas));
-                keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Additive, _fallbackAtlas));
             }
 
-            Material normalMat = renderConfig != null ? renderConfig.NormalMaterial : null;
-            Material additiveMat = renderConfig != null ? renderConfig.AdditiveMaterial : null;
+            Material mat = renderConfig != null ? renderConfig.NormalMaterial : null;
 
-            _batchManager.Initialize(keys, normalMat, additiveMat, maxQuadsPerBucket, GetSortingOrder);
+            _batchManager.Initialize(keys, mat, maxQuadsPerBucket, _ => RenderSortingOrder.VFX);
         }
 
         /// <summary>
@@ -85,7 +83,7 @@ namespace MiniGameTemplate.VFX
                 // 解析基础 UV
                 Rect baseUV = type.GetResolvedBaseUV();
 
-                var bucketKey = new RenderBatchManager.BucketKey(type.Layer, texture);
+                var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
                 if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
 
                 WriteQuad(bucket, ref instance, type, baseUV);
@@ -135,14 +133,5 @@ namespace MiniGameTemplate.VFX
             vertex.Color = color;
         }
 
-        private static int GetSortingOrder(RenderLayer layer)
-        {
-            return layer switch
-            {
-                RenderLayer.Normal => RenderSortingOrder.VFXNormal,
-                RenderLayer.Additive => RenderSortingOrder.VFXAdditive,
-                _ => 0,
-            };
-        }
     }
 }

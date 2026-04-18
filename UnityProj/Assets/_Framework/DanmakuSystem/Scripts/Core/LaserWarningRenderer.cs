@@ -46,7 +46,6 @@ namespace MiniGameTemplate.Danmaku
             _batchManager.Initialize(
                 keys,
                 renderConfig.LaserMaterial,
-                renderConfig.LaserMaterial,
                 maxQuads,
                 _ => RenderSortingOrder.LaserDefault - 1);  // 预警线在激光本体下方
         }

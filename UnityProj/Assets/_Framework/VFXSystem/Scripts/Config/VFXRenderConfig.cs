@@ -11,7 +11,6 @@ namespace MiniGameTemplate.VFX
     {
         [Header("材质")]
         public Material NormalMaterial;
-        public Material AdditiveMaterial;
 
         [Header("贴图")]
         [Tooltip("阶段 1 共用图集。所有 VFXTypeSO 的 AtlasUV 都基于这张贴图。")]

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 弹幕渲染器——通过 RenderBatchManager 按 (RenderLayer, Texture) 分桶渲染。
+    /// 弹幕渲染器——通过 RenderBatchManager 按 Texture 分桶渲染（ADR-029 v2：统一 Normal）。
     /// 支持多贴图弹丸和 Static/SpriteSheet 两种采样模式。
     /// </summary>
     public class BulletRenderer
@@ -17,14 +17,14 @@ namespace MiniGameTemplate.Danmaku
         public int TotalDrawCount => _totalQuadCount;
 
         /// <summary>
-        /// 初始化渲染器——从 TypeRegistry 收集所有 (Layer, SourceTexture) 组合预热桶。
+        /// 初始化渲染器——从 TypeRegistry 收集所有 Texture 预热桶。
         /// </summary>
         public void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig.BulletAtlas;
 
-            // 收集所有唯一的 (Layer, SourceTexture) 组合
+            // 收集所有唯一的 Texture 组合（ADR-029 v2：Layer 统一 Normal）
             var keys = new System.Collections.Generic.List<RenderBatchManager.BucketKey>();
 
             if (registry.BulletTypes != null)
@@ -39,26 +39,23 @@ namespace MiniGameTemplate.Danmaku
                     if (tex == null) tex = _fallbackAtlas;
                     if (tex == null) continue;
 
-                    var key = new RenderBatchManager.BucketKey(bt.Layer, tex);
+                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, tex);
                     if (!keys.Contains(key))
                         keys.Add(key);
                 }
             }
 
-            // 兼容：如果没有任何桶被收集（所有 BulletType 都无有效贴图），
-            // 但全局 Atlas 存在，至少建两个 fallback 桶
+            // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建一个 fallback 桶
             if (keys.Count == 0 && _fallbackAtlas != null)
             {
                 keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas));
-                keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Additive, _fallbackAtlas));
             }
 
             _batchManager.Initialize(
                 keys,
                 renderConfig.BulletMaterial,
-                renderConfig.BulletAdditiveMaterial,
                 maxQuadsPerBucket,
-                GetSortingOrder);
+                _ => RenderSortingOrder.Bullet);
         }
 
         /// <summary>
@@ -88,7 +85,7 @@ namespace MiniGameTemplate.Danmaku
                 // 解析基础 UV——Atlas 绑定时从 AtlasMappingSO 查子区域
                 Rect baseUV = bulletType.GetResolvedBaseUV();
 
-                var bucketKey = new RenderBatchManager.BucketKey(bulletType.Layer, texture);
+                var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
                 if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
 
                 // 受伤闪烁
@@ -283,14 +280,5 @@ namespace MiniGameTemplate.Danmaku
                 (byte)(alpha * tint.a * 255));
         }
 
-        private static int GetSortingOrder(RenderLayer layer)
-        {
-            return layer switch
-            {
-                RenderLayer.Normal => RenderSortingOrder.BulletNormal,
-                RenderLayer.Additive => RenderSortingOrder.BulletAdditive,
-                _ => 0,
-            };
-        }
     }
 }
