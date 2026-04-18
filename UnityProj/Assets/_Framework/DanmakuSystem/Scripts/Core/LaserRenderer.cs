@@ -28,7 +28,7 @@ namespace MiniGameTemplate.Danmaku
         {
             _batchManager = new RenderBatchManager();
 
-            var keys = new System.Collections.Generic.List<RenderBatchManager.BucketKey>();
+            var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
 
             if (registry.LaserTypes != null)
             {
@@ -39,16 +39,22 @@ namespace MiniGameTemplate.Danmaku
 
                     // 激光统一使用 Normal 层（激光自身材质处理混合模式）
                     var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, lt.LaserTexture);
-                    if (!keys.Contains(key))
-                        keys.Add(key);
+                    bool exists = false;
+                    for (int j = 0; j < registrations.Count; j++)
+                    {
+                        if (registrations[j].Key.Equals(key))
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists)
+                        registrations.Add(new RenderBatchManager.BucketRegistration(key, renderConfig.LaserMaterial, RenderSortingOrder.LaserDefault));
                 }
             }
 
-            _batchManager.Initialize(
-                keys,
-                renderConfig.LaserMaterial,
-                maxQuadsPerBucket,
-                _ => RenderSortingOrder.LaserDefault);
+            _batchManager.Initialize(registrations, maxQuadsPerBucket);
         }
 
         /// <summary>

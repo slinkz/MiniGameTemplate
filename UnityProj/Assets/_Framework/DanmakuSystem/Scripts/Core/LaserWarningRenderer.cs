@@ -28,7 +28,7 @@ namespace MiniGameTemplate.Danmaku
         {
             _batchManager = new RenderBatchManager();
 
-            var keys = new System.Collections.Generic.List<RenderBatchManager.BucketKey>();
+            var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
 
             if (registry.LaserTypes != null)
             {
@@ -38,16 +38,22 @@ namespace MiniGameTemplate.Danmaku
                     if (lt == null || lt.LaserTexture == null) continue;
 
                     var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, lt.LaserTexture);
-                    if (!keys.Contains(key))
-                        keys.Add(key);
+                    bool exists = false;
+                    for (int j = 0; j < registrations.Count; j++)
+                    {
+                        if (registrations[j].Key.Equals(key))
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists)
+                        registrations.Add(new RenderBatchManager.BucketRegistration(key, renderConfig.LaserMaterial, RenderSortingOrder.LaserDefault - 1));
                 }
             }
 
-            _batchManager.Initialize(
-                keys,
-                renderConfig.LaserMaterial,
-                maxQuads,
-                _ => RenderSortingOrder.LaserDefault - 1);  // 预警线在激光本体下方
+            _batchManager.Initialize(registrations, maxQuads);  // 预警线在激光本体下方
         }
 
         /// <summary>

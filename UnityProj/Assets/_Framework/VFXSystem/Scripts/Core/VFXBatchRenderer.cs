@@ -24,7 +24,8 @@ namespace MiniGameTemplate.VFX
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig != null ? renderConfig.AtlasTexture : null;
 
-            var keys = new System.Collections.Generic.List<RenderBatchManager.BucketKey>();
+            Material mat = renderConfig != null ? renderConfig.NormalMaterial : null;
+            var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
 
             if (registry != null)
             {
@@ -38,20 +39,31 @@ namespace MiniGameTemplate.VFX
                     if (tex == null) continue;
 
                     var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, tex);
-                    if (!keys.Contains(key))
-                        keys.Add(key);
+                    bool exists = false;
+                    for (int j = 0; j < registrations.Count; j++)
+                    {
+                        if (registrations[j].Key.Equals(key))
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists)
+                        registrations.Add(new RenderBatchManager.BucketRegistration(key, mat, RenderSortingOrder.VFX));
                 }
             }
 
             // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建一个 fallback 桶
-            if (keys.Count == 0 && _fallbackAtlas != null)
+            if (registrations.Count == 0 && _fallbackAtlas != null)
             {
-                keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas));
+                registrations.Add(new RenderBatchManager.BucketRegistration(
+                    new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas),
+                    mat,
+                    RenderSortingOrder.VFX));
             }
 
-            Material mat = renderConfig != null ? renderConfig.NormalMaterial : null;
-
-            _batchManager.Initialize(keys, mat, maxQuadsPerBucket, _ => RenderSortingOrder.VFX);
+            _batchManager.Initialize(registrations, maxQuadsPerBucket);
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace MiniGameTemplate.Danmaku
             _fallbackAtlas = renderConfig.BulletAtlas;
 
             // 收集所有唯一的 Texture 组合（ADR-029 v2：Layer 统一 Normal）
-            var keys = new System.Collections.Generic.List<RenderBatchManager.BucketKey>();
+            var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
 
             if (registry.BulletTypes != null)
             {
@@ -40,22 +40,31 @@ namespace MiniGameTemplate.Danmaku
                     if (tex == null) continue;
 
                     var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, tex);
-                    if (!keys.Contains(key))
-                        keys.Add(key);
+                    bool exists = false;
+                    for (int j = 0; j < registrations.Count; j++)
+                    {
+                        if (registrations[j].Key.Equals(key))
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists)
+                        registrations.Add(new RenderBatchManager.BucketRegistration(key, renderConfig.BulletMaterial, RenderSortingOrder.Bullet));
                 }
             }
 
             // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建一个 fallback 桶
-            if (keys.Count == 0 && _fallbackAtlas != null)
+            if (registrations.Count == 0 && _fallbackAtlas != null)
             {
-                keys.Add(new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas));
+                registrations.Add(new RenderBatchManager.BucketRegistration(
+                    new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas),
+                    renderConfig.BulletMaterial,
+                    RenderSortingOrder.Bullet));
             }
 
-            _batchManager.Initialize(
-                keys,
-                renderConfig.BulletMaterial,
-                maxQuadsPerBucket,
-                _ => RenderSortingOrder.Bullet);
+            _batchManager.Initialize(registrations, maxQuadsPerBucket);
         }
 
         /// <summary>
