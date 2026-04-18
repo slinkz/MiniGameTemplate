@@ -6,29 +6,17 @@ using UnityEngine.Rendering;
 namespace MiniGameTemplate.Rendering
 {
     /// <summary>
-    /// 渲染批次管理器——按 Texture2D 分桶，每桶一个 Mesh + 一个 DrawCall。
-    /// <para>
-    /// 设计原则（ADR-015 + ADR-029 v2）：
-    /// 1. 只允许初始化时按注册表预热桶，运行时禁止隐式建桶
-    /// 2. 共享实现，不共享实例：Danmaku 和 VFX 各自持有各自的 RenderBatchManager 实例
-    /// 3. 对未知贴图：开发期报错计数，运行时跳过渲染
-    /// 4. 统一 Normal（Alpha Blend），不再区分 Additive（ADR-029 v2）
-    /// </para>
+    /// 渲染批次管理器——按 (RenderLayer, Texture) 分桶，每桶一个 Mesh + 一个 DrawCall。
+    /// v2.3：支持多模板材质注册、Texture 基类、注册时排序。
     /// </summary>
     public class RenderBatchManager : IDisposable
     {
-        // ──── 桶标识 ────
-
-        /// <summary>
-        /// 渲染桶的唯一标识——(RenderLayer, Texture2D) 二元组。
-        /// 结构体 Key + IEquatable 避免 Dictionary 查找时装箱。
-        /// </summary>
         public readonly struct BucketKey : IEquatable<BucketKey>
         {
             public readonly RenderLayer Layer;
-            public readonly Texture2D Texture;
+            public readonly Texture Texture;
 
-            public BucketKey(RenderLayer layer, Texture2D texture)
+            public BucketKey(RenderLayer layer, Texture texture)
             {
                 Layer = layer;
                 Texture = texture;
@@ -43,19 +31,28 @@ namespace MiniGameTemplate.Rendering
 
             public override int GetHashCode()
             {
-                // Texture 的 InstanceID 作为 hash，避免 GetHashCode 虚调用
                 int texHash = Texture != null ? Texture.GetInstanceID() : 0;
                 return ((int)Layer * 397) ^ texHash;
             }
         }
 
-        // ──── 渲染桶 ────
+        public readonly struct BucketRegistration
+        {
+            public readonly BucketKey Key;
+            public readonly Material TemplateMaterial;
+            public readonly int SortingOrder;
 
-        /// <summary>
-        /// 单个渲染桶——持有一个 Mesh、一个材质实例、一个顶点数组。
-        /// </summary>
+            public BucketRegistration(BucketKey key, Material templateMaterial, int sortingOrder)
+            {
+                Key = key;
+                TemplateMaterial = templateMaterial;
+                SortingOrder = sortingOrder;
+            }
+        }
+
         public class RenderBucket
         {
+            public BucketKey Key;
             public RenderVertex[] Vertices;
             public int QuadCount;
             public int MaxQuads;
@@ -63,10 +60,7 @@ namespace MiniGameTemplate.Rendering
             public Material Material;
             public int SortingOrder;
 
-            /// <summary>
-            /// 分配一个 Quad 的顶点空间（4 顶点），返回 baseVertex 索引。
-            /// 桶满时返回 -1。
-            /// </summary>
+
             public int AllocateQuad()
             {
                 if (QuadCount >= MaxQuads) return -1;
@@ -76,45 +70,23 @@ namespace MiniGameTemplate.Rendering
             }
         }
 
-        // VertexAttributeDescriptor 缓存（与 BulletRenderer 一致，避免 GC）
-        private static readonly VertexAttributeDescriptor[] VertexLayout = new[]
+        private static readonly VertexAttributeDescriptor[] VertexLayout =
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
             new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
             new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
         };
 
-        // 桶存储：Dictionary 用于 Key→Index 查找，数组用于遍历
         private Dictionary<BucketKey, int> _bucketIndex;
         private RenderBucket[] _buckets;
         private int _bucketCount;
-
-        // 调试：未知桶错误计数
         private int _unknownBucketErrorCount;
-
         private bool _initialized;
 
-        /// <summary>调试用：运行时请求了未知桶的次数</summary>
         public int UnknownBucketErrorCount => _unknownBucketErrorCount;
-
-        /// <summary>当前桶数量</summary>
         public int BucketCount => _bucketCount;
 
-        // ──── 初始化 ────
-
-        /// <summary>
-        /// 初始化：预热所有桶。必须在渲染循环开始前调用。
-        /// ADR-029 v2：移除 additiveMaterial 参数，统一使用单一材质。
-        /// </summary>
-        /// <param name="keys">需要预热的所有桶标识</param>
-        /// <param name="material">模板材质（Normal / Alpha Blend）</param>
-        /// <param name="maxQuadsPerBucket">每个桶的最大 Quad 数</param>
-        /// <param name="sortingOrderProvider">根据 RenderLayer 返回 sortingOrder 的委托，null 时使用默认值</param>
-        public void Initialize(
-            IReadOnlyList<BucketKey> keys,
-            Material material,
-            int maxQuadsPerBucket,
-            Func<RenderLayer, int> sortingOrderProvider = null)
+        public void Initialize(IReadOnlyList<BucketRegistration> registrations, int maxQuadsPerBucket)
         {
             if (_initialized)
             {
@@ -122,65 +94,55 @@ namespace MiniGameTemplate.Rendering
                 return;
             }
 
-            _bucketIndex = new Dictionary<BucketKey, int>(keys.Count);
-            _buckets = new RenderBucket[keys.Count];
+            if (registrations == null)
+                throw new ArgumentNullException(nameof(registrations));
+            if (maxQuadsPerBucket <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxQuadsPerBucket), "maxQuadsPerBucket 必须 > 0");
+
+            _bucketIndex = new Dictionary<BucketKey, int>(registrations.Count);
+            _buckets = new RenderBucket[registrations.Count];
             _bucketCount = 0;
             _unknownBucketErrorCount = 0;
 
-            for (int i = 0; i < keys.Count; i++)
+            for (int i = 0; i < registrations.Count; i++)
             {
-                var key = keys[i];
+                BucketRegistration registration = registrations[i];
+                BucketKey key = registration.Key;
 
-                // 跳过 null 贴图
                 if (key.Texture == null)
                 {
                     Debug.LogWarning($"[RenderBatchManager] Skipping bucket with null texture (Layer={key.Layer}).");
                     continue;
                 }
 
-                // 跳过重复 key
-                if (_bucketIndex.ContainsKey(key))
-                    continue;
-
-                // 选择模板材质（ADR-029 v2：统一 Normal）
-                Material templateMat = material;
-                if (templateMat == null)
+                if (registration.TemplateMaterial == null)
                 {
                     Debug.LogWarning($"[RenderBatchManager] Template material is null for Texture={key.Texture.name}. Skipping.");
                     continue;
                 }
 
-                // 创建材质实例并绑定贴图
-                var matInstance = new Material(templateMat)
+                if (_bucketIndex.ContainsKey(key))
+                    continue;
+
+                Material matInstance = new Material(registration.TemplateMaterial)
                 {
                     name = $"BatchMat_{key.Layer}_{key.Texture.name} (Instance)",
                     mainTexture = key.Texture,
                 };
 
-
-
-
-                // sortingOrder
-                int sortingOrder = sortingOrderProvider != null
-                    ? sortingOrderProvider(key.Layer)
-                    : GetDefaultSortingOrder(key.Layer);
-
-                // 创建 Mesh
                 int vertexCount = maxQuadsPerBucket * 4;
                 int indexCount = maxQuadsPerBucket * 6;
 
-                var mesh = new Mesh
+                Mesh mesh = new Mesh
                 {
                     name = $"BatchMesh_{key.Layer}_{key.Texture.name}",
                     indexFormat = vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16,
                 };
 
                 mesh.SetVertexBufferParams(vertexCount, VertexLayout);
-                mesh.SetIndexBufferParams(indexCount,
-                    vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16);
+                mesh.SetIndexBufferParams(indexCount, vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16);
 
-                // 预填充 Quad 索引
-                var indices = new int[indexCount];
+                int[] indices = new int[indexCount];
                 for (int q = 0; q < maxQuadsPerBucket; q++)
                 {
                     int vi = q * 4;
@@ -194,15 +156,15 @@ namespace MiniGameTemplate.Rendering
                 }
                 mesh.SetIndices(indices, MeshTopology.Triangles, 0, false);
 
-                // 组装桶
-                var bucket = new RenderBucket
+                RenderBucket bucket = new RenderBucket
                 {
+                    Key = key,
                     Vertices = new RenderVertex[vertexCount],
                     QuadCount = 0,
                     MaxQuads = maxQuadsPerBucket,
                     Mesh = mesh,
                     Material = matInstance,
-                    SortingOrder = sortingOrder,
+                    SortingOrder = registration.SortingOrder,
                 };
 
                 _bucketIndex[key] = _bucketCount;
@@ -210,14 +172,10 @@ namespace MiniGameTemplate.Rendering
                 _bucketCount++;
             }
 
+            SortBucketsBySortingOrder();
             _initialized = true;
         }
 
-        // ──── 运行时 API ────
-
-        /// <summary>
-        /// 尝试获取桶来写入 Quad。未知桶返回 false + 累加报错计数。
-        /// </summary>
         public bool TryGetBucket(BucketKey key, out RenderBucket bucket)
         {
             if (_bucketIndex != null && _bucketIndex.TryGetValue(key, out int idx))
@@ -234,9 +192,6 @@ namespace MiniGameTemplate.Rendering
             return false;
         }
 
-        /// <summary>
-        /// 每帧开始时重置所有桶的 Quad 计数。
-        /// </summary>
         public void ResetAll()
         {
             for (int i = 0; i < _bucketCount; i++)
@@ -245,9 +200,6 @@ namespace MiniGameTemplate.Rendering
             }
         }
 
-        /// <summary>
-        /// 统一提交所有桶的 SetVertexBufferData + Graphics.DrawMesh。
-        /// </summary>
         public void UploadAndDrawAll()
         {
             int drawCalls = 0;
@@ -255,8 +207,7 @@ namespace MiniGameTemplate.Rendering
 
             for (int i = 0; i < _bucketCount; i++)
             {
-                var bucket = _buckets[i];
-
+                RenderBucket bucket = _buckets[i];
                 if (bucket.QuadCount == 0) continue;
 
                 activeBatches++;
@@ -273,7 +224,6 @@ namespace MiniGameTemplate.Rendering
                     MeshUpdateFlags.DontValidateIndices | MeshUpdateFlags.DontRecalculateBounds);
 
                 bucket.Mesh.bounds = new Bounds(Vector3.zero, new Vector3(1000f, 1000f, 10f));
-
                 Graphics.DrawMesh(bucket.Mesh, Matrix4x4.identity, bucket.Material, 0);
                 drawCalls++;
             }
@@ -281,17 +231,13 @@ namespace MiniGameTemplate.Rendering
             RenderBatchManagerRuntimeStats.AccumulateBatch(drawCalls, activeBatches, _unknownBucketErrorCount);
         }
 
-
-        /// <summary>
-        /// 释放所有 Mesh 和材质实例资源。
-        /// </summary>
         public void Dispose()
         {
             if (_buckets != null)
             {
                 for (int i = 0; i < _bucketCount; i++)
                 {
-                    var bucket = _buckets[i];
+                    RenderBucket bucket = _buckets[i];
                     if (bucket.Mesh != null) UnityEngine.Object.Destroy(bucket.Mesh);
                     if (bucket.Material != null) UnityEngine.Object.Destroy(bucket.Material);
                 }
@@ -303,12 +249,22 @@ namespace MiniGameTemplate.Rendering
             _initialized = false;
         }
 
-        // ──── 辅助 ────
-
-        private static int GetDefaultSortingOrder(RenderLayer layer)
+        private void SortBucketsBySortingOrder()
         {
-            // ADR-029 v2：只有 Normal 一种，直接返回
-            return RenderSortingOrder.Bullet;
+            if (_bucketCount <= 1)
+                return;
+
+            Array.Sort(_buckets, 0, _bucketCount, Comparer<RenderBucket>.Create((a, b) => a.SortingOrder.CompareTo(b.SortingOrder)));
+            RebuildBucketIndex();
+        }
+
+        private void RebuildBucketIndex()
+        {
+            _bucketIndex.Clear();
+            for (int i = 0; i < _bucketCount; i++)
+            {
+                _bucketIndex[_buckets[i].Key] = i;
+            }
         }
     }
 }

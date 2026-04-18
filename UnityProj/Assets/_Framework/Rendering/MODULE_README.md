@@ -14,6 +14,7 @@
 | `RenderBatchManager.cs` | 306 | [Phase 1] 渲染批次管理器——按 `(RenderLayer, Texture2D)` 二元组分桶，每桶一个 Mesh + 一个 DrawCall |
 | `RenderBatchManagerRuntimeStats.cs` | — | [Phase 4] 渲染统计共享静态类，提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计 |
 | `AtlasMappingSO.cs` | 108 | [Phase 4.1] Atlas 映射 ScriptableObject——记录图集贴图 + 源贴图映射（双键查找），ADR-019 可逆派生产物 |
+| `RuntimeAtlasSystem/` | — | [Phase R0/R1] RuntimeAtlas 运行时动态图集基础设施（ShelfPacking / Blit / Page / Manager / Stats） |
 
 ## AtlasMappingSO（Phase 4.1 新增）
 
