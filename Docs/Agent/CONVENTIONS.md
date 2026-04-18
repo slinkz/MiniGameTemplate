@@ -740,16 +740,29 @@ Agent 在完成代码编写后，提交前必须自检以下项目：
 - [ ] **依赖方向**: 不违反层级依赖图
 - [ ] **MODULE_README**: 新模块目录包含 `MODULE_README.md`
 - [ ] **Review Skill**: 任何代码改动后必须执行 `code-review-checklist` Skill，修完 bug 后再复查一次
-- [ ] **Unity CLI 编译验证**: 代码评审与 bug 修复完成后，必须使用 Unity 编辑器命令行做 batchmode 编译检查，直到日志中无脚本编译错误为止
+- [ ] **Unity CLI 编译验证**: 代码评审与 bug 修复完成后，必须验证编译通过。**优先使用 MCP 工具** `unity_get_compilation_errors`（见 ARCHITECTURE.md 的 MCP 集成章节），MCP 不可用时回退到 Unity 编辑器命令行 batchmode 编译检查
 - [ ] **可视化验证样本检查**: 涉及多类型渲染/换色/皮肤切换时，先确认验证样本在肉眼上可明显区分（颜色、尺寸、轮廓、混合层至少一项强差异）；如果日志已证明类型/状态切换正确，应优先检查素材与混合表现，而不是继续在输入链路和状态机上兜圈子
 
 ### [AGENT] 强制编译验证流程
 1. 完成代码编写
 2. 加载并执行 `code-review-checklist` Skill
 3. 修复审查发现的问题
-4. 使用 Unity 编辑器命令行执行 batchmode 编译检查
-5. 如果日志中存在脚本编译错误，继续修复并重复步骤 2-4，直到编译通过
-6. 只有在 review + Unity CLI 编译都通过后，才通知用户进编辑器做运行验证
+4. **编译验证（按优先级选择）**：
+   - **首选：MCP 工具**（Unity Editor 打开时）
+     ```
+     unity_get_compilation_errors  { "severity": "all", "port": 7891 }
+     ```
+     返回 `count: 0` 即通过。若有错误，直接根据文件/行号修复。
+   - **备选：HTTP 直连**（MCP Server 不可用时）
+     ```powershell
+     curl.exe -s http://127.0.0.1:7891/api/compilation/errors
+     ```
+   - **兜底：Unity CLI batchmode**（Unity Editor 未打开时）
+     ```powershell
+     & "C:\UnityWin2021\Unity.exe" -batchmode -quit -projectPath "..." -logFile "..."
+     ```
+5. 如果存在编译错误，继续修复并重复步骤 2-4，直到编译通过
+6. 只有在 review + 编译都通过后，才通知用户进编辑器做运行验证
 
 ### [AGENT] Unity CLI 编译命令（Windows）
 ```powershell
