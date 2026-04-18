@@ -19,7 +19,7 @@ MonoBehaviour:
     y: 0.12890625
     width: 0.25
     height: 0.125
-  SamplingMode: 1
+  SamplingMode: 0
   SheetColumns: 1
   SheetRows: 1
   SheetTotalFrames: 1
@@ -220,5 +220,4 @@ MonoBehaviour:
     height: 0
   HeavyExplosionPrefab: {fileID: 0}
   ChildPattern: {fileID: 0}
-  Layer: 0
   RuntimeIndex: 0
