@@ -37,7 +37,11 @@ Shader "Hidden/RuntimeAtlasBlit"
             v2f vert(appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                // 全屏 quad 顶点已经是 NDC 坐标 (-1,-1) 到 (1,1)，
+                // 直接 passthrough 即可。不能使用 UnityObjectToClipPos，
+                // 因为 CommandBuffer 上下文中 VP 矩阵不可控，
+                // 会导致 quad 变换到错误位置，Blit 结果为空。
+                o.vertex = float4(v.vertex.xy, 0, 1);
                 o.uv = v.uv;
                 return o;
             }

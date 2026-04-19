@@ -24,7 +24,12 @@ namespace MiniGameTemplate.Rendering
 
             public bool Equals(BucketKey other)
             {
-                return Layer == other.Layer && ReferenceEquals(Texture, other.Texture);
+                if (Layer != other.Layer)
+                    return false;
+
+                int thisTextureId = Texture != null ? Texture.GetInstanceID() : 0;
+                int otherTextureId = other.Texture != null ? other.Texture.GetInstanceID() : 0;
+                return thisTextureId == otherTextureId;
             }
 
             public override bool Equals(object obj) => obj is BucketKey other && Equals(other);
@@ -70,6 +75,10 @@ namespace MiniGameTemplate.Rendering
             }
         }
 
+        // IMPORTANT: Unity 会将非标准顺序的顶点属性强制重排为标准顺序。
+        // 标准顺序为：Position → Normal → Tangent → Color → TexCoord0~7。
+        // 此数组声明顺序必须遵循标准顺序，且必须与 RenderVertex 结构体字段顺序完全一致。
+        // 违反此规则会导致 CPU 结构体与 GPU 内存布局不一致，表现为渲染错误或不可见。
         private static readonly VertexAttributeDescriptor[] VertexLayout =
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
@@ -127,8 +136,10 @@ namespace MiniGameTemplate.Rendering
                 Material matInstance = new Material(registration.TemplateMaterial)
                 {
                     name = $"BatchMat_{key.Layer}_{key.Texture.name} (Instance)",
-                    mainTexture = key.Texture,
                 };
+                matInstance.mainTexture = key.Texture;
+                if (matInstance.HasProperty("_Color"))
+                    matInstance.SetColor("_Color", new Color(1f, 1f, 1f, 1f));
 
                 int vertexCount = maxQuadsPerBucket * 4;
                 int indexCount = maxQuadsPerBucket * 6;

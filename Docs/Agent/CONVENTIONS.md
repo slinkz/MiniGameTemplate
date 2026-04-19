@@ -697,6 +697,64 @@ DanmakuSystem.Instance.FireLaser(typeIndex, source, length: 10f, lifetime: 5f);
 
 ---
 
+## [AGENT] Mesh 顶点布局规范（强制）
+
+### 血泪教训
+此规范源于 2026-04-19 两次修复才修好的渲染 Bug：CPU 结构体字段顺序与 GPU 顶点声明顺序不一致，导致子弹完全不可见。
+
+### Unity 标准顶点属性排序（强制遵循）
+Unity 在 `Mesh.SetVertexBufferParams()` 时会**静默重排**不符合标准顺序的顶点属性。标准顺序为：
+
+```
+Position → Normal → Tangent → Color → TexCoord0 → TexCoord1 → ... → TexCoord7 → BlendWeight → BlendIndices
+```
+
+跳过未使用的属性，但**已使用属性之间的相对顺序不可改变**。
+
+### 三条铁律
+
+1. **`VertexAttributeDescriptor[]` 数组必须按标准顺序声明**
+   - ✅ `Position, Color, TexCoord0`
+   - ❌ `Position, TexCoord0, Color`（Unity 会静默重排为 Position, Color, TexCoord0）
+
+2. **`[StructLayout(LayoutKind.Sequential)]` 结构体字段必须与 `VertexAttributeDescriptor[]` 声明顺序完全一致**
+   - 不是"想当然的语义顺序"，是"Unity 标准属性排序"
+   - CPU 结构体的 `Marshal.OffsetOf` 必须与 GPU 侧实际偏移一一对应
+
+3. **如果控制台出现 "Mesh vertex buffer attributes were supplied in non-standard order" 警告，说明顶点布局有对齐风险**
+   - 此警告意味着 Unity 已经强制重排了 GPU 侧布局
+   - 必须立即检查 CPU 结构体是否与重排后的顺序一致
+   - **不可忽略此警告**
+
+### 本项目的标准顶点格式
+
+```csharp
+// RenderVertex.cs — CPU 侧
+[StructLayout(LayoutKind.Sequential)]
+public struct RenderVertex
+{
+    public Vector3 Position;   // 12B, offset=0
+    public Color32 Color;      // 4B,  offset=12
+    public Vector2 UV;         // 8B,  offset=16
+}   // sizeof=24
+
+// RenderBatchManager.cs — GPU 侧
+private static readonly VertexAttributeDescriptor[] VertexLayout =
+{
+    new(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
+    new(VertexAttribute.Color,    VertexAttributeFormat.UNorm8,  4),
+    new(VertexAttribute.TexCoord0,VertexAttributeFormat.Float32, 2),
+};
+```
+
+### [AGENT] 修改顶点布局时的检查清单
+- [ ] `VertexAttributeDescriptor[]` 顺序符合 Unity 标准排序
+- [ ] `struct RenderVertex` 字段顺序与 `VertexAttributeDescriptor[]` 一致
+- [ ] 进入 Play 模式后控制台**无** "non-standard order" 警告
+- [ ] 通过 `Marshal.OffsetOf` 反射验证各字段偏移符合预期
+
+---
+
 ## [AGENT] 渲染/视觉问题排查顺序
 
 适用于多类型 VFX、换色、皮肤切换、材质切换、Blend Mode 差异等“日志说切对了，但肉眼看不出来”的问题。
@@ -750,7 +808,9 @@ Agent 在完成代码编写后，提交前必须自检以下项目：
 4. **编译验证（按优先级选择）**：
    - **首选：MCP 工具**（Unity Editor 打开时）
      ```
-     unity_get_compilation_errors  { "severity": "all", "port": 7891 }
+     unity_list_instances          { "refresh": true }
+     unity_select_instance        { "port": <扫描到的真实端口> }
+     unity_get_compilation_errors { "severity": "all", "port": <当前实例端口> }
      ```
      返回 `count: 0` 即通过。若有错误，直接根据文件/行号修复。
    - **备选：HTTP 直连**（MCP Server 不可用时）
