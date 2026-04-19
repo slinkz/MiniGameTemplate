@@ -98,7 +98,16 @@ namespace MiniGameTemplate.Danmaku
                 Rect baseUV = binding.UVRect;
 
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
-                if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
+                if (!_batchManager.TryGetBucket(bucketKey, out var bucket))
+                {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    var allocation = (_runtimeAtlas != null && bulletType != null && bulletType.SourceTexture != null)
+                        ? _runtimeAtlas.TryGetAllocation(AtlasChannel.Bullet, bulletType.SourceTexture)
+                        : AtlasAllocation.Invalid;
+                    Debug.LogWarning($"[BulletRenderer] Missing bucket for bulletType={bulletType?.name ?? "null"}, source={bulletType?.SourceTexture?.name ?? "null"}, resolvedTex={texture?.name ?? "null"}, resolvedTexId={(texture != null ? texture.GetInstanceID() : 0)}, usesRuntimeAtlas={binding.UsesRuntimeAtlas}, allocValid={allocation.Valid}, allocPage={allocation.PageIndex}, allocUV={allocation.UVRect}, fallback={_fallbackAtlas?.name ?? "null"}");
+#endif
+                    continue;
+                }
 
                 // 受伤闪烁
                 ref var trail = ref trails[i];

@@ -280,7 +280,7 @@ Unity Editor (2021.3.17f1)
 
 **Unity 侧**（已就绪，无需操作）：
 - 插件包：`Packages/com.anklebreaker.unity-mcp/`（本地冻结版本，含 2021.3 兼容补丁）
-- 端口：`7891`（通过 MCP Dashboard 配置，持久化在 EditorPrefs 中）
+- 端口：**建议使用自动端口模式**（插件默认在 `7890-7899` 范围内自动选可用端口）；仅在明确需要固定端口时才手动锁定，例如 `7891`
 - 自动启动：Unity Editor 打开即运行
 
 **WorkBuddy 侧**（已配置在 `~/.workbuddy/mcp.json`）：
@@ -298,6 +298,8 @@ Unity Editor (2021.3.17f1)
 }
 ```
 
+> 说明：`UNITY_BRIDGE_PORT` 只是 Node MCP Server 的默认探测入口，不代表 Unity 实际运行端口被固定为 7891。Unity 侧启用自动端口后，Agent 必须先调用 `unity_list_instances` 扫描 `7890-7899`，拿到真实端口后再 `unity_select_instance` 并在后续工具里显式透传该端口。
+
 **前置依赖**：
 - Node.js 18+（当前：v22.22.2，路径：`C:\Program Files\nodejs\`）
 - Unity Editor 需要处于打开状态且 MCP Bridge 正在运行
@@ -310,7 +312,7 @@ Unity Editor (2021.3.17f1)
 
 ```
 工具名: unity_get_compilation_errors
-参数:   { "severity": "all", "port": 7891 }
+参数:   { "severity": "all", "port": <当前实例端口> }
 ```
 
 - 返回 `count: 0` 表示编译通过
@@ -321,7 +323,7 @@ Unity Editor (2021.3.17f1)
 
 ```
 工具名: unity_editor_ping
-参数:   { "port": 7891 }
+参数:   { "port": <当前实例端口> }
 ```
 
 返回 Unity 版本、项目名、项目路径、平台信息。
@@ -341,7 +343,7 @@ Unity Editor (2021.3.17f1)
 | 项目信息 | `unity_project_info` | 包列表、渲染管线、构建设置 |
 | Play Mode | `unity_play_mode` | 进入/暂停/停止播放 |
 
-> **⚠️ 重要**：所有 MCP 工具调用时请携带 `port: 7891` 参数，确保路由到正确的 Unity 实例。
+> **⚠️ 重要**：所有 MCP 工具调用时请携带当前 Unity 实例的实际端口参数；若启用自动端口模式，先用 `unity_list_instances` 发现端口，再把该端口透传给后续工具。只有在 Unity 侧明确锁定手动端口时，才应把 `7891` 当作固定值使用。
 
 #### 备用方案
 

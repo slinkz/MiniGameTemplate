@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: VFXRenderConfig_Demo
   m_EditorClassIdentifier: 
   NormalMaterial: {fileID: 2100000, guid: a4e7388c281a69e4dad5a821d6518c45, type: 2}
-  AdditiveMaterial: {fileID: 2100000, guid: d655859f37fcd584dad07337bcffb637, type: 2}
   AtlasTexture: {fileID: 2800000, guid: 643f6d88489736041a319b379721e87c, type: 3}
+  RuntimeAtlasConfig: {fileID: 11400000, guid: 657a4741f7454f041bb2b5c72ce0cb64, type: 2}

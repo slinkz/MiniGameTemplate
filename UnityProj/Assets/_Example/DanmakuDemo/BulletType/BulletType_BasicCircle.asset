@@ -12,20 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf6c8c972e4d1a54db94c601aec6c0eb, type: 3}
   m_Name: BulletType_BasicCircle
   m_EditorClassIdentifier: 
-  SourceTexture: {fileID: 0}
+  SourceTexture: {fileID: 2800000, guid: 2c580c869842fe94ebb0ebf64f0544f7, type: 3}
   UVRect:
     serializedVersion: 2
-    x: 0.515625
-    y: 0.12890625
-    width: 0.25
-    height: 0.125
+    x: 0
+    y: 0
+    width: 1
+    height: 1
   SamplingMode: 0
   SheetColumns: 1
   SheetRows: 1
   SheetTotalFrames: 1
   PlaybackMode: 0
   FixedFps: 12
-  AtlasBinding: {fileID: 11400000, guid: 34dea8f4a8e554242abfedad1e5fc78c, type: 2}
+  AtlasBinding: {fileID: 0}
   SchemaVersion: 1
   _legacyAtlasUV:
     serializedVersion: 2
