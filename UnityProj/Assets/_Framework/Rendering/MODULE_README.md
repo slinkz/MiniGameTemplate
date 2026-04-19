@@ -9,12 +9,12 @@
 | 文件 | 行数 | 说明 |
 |------|------|------|
 | `RenderVertex.cs` | — | 共享顶点格式（24 bytes，Position:float3 + Color32:4B + UV:float2），`StructLayout.Sequential` |
-| `RenderLayer.cs` | — | 渲染层枚举（`Normal = 0`, `Additive = 1`） |
-| `RenderSortingOrder.cs` | — | 渲染排序常量（BulletNormal=100, BulletAdditive=110, LaserDefault=120, VFXNormal=200, VFXAdditive=210, DamageNumber=300） |
-| `RenderBatchManager.cs` | 306 | [Phase 1] 渲染批次管理器——按 `(RenderLayer, Texture2D)` 二元组分桶，每桶一个 Mesh + 一个 DrawCall |
-| `RenderBatchManagerRuntimeStats.cs` | — | [Phase 4] 渲染统计共享静态类，提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计 |
+| `RenderLayer.cs` | — | 渲染层枚举（ADR-029 v2 后当前仅使用 `Normal = 0`） |
+| `RenderSortingOrder.cs` | — | 渲染排序常量（Bullet=100, LaserDefault=120, VFX=200, DamageNumber=300） |
+| `RenderBatchManager.cs` | 306 | [Phase 1 / R2.1] 渲染批次管理器——按 `(RenderLayer, Texture)` 分桶，支持 `BucketRegistration` 多模板材质与注册时排序 |
+| `RenderBatchManagerRuntimeStats.cs` | — | [Phase R3] 渲染统计共享静态类，提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计，TrailPool 已接入 |
 | `AtlasMappingSO.cs` | 108 | [Phase 4.1] Atlas 映射 ScriptableObject——记录图集贴图 + 源贴图映射（双键查找），ADR-019 可逆派生产物 |
-| `RuntimeAtlasSystem/` | — | [Phase R0/R1/R2] RuntimeAtlas 运行时动态图集基础设施（ShelfPacking / Blit / Page / Manager / Stats / BindingResolver） |
+| `RuntimeAtlasSystem/` | — | [Phase R0/R1/R2/R3] RuntimeAtlas 运行时动态图集基础设施（ShelfPacking / Blit / Page / Manager / Stats / BindingResolver） |
 
 ## AtlasMappingSO（Phase 4.1 新增）
 
@@ -89,18 +89,16 @@ RenderBatchManager : IDisposable
 ### 使用方式
 
 ```csharp
-// 1. 构建预热 Key 列表（来自 TypeRegistry）
-var keys = new List<RenderBatchManager.BucketKey>();
-foreach (var bulletType in typeRegistry.BulletTypes)
-{
-    keys.Add(new(RenderLayer.Normal, bulletType.SourceTexture));
-    if (bulletType.IsAdditive)
-        keys.Add(new(RenderLayer.Additive, bulletType.SourceTexture));
-}
+// 1. 构建预热注册表（来自 TypeRegistry / RuntimeAtlas 解析结果）
+var registrations = new List<RenderBatchManager.BucketRegistration>();
+registrations.Add(new RenderBatchManager.BucketRegistration(
+    new RenderBatchManager.BucketKey(RenderLayer.Normal, texture),
+    templateMaterial,
+    RenderSortingOrder.Bullet));
 
 // 2. 初始化
 var batchManager = new RenderBatchManager();
-batchManager.Initialize(keys, normalMaterial, additiveMaterial, maxQuadsPerBucket: 2048);
+batchManager.Initialize(registrations, maxQuadsPerBucket: 2048);
 
 // 3. 每帧
 batchManager.ResetAll();

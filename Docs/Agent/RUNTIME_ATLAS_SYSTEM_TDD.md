@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.6
+> 文档版本：v2.7
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.6 — Phase R2 落地）
+> 修订日期：2026-04-19（v2.7 — Phase R3 落地）
 > 作者：广智 × 天命人
-> 状态：**实施中** — Phase R0 已验收通过，Phase R1 编译通过，Phase R2 已完成并待天命人验收
+> 状态：**实施中** — Phase R0 已验收通过，Phase R1 编译通过，Phase R2 已验收通过，Phase R3 已完成并待天命人验收
 
 ---
 
@@ -20,6 +20,7 @@
 | **v2.4** | **2026-04-19** | **Phase R0 落地**：完成 R0.2/R0.4/R0.5，补齐 RuntimeAtlas 基础设施代码；R0.3 算法实现完成，单元测试因项目缺少现成测试基础设施延后补齐。另提前落地 R2.1 的 RBM v2.3 接口改造（Texture 基类、多模板材质、注册时排序），避免后续迁移返工。 |
 | **v2.5** | **2026-04-19** | **Phase R1 落地**：`RuntimeAtlasManager` 从可编译骨架补齐为配置驱动核心管理器；新增 `Initialize(RuntimeAtlasConfig)`、`TryGetAllocation()`、`GetPageCount()`、`RestoreDirtyPages()` 分批恢复能力；`RuntimeAtlasConfig` 增加统一 `Validate()`；`RuntimeAtlasStats` 扩展为请求数 / 命中率 / overflow / pending restore 统计。 |
 | **v2.6** | **2026-04-19** | **Phase R2 落地**：新增 `RuntimeAtlasBindingResolver` 统一 `SourceTexture / AtlasBinding / RuntimeAtlas` 三路解析；`BulletRenderer` 与 `VFXBatchRenderer` 已优先接入 `RuntimeAtlas`，Laser / LaserWarning 保持独立贴图但继续走统一 RBM；`DanmakuRenderConfig` / `VFXRenderConfig` 新增 `RuntimeAtlasConfig` 配置入口。 |
+| **v2.7** | **2026-04-19** | **Phase R3 落地**：`DamageNumberSystem` 已迁移到 `RenderBatchManager + RuntimeAtlas(DamageText)`，数字 UV 改为基于 Atlas 子区间重映射；`TrailPool` 采用方案 A，保持独立 Mesh 但已接入 `RenderBatchManagerRuntimeStats`；`DanmakuSystem.RunLateUpdatePipeline()` 已切换到新的 `DamageNumberSystem.Rebuild(dt)` 统一提交流程。`SpriteSheetVFXSystem` 在提交层面已通过 `VFXBatchRenderer` 统一到 RBM，但编排层面仍保持独立 `LateUpdate`，该边界在 R3 文档中显式保留。 |
 
 ### v2.0 核心变更（天命人反馈驱动）
 
@@ -901,10 +902,10 @@ Assets/_Framework/Editor/Rendering/
 
 | Task | 描述 | 交付物 |
 |------|------|--------|
-| R3.1 | DamageNumberSystem 迁移到 RBM（含 UV 切分适配） | `DamageNumberSystem.cs` |
-| R3.2 | TrailPool 方案落地（方案 A：接入统计 / 方案 B：Quad 化） | `TrailPool.cs` |
-| R3.3 | 统一渲染调度：DanmakuSystem.RunLateUpdatePipeline 改造 | `DanmakuSystem.UpdatePipeline.cs` |
-| R3.4 | VFX 系统 SpriteSheetVFXSystem 接入统一管线 | `SpriteSheetVFXSystem.cs` |
+| R3.1 | DamageNumberSystem 迁移到 RBM（含 UV 切分适配） | `DamageNumberSystem.cs` | ✅ 已完成（2026-04-19） |
+| R3.2 | TrailPool 方案落地（方案 A：接入统计 / 方案 B：Quad 化） | `TrailPool.cs` | ✅ 已完成（方案 A，2026-04-19） |
+| R3.3 | 统一渲染调度：DanmakuSystem.RunLateUpdatePipeline 改造 | `DanmakuSystem.UpdatePipeline.cs` | ✅ 已完成（2026-04-19） |
+| R3.4 | VFX 系统 SpriteSheetVFXSystem 接入统一管线 | `SpriteSheetVFXSystem.cs` | ⚠️ 提交层统一已完成；编排层仍保持独立 `LateUpdate`，本阶段按现状收敛定义 |
 
 ### Phase R4：验证与调试（~2 天）
 

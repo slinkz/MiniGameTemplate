@@ -24,6 +24,11 @@
   - `BulletRenderer` 优先使用 `RuntimeAtlas`，失败时回退旧 AtlasBinding / SourceTexture / fallback
   - `VFXBatchRenderer` 优先使用 `RuntimeAtlas`，失败时回退旧 AtlasBinding / SourceTexture / fallback
   - `LaserRenderer` / `LaserWarningRenderer` 保持独立贴图，但继续走统一 RBM 初始化链
+- Phase R3 已落地：
+  - `DamageNumberSystem` 已迁移到 `RenderBatchManager + RuntimeAtlas(DamageText)`，数字 UV 以 Atlas 子区间重映射
+  - `TrailPool` 采用方案 A：保持独立 Mesh，但 DrawCall 已接入 `RenderBatchManagerRuntimeStats`
+  - `DanmakuSystem.RunLateUpdatePipeline()` 已改为调用 `DamageNumberSystem.Rebuild(dt)`，统一 Danmaku 侧提交流程
+  - `SpriteSheetVFXSystem` 在提交层面已通过 `VFXBatchRenderer` 统一到 RBM，编排层仍保持独立 `LateUpdate`
 - `RenderBatchManager` 已提前升级到 TDD v2.3 接口：
   - `BucketKey.Texture : Texture`
   - `BucketRegistration`
@@ -62,8 +67,8 @@ TDD 原计划包含单元测试，但当前项目里没有现成的 Unity Test F
 - 后续在引入测试基础设施时补齐 `ShelfPacker` 的边界用例
 
 ## 下一步
-- 待天命人验收 Phase R2 后再决定是否进入 Phase R3
-- Phase R3 重点：
-  - DamageNumberSystem 迁移到 RBM，并完成数字 UV 在 Atlas 子区间内重映射
-  - TrailPool 维持独立 Mesh，但接入统一渲染统计（按 TDD 的方案 A）
-  - DanmakuSystem / SpriteSheetVFXSystem 进一步收敛统一渲染调度
+- 待天命人验收 Phase R3 后再决定是否进入 Phase R4
+- Phase R4 重点：
+  - Demo 场景验证：DamageNumber / TrailPool / VFX 统一后视觉与统计正确
+  - Debug HUD 验证统一 DC 统计已覆盖 Trail
+  - 真机 / WebGL 验证 RuntimeAtlas 在微信小游戏环境下的 RT Lost 与恢复表现

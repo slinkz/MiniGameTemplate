@@ -81,7 +81,7 @@ namespace MiniGameTemplate.Danmaku
             _bulletRenderer.Rebuild(_bulletWorld, _bulletWorld.Trails, _typeRegistry);
             _laserRenderer.Rebuild(_laserPool, _typeRegistry);
             _laserWarningRenderer.Rebuild(_laserPool, _typeRegistry);
-            _damageNumbers.UpdateAndRender(dt);
+            _damageNumbers.Rebuild(dt);
             _trailPool.Render();
 
             // 渲染统计帧结束
