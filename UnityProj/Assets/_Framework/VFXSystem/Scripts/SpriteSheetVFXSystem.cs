@@ -23,6 +23,9 @@ namespace MiniGameTemplate.VFX
 
         public int ActiveCount => _pool?.ActiveCount ?? 0;
 
+        /// <summary>获取 VFX RuntimeAtlas 统计快照（无 Atlas 时返回 null）。</summary>
+        public Rendering.RuntimeAtlasStats? GetAtlasStats() => _renderer?.GetAtlasStats();
+
         private void Awake()
         {
             Initialize();

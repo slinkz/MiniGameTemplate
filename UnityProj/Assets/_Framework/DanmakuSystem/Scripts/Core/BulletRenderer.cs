@@ -178,6 +178,14 @@ namespace MiniGameTemplate.Danmaku
             _batchManager.UploadAndDrawAll();
         }
 
+        /// <summary>获取 RuntimeAtlas 统计快照（无 Atlas 时返回 null）。</summary>
+        public RuntimeAtlasStats? GetAtlasStats()
+        {
+            return _runtimeAtlas != null && _runtimeAtlas.IsInitialized
+                ? _runtimeAtlas.GetStats()
+                : (RuntimeAtlasStats?)null;
+        }
+
         /// <summary>释放 BatchManager 资源。</summary>
         public void Dispose()
         {

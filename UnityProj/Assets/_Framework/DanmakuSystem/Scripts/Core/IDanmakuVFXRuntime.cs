@@ -39,5 +39,10 @@ namespace MiniGameTemplate.Danmaku
         /// 由 DanmakuSystem.RunLateUpdatePipeline 在 BeginFrame/EndFrame 区间内调用。
         /// </summary>
         void RenderVFX();
+
+        /// <summary>
+        /// 获取 VFX RuntimeAtlas 统计快照（无 Atlas 时返回 null）。
+        /// </summary>
+        MiniGameTemplate.Rendering.RuntimeAtlasStats? GetAtlasStats();
     }
 }

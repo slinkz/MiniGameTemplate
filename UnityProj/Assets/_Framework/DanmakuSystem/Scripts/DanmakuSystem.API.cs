@@ -1,3 +1,4 @@
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
@@ -39,6 +40,23 @@ namespace MiniGameTemplate.Danmaku
         {
             get => _difficulty;
             set => _difficulty = value;
+        }
+
+        // ──── RuntimeAtlas 统计（R4.3：Debug HUD 用） ────
+
+        /// <summary>
+        /// 收集所有子系统的 RuntimeAtlas 统计快照。
+        /// 返回数组：[0]=Bullet, [1]=VFX, [2]=DamageNumber。
+        /// 对应 Atlas 未启用的条目为 null。
+        /// </summary>
+        public (string Label, RuntimeAtlasStats? Stats)[] GetAllAtlasStats()
+        {
+            return new (string, RuntimeAtlasStats?)[]
+            {
+                ("Bullet", _bulletRenderer?.GetAtlasStats()),
+                ("VFX", _vfxRuntime?.GetAtlasStats()),
+                ("DmgNum", _damageNumbers?.GetAtlasStats()),
+            };
         }
 
         // ──── 公开 API ────

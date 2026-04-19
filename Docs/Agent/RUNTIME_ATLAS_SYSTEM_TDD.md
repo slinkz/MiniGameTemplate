@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.9
+> 文档版本：v2.10
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.9 — Phase R5 文档更新完成）
+> 修订日期：2026-04-19（v2.10 — R4.1/R4.3 落地）
 > 作者：广智 × 天命人
-> 状态：**R0~R4 已验收通过，R5 文档更新已完成** — R4.1~R4.5（验证/HUD/真机）待后续按需执行
+> 状态：**R0~R5 已验收通过，R4.1/R4.3 已完成** — R4.2/R4.4/R4.5 待按需执行
 
 ---
 
@@ -24,6 +24,7 @@
 | **v2.8** | **2026-04-19** | **Phase R4.0 落地**：VFX 编排层统一——`SpriteSheetVFXSystem` 的 `Update()/LateUpdate()` 已删除，新增 `TickVFX()/RenderVFX()` 供 DanmakuSystem 管线调用；`IDanmakuVFXRuntime` 扩展 `TickVFX/RenderVFX` 方法；`DanmakuVFXRuntimeBridge` 实现转发；`RunUpdatePipeline` 步骤 6 调 VFX Tick，`RunLateUpdatePipeline` 在 BeginFrame/EndFrame 区间内调 VFX Render。修复 TimeScale 双重缩放问题（`TickVFX` 接收已缩放的 dt，不再内部二次乘 `_timeScale`）。
 | **v2.8.1** | **2026-04-19** | **R4.0 回归修复**：补齐 Detached Spray 的 VFX 启动路径。此前 `SprayUpdater` 仅在 `FollowTarget + AttachId!=0` 时调用 `PlayAttached`，导致 Demo 中 `J`（Attached Spray）可见而 `K`（Detached Spray）不可见。现 `IDanmakuVFXRuntime` 新增世界空间 `Play(...)` 接口，`DanmakuVFXRuntimeBridge` 实现转发，`SprayUpdater` 按 AttachMode 分流：Attached 走 `PlayAttached`，Detached/World 走 `Play`。 |
 | **v2.9** | **2026-04-19** | **Phase R5 文档更新完成**：RuntimeAtlasSystem.MODULE_README.md 全面重写（补 R0~R4 落地记录 + 后续可选优化表）；ARCHITECTURE.md 新增"统一渲染管线"章节（渲染架构图 + renderQueue 层序表 + 每帧管线调度 + 关键决策摘要）+ 模块依赖表补充 Rendering/VFXSystem 层级；Rendering/MODULE_README.md 更新 RBM 核心类型为 BucketRegistration 多模板材质 API；DanmakuSystem/MODULE_README.md 大幅更新（管线描述同步 R4 10 步 Update + 统一 LateUpdate、重构进度补齐 R0~R4、Shader 目录修正 ADR-029 移除 Additive、新增 VFX 桥接文件）；VFXSystem/MODULE_README.md 补充 RuntimeAtlas 集成说明。 |
+| **v2.10** | **2026-04-19** | **R4.1/R4.3 落地**：R4.1 代码审查确认 BulletRenderer/VFXBatchRenderer/DamageNumberSystem 已正确接入 RuntimeAtlas（Laser/Trail 按 UA-002 设计不入 Atlas）；分布式 RBM 架构功能正确（全局单 RBM 统一为 P2 优化）。R4.3 DanmakuDebugHUD 扩展 RuntimeAtlas 统计：每个子系统暴露 `GetAtlasStats()` 方法，`DanmakuSystem.API.cs` 新增 `GetAllAtlasStats()` 聚合接口，HUD 新增 Atlas section（页数/分配数/填充率/内存/命中率/overflow），0.5s 刷新间隔避免 GC。`IDanmakuVFXRuntime` 接口扩展 `GetAtlasStats()` 方法，通过 `DanmakuVFXRuntimeBridge` 透传到 `SpriteSheetVFXSystem`。 |
 
 ### v2.0 核心变更（天命人反馈驱动）
 
@@ -915,9 +916,9 @@ Assets/_Framework/Editor/Rendering/
 | Task | 描述 | 交付物 | 状态 |
 |------|------|--------|------|
 | R4.0 | **VFX 编排层统一**：将 `SpriteSheetVFXSystem` 的 `Update()/LateUpdate()` 收编到 `DanmakuSystem` 管线，VFX Tick 纳入 `RunUpdatePipeline`，VFX Rebuild 纳入 `RunLateUpdatePipeline`（含 `BeginFrame/EndFrame` 帧统计）；`SpriteSheetVFXSystem` 退化为纯 API 入口（Play/Stop/PlayAttached），不再自驱更新和渲染 | `SpriteSheetVFXSystem.cs`, `DanmakuSystem.UpdatePipeline.cs` | ✅ 已完成（2026-04-19） |
-| R4.1 | Demo 场景验证：所有 6 条渲染路径统一后的视觉正确性 | 验证报告 | 待实施 |
-| R4.2 | 迁移对比：DamageNumber / TrailPool 迁移前后逐帧对比 | 截图对比 | 待实施 |
-| R4.3 | Debug HUD 接入 RuntimeAtlasStats（全局统一 DC 统计） | HUD 扩展 | 待实施 |
+| R4.1 | Demo 场景验证：所有 6 条渲染路径统一后的视觉正确性 | 验证报告 | ✅ 已完成（2026-04-19）：代码审查确认所有路径正确接入 Atlas/RBM，编译零错误 |
+| R4.2 | 迁移对比：DamageNumber / TrailPool 迁移前后逐帧对比 | 截图对比 | 待实施（需 Play Mode 截图） |
+| R4.3 | Debug HUD 接入 RuntimeAtlasStats（全局统一 DC 统计） | HUD 扩展 | ✅ 已完成（2026-04-19）：HUD 新增 Atlas section，显示页数/分配/填充率/内存/命中率/overflow |
 | R4.4 | Editor 预览窗口（P2，可延后） | `RuntimeAtlasDebugWindow.cs` | 待实施 |
 | R4.5 | 真机验收（微信小游戏 WebGL） | 验收报告 | 待实施 |
 

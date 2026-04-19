@@ -8,6 +8,7 @@ namespace MiniGameTemplate.Example
     /// <summary>
     /// 弹幕 Demo 调试面板——OnGUI 实现，零依赖。
     /// 显示 FPS、活跃弹丸数、调度任务数、SpawnerDriver 状态、难度标签。
+    /// R4.3：新增 RuntimeAtlas 统计（页数/填充率/命中率/overflow/内存）。
     /// 按 F1 切换显示/隐藏。
     /// </summary>
     public class DanmakuDebugHUD : MonoBehaviour
@@ -25,9 +26,15 @@ namespace MiniGameTemplate.Example
         private int _fpsFrameCount;
         private float _currentFps;
 
+        // Atlas 统计缓存（每 0.5s 刷新一次，避免每帧 GC）
+        private (string Label, RuntimeAtlasStats? Stats)[] _atlasStatsCache;
+        private float _atlasStatsRefreshTimer;
+        private const float ATLAS_STATS_REFRESH_INTERVAL = 0.5f;
+
         // 缓存样式（OnGUI 每帧重建会 GC，缓存一次）
         private GUIStyle _boxStyle;
         private GUIStyle _labelStyle;
+        private GUIStyle _sectionLabelStyle;
         private bool _styleInitialized;
 
         private void Start()
@@ -56,6 +63,14 @@ namespace MiniGameTemplate.Example
                 _fpsFrameCount = 0;
                 _fpsTimer = 0f;
             }
+
+            // Atlas 统计刷新
+            _atlasStatsRefreshTimer += Time.unscaledDeltaTime;
+            if (_atlasStatsRefreshTimer >= ATLAS_STATS_REFRESH_INTERVAL && _system != null)
+            {
+                _atlasStatsCache = _system.GetAllAtlasStats();
+                _atlasStatsRefreshTimer = 0f;
+            }
         }
 
         private void OnGUI()
@@ -64,10 +79,14 @@ namespace MiniGameTemplate.Example
 
             InitStyles();
 
-            float w = 320f;
+            float w = 340f;
             float lineH = _fontSize + 4f;
             float padding = 6f;
-            int lineCount = 12;
+
+            // 动态计算行数：基础 13 行 + Atlas 统计行
+            int lineCount = 13;
+            int atlasLineCount = CountAtlasLines();
+            lineCount += atlasLineCount;
 
             float h = lineH * lineCount + padding * 2;
 
@@ -131,9 +150,76 @@ namespace MiniGameTemplate.Example
             DrawLabel(x, y, $"Collision Overflow: {_system.CollisionEventBuffer?.OverflowCount ?? 0}");
             y += lineH;
 
+            // ──── RuntimeAtlas 统计（R4.3） ────
+            if (_atlasStatsCache != null && _atlasStatsCache.Length > 0)
+            {
+                DrawSectionLabel(x, y, "── RuntimeAtlas ──");
+                y += lineH;
+
+                for (int i = 0; i < _atlasStatsCache.Length; i++)
+                {
+                    var (label, stats) = _atlasStatsCache[i];
+                    if (!stats.HasValue) continue;
+
+                    var s = stats.Value;
+                    int totalPages = 0;
+                    int totalAllocs = 0;
+                    float avgFill = 0f;
+                    int filledChannels = 0;
+
+                    if (s.PageCountPerChannel != null)
+                    {
+                        for (int c = 0; c < s.PageCountPerChannel.Length; c++)
+                        {
+                            totalPages += s.PageCountPerChannel[c];
+                        }
+                    }
+                    if (s.AllocationCountPerChannel != null)
+                    {
+                        for (int c = 0; c < s.AllocationCountPerChannel.Length; c++)
+                        {
+                            totalAllocs += s.AllocationCountPerChannel[c];
+                        }
+                    }
+                    if (s.FillRatePerChannel != null)
+                    {
+                        for (int c = 0; c < s.FillRatePerChannel.Length; c++)
+                        {
+                            if (s.FillRatePerChannel[c] > 0f)
+                            {
+                                avgFill += s.FillRatePerChannel[c];
+                                filledChannels++;
+                            }
+                        }
+                        if (filledChannels > 0) avgFill /= filledChannels;
+                    }
+
+                    float memMB = s.TotalMemoryBytes / (1024f * 1024f);
+                    Color hitColor = s.CacheHitRate >= 0.9f ? Color.green
+                        : s.CacheHitRate >= 0.5f ? Color.yellow
+                        : Color.red;
+                    Color overflowColor = s.OverflowCount > 0 ? Color.red : Color.green;
+
+                    DrawLabel(x, y, $"<b>[{label}]</b> Pg:{totalPages} Alloc:{totalAllocs} Fill:{avgFill:P0} Mem:{memMB:F1}MB Hit:<color=#{ColorUtility.ToHtmlStringRGB(hitColor)}>{s.CacheHitRate:P0}</color> OF:<color=#{ColorUtility.ToHtmlStringRGB(overflowColor)}>{s.OverflowCount}</color>");
+                    y += lineH;
+                }
+            }
+
             // 快捷键提示
             DrawLabel(x, y, "<color=#888888>F1=Toggle R=Clear P=Pause L=Laser 1/2/3=Diff</color>");
 
+        }
+
+        private int CountAtlasLines()
+        {
+            if (_atlasStatsCache == null) return 0;
+            int count = 1; // section header
+            for (int i = 0; i < _atlasStatsCache.Length; i++)
+            {
+                if (_atlasStatsCache[i].Stats.HasValue)
+                    count++;
+            }
+            return count;
         }
 
         private int CountActiveBullets()
@@ -157,6 +243,11 @@ namespace MiniGameTemplate.Example
             GUI.Label(new Rect(x, y, 400, _fontSize + 4), text, _labelStyle);
         }
 
+        private void DrawSectionLabel(float x, float y, string text)
+        {
+            GUI.Label(new Rect(x, y, 400, _fontSize + 4), text, _sectionLabelStyle);
+        }
+
         private void InitStyles()
         {
             if (_styleInitialized) return;
@@ -171,6 +262,14 @@ namespace MiniGameTemplate.Example
                 fontSize = _fontSize,
                 richText = true,
                 normal = { textColor = Color.white }
+            };
+
+            _sectionLabelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = _fontSize,
+                richText = true,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = new Color(0.5f, 0.8f, 1f) }
             };
 
             _styleInitialized = true;

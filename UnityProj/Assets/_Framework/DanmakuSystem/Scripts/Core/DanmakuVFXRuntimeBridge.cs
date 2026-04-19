@@ -50,5 +50,10 @@ namespace MiniGameTemplate.Danmaku
             if (_system != null)
                 _system.RenderVFX();
         }
+
+        public MiniGameTemplate.Rendering.RuntimeAtlasStats? GetAtlasStats()
+        {
+            return _system?.GetAtlasStats();
+        }
     }
 }
