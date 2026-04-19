@@ -50,8 +50,14 @@ namespace MiniGameTemplate.Danmaku
                         {
                             spray.VfxSlot = vfxRuntime.PlayAttached(sprayType.SprayVFXType, spray.AttachId, 1f);
                         }
+                        else
+                        {
+                            float rotationDegrees = spray.Direction * Mathf.Rad2Deg;
+                            spray.VfxSlot = vfxRuntime.Play(sprayType.SprayVFXType, spray.Origin, 1f, rotationDegrees);
+                        }
                     }
                 }
+
 
 
 

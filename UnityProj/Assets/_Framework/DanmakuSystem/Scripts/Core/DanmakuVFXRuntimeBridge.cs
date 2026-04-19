@@ -29,6 +29,11 @@ namespace MiniGameTemplate.Danmaku
                 _system.StopAttached(slot);
         }
 
+        public int Play(VFXTypeSO type, UnityEngine.Vector3 position, float scale = 1f, float rotationDegrees = 0f)
+        {
+            return _system != null ? _system.Play(type, position, scale, rotationDegrees) : -1;
+        }
+
         public int PlayAttached(VFXTypeSO type, byte attachSourceId, float scale = 1f)
         {
             return _system != null ? _system.PlayAttached(type, attachSourceId, scale) : -1;

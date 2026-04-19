@@ -19,6 +19,11 @@ namespace MiniGameTemplate.Danmaku
         void StopAttached(int slot);
 
         /// <summary>
+        /// Plays a world-space VFX instance.
+        /// </summary>
+        int Play(VFXTypeSO type, UnityEngine.Vector3 position, float scale = 1f, float rotationDegrees = 0f);
+
+        /// <summary>
         /// Plays an attached VFX instance.
         /// </summary>
         int PlayAttached(VFXTypeSO type, byte attachSourceId, float scale = 1f);

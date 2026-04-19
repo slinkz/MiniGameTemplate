@@ -55,3 +55,4 @@ DanmakuSystem
 | Phase 2 | IDanmakuEffectsBridge 桥接解耦，VFX 不再被 Danmaku 直接引用 | ✅ 已完成 |
 | Phase 3 | VFX 时间缩放、附着模式（World/FollowTarget）、喷雾可视化 | ✅ 已完成 |
 | **R4.0** | **编排层统一**：SpriteSheetVFXSystem 去除 Update/LateUpdate，退化为纯 API 入口；由 DanmakuSystem 管线通过 IDanmakuVFXRuntime.TickVFX/RenderVFX 统一驱动 | ✅ 已完成 |
+| **R4.0.1** | **回归修复**：补齐 Detached Spray 的世界空间 VFX 启动路径；IDanmakuVFXRuntime 新增 `Play(type, position, scale, rotationDegrees)`，SprayUpdater 按 AttachMode 分流 Attached/Detached | ✅ 已完成 |
