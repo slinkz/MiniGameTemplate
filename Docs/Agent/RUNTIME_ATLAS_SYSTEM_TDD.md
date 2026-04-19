@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.4
+> 文档版本：v2.5
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.4 — Phase R0 落地 + RBM v2.3 接口前置）
+> 修订日期：2026-04-19（v2.5 — Phase R1 落地）
 > 作者：广智 × 天命人
-> 状态：**实施中** — Phase R0 已部分完成（R0.2/R0.4/R0.5 ✅，R0.3 测试待补），可待验收后进入 Phase R1
+> 状态：**实施中** — Phase R0 已验收通过，Phase R1 已完成并待天命人验收
 
 ---
 
@@ -18,6 +18,7 @@
 | **v2.2** | **2026-04-18** | **PK Round 1 回应**：修正 BucketKey 描述矛盾（UA-001）、激光改为独立贴图不入 Atlas（UA-002）、补充分帧重建策略（UA-003）、RBM 按 SortingOrder 排序提交（UA-004） |
 | **v2.3** | **2026-04-18** | **PK Round 2 回应（终）**：RBM.Initialize 改为多模板材质 API（UA-005）、§3.3/§3.4/§7.1/§7.3 内联补全（UA-006）、排序策略明确为注册时排序（UA-007） |
 | **v2.4** | **2026-04-19** | **Phase R0 落地**：完成 R0.2/R0.4/R0.5，补齐 RuntimeAtlas 基础设施代码；R0.3 算法实现完成，单元测试因项目缺少现成测试基础设施延后补齐。另提前落地 R2.1 的 RBM v2.3 接口改造（Texture 基类、多模板材质、注册时排序），避免后续迁移返工。 |
+| **v2.5** | **2026-04-19** | **Phase R1 落地**：`RuntimeAtlasManager` 从可编译骨架补齐为配置驱动核心管理器；新增 `Initialize(RuntimeAtlasConfig)`、`TryGetAllocation()`、`GetPageCount()`、`RestoreDirtyPages()` 分批恢复能力；`RuntimeAtlasConfig` 增加统一 `Validate()`；`RuntimeAtlasStats` 扩展为请求数 / 命中率 / overflow / pending restore 统计。 |
 
 ### v2.0 核心变更（天命人反馈驱动）
 
@@ -880,10 +881,10 @@ Assets/_Framework/Editor/Rendering/
 
 | Task | 描述 | 交付物 |
 |------|------|--------|
-| R1.1 | `RuntimeAtlasManager` 核心实现 | `.cs` |
-| R1.2 | `RuntimeAtlasConfig` SO | `.cs` |
-| R1.3 | Warmup 批量预热 | `.cs` |
-| R1.4 | `RuntimeAtlasStats` 统计输出 | `.cs` |
+| R1.1 | `RuntimeAtlasManager` 核心实现 | `.cs` | ✅ 已完成（2026-04-19） |
+| R1.2 | `RuntimeAtlasConfig` SO | `.cs` | ✅ 已完成（2026-04-19） |
+| R1.3 | Warmup 批量预热 | `.cs` | ✅ 已完成（2026-04-19） |
+| R1.4 | `RuntimeAtlasStats` 统计输出 | `.cs` | ✅ 已完成（2026-04-19） |
 
 ### Phase R2：RBM 改造 + 已有 Renderer 迁移（~3 天）
 

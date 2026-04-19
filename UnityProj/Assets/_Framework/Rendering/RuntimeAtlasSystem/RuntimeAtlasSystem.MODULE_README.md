@@ -12,7 +12,13 @@
   - `AtlasPage`
   - `AtlasBlit`
   - `RuntimeAtlasBlit.shader`
-- `RuntimeAtlasManager` / `RuntimeAtlasConfig` / `RuntimeAtlasStats` 已提前落地，为 Phase R1 做准备
+- Phase R1 已落地：
+  - `RuntimeAtlasManager.Initialize(RuntimeAtlasConfig)` 配置驱动初始化
+  - `WarmUp()` 返回本次预热新增 Blit 数
+  - `TryGetAllocation()` / `GetPageCount()` 查询接口
+  - `HandleRTLost()` + `RestoreDirtyPages()` 两阶段恢复
+  - `RuntimeAtlasStats` 扩展到请求数 / 命中率 / overflow / pending restore
+  - `RuntimeAtlasConfig.Validate()` 统一配置校验
 - `RenderBatchManager` 已提前升级到 TDD v2.3 接口：
   - `BucketKey.Texture : Texture`
   - `BucketRegistration`
@@ -50,8 +56,9 @@ TDD 原计划包含单元测试，但当前项目里没有现成的 Unity Test F
 - 后续在引入测试基础设施时补齐 `ShelfPacker` 的边界用例
 
 ## 下一步
-- 待天命人验收通过后进入 Phase R1
-- Phase R1 重点：
-  - 收敛 `RuntimeAtlasManager` API
-  - 接入 `RuntimeAtlasConfig`
-  - 完善 WarmUp / Stats 的验收路径
+- 待天命人验收通过后进入 Phase R2
+- Phase R2 重点：
+  - BulletRenderer 接入 RuntimeAtlas
+  - LaserRenderer / LaserWarningRenderer 统一到全局 RBM（保持独立贴图）
+  - VFXBatchRenderer 接入 RuntimeAtlas
+  - 验证统一 RBM 初始化链路
