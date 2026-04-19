@@ -79,13 +79,21 @@ namespace MiniGameTemplate.Danmaku
                     continue;
                 }
 
-                // 残影记录（渲染前更新历史位置）
+                // 残影记录（间隔 N 帧采样，确保残影有足够间距）
                 ref var trail = ref trails[i];
                 if (trail.TrailLength > 0)
                 {
-                    trail.PrevPos3 = trail.PrevPos2;
-                    trail.PrevPos2 = trail.PrevPos1;
-                    trail.PrevPos1 = core.Position;
+                    var ghostInterval = registry.BulletTypes[core.TypeIndex].GhostInterval;
+                    trail.GhostFrameCounter++;
+                    if (trail.GhostFrameCounter >= ghostInterval)
+                    {
+                        trail.GhostFrameCounter = 0;
+                        trail.PrevPos3 = trail.PrevPos2;
+                        trail.PrevPos2 = trail.PrevPos1;
+                        trail.PrevPos1 = core.Position;
+                        if (trail.GhostFilledCount < 3)
+                            trail.GhostFilledCount++;
+                    }
                 }
 
                 // 运动策略委托——通过 MotionRegistry 查表执行

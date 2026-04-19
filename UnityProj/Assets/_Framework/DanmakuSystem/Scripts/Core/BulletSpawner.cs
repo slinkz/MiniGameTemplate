@@ -84,6 +84,8 @@ namespace MiniGameTemplate.Danmaku
                     ? type.GhostCount : (byte)0;
                 trail.PrevPos1 = trail.PrevPos2 = trail.PrevPos3 = origin;
                 trail.FlashTimer = 0;
+                trail.GhostFrameCounter = 0;
+                trail.GhostFilledCount = 0;
 
                 // 分配重量拖尾句柄
                 if ((core.Flags & BulletCore.FLAG_HEAVY_TRAIL) != 0 && trailPool != null)
@@ -111,6 +113,24 @@ namespace MiniGameTemplate.Danmaku
                     mod.AccelEndTime = pattern.DelayBeforeAccel + pattern.AccelDuration;
                     mod.HomingStartTime = pattern.HomingDelay;
                     mod.HomingStrength = pattern.HomingStrength;
+                }
+
+                // 运动策略参数写入 Modifier 复用字段
+                // SineWave: HomingStartTime=振幅, HomingStrength=频率
+                // Spiral:   HomingStrength=角速度
+                // 非 Default 运动策略需要 InitialDirection 作基准方向
+                if (type.MotionType == MotionType.SineWave)
+                {
+                    ref var mod = ref world.Modifiers[slot];
+                    mod.HomingStartTime = type.SineAmplitude;
+                    mod.HomingStrength = type.SineFrequency;
+                    mod.InitialDirection = core.Velocity.normalized;
+                }
+                else if (type.MotionType == MotionType.Spiral)
+                {
+                    ref var mod = ref world.Modifiers[slot];
+                    mod.HomingStrength = type.SpiralAngularVelocity;
+                    mod.InitialDirection = core.Velocity.normalized;
                 }
 
                 // SpeedOverLifetime 曲线（与延迟变速互斥）

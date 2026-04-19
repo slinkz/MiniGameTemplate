@@ -39,7 +39,7 @@ namespace MiniGameTemplate.Danmaku
                 speedMultiplier = type.SpeedOverLifetime.Evaluate(normalizedTime);
             }
 
-            // 飞行方向（单位向量）
+            // 飞行方向——使用 InitialDirection 作基准（不受 Velocity 写回影响）
             float speed = core.Velocity.magnitude;
             if (speed < 0.001f)
             {
@@ -47,7 +47,11 @@ namespace MiniGameTemplate.Danmaku
                 return;
             }
 
-            Vector2 forward = core.Velocity / speed;
+            Vector2 forward = modifier.InitialDirection;
+            // 如果 InitialDirection 未初始化（旧数据兼容），回退到 Velocity
+            if (forward.sqrMagnitude < 0.5f)
+                forward = core.Velocity / speed;
+
             // 垂直方向（逆时针旋转 90 度）
             Vector2 perpendicular = new Vector2(-forward.y, forward.x);
 
@@ -57,7 +61,15 @@ namespace MiniGameTemplate.Danmaku
             float sineOffset = (Mathf.Sin(currPhase) - Mathf.Sin(prevPhase)) * amplitude;
 
             // 位置更新 = 直线运动 + 正弦横向偏移
-            core.Position += forward * (speed * speedMultiplier * dt) + perpendicular * sineOffset;
+            Vector2 displacement = forward * (speed * speedMultiplier * dt) + perpendicular * sineOffset;
+            core.Position += displacement;
+
+            // 把实际运动方向写回 Velocity（保持原速度大小，只更新方向）
+            // 这样 BulletRenderer 的 RotateToDirection 才能正确跟随曲线朝向
+            if (displacement.sqrMagnitude > 0.0001f)
+            {
+                core.Velocity = displacement.normalized * speed;
+            }
         }
 
         private static float CalculateModifierSpeed(float elapsed, ref BulletModifier mod)

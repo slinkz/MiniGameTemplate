@@ -66,6 +66,23 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("运动策略类型（Default=标准运动, SineWave=正弦波, Spiral=螺旋）")]
         public MotionType MotionType = MotionType.Default;
 
+        // ── SineWave 参数（MotionType == SineWave 时有效） ──
+
+        [Header("正弦波参数（SineWave）")]
+        [Tooltip("正弦波振幅（世界单位）。越大摆动幅度越大")]
+        [Min(0.01f)]
+        public float SineAmplitude = 1.0f;
+
+        [Tooltip("正弦波频率（Hz）。越大摆动越快")]
+        [Min(0.1f)]
+        public float SineFrequency = 3.0f;
+
+        // ── Spiral 参数（MotionType == Spiral 时有效） ──
+
+        [Header("螺旋参数（Spiral）")]
+        [Tooltip("螺旋角速度（度/秒）。正值=逆时针，负值=顺时针")]
+        public float SpiralAngularVelocity = 180f;
+
         [Tooltip("速度随生命周期的曲线（横轴 0-1 = 生命百分比，纵轴 = 速度倍率）")]
         public AnimationCurve SpeedOverLifetime = AnimationCurve.Constant(0, 1, 1);
 
@@ -146,6 +163,10 @@ namespace MiniGameTemplate.Danmaku
 
         [Tooltip("Mesh 残影数量（Ghost 模式）")]
         public byte GhostCount = 3;
+
+        [Tooltip("残影采样间隔（帧数）。越大残影间距越远。默认 5 帧（60fps 下约 0.083 秒）")]
+        [Range(1, 15)]
+        public byte GhostInterval = 5;
 
         [Tooltip("轨迹点数（Trail 模式）")]
         public int TrailPointCount = 20;

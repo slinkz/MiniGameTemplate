@@ -118,6 +118,34 @@ namespace MiniGameTemplate.Danmaku
                     trail.FlashTimer--;
                 }
 
+                // 预计算弹丸旋转角度（Ghost 和弹丸 Quad 共用）
+                float cos = 1f, sin = 0f;
+                if ((core.Flags & BulletCore.FLAG_ROTATE_TO_DIR) != 0)
+                {
+                    float angle = Mathf.Atan2(core.Velocity.y, core.Velocity.x);
+                    cos = Mathf.Cos(angle);
+                    sin = Mathf.Sin(angle);
+                }
+
+                // ── Ghost 残影 Quad（先写 = 先画 = 在弹丸后方） ──
+                // GhostFilledCount 跟踪实际采样过的位置数量，避免首几帧显示初始位置假残影
+                int ghostCount = Mathf.Min(trail.TrailLength, trail.GhostFilledCount);
+                if (core.Phase == (byte)BulletPhase.Active && ghostCount > 0)
+                {
+                    Rect ghostUV = bulletType.SamplingMode == BulletSamplingMode.Static
+                        ? baseUV
+                        : bulletType.GetFrameUV(0, baseUV); // 残影用第一帧
+
+                    // 从最远的残影开始写（最透明 → 最不透明），确保近处残影覆盖远处
+                    if (ghostCount >= 3)
+                        WriteGhostQuad(bucket, trail.PrevPos3, bulletType, 0.15f, ghostUV, cos, sin);
+                    if (ghostCount >= 2)
+                        WriteGhostQuad(bucket, trail.PrevPos2, bulletType, 0.3f, ghostUV, cos, sin);
+                    if (ghostCount >= 1)
+                        WriteGhostQuad(bucket, trail.PrevPos1, bulletType, 0.6f, ghostUV, cos, sin);
+                }
+
+                // ── 弹丸 Quad（后写 = 后画 = 在 Ghost 上层） ──
                 // 爆炸帧动画
                 if (core.Phase == (byte)BulletPhase.Exploding
                     && bulletType.Explosion == ExplosionMode.MeshFrame
@@ -136,29 +164,14 @@ namespace MiniGameTemplate.Danmaku
 
                     float explosionAlpha = 1f - (float)frame / bulletType.ExplosionFrameCount;
 
-                    WriteQuadUV(bucket, ref core, bulletType, explosionAlpha, tint, frameUV);
+                    WriteQuadUV(bucket, ref core, bulletType, explosionAlpha, tint, frameUV, cos, sin);
                 }
                 else
                 {
                     // 解析 UV：Static 或 SpriteSheet（基于 Atlas 解析后的 baseUV）
                     Rect uv = ResolveUV(bulletType, ref core, baseUV);
 
-                    WriteQuadUV(bucket, ref core, bulletType, 1f, tint, uv);
-                }
-
-                // 残影 Quad
-                if (core.Phase == (byte)BulletPhase.Active)
-                {
-                    Rect ghostUV = bulletType.SamplingMode == BulletSamplingMode.Static
-                        ? baseUV
-                        : bulletType.GetFrameUV(0, baseUV); // 残影用第一帧
-
-                    if (trail.TrailLength >= 1)
-                        WriteGhostQuad(bucket, trail.PrevPos1, bulletType, 0.6f, ghostUV);
-                    if (trail.TrailLength >= 2)
-                        WriteGhostQuad(bucket, trail.PrevPos2, bulletType, 0.3f, ghostUV);
-                    if (trail.TrailLength >= 3)
-                        WriteGhostQuad(bucket, trail.PrevPos3, bulletType, 0.15f, ghostUV);
+                    WriteQuadUV(bucket, ref core, bulletType, 1f, tint, uv, cos, sin);
                 }
             }
 
@@ -222,7 +235,8 @@ namespace MiniGameTemplate.Danmaku
         // ──── Quad 写入 ────
 
         private void WriteQuadUV(RenderBatchManager.RenderBucket bucket,
-            ref BulletCore core, BulletTypeSO type, float alpha, Color tint, Rect uv)
+            ref BulletCore core, BulletTypeSO type, float alpha, Color tint, Rect uv,
+            float cos, float sin)
         {
             int baseVertex = bucket.AllocateQuad();
             if (baseVertex < 0) return;
@@ -243,14 +257,6 @@ namespace MiniGameTemplate.Danmaku
                 tint.b * (core.AnimColor.b / 255f),
                 tint.a * (core.AnimColor.a / 255f));
 
-            float cos = 1f, sin = 0f;
-            if ((core.Flags & BulletCore.FLAG_ROTATE_TO_DIR) != 0)
-            {
-                float angle = Mathf.Atan2(core.Velocity.y, core.Velocity.x);
-                cos = Mathf.Cos(angle);
-                sin = Mathf.Sin(angle);
-            }
-
             var verts = bucket.Vertices;
             WriteVertex(ref verts[baseVertex + 0], core.Position, -halfW, -halfH, cos, sin,
                 uv.xMin, uv.yMin, finalTint, finalAlpha);
@@ -263,7 +269,8 @@ namespace MiniGameTemplate.Danmaku
         }
 
         private void WriteGhostQuad(RenderBatchManager.RenderBucket bucket,
-            Vector2 position, BulletTypeSO type, float alpha, Rect uv)
+            Vector2 position, BulletTypeSO type, float alpha, Rect uv,
+            float cos, float sin)
         {
             int baseVertex = bucket.AllocateQuad();
             if (baseVertex < 0) return;
@@ -274,13 +281,13 @@ namespace MiniGameTemplate.Danmaku
             float halfH = type.Size.y * 0.5f;
 
             var verts = bucket.Vertices;
-            WriteVertex(ref verts[baseVertex + 0], position, -halfW, -halfH, 1, 0,
+            WriteVertex(ref verts[baseVertex + 0], position, -halfW, -halfH, cos, sin,
                 uv.xMin, uv.yMin, type.Tint, alpha);
-            WriteVertex(ref verts[baseVertex + 1], position, halfW, -halfH, 1, 0,
+            WriteVertex(ref verts[baseVertex + 1], position, halfW, -halfH, cos, sin,
                 uv.xMax, uv.yMin, type.Tint, alpha);
-            WriteVertex(ref verts[baseVertex + 2], position, halfW, halfH, 1, 0,
+            WriteVertex(ref verts[baseVertex + 2], position, halfW, halfH, cos, sin,
                 uv.xMax, uv.yMax, type.Tint, alpha);
-            WriteVertex(ref verts[baseVertex + 3], position, -halfW, halfH, 1, 0,
+            WriteVertex(ref verts[baseVertex + 3], position, -halfW, halfH, cos, sin,
                 uv.xMin, uv.yMax, type.Tint, alpha);
         }
 
