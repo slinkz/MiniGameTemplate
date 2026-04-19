@@ -37,10 +37,10 @@ MonoBehaviour:
   Size: {x: 1, y: 1}
   RotateToDirection: 1
   CollisionRadius: 0.15
-  MotionType: 1
+  MotionType: 2
   SineAmplitude: 1
   SineFrequency: 0.5
-  SpiralAngularVelocity: 180
+  SpiralAngularVelocity: 30
   SpeedOverLifetime:
     serializedVersion: 3
     m_Curve:
@@ -170,7 +170,7 @@ MonoBehaviour:
   PierceSFX: {fileID: 0}
   DamageFlashTint: {r: 1, g: 0.3, b: 0.3, a: 1}
   DamageFlashFrames: 3
-  Trail: 3
+  Trail: 2
   GhostCount: 3
   GhostInterval: 12
   TrailPointCount: 20

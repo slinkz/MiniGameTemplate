@@ -141,6 +141,10 @@ namespace MiniGameTemplate.Rendering
                 if (matInstance.HasProperty("_Color"))
                     matInstance.SetColor("_Color", new Color(1f, 1f, 1f, 1f));
 
+                // 通过 renderQueue 确保 GPU 级层序——不依赖 DrawMesh 调用顺序
+                // Transparent 基础值 = 3000，加上 SortingOrder 偏移
+                matInstance.renderQueue = 3000 + registration.SortingOrder;
+
                 int vertexCount = maxQuadsPerBucket * 4;
                 int indexCount = maxQuadsPerBucket * 6;
 
