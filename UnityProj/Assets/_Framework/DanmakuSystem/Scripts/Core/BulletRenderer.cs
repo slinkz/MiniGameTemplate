@@ -10,6 +10,7 @@ namespace MiniGameTemplate.Danmaku
     public class BulletRenderer
     {
         private RenderBatchManager _batchManager;
+        private RuntimeAtlasManager _runtimeAtlas;
         private Texture2D _fallbackAtlas; // 旧资产 SourceTexture 为空时的 fallback
         private int _totalQuadCount;
 
@@ -23,6 +24,13 @@ namespace MiniGameTemplate.Danmaku
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig.BulletAtlas;
+            _runtimeAtlas = null;
+
+            if (renderConfig != null && renderConfig.RuntimeAtlasConfig != null)
+            {
+                _runtimeAtlas = new RuntimeAtlasManager();
+                _runtimeAtlas.Initialize(renderConfig.RuntimeAtlasConfig);
+            }
 
             // 收集所有唯一的 Texture 组合（ADR-029 v2：Layer 统一 Normal）
             var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
@@ -34,12 +42,10 @@ namespace MiniGameTemplate.Danmaku
                     var bt = registry.BulletTypes[i];
                     if (bt == null) continue;
 
-                    // 优先 AtlasBinding.AtlasTexture > SourceTexture > fallback
-                    var tex = bt.GetResolvedTexture();
-                    if (tex == null) tex = _fallbackAtlas;
-                    if (tex == null) continue;
+                    var binding = RuntimeAtlasBindingResolver.ResolveBullet(_runtimeAtlas, _fallbackAtlas, bt);
+                    if (!binding.IsValid) continue;
 
-                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, tex);
+                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
                     bool exists = false;
                     for (int j = 0; j < registrations.Count; j++)
                     {
@@ -85,14 +91,11 @@ namespace MiniGameTemplate.Danmaku
 
                 var bulletType = registry.BulletTypes[core.TypeIndex];
 
-                // 确定贴图——优先 AtlasBinding > SourceTexture > fallback（ADR-017）
-                // 注意：Unity Object 的 ?? 运算符不走 Unity 的 == null 重载，必须用显式 != null
-                var resolvedTex = bulletType.GetResolvedTexture();
-                var texture = (resolvedTex != null) ? resolvedTex : _fallbackAtlas;
-                if (texture == null) continue;
+                var binding = RuntimeAtlasBindingResolver.ResolveBullet(_runtimeAtlas, _fallbackAtlas, bulletType);
+                if (!binding.IsValid) continue;
 
-                // 解析基础 UV——Atlas 绑定时从 AtlasMappingSO 查子区域
-                Rect baseUV = bulletType.GetResolvedBaseUV();
+                Texture texture = binding.Texture;
+                Rect baseUV = binding.UVRect;
 
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
                 if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
@@ -157,6 +160,8 @@ namespace MiniGameTemplate.Danmaku
         public void Dispose()
         {
             _batchManager?.Dispose();
+            _runtimeAtlas?.Dispose();
+            _runtimeAtlas = null;
         }
 
         // ──── 序列帧 UV 解析 ────

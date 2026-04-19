@@ -1,3 +1,4 @@
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 
 namespace MiniGameTemplate.VFX
@@ -15,5 +16,9 @@ namespace MiniGameTemplate.VFX
         [Header("贴图")]
         [Tooltip("阶段 1 共用图集。所有 VFXTypeSO 的 AtlasUV 都基于这张贴图。")]
         public Texture2D AtlasTexture;
+
+        [Header("Runtime Atlas")]
+        [Tooltip("运行时动态图集配置。为空时保持旧渲染路径，不启用 RuntimeAtlas。")]
+        public RuntimeAtlasConfig RuntimeAtlasConfig;
     }
 }

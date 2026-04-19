@@ -1,3 +1,4 @@
+using MiniGameTemplate.Rendering;
 using UnityEngine;
 
 namespace MiniGameTemplate.Danmaku
@@ -21,5 +22,9 @@ namespace MiniGameTemplate.Danmaku
 
         [Tooltip("数字精灵图集（0-9 飘字用）")]
         public Texture2D NumberAtlas;
+
+        [Header("Runtime Atlas")]
+        [Tooltip("运行时动态图集配置。为空时保持旧渲染路径，不启用 RuntimeAtlas。")]
+        public RuntimeAtlasConfig RuntimeAtlasConfig;
     }
 }

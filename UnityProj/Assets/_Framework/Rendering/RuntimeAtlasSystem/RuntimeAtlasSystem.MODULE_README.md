@@ -19,6 +19,11 @@
   - `HandleRTLost()` + `RestoreDirtyPages()` 两阶段恢复
   - `RuntimeAtlasStats` 扩展到请求数 / 命中率 / overflow / pending restore
   - `RuntimeAtlasConfig.Validate()` 统一配置校验
+- Phase R2 已落地：
+  - `RuntimeAtlasBindingResolver` 统一 `SourceTexture / AtlasBinding / RuntimeAtlas` 三路解析
+  - `BulletRenderer` 优先使用 `RuntimeAtlas`，失败时回退旧 AtlasBinding / SourceTexture / fallback
+  - `VFXBatchRenderer` 优先使用 `RuntimeAtlas`，失败时回退旧 AtlasBinding / SourceTexture / fallback
+  - `LaserRenderer` / `LaserWarningRenderer` 保持独立贴图，但继续走统一 RBM 初始化链
 - `RenderBatchManager` 已提前升级到 TDD v2.3 接口：
   - `BucketKey.Texture : Texture`
   - `BucketRegistration`
@@ -39,6 +44,7 @@
 | `RuntimeAtlasManager.cs` | RuntimeAtlas 核心入口（已提前落地 R1 骨架） |
 | `RuntimeAtlasConfig.cs` | 全局配置 SO |
 | `RuntimeAtlasStats.cs` | 统计快照结构 |
+| `RuntimeAtlasBindingResolver.cs` | R2 统一纹理解算辅助层（RuntimeAtlas / AtlasBinding / SourceTexture 回退链） |
 
 ## 已知说明
 
@@ -56,9 +62,8 @@ TDD 原计划包含单元测试，但当前项目里没有现成的 Unity Test F
 - 后续在引入测试基础设施时补齐 `ShelfPacker` 的边界用例
 
 ## 下一步
-- 待天命人验收通过后进入 Phase R2
-- Phase R2 重点：
-  - BulletRenderer 接入 RuntimeAtlas
-  - LaserRenderer / LaserWarningRenderer 统一到全局 RBM（保持独立贴图）
-  - VFXBatchRenderer 接入 RuntimeAtlas
-  - 验证统一 RBM 初始化链路
+- 待天命人验收 Phase R2 后再决定是否进入 Phase R3
+- Phase R3 重点：
+  - DamageNumberSystem 迁移到 RBM，并完成数字 UV 在 Atlas 子区间内重映射
+  - TrailPool 维持独立 Mesh，但接入统一渲染统计（按 TDD 的方案 A）
+  - DanmakuSystem / SpriteSheetVFXSystem 进一步收敛统一渲染调度

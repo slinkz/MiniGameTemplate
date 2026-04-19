@@ -10,6 +10,7 @@ namespace MiniGameTemplate.VFX
     public class VFXBatchRenderer
     {
         private RenderBatchManager _batchManager;
+        private RuntimeAtlasManager _runtimeAtlas;
         private Texture2D _fallbackAtlas; // 旧资产 SourceTexture 为空时的 fallback
         private int _totalQuadCount;
 
@@ -23,6 +24,13 @@ namespace MiniGameTemplate.VFX
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig != null ? renderConfig.AtlasTexture : null;
+            _runtimeAtlas = null;
+
+            if (renderConfig != null && renderConfig.RuntimeAtlasConfig != null)
+            {
+                _runtimeAtlas = new RuntimeAtlasManager();
+                _runtimeAtlas.Initialize(renderConfig.RuntimeAtlasConfig);
+            }
 
             Material mat = renderConfig != null ? renderConfig.NormalMaterial : null;
             var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
@@ -33,12 +41,10 @@ namespace MiniGameTemplate.VFX
                 {
                     if (!registry.TryGet((ushort)i, out var vfxType)) continue;
 
-                    // 优先 AtlasBinding.AtlasTexture > SourceTexture > fallback
-                    var tex = vfxType.GetResolvedTexture();
-                    if (tex == null) tex = _fallbackAtlas;
-                    if (tex == null) continue;
+                    var binding = RuntimeAtlasBindingResolver.ResolveVFX(_runtimeAtlas, _fallbackAtlas, vfxType);
+                    if (!binding.IsValid) continue;
 
-                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, tex);
+                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
                     bool exists = false;
                     for (int j = 0; j < registrations.Count; j++)
                     {
@@ -87,13 +93,11 @@ namespace MiniGameTemplate.VFX
                 if (!instance.IsActive) continue;
                 if (!registry.TryGet(instance.TypeIndex, out var type)) continue;
 
-                // 优先 AtlasBinding > SourceTexture > fallback（ADR-017）
-                var resolvedTex = type.GetResolvedTexture();
-                var texture = (resolvedTex != null) ? resolvedTex : _fallbackAtlas;
-                if (texture == null) continue;
+                var binding = RuntimeAtlasBindingResolver.ResolveVFX(_runtimeAtlas, _fallbackAtlas, type);
+                if (!binding.IsValid) continue;
 
-                // 解析基础 UV
-                Rect baseUV = type.GetResolvedBaseUV();
+                Texture texture = binding.Texture;
+                Rect baseUV = binding.UVRect;
 
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
                 if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
@@ -108,6 +112,8 @@ namespace MiniGameTemplate.VFX
         public void Dispose()
         {
             _batchManager?.Dispose();
+            _runtimeAtlas?.Dispose();
+            _runtimeAtlas = null;
         }
 
         // ──── Quad 写入 ────

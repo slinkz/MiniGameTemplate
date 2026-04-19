@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.5
+> 文档版本：v2.6
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.5 — Phase R1 落地）
+> 修订日期：2026-04-19（v2.6 — Phase R2 落地）
 > 作者：广智 × 天命人
-> 状态：**实施中** — Phase R0 已验收通过，Phase R1 已完成并待天命人验收
+> 状态：**实施中** — Phase R0 已验收通过，Phase R1 编译通过，Phase R2 已完成并待天命人验收
 
 ---
 
@@ -19,6 +19,7 @@
 | **v2.3** | **2026-04-18** | **PK Round 2 回应（终）**：RBM.Initialize 改为多模板材质 API（UA-005）、§3.3/§3.4/§7.1/§7.3 内联补全（UA-006）、排序策略明确为注册时排序（UA-007） |
 | **v2.4** | **2026-04-19** | **Phase R0 落地**：完成 R0.2/R0.4/R0.5，补齐 RuntimeAtlas 基础设施代码；R0.3 算法实现完成，单元测试因项目缺少现成测试基础设施延后补齐。另提前落地 R2.1 的 RBM v2.3 接口改造（Texture 基类、多模板材质、注册时排序），避免后续迁移返工。 |
 | **v2.5** | **2026-04-19** | **Phase R1 落地**：`RuntimeAtlasManager` 从可编译骨架补齐为配置驱动核心管理器；新增 `Initialize(RuntimeAtlasConfig)`、`TryGetAllocation()`、`GetPageCount()`、`RestoreDirtyPages()` 分批恢复能力；`RuntimeAtlasConfig` 增加统一 `Validate()`；`RuntimeAtlasStats` 扩展为请求数 / 命中率 / overflow / pending restore 统计。 |
+| **v2.6** | **2026-04-19** | **Phase R2 落地**：新增 `RuntimeAtlasBindingResolver` 统一 `SourceTexture / AtlasBinding / RuntimeAtlas` 三路解析；`BulletRenderer` 与 `VFXBatchRenderer` 已优先接入 `RuntimeAtlas`，Laser / LaserWarning 保持独立贴图但继续走统一 RBM；`DanmakuRenderConfig` / `VFXRenderConfig` 新增 `RuntimeAtlasConfig` 配置入口。 |
 
 ### v2.0 核心变更（天命人反馈驱动）
 
@@ -891,10 +892,10 @@ Assets/_Framework/Editor/Rendering/
 | Task | 描述 | 交付物 |
 |------|------|--------|
 | R2.1 | `BucketKey.Texture` 类型拓宽 + `Initialize` 多模板材质 API + 注册时排序 (v2.3) | `RenderBatchManager.cs` |
-| R2.2 | BulletRenderer 集成 RuntimeAtlas | `BulletRenderer.cs` |
-| R2.3 | LaserRenderer 统一到全局 RBM（不入 Atlas，保持独立贴图）(v2.2 修正) | `LaserRenderer.cs` |
-| R2.4 | LaserWarningRenderer 集成 RuntimeAtlas | `LaserWarningRenderer.cs` |
-| R2.5 | VFXBatchRenderer 集成 RuntimeAtlas | `VFXRenderer.cs` |
+| R2.2 | BulletRenderer 集成 RuntimeAtlas | `BulletRenderer.cs` | ✅ 已完成（2026-04-19） |
+| R2.3 | LaserRenderer 统一到全局 RBM（不入 Atlas，保持独立贴图）(v2.2 修正) | `LaserRenderer.cs` | ✅ 已完成（R0/R1 前置已落地，R2 验证通过） |
+| R2.4 | LaserWarningRenderer 集成 RuntimeAtlas | `LaserWarningRenderer.cs` | ✅ 已完成（沿用 Laser 独立贴图 + 统一 RBM 路径，R2 验证通过） |
+| R2.5 | VFXBatchRenderer 集成 RuntimeAtlas | `VFXBatchRenderer.cs` | ✅ 已完成（2026-04-19） |
 
 ### Phase R3：自管 Mesh 系统迁移（~3 天）— v2.0 新增
 
