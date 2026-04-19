@@ -15,10 +15,12 @@ MonoBehaviour:
   MaxBullets: 512
   MaxLasers: 16
   MaxSprays: 8
+  MaxTrails: 64
   WorldBounds:
     serializedVersion: 2
     x: -5
     y: -8
     width: 10
     height: 16
-  InvincibleDuration: 0.5
+  CollisionEventBufferCapacity: 256
+  InvincibleDuration: 0

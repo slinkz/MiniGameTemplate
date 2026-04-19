@@ -152,7 +152,7 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  Damage: 1
+  Damage: 26849
   InitialHitPoints: 1
   Faction: 0
   OnHitTarget: 0
@@ -167,7 +167,7 @@ MonoBehaviour:
   PierceSFX: {fileID: 0}
   DamageFlashTint: {r: 1, g: 0.3, b: 0.3, a: 1}
   DamageFlashFrames: 3
-  Trail: 0
+  Trail: 2
   GhostCount: 3
   TrailPointCount: 20
   TrailWidth: 0.3

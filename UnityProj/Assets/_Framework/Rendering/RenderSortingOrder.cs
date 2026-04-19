@@ -7,6 +7,9 @@ namespace MiniGameTemplate.Rendering
     /// </summary>
     public static class RenderSortingOrder
     {
+        /// <summary>拖尾层（在弹丸后方）</summary>
+        public const int Trail = 90;
+
         /// <summary>弹丸层</summary>
         public const int Bullet = 100;
 

@@ -77,12 +77,12 @@ namespace MiniGameTemplate.Danmaku
             // 渲染统计帧开始
             RenderBatchManagerRuntimeStats.BeginFrame();
 
-            // 渲染
+            // 渲染——顺序决定 Graphics.DrawMesh 的层次（先提交 = 先渲染 = 在后面）
+            _trailPool.Render();            // Trail 最先提交 → 在最后面
             _bulletRenderer.Rebuild(_bulletWorld, _bulletWorld.Trails, _typeRegistry);
             _laserRenderer.Rebuild(_laserPool, _typeRegistry);
             _laserWarningRenderer.Rebuild(_laserPool, _typeRegistry);
             _damageNumbers.Rebuild(dt);
-            _trailPool.Render();
 
             // 渲染统计帧结束
             RenderBatchManagerRuntimeStats.EndFrame();

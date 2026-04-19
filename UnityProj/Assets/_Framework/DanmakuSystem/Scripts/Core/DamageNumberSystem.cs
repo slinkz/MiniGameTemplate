@@ -12,7 +12,8 @@ namespace MiniGameTemplate.Danmaku
     {
         public const int MAX_NUMBERS = 128;
         private const int MAX_DIGITS_PER_NUMBER = 5;
-        private const float DIGIT_UV_WIDTH = 0.1f;
+        private const int DIGIT_COUNT = 10;
+        private const float DIGIT_UV_WIDTH = 1f / DIGIT_COUNT;
         private const float DIGIT_SIZE = 0.3f;
         private const float DIGIT_SPACING = 0.2f;
         private const float FLOAT_SPEED = 1.5f;
@@ -172,8 +173,10 @@ namespace MiniGameTemplate.Danmaku
                 float x = startX + d * DIGIT_SPACING * data.Scale;
                 float halfSize = DIGIT_SIZE * 0.5f * data.Scale;
 
-                float localUvLeft = digit * DIGIT_UV_WIDTH;
-                float localUvRight = localUvLeft + DIGIT_UV_WIDTH;
+                float pixelWidth = _fallbackAtlas != null ? _fallbackAtlas.width : 0f;
+                float digitPixelWidth = pixelWidth / DIGIT_COUNT;
+                float localUvLeft = digitPixelWidth > 0f ? digit * digitPixelWidth / pixelWidth : digit * DIGIT_UV_WIDTH;
+                float localUvRight = digitPixelWidth > 0f ? (digit + 1) * digitPixelWidth / pixelWidth : localUvLeft + DIGIT_UV_WIDTH;
                 float uvLeft = atlasUv.x + localUvLeft * atlasUv.width;
                 float uvRight = atlasUv.x + localUvRight * atlasUv.width;
                 float uvBottom = atlasUv.y;
@@ -193,25 +196,25 @@ namespace MiniGameTemplate.Danmaku
                 {
                     Position = new Vector3(x - halfSize, data.Position.y - halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvLeft, uvBottom),
+                    UV = new Vector2(uvLeft, uvTop),
                 };
                 verts[baseVertex + 1] = new RenderVertex
                 {
                     Position = new Vector3(x + halfSize, data.Position.y - halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvRight, uvBottom),
+                    UV = new Vector2(uvRight, uvTop),
                 };
                 verts[baseVertex + 2] = new RenderVertex
                 {
                     Position = new Vector3(x + halfSize, data.Position.y + halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvRight, uvTop),
+                    UV = new Vector2(uvRight, uvBottom),
                 };
                 verts[baseVertex + 3] = new RenderVertex
                 {
                     Position = new Vector3(x - halfSize, data.Position.y + halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvLeft, uvTop),
+                    UV = new Vector2(uvLeft, uvBottom),
                 };
             }
         }
