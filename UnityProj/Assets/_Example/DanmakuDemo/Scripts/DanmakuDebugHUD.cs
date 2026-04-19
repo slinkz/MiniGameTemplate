@@ -36,6 +36,7 @@ namespace MiniGameTemplate.Example
         private GUIStyle _labelStyle;
         private GUIStyle _sectionLabelStyle;
         private bool _styleInitialized;
+        private float _cachedLabelWidth;
 
         private void Start()
         {
@@ -80,16 +81,19 @@ namespace MiniGameTemplate.Example
 
             InitStyles();
 
-            float w = 340f;
-            float lineH = _fontSize + 4f;
+            // 宽度自适应：屏幕宽度的 60%，钳制在 [300, 560] 区间
+            float w = Mathf.Clamp(Screen.width * 0.6f, 300f, 560f);
+            float lineH = _fontSize + 8f;
             float padding = 6f;
+            _cachedLabelWidth = w - padding * 2;
 
-            // 动态计算行数：基础 13 行 + Atlas 统计行
-            int lineCount = 13;
+            // 基础行数（FPS~CollisionOverflow = 12 行 + 快捷键提示 1 行 = 13）
+            // + Atlas section（header + stats 行）
+            int baseLineCount = 13;
             int atlasLineCount = CountAtlasLines();
-            lineCount += atlasLineCount;
+            int totalLines = baseLineCount + atlasLineCount;
 
-            float h = lineH * lineCount + padding * 2;
+            float h = lineH * totalLines + padding * 2 + 2f; // +2 底部余量
 
             Rect boxRect = new Rect(8, 8, w, h);
             GUI.Box(boxRect, GUIContent.none, _boxStyle);
@@ -201,7 +205,7 @@ namespace MiniGameTemplate.Example
                         : Color.red;
                     Color overflowColor = s.OverflowCount > 0 ? Color.red : Color.green;
 
-                    DrawLabel(x, y, $"<b>[{label}]</b> Pg:{totalPages} Alloc:{totalAllocs} Fill:{avgFill:P0} Mem:{memMB:F1}MB Hit:<color=#{ColorUtility.ToHtmlStringRGB(hitColor)}>{s.CacheHitRate:P0}</color> OF:<color=#{ColorUtility.ToHtmlStringRGB(overflowColor)}>{s.OverflowCount}</color>");
+                    DrawLabel(x, y, $"[{label}] P:{totalPages} A:{totalAllocs} {avgFill:P0} {memMB:F1}M Hit:<color=#{ColorUtility.ToHtmlStringRGB(hitColor)}>{s.CacheHitRate:P0}</color> OF:<color=#{ColorUtility.ToHtmlStringRGB(overflowColor)}>{s.OverflowCount}</color>");
                     y += lineH;
                 }
             }
@@ -252,12 +256,12 @@ namespace MiniGameTemplate.Example
 
         private void DrawLabel(float x, float y, string text)
         {
-            GUI.Label(new Rect(x, y, 400, _fontSize + 4), text, _labelStyle);
+            GUI.Label(new Rect(x, y, _cachedLabelWidth, _fontSize + 8), text, _labelStyle);
         }
 
         private void DrawSectionLabel(float x, float y, string text)
         {
-            GUI.Label(new Rect(x, y, 400, _fontSize + 4), text, _sectionLabelStyle);
+            GUI.Label(new Rect(x, y, _cachedLabelWidth, _fontSize + 8), text, _sectionLabelStyle);
         }
 
         private void InitStyles()

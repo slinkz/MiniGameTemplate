@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d1d8af588c48e0439d818c14ede8bb8, type: 3}
   m_Name: VFXType_Explosion_Test
   m_EditorClassIdentifier: 
-  AtlasUV:
+  SourceTexture: {fileID: 2800000, guid: 643f6d88489736041a319b379721e87c, type: 3}
+  UVRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1
     height: 1
+  SchemaVersion: 1
+  AtlasBinding: {fileID: 0}
   Columns: 4
   Rows: 4
   TotalFrames: 16
@@ -26,4 +29,4 @@ MonoBehaviour:
   RotateWithInstance: 0
   Size: {x: 1.6, y: 1.6}
   Tint: {r: 1, g: 1, b: 1, a: 1}
-  Layer: 1
+  AttachMode: 0
