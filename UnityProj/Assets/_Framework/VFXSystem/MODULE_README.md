@@ -13,18 +13,25 @@
 - `Scripts/Data/` — 纯数据结构
 
 ## 架构说明
-- `SpriteSheetVFXSystem`：唯一 MonoBehaviour 入口，负责生命周期与每帧驱动
+- `SpriteSheetVFXSystem`：唯一 MonoBehaviour 入口（**纯 API 入口**）。R4.0 后不再自驱 `Update/LateUpdate`——由 `DanmakuSystem` 管线通过 `TickVFX()/RenderVFX()` 统一驱动更新和渲染
 - `VFXPool`：预分配实例池（64 容量），管理槽位分配/回收
 - `VFXBatchRenderer`：通过 `RenderBatchManager`（`_Framework/Rendering/`）按 `(RenderLayer, SourceTexture)` 分桶渲染
 - `VFXTypeSO`：设计师可编辑的特效配置资产（支持独立贴图 SpriteSheet，atlas 仅为可选优化）
 
-## 与 DanmakuSystem 的关系 [Phase 2]
+## 与 DanmakuSystem 的关系 [Phase 2 → R4.0 编排层统一]
 
 VFXSystem **不主动依赖** DanmakuSystem。两系统的联动通过桥接接口实现：
 
 ```
 DanmakuSystem
-  └── IDanmakuEffectsBridge (接口，在 Danmaku 命名空间)
+  ├── IDanmakuVFXRuntime (管线驱动接口)
+  │     ├── TickVFX(dt)        ← RunUpdatePipeline 步骤 6
+  │     ├── RenderVFX()        ← RunLateUpdatePipeline（BeginFrame/EndFrame 区间内）
+  │     ├── SetTimeScale()
+  │     ├── PlayAttached() / StopAttached()
+  │     └── DanmakuVFXRuntimeBridge → 转发到 SpriteSheetVFXSystem
+  │
+  └── IDanmakuEffectsBridge (碰撞特效接口)
         └── DefaultDanmakuEffectsBridge (唯一引用 VFX 命名空间的类)
               └── 调用 SpriteSheetVFXSystem.PlayOneShot / CanPlay
 ```
@@ -46,4 +53,5 @@ DanmakuSystem
 | Phase 0 | RenderVertex 迁移到共享层 | ✅ 已完成 |
 | Phase 1 | VFXBatchRenderer 迁移到 BatchManager，VFXTypeSO 新增 SourceTexture 支持独立贴图 | ✅ 已完成 |
 | Phase 2 | IDanmakuEffectsBridge 桥接解耦，VFX 不再被 Danmaku 直接引用 | ✅ 已完成 |
-| Phase 3 | VFX 时间缩放、附着模式（World/FollowTarget）、喷雾可视化 | ⏳ 待开始 |
+| Phase 3 | VFX 时间缩放、附着模式（World/FollowTarget）、喷雾可视化 | ✅ 已完成 |
+| **R4.0** | **编排层统一**：SpriteSheetVFXSystem 去除 Update/LateUpdate，退化为纯 API 入口；由 DanmakuSystem 管线通过 IDanmakuVFXRuntime.TickVFX/RenderVFX 统一驱动 | ✅ 已完成 |

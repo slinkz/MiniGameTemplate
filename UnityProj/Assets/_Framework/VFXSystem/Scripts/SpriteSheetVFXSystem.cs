@@ -3,8 +3,9 @@ using UnityEngine;
 namespace MiniGameTemplate.VFX
 {
     /// <summary>
-    /// Sprite Sheet VFX 唯一 MonoBehaviour 入口。
-    /// 阶段 1 只负责初始化、播放、更新、渲染与清理。
+    /// Sprite Sheet VFX 唯一 MonoBehaviour 入口（纯 API 入口）。
+    /// R4.0：Update/LateUpdate 已收编到 DanmakuSystem 管线，
+    /// 本类不再自驱更新和渲染——由外部通过 TickVFX/RenderVFX 调用。
     /// </summary>
     public class SpriteSheetVFXSystem : MonoBehaviour
     {
@@ -16,6 +17,8 @@ namespace MiniGameTemplate.VFX
         private VFXPool _pool;
         private VFXBatchRenderer _renderer;
         private IVFXPositionResolver _positionResolver;
+        // R4.0 注：管线驱动模式下，TickVFX 接收的 dt 已由 DanmakuSystem 乘过 TimeScale，
+        // 本字段不再影响 TickVFX。保留供独立使用场景（无 DanmakuSystem 驱动时）。
         private float _timeScale = 1f;
 
         public int ActiveCount => _pool?.ActiveCount ?? 0;
@@ -30,12 +33,23 @@ namespace MiniGameTemplate.VFX
             Dispose();
         }
 
-        private void Update()
+        // ──── 管线驱动入口（R4.0：由 DanmakuSystem 管线调用） ────
+
+        /// <summary>
+        /// 更新所有活跃 VFX 实例（帧动画推进、附着位置同步）。
+        /// 由 DanmakuSystem.RunUpdatePipeline 调用，不再自驱。
+        /// 注意：传入的 deltaTime 已经过弹幕 TimeScale 缩放，内部不再二次缩放。
+        /// </summary>
+        public void TickVFX(float deltaTime)
         {
-            Tick(Time.deltaTime * _timeScale);
+            Tick(deltaTime);
         }
 
-        private void LateUpdate()
+        /// <summary>
+        /// 重建 VFX 渲染数据并提交 DrawMesh。
+        /// 由 DanmakuSystem.RunLateUpdatePipeline 在 BeginFrame/EndFrame 区间内调用。
+        /// </summary>
+        public void RenderVFX()
         {
             _renderer?.Rebuild(_pool, _typeRegistry);
         }
