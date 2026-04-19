@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.8
+> 文档版本：v2.9
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.8 — Phase R4.0 落地）
+> 修订日期：2026-04-19（v2.9 — Phase R5 文档更新完成）
 > 作者：广智 × 天命人
-> 状态：**实施中** — Phase R0~R3 已验收通过，R4.0 已完成，R4.1~R4.5 待天命人验收后决定
+> 状态：**R0~R4 已验收通过，R5 文档更新已完成** — R4.1~R4.5（验证/HUD/真机）待后续按需执行
 
 ---
 
@@ -23,6 +23,7 @@
 | **v2.7** | **2026-04-19** | **Phase R3 落地**：`DamageNumberSystem` 已迁移到 `RenderBatchManager + RuntimeAtlas(DamageText)`，数字 UV 改为基于 Atlas 子区间重映射；`TrailPool` 采用方案 A，保持独立 Mesh 但已接入 `RenderBatchManagerRuntimeStats`；`DanmakuSystem.RunLateUpdatePipeline()` 已切换到新的 `DamageNumberSystem.Rebuild(dt)` 统一提交流程。`SpriteSheetVFXSystem` 在提交层面已通过 `VFXBatchRenderer` 统一到 RBM，但编排层面仍保持独立 `LateUpdate`，该边界在 R3 文档中显式保留。 |
 | **v2.8** | **2026-04-19** | **Phase R4.0 落地**：VFX 编排层统一——`SpriteSheetVFXSystem` 的 `Update()/LateUpdate()` 已删除，新增 `TickVFX()/RenderVFX()` 供 DanmakuSystem 管线调用；`IDanmakuVFXRuntime` 扩展 `TickVFX/RenderVFX` 方法；`DanmakuVFXRuntimeBridge` 实现转发；`RunUpdatePipeline` 步骤 6 调 VFX Tick，`RunLateUpdatePipeline` 在 BeginFrame/EndFrame 区间内调 VFX Render。修复 TimeScale 双重缩放问题（`TickVFX` 接收已缩放的 dt，不再内部二次乘 `_timeScale`）。
 | **v2.8.1** | **2026-04-19** | **R4.0 回归修复**：补齐 Detached Spray 的 VFX 启动路径。此前 `SprayUpdater` 仅在 `FollowTarget + AttachId!=0` 时调用 `PlayAttached`，导致 Demo 中 `J`（Attached Spray）可见而 `K`（Detached Spray）不可见。现 `IDanmakuVFXRuntime` 新增世界空间 `Play(...)` 接口，`DanmakuVFXRuntimeBridge` 实现转发，`SprayUpdater` 按 AttachMode 分流：Attached 走 `PlayAttached`，Detached/World 走 `Play`。 |
+| **v2.9** | **2026-04-19** | **Phase R5 文档更新完成**：RuntimeAtlasSystem.MODULE_README.md 全面重写（补 R0~R4 落地记录 + 后续可选优化表）；ARCHITECTURE.md 新增"统一渲染管线"章节（渲染架构图 + renderQueue 层序表 + 每帧管线调度 + 关键决策摘要）+ 模块依赖表补充 Rendering/VFXSystem 层级；Rendering/MODULE_README.md 更新 RBM 核心类型为 BucketRegistration 多模板材质 API；DanmakuSystem/MODULE_README.md 大幅更新（管线描述同步 R4 10 步 Update + 统一 LateUpdate、重构进度补齐 R0~R4、Shader 目录修正 ADR-029 移除 Additive、新增 VFX 桥接文件）；VFXSystem/MODULE_README.md 补充 RuntimeAtlas 集成说明。 |
 
 ### v2.0 核心变更（天命人反馈驱动）
 
@@ -922,11 +923,11 @@ Assets/_Framework/Editor/Rendering/
 
 ### Phase R5：文档更新（~0.5 天）
 
-| Task | 描述 | 交付物 |
-|------|------|--------|
-| R5.1 | `MODULE_README.md` for RuntimeAtlas | 文档 |
-| R5.2 | 更新 `ARCHITECTURE.md` 渲染架构图 | 文档 |
-| R5.3 | 更新 `Rendering/MODULE_README.md` | 文档 |
+| Task | 描述 | 交付物 | 状态 |
+|------|------|--------|------|
+| R5.1 | `MODULE_README.md` for RuntimeAtlas | 文档 | ✅ 已完成（2026-04-19） |
+| R5.2 | 更新 `ARCHITECTURE.md` 渲染架构图 | 文档 | ✅ 已完成（2026-04-19） |
+| R5.3 | 更新 `Rendering/MODULE_README.md` + `DanmakuSystem/MODULE_README.md` + `VFXSystem/MODULE_README.md` | 文档 | ✅ 已完成（2026-04-19） |
 
 ### 总预估工期：**约 12.5 天**
 

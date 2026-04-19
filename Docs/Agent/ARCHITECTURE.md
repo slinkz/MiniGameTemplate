@@ -169,11 +169,13 @@ Spine（可选）接入：
 |------|------|------|
 | L0 (零依赖) | Utils | 无 |
 | L1 (基础) | EventSystem, DataSystem, Timer, AssetSystem | Utils |
+| L1-R (渲染基础) | **Rendering**（RenderBatchManager / RuntimeAtlasSystem / RenderVertex） | 无（零业务依赖） |
 | L2 (服务) | UISystem, AudioSystem, ObjectPool | L1 + Utils |
 | L3 (编排) | FSM, WeChatBridge | L1 |
 | L4 (入口) | GameLifecycle | L1 + L2 + L3 |
 | L5 (调试) | DebugTools | L1 |
-| L-Danmaku | DanmakuSystem | L0 + L1 (EventSystem, ObjectPool, AudioSystem) |
+| L-VFX | **VFXSystem**（SpriteSheetVFXSystem / VFXBatchRenderer） | L1-R (Rendering) |
+| L-Danmaku | DanmakuSystem | L0 + L1 (EventSystem, ObjectPool, AudioSystem) + L1-R (Rendering) + L-VFX (通过 IDanmakuVFXRuntime 桥接) |
 | Game | _Example, _Game | 所有框架模块 |
 
 ## 关键设计决策
@@ -198,6 +200,86 @@ Spine（可选）接入：
 - Unity 工程（UnityProj/）是程序的工作区
 - FairyGUI 导出的资源直接输出到 UnityProj，实现单向数据流
 - 两个工程在同一个 Git 仓库中，保证版本一致性
+
+## 统一渲染管线（Phase R0 ~ R4 落地后）
+
+### 架构总览
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│                     统一渲染管线（当前架构）                      │
+│                                                               │
+│   BulletRenderer  LaserRenderer  VFXBatchRenderer  DmgNumber  │
+│        │              │              │                │       │
+│        └──────┬───────┴──────┬───────┘                │       │
+│               ▼              ▼                        ▼       │
+│   RuntimeAtlasSystem（动态图集）    独立贴图（Laser）    Atlas   │
+│        │                              │                │      │
+│        └──────────────┬───────────────┴────────────────┘      │
+│                       ▼                                       │
+│            RenderBatchManager（统一分桶 + 提交）                │
+│            BucketRegistration（多模板材质 + 注册时排序）         │
+│                       │                                       │
+│                       ▼                                       │
+│            Graphics.DrawMesh（material.renderQueue 控制层序）   │
+│                                                               │
+│   TrailPool ────── 独立 Mesh（方案 A）                         │
+│        │                                                      │
+│        └─→ Graphics.DrawMesh（renderQueue = 3090）             │
+│                                                               │
+│   RenderBatchManagerRuntimeStats（统一 DC 统计，含 Trail）      │
+└───────────────────────────────────────────────────────────────┘
+```
+
+### 渲染提交顺序（renderQueue）
+
+| 子系统 | renderQueue | 说明 |
+|--------|-------------|------|
+| Trail | 3090 | 在弹丸后方 |
+| Bullet | 3100 | 主体 |
+| Laser | 3120 | — |
+| VFX | 3200 | 特效在弹丸前方 |
+| DamageNumber | 3300 | 最前方（飘字不被遮挡） |
+
+### 每帧管线调度
+
+```
+DanmakuSystem.RunUpdatePipeline()
+  1. SpawnerDriver.Tick
+  2. PatternScheduler.Tick
+  3. BulletMover.UpdateAll（MotionRegistry 策略委托）
+  4. LaserUpdater.UpdateAll
+  5. SprayUpdater.UpdateAll
+  6. IDanmakuVFXRuntime.TickVFX(dt)       ← R4.0 新增
+  7. CollisionSolver.SolveAll
+  8. PlayerHit + 飘字
+  9. EffectsBridge.OnCollisionEventsReady
+ 10. CollisionEventBuffer.Reset
+
+DanmakuSystem.RunLateUpdatePipeline()
+  RenderBatchManagerRuntimeStats.BeginFrame()
+  ├── BulletRenderer.Rebuild              → RBM（RuntimeAtlas 纹理）
+  ├── LaserRenderer.Rebuild               → RBM（独立贴图）
+  ├── LaserWarningRenderer.Rebuild        → RBM（独立贴图）
+  ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 新增（VFXBatchRenderer → 独立 RBM）
+  ├── DamageNumberSystem.Rebuild(dt)      → RBM（RuntimeAtlas DamageText）
+  ├── RBM.UploadAndDrawAll()              ← 统一提交（桶按 SortingOrder 升序遍历）
+  └── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh
+  RenderBatchManagerRuntimeStats.EndFrame()
+```
+
+### 关键设计决策摘要
+
+| 决策 | 选型 | 理由 |
+|------|------|------|
+| 图集算法 | Shelf Packing (Best-Fit) | 零 GC、O(N) 搜索、支持混合尺寸 |
+| 纹理 Blit | CommandBuffer + SetRenderTarget | WebGL 2.0 兼容，不依赖 Graphics.CopyTexture |
+| 激光入 Atlas | ❌ 不入 | UV.y 是 world-space 累积长度，Atlas 子区域会破坏 wrap 采样 |
+| TrailPool 迁移 | 方案 A（独立 Mesh + 接入统计） | TriangleStrip 拓扑与 RBM 的 Quad 拓扑不匹配 |
+| DC 排序 | material.renderQueue | Graphics.DrawMesh 跨 RBM 实例的层级控制必须靠 renderQueue，不能靠调用顺序 |
+| VFX 编排 | DanmakuSystem 管线统一驱动 | SpriteSheetVFXSystem 退化为纯 API，TickVFX/RenderVFX 由管线调用 |
+
+> 详细设计文档：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.8.1）
 
 ## DanmakuSystem 架构详解
 

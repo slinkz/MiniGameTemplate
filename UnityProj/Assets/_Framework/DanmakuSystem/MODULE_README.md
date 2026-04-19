@@ -64,12 +64,13 @@ DanmakuSystem/
 │       ├── LaserUpdater.cs    # 激光更新（含 FreeLaser 统一回收）
 │       ├── LaserSegmentSolver.cs # 激光折射段解算（射线 vs AABB/屏幕边缘）
 │       ├── SprayUpdater.cs    # 喷雾更新（含 FreeSpray 统一回收）
-│       ├── DamageNumberSystem.cs # 伤害飘字
-│       └── TrailPool.cs       # 拖尾曲线池
+│       ├── IDanmakuVFXRuntime.cs  # [R4.0] VFX 管线驱动接口（TickVFX/RenderVFX/Play/PlayAttached/StopAttached）
+│       ├── DanmakuVFXRuntimeBridge.cs # [R4.0] 桥接实现（转发到 SpriteSheetVFXSystem）
+│       ├── DamageNumberSystem.cs # 伤害飘字（R3 迁移到 RBM + RuntimeAtlas）
+│       └── TrailPool.cs       # 拖尾曲线池（方案 A：独立 Mesh + 接入统计）
 └── Shaders/
-    ├── DanmakuBullet.shader         # Alpha Blend
-    ├── DanmakuBulletAdditive.shader # Additive
-    └── DanmakuLaser.shader          # 激光
+    ├── DanmakuBullet.shader         # Alpha Blend（子弹/VFX/飘字通用）
+    └── DanmakuLaser.shader          # 激光（Additive Blend，硬编码 CoreColor/GlowColor）
 ```
 
 ## 架构要点
@@ -77,8 +78,9 @@ DanmakuSystem/
 ### 核心数据架构
 - **SoA 布局**: BulletCore(热) + BulletTrail(冷) + BulletModifier(修饰) 三层分离
 - **预分配池**: 所有容器启动时预分配，运行时零 new
-- **多贴图分桶渲染**: 通过 `RenderBatchManager`（共享 `_Framework/Rendering/`）按 `(RenderLayer, Texture2D)` 二元组分桶，每桶一个 DrawCall
-- **激光渲染**: LaserRenderer 使用 BatchManager，WidthProfile 曲线驱动宽度，Phase alpha 闪烁/渐隐
+- **统一渲染管线**: 所有 Renderer 通过 `RenderBatchManager`（共享 `_Framework/Rendering/`）提交，按 `BucketRegistration(BucketKey, templateMat, sortingOrder)` 分桶，`material.renderQueue` 控制 GPU 级层序
+- **RuntimeAtlas 纹理管理**: 子弹/VFX/飘字优先通过 `RuntimeAtlasBindingResolver` 走 RuntimeAtlas 动态图集，激光保持独立贴图
+- **激光渲染**: LaserRenderer 使用统一 RBM，WidthProfile 曲线驱动宽度，Phase alpha 闪烁/渐隐
 
 ### Facade 拆分 [Phase 2]
 
@@ -202,13 +204,13 @@ public class MyEffectsBridge : IDanmakuEffectsBridge
 
 ## 依赖模块
 
-- **Rendering**: `_Framework/Rendering/`（RenderVertex / RenderLayer / RenderSortingOrder / RenderBatchManager）
+- **Rendering**: `_Framework/Rendering/`（RenderVertex / RenderLayer / RenderSortingOrder / RenderBatchManager / RenderBatchManagerRuntimeStats / RuntimeAtlasSystem）
+- **VFXSystem**: `_Framework/VFXSystem/`（通过 `IDanmakuVFXRuntime` + `IDanmakuEffectsBridge` 桥接，主命名空间不直接引用 VFX）
 - **EventSystem**: GameEvent / IntGameEvent（玩家命中/伤害事件）
 - **ObjectPool**: PoolManager / PoolDefinition（重特效预制件）
 - **AudioSystem**: AudioClipSO（音效配置）
-- **VFXSystem**（仅通过 `DefaultDanmakuEffectsBridge` 间接依赖，主命名空间不引用 VFX）
 
-## 每帧更新管线 [Phase 2]
+## 每帧更新管线 [Phase 2 → R4.0 统一]
 
 ```
 Update() → RunUpdatePipeline()
@@ -216,17 +218,23 @@ Update() → RunUpdatePipeline()
   2. PatternScheduler.Tick       — 调度器执行到期任务
   3. BulletMover.UpdateAll       — 弹丸运动（MotionRegistry 策略委托）
   4. LaserUpdater.UpdateAll      — 激光更新（挂载同步 + 折射段解算）
-  5. SprayUpdater.UpdateAll      — 喷雾更新（挂载同步）
-  6. CollisionSolver.SolveAll    — 7 阶段碰撞（写入 CollisionEventBuffer）
-  7. PlayerHit 事件 + 飘字       — 无敌帧 + GameEvent
-  8. EffectsBridge.OnCollisionEventsReady — 桥接层消费事件 Buffer
-  9. CollisionEventBuffer.Reset  — 帧末清零
+  5. SprayUpdater.UpdateAll      — 喷雾更新（挂载同步 + VFX 启动）
+  6. IDanmakuVFXRuntime.TickVFX  — VFX 逻辑帧推进（R4.0 收编）
+  7. CollisionSolver.SolveAll    — 7 阶段碰撞（写入 CollisionEventBuffer）
+  8. PlayerHit 事件 + 飘字       — 无敌帧 + GameEvent
+  9. EffectsBridge.OnCollisionEventsReady — 桥接层消费事件 Buffer
+ 10. CollisionEventBuffer.Reset  — 帧末清零
 
 LateUpdate() → RunLateUpdatePipeline()
-  1. BulletRenderer.Rebuild      — 弹丸 Mesh 重建
-  2. LaserRenderer.Rebuild       — 激光 Mesh 重建
-  3. DamageNumberSystem.UpdateAndRender — 飘字
-  4. TrailPool.Render             — 拖尾
+  RenderBatchManagerRuntimeStats.BeginFrame()
+  ├── BulletRenderer.Rebuild              → RBM（RuntimeAtlas 纹理）
+  ├── LaserRenderer.Rebuild               → RBM（独立贴图）
+  ├── LaserWarningRenderer.Rebuild        → RBM（独立贴图）
+  ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 收编（VFXBatchRenderer → 独立 RBM 实例）
+  ├── DamageNumberSystem.Rebuild(dt)      → RBM（RuntimeAtlas DamageText）
+  ├── RBM.UploadAndDrawAll()              ← 统一提交（桶按 SortingOrder 升序）
+  └── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh
+  RenderBatchManagerRuntimeStats.EndFrame()
 ```
 
 ## 性能预算
@@ -256,5 +264,10 @@ LateUpdate() → RunLateUpdatePipeline()
 | Phase 0 | 基础设施层（共享渲染、容量配置化） | ✅ 已完成 |
 | Phase 1 | 渲染管线重构（多贴图分桶、序列帧子弹） | ✅ 已完成 |
 | Phase 2 | 事件与扩展性（碰撞事件 Buffer、运动策略、Facade 拆分、VFX 桥接、清屏 API） | ✅ 已完成 |
-| Phase 3 | 视觉增强（弹丸动画、Shader、预警线、喷雾可视化） | ⏳ 待开始 |
-| Phase 4 | 工作流与工具（Atlas 工具、热重载、调试 HUD、文档） | ⏳ 待开始 |
+| Phase 3 | 视觉增强（Ghost 残影、Trail 拖尾、SineWave/Spiral 运动、DamageNumber） | ✅ 已完成 |
+| Phase 4 | 工具与优化（Atlas 打包工具 4.1/4.2、ADR-029 Additive 移除） | ✅ 已完成 |
+| **R0** | RuntimeAtlasSystem 基础设施 | ✅ 已完成 |
+| **R1** | RuntimeAtlasManager 配置驱动管理层 | ✅ 已完成 |
+| **R2** | BulletRenderer / VFXBatchRenderer / Laser 迁移到统一 RBM + RuntimeAtlas | ✅ 已完成 |
+| **R3** | DamageNumberSystem / TrailPool 迁移 + 管线统一调度 | ✅ 已完成 |
+| **R4** | VFX 编排层统一（SpriteSheetVFXSystem 收编到 DanmakuSystem 管线）+ Detached Spray VFX 回归修复 | ✅ 已完成 |

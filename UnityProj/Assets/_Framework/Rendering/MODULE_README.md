@@ -1,20 +1,20 @@
-# Rendering — 共享渲染基础设施层
+# Rendering — 统一渲染基础设施层
 
-本目录存放 Danmaku / VFX / DamageNumber 等系统共用的底层渲染类型。
+本目录存放 Danmaku / VFX / DamageNumber / Trail 等系统共用的底层渲染类型，是统一渲染管线的基础设施。
 
 命名空间：`MiniGameTemplate.Rendering`
 
 ## 文件清单
 
-| 文件 | 行数 | 说明 |
-|------|------|------|
-| `RenderVertex.cs` | — | 共享顶点格式（24 bytes，Position:float3 + Color32:4B + UV:float2），`StructLayout.Sequential` |
-| `RenderLayer.cs` | — | 渲染层枚举（ADR-029 v2 后当前仅使用 `Normal = 0`） |
-| `RenderSortingOrder.cs` | — | 渲染排序常量（Bullet=100, LaserDefault=120, VFX=200, DamageNumber=300） |
-| `RenderBatchManager.cs` | 306 | [Phase 1 / R2.1] 渲染批次管理器——按 `(RenderLayer, Texture)` 分桶，支持 `BucketRegistration` 多模板材质与注册时排序 |
-| `RenderBatchManagerRuntimeStats.cs` | — | [Phase R3] 渲染统计共享静态类，提供 Last/Peak/Average DrawCall 与 ActiveBatch 统计，TrailPool 已接入 |
-| `AtlasMappingSO.cs` | 108 | [Phase 4.1] Atlas 映射 ScriptableObject——记录图集贴图 + 源贴图映射（双键查找），ADR-019 可逆派生产物 |
-| `RuntimeAtlasSystem/` | — | [Phase R0/R1/R2/R3] RuntimeAtlas 运行时动态图集基础设施（ShelfPacking / Blit / Page / Manager / Stats / BindingResolver） |
+| 文件 | 说明 |
+|------|------|
+| `RenderVertex.cs` | 共享顶点格式（24 bytes，Position:float3 + Color32:4B + UV:float2），`StructLayout.Sequential`。**必须遵循 Unity 标准属性排序：Position → Color → TexCoord0** |
+| `RenderLayer.cs` | 渲染层枚举（ADR-029 v2 后仅使用 `Normal = 0`） |
+| `RenderSortingOrder.cs` | 渲染排序常量：Trail=90, Bullet=100, LaserDefault=120, VFX=200, DamageNumber=300 |
+| `RenderBatchManager.cs` | 统一渲染批次管理器——按 `BucketKey(RenderLayer, Texture)` 分桶，支持 `BucketRegistration` 多模板材质与注册时排序，`material.renderQueue = 3000 + SortingOrder` 控制 GPU 级层序 |
+| `RenderBatchManagerRuntimeStats.cs` | 渲染统计共享静态类，Last/Peak/Average DrawCall 与 ActiveBatch 统计，TrailPool 已接入 |
+| `AtlasMappingSO.cs` | [Phase 4.1] Editor Atlas 映射 SO（ADR-019 可逆派生产物），运行时由 RuntimeAtlas 接管 |
+| `RuntimeAtlasSystem/` | [Phase R0~R4] 运行时动态图集核心（ShelfPacking / Blit / Page / Manager / Stats / Config / BindingResolver），详见子目录 MODULE_README |
 
 ## AtlasMappingSO（Phase 4.1 新增）
 
@@ -59,28 +59,30 @@ Rect baseUV   = bulletType.GetResolvedBaseUV();      // 旧链路解析基础 UV
 
 ## RenderBatchManager
 
-渲染批次管理器是 Danmaku 和 VFX 共用的渲染基础设施，遵循 **共享实现，不共享实例** 原则。
+渲染批次管理器是所有 2D Quad 型渲染的统一提交出口。
 
 ### 核心类型
 
 ```
 RenderBatchManager : IDisposable
-├── BucketKey (readonly struct)    — (RenderLayer, Texture2D) 二元组
-├── RenderBucket (class)           — 单桶：Mesh + Material实例 + RenderVertex[] + QuadCount
+├── BucketKey (readonly struct)    — (RenderLayer, Texture) 二元组（Texture 为基类，支持 Texture2D 和 RenderTexture）
+├── BucketRegistration (struct)    — (BucketKey key, Material templateMat, int sortingOrder)
+├── RenderBucket (class)           — 单桶：Mesh + Material实例(renderQueue=3000+sortingOrder) + RenderVertex[] + QuadCount
 └── API
-    ├── Initialize(keys, normalMat, additiveMat, maxQuads, sortingOrderProvider?)
+    ├── Initialize(IReadOnlyList<BucketRegistration> registrations, int maxQuadsPerBucket)
     ├── TryGetBucket(key, out bucket) → bool
     ├── ResetAll()                    — 帧头清零 QuadCount
-    ├── UploadAndDrawAll()            — 帧尾 SetVertexBufferData + Graphics.DrawMesh
+    ├── UploadAndDrawAll()            — 帧尾 SetVertexBufferData + Graphics.DrawMesh（桶按 SortingOrder 升序遍历）
     └── Dispose()                     — 销毁 Mesh/Material 实例
 ```
 
-### 设计原则（ADR-015）
+### 设计原则
 
-1. **初始化时预热**：必须在 `Initialize()` 时传入所有 `BucketKey`（来自各自 TypeRegistry），运行时禁止隐式建桶
-2. **共享实现，不共享实例**：Danmaku 和 VFX 各自持有独立的 `RenderBatchManager` 实例，生命周期跟随各自系统
-3. **未知桶处理**：运行时请求未注册桶时跳过渲染 + 累加 `UnknownBucketErrorCount`（开发期 LogWarning）
-4. **零依赖**：本层不引用 Danmaku、VFX 或任何业务命名空间
+1. **初始化时预热**（ADR-015）：必须在 `Initialize()` 时传入所有 `BucketRegistration`，运行时禁止隐式建桶
+2. **多模板材质**（TDD v2.3 UA-005）：每个桶独立绑定模板材质，支持不同 Shader/Blend 模式共存（如 BulletMaterial + LaserMaterial）
+3. **注册时排序**（TDD v2.3 UA-007）：`_buckets` 数组在初始化末尾按 SortingOrder 升序排列，运行时 `UploadAndDrawAll()` 顺序遍历即可，零排序开销
+4. **GPU 级层序控制**：每个桶的 Material 实例 `renderQueue = 3000 + sortingOrder`，确保 `Graphics.DrawMesh` 跨 RBM 实例的渲染层序正确
+5. **零依赖**：本层不引用 Danmaku、VFX 或任何业务命名空间
 
 ### 同 asmdef
 
