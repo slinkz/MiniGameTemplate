@@ -41,6 +41,7 @@ namespace MiniGameTemplate.Example
         {
             _visible = _showOnStart;
             _system = DanmakuSystem.Instance;
+            RefreshAtlasStatsCache();
         }
 
         private void Update()
@@ -66,9 +67,9 @@ namespace MiniGameTemplate.Example
 
             // Atlas 统计刷新
             _atlasStatsRefreshTimer += Time.unscaledDeltaTime;
-            if (_atlasStatsRefreshTimer >= ATLAS_STATS_REFRESH_INTERVAL && _system != null)
+            if (_atlasStatsRefreshTimer >= ATLAS_STATS_REFRESH_INTERVAL)
             {
-                _atlasStatsCache = _system.GetAllAtlasStats();
+                RefreshAtlasStatsCache();
                 _atlasStatsRefreshTimer = 0f;
             }
         }
@@ -151,7 +152,7 @@ namespace MiniGameTemplate.Example
             y += lineH;
 
             // ──── RuntimeAtlas 统计（R4.3） ────
-            if (_atlasStatsCache != null && _atlasStatsCache.Length > 0)
+            if (CountAtlasLines() > 0)
             {
                 DrawSectionLabel(x, y, "── RuntimeAtlas ──");
                 y += lineH;
@@ -212,14 +213,25 @@ namespace MiniGameTemplate.Example
 
         private int CountAtlasLines()
         {
-            if (_atlasStatsCache == null) return 0;
-            int count = 1; // section header
+            if (_atlasStatsCache == null || _atlasStatsCache.Length == 0)
+                return 0;
+
+            int statLineCount = 0;
             for (int i = 0; i < _atlasStatsCache.Length; i++)
             {
                 if (_atlasStatsCache[i].Stats.HasValue)
-                    count++;
+                    statLineCount++;
             }
-            return count;
+
+            return statLineCount > 0 ? 1 + statLineCount : 0;
+        }
+
+        private void RefreshAtlasStatsCache()
+        {
+            if (_system == null)
+                return;
+
+            _atlasStatsCache = _system.GetAllAtlasStats();
         }
 
         private int CountActiveBullets()

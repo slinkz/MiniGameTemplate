@@ -1,8 +1,8 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.10
+> 文档版本：v2.10.1
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.10 — R4.1/R4.3 落地）
+> 修订日期：2026-04-19（v2.10.1 — R4.1/R4.3 评审收口）
 > 作者：广智 × 天命人
 > 状态：**R0~R5 已验收通过，R4.1/R4.3 已完成** — R4.2/R4.4/R4.5 待按需执行
 
@@ -25,6 +25,7 @@
 | **v2.8.1** | **2026-04-19** | **R4.0 回归修复**：补齐 Detached Spray 的 VFX 启动路径。此前 `SprayUpdater` 仅在 `FollowTarget + AttachId!=0` 时调用 `PlayAttached`，导致 Demo 中 `J`（Attached Spray）可见而 `K`（Detached Spray）不可见。现 `IDanmakuVFXRuntime` 新增世界空间 `Play(...)` 接口，`DanmakuVFXRuntimeBridge` 实现转发，`SprayUpdater` 按 AttachMode 分流：Attached 走 `PlayAttached`，Detached/World 走 `Play`。 |
 | **v2.9** | **2026-04-19** | **Phase R5 文档更新完成**：RuntimeAtlasSystem.MODULE_README.md 全面重写（补 R0~R4 落地记录 + 后续可选优化表）；ARCHITECTURE.md 新增"统一渲染管线"章节（渲染架构图 + renderQueue 层序表 + 每帧管线调度 + 关键决策摘要）+ 模块依赖表补充 Rendering/VFXSystem 层级；Rendering/MODULE_README.md 更新 RBM 核心类型为 BucketRegistration 多模板材质 API；DanmakuSystem/MODULE_README.md 大幅更新（管线描述同步 R4 10 步 Update + 统一 LateUpdate、重构进度补齐 R0~R4、Shader 目录修正 ADR-029 移除 Additive、新增 VFX 桥接文件）；VFXSystem/MODULE_README.md 补充 RuntimeAtlas 集成说明。 |
 | **v2.10** | **2026-04-19** | **R4.1/R4.3 落地**：R4.1 代码审查确认 BulletRenderer/VFXBatchRenderer/DamageNumberSystem 已正确接入 RuntimeAtlas（Laser/Trail 按 UA-002 设计不入 Atlas）；分布式 RBM 架构功能正确（全局单 RBM 统一为 P2 优化）。R4.3 DanmakuDebugHUD 扩展 RuntimeAtlas 统计：每个子系统暴露 `GetAtlasStats()` 方法，`DanmakuSystem.API.cs` 新增 `GetAllAtlasStats()` 聚合接口，HUD 新增 Atlas section（页数/分配数/填充率/内存/命中率/overflow），0.5s 刷新间隔避免 GC。`IDanmakuVFXRuntime` 接口扩展 `GetAtlasStats()` 方法，通过 `DanmakuVFXRuntimeBridge` 透传到 `SpriteSheetVFXSystem`。 |
+| **v2.10.1** | **2026-04-19** | **评审收口**：软件架构师复核确认本轮实现未偏离 TDD，仅对 `DanmakuDebugHUD` 做两处收口修正——(1) `Start()` 首帧主动刷新 `_atlasStatsCache`，避免进入 Play / 首次显示 HUD 时 Atlas section 需要等待 0.5s 才出现；(2) 统一 Atlas section 的显示条件与行数计算逻辑，仅在存在至少 1 条有效 stats 时显示 section header，避免 HUD 高度计算与实际显示分叉。随后代码评审复核通过，Unity MCP 编译检查 0 errors。 |
 
 ### v2.0 核心变更（天命人反馈驱动）
 

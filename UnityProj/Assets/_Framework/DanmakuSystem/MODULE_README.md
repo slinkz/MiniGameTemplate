@@ -80,6 +80,7 @@ DanmakuSystem/
 - **预分配池**: 所有容器启动时预分配，运行时零 new
 - **统一渲染管线**: 所有 Renderer 通过 `RenderBatchManager`（共享 `_Framework/Rendering/`）提交，按 `BucketRegistration(BucketKey, templateMat, sortingOrder)` 分桶，`material.renderQueue` 控制 GPU 级层序
 - **RuntimeAtlas 纹理管理**: 子弹/VFX/飘字优先通过 `RuntimeAtlasBindingResolver` 走 RuntimeAtlas 动态图集，激光保持独立贴图
+- **Debug HUD Atlas 可观测性**: `DanmakuDebugHUD` 通过 `DanmakuSystem.GetAllAtlasStats()` 聚合读取 Bullet/VFX/DamageNumber 的 RuntimeAtlas 统计；HUD 在 `Start()` 首帧主动刷新缓存，且仅在存在有效 stats 时显示 RuntimeAtlas section，避免首屏空窗与高度计算分叉
 - **激光渲染**: LaserRenderer 使用统一 RBM，WidthProfile 曲线驱动宽度，Phase alpha 闪烁/渐隐
 
 ### Facade 拆分 [Phase 2]
