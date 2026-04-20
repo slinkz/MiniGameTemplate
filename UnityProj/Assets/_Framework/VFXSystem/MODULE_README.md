@@ -12,6 +12,26 @@
 - `Scripts/Core/` — 运行时核心逻辑
 - `Scripts/Data/` — 纯数据结构
 
+## 文件清单
+
+```
+VFXSystem/
+├── MODULE_README.md
+└── Scripts/
+    ├── SpriteSheetVFXSystem.cs     # 唯一 MonoBehaviour 入口（纯 API 入口，R4.0 后由管线驱动）
+    ├── Config/
+    │   ├── VFXTypeSO.cs            # 特效类型 SO（SourceTexture / UVRect / 帧动画参数）
+    │   ├── VFXTypeRegistrySO.cs    # 类型注册表 SO（VFXTypeSO[] 索引映射）
+    │   └── VFXRenderConfig.cs      # 渲染配置 SO（模板材质 / fallback 贴图 / RuntimeAtlasConfig）
+    ├── Core/
+    │   ├── VFXBatchRenderer.cs     # 通过 RBM 按桶渲染（RuntimeAtlas → AtlasBinding → SourceTexture 回退链）
+    │   ├── VFXPool.cs              # 预分配实例池（64 容量）
+    │   └── IVFXPositionResolver.cs # VFX 附着位置解析接口
+    └── Data/
+        ├── VFXInstance.cs          # 单 VFX 实例运行时数据
+        └── VFXAttachMode.cs        # 附着模式枚举（World / FollowTarget）
+```
+
 ## 架构说明
 - `SpriteSheetVFXSystem`：唯一 MonoBehaviour 入口（**纯 API 入口**）。R4.0 后不再自驱 `Update/LateUpdate`——由 `DanmakuSystem` 管线通过 `TickVFX()/RenderVFX()` 统一驱动更新和渲染
 - `VFXPool`：预分配实例池（64 容量），管理槽位分配/回收

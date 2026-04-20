@@ -2,214 +2,261 @@
 
 > **预计阅读**：10 分钟 &nbsp;|&nbsp; **前置**：先读 [弹幕系统总览](DANMAKU_SYSTEM.md) 了解整体架构
 >
-> 本文档覆盖弹幕系统的渲染管线：交错顶点 Mesh 上传、分层合批、弹丸旋转、图集方案、拖尾系统、爆炸特效与子弹幕触发、伤害飘字渲染。
+> 本文档覆盖弹幕系统的渲染管线：统一顶点格式、RenderBatchManager 分桶提交、RuntimeAtlas 动态图集、renderQueue GPU 级层序、拖尾系统、VFX 编排、伤害飘字渲染。
 
 ---
 
-## Mesh 上传优化
+## 统一顶点格式
 
-弹丸渲染的核心瓶颈是 CPU 到 GPU 的数据上传。采用**交错顶点格式 + 单次上传**策略。
-
-### 顶点格式
+所有 2D Quad 渲染（弹丸、激光、VFX、飘字）共享同一顶点结构，位于 `_Framework/Rendering/RenderVertex.cs`：
 
 ```csharp
 [StructLayout(LayoutKind.Sequential)]
-struct DanmakuVertex
+public struct RenderVertex
 {
-    public Vector3 Position;   // 12 bytes
-    public Color32 Color;      // 4 bytes
-    public Vector2 UV;         // 8 bytes
+    public Vector3 Position;   // 12 bytes, offset=0
+    public Color32 Color;      // 4 bytes,  offset=12
+    public Vector2 UV;         // 8 bytes,  offset=16
 }
 // sizeof = 24 bytes
 ```
 
-### BulletRenderer — 双 Mesh 分层
-
-```csharp
-public class BulletRenderer
-{
-    private Mesh _meshNormal;                   // Alpha Blend 层
-    private Mesh _meshAdditive;                 // Additive 层
-    private DanmakuVertex[] _verticesNormal;
-    private DanmakuVertex[] _verticesAdditive;
-
-    private VertexAttributeDescriptor[] _layout = new[]
-    {
-        new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
-        new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4),
-        new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2),
-    };
-
-    public void Initialize(int maxQuads, DanmakuRenderConfig renderConfig) { /* ... */ }
-
-    public void Rebuild(BulletWorld world, DanmakuTypeRegistry registry)
-    {
-        // 遍历活跃弹丸，按 RenderLayer 分拣到对应顶点数组
-        // 各自 1 次 SetVertexBufferData + 1 次 DrawMesh
-    }
-}
-```
-
-**性能对比**：
-
-| 方案 | 每帧拷贝次数 | 数据量（8192 quads） |
-|------|:---:|---:|
-| 旧方案：`SetVertices` + `SetUVs` + `SetColors` + `SetTriangles` | 4 次 | ~960 KB |
-| 新方案：交错顶点 + `SetVertexBufferData` | **1 次** | ~768 KB |
-
-> **WebGL 兼容**：Unity 2022 WebGL 不支持 `NativeArray` 版 `SetVertexBufferData`，但 `T[]` 版本可用。`Mesh.MarkDynamic()` 在 WebGL 上对应 `GL.DYNAMIC_DRAW`。
+**重要**：字段顺序必须严格遵循 Unity 标准属性排序 `Position → Color → TexCoord0`。
+详见 `CONVENTIONS.md` 的"Mesh 顶点布局规范"。
 
 ---
 
-## 分层 Mesh 合批
+## RenderBatchManager 分桶渲染
+
+弹幕渲染的核心是 `RenderBatchManager`（简称 RBM），位于 `_Framework/Rendering/`。
+
+### 架构概览
 
 ```
-┌─────────────────────────────────────────────────┐
-│                   每帧渲染                        │
-│  Mesh Layer 0: 弹丸主体 + 残影     ── 1 DC      │  ← Alpha Blend
-│  Mesh Layer 1: 发光弹丸 + 残影     ── 1 DC      │  ← Additive
-│  Mesh Layer 2: 伤害飘字（数字精灵）── 1 DC       │  ← Number Atlas
-│  LaserPool:    激光（LaserRenderer）── 1 DC   │
-│  TrailPool:    重量级拖尾          ── 1-3 DC     │
+每个 Renderer 持有独立的 RBM 实例：
+  BulletRenderer  → RBM（RuntimeAtlas 纹理，renderQueue=3100）
+  LaserRenderer   → RBM（独立贴图，renderQueue=3120）
+  LaserWarning    → RBM（独立贴图，renderQueue=3120）
+  VFXBatchRenderer → RBM（RuntimeAtlas 纹理，renderQueue=3200）
+  DamageNumber    → RBM（RuntimeAtlas DamageText，renderQueue=3300）
+  TrailPool       → 独立 Mesh + Graphics.DrawMesh（renderQueue=3090）
+```
 
-...省略后续行...
+### 分桶规则
+
+每个 RBM 初始化时通过 `BucketRegistration` 注册所有桶：
+
+```csharp
+new BucketRegistration(
+    key: new BucketKey(RenderLayer.Normal, texture),
+    templateMaterial: bulletMaterial,
+    sortingOrder: RenderSortingOrder.Bullet   // 100
+)
+```
+
+- **BucketKey** = `(RenderLayer, Texture)` 二元组
+- 每个桶创建材质实例，设 `material.renderQueue = 3000 + sortingOrder`
+- 初始化末尾按 SortingOrder 升序排列 `_buckets` 数组
+
+### 每帧流程
+
+```
+batchManager.ResetAll()           ← 帧头清零所有桶的 QuadCount
+// 遍历实体，按纹理查桶，写入顶点
+batchManager.UploadAndDrawAll()   ← 帧尾 SetVertexBufferData + Graphics.DrawMesh
+```
+
+> **注意**：ADR-029 v2 移除了 Additive Blend。RenderLayer 枚举只剩 `Normal = 0`。
+
+---
+
+## 渲染提交顺序（renderQueue）
+
+渲染层序由 `material.renderQueue` 值控制，**不依赖代码调用顺序**：
+
+| 子系统 | renderQueue | 说明 |
+|--------|-------------|------|
+| Trail | 3090 | 在弹丸后方 |
+| Bullet | 3100 | 主体 |
+| Laser / LaserWarning | 3120 | — |
+| VFX | 3200 | 特效在弹丸前方 |
+| DamageNumber | 3300 | 最前方（飘字不被遮挡） |
+
+> **经验教训**：`Graphics.DrawMesh` 跨 RBM 实例的层级控制必须靠 `renderQueue`，不能靠调用顺序。
+
+### LateUpdate 管线
+
+```
+DanmakuSystem.RunLateUpdatePipeline()
+  RenderBatchManagerRuntimeStats.BeginFrame()
+  ├── TrailPool.Render()                     ← 独立 Mesh + Graphics.DrawMesh
+  ├── BulletRenderer.Rebuild + UploadAndDrawAll
+  ├── LaserRenderer.Rebuild + UploadAndDrawAll
+  ├── LaserWarningRenderer.Rebuild + UploadAndDrawAll
+  ├── IDanmakuVFXRuntime.RenderVFX()         ← R4.0 收编
+  └── DamageNumberSystem.Rebuild(dt) + UploadAndDrawAll
+  RenderBatchManagerRuntimeStats.EndFrame()
+```
+
+---
+
+## RuntimeAtlas 动态图集
+
+弹丸/VFX/飘字的纹理通过 `RuntimeAtlasSystem` 在运行时按需 Blit 到动态 Atlas RenderTexture。
+
+### 纹理解析链（RuntimeAtlasBindingResolver）
+
+```
+优先级：RuntimeAtlas 分配 → AtlasBinding → SourceTexture → fallback
+```
+
+- **Bullet/VFX**：优先走 RuntimeAtlas（Channel=Bullet/VFX）
+- **DamageNumber**：走 RuntimeAtlas（Channel=DamageText）
+- **Laser/LaserWarning**：不入 Atlas（UV.y 是 world-space 累积长度，Atlas 子区域会破坏 wrap 采样）
+
+### 关键设计
+
+- **Shelf Packing**：Best-Fit 算法，O(N) 搜索，零 GC
+- **Blit 方式**：CommandBuffer + SetRenderTarget（WebGL 2.0 兼容）
+- **切关清空**：场景切换时 Reset 所有 Channel
+- **RT Lost 恢复**：HandleRTLost + RestoreDirtyPages 两阶段恢复
+
+> 详细设计：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.10.1）
+
+---
+
+## 弹丸旋转
+
+- **圆弹**（`RotateToDirection = false`）：轴对齐四边形，4 次加法
+- **米粒弹**（`RotateToDirection = true`）：`cos/sin` 旋转顶点（BulletCore 预计算缓存）
+
+2048 颗全旋转额外 ~0.3-0.5ms。圆弹走快速路径跳过旋转。
 
 ---
 
 ## 激光渲染
 
-激光由独立的 `LaserRenderer` 负责渲染，与弹丸渲染完全解耦。
+激光由 `LaserRenderer` 和 `LaserWarningRenderer` 各自通过独立 RBM 渲染。
 
-### 渲染管线
+### LaserRenderer 管线
 
 ```
 LaserPool.Data[]
   │  遍历活跃激光（Phase > 0 且 SegmentCount > 0）
-  │
   ├→ GetPhaseAlpha() 计算阶段透明度
   │    Charging(1): 正弦闪烁 0.3~0.8
   │    Firing(2):   1.0 全亮
   │    Fading(3):   线性衰减 → 0
-  │
   └→ 每段 LaserSegment → WriteSegmentQuad()
        ├→ 沿线段方向展开 Quad（4 顶点）
-       ├→ 宽度垂直于线段方向，由 WidthProfile 沿总长度归一化采样
-       ├→ UV.x: 0→1 横跨宽度（中心=0.5，Shader 用于 Core/Glow 渐变）
-       ├→ UV.y: 沿长度方向连续映射（多段折射时 UV 首尾衔接）
+       ├→ 宽度由 WidthProfile 沿总长度归一化采样
+       ├→ UV.x: 0→1 横跨宽度
+       ├→ UV.y: 沿长度方向连续映射
        └→ Color32: CoreColor × Phase alpha
 ```
 
-### Mesh 策略
+### Shader
 
-- **单 Mesh**：激光始终使用 Additive 混合（`DanmakuLaser.shader`），只需一个 Mesh
-- **容量**：16 条激光 × 9 段/条 = 144 Quad = 576 顶点（远小于 65535，使用 UInt16 索引）
-- **更新策略**：与弹丸一致——索引预填充一次，每帧只更新顶点数据
-
-### Shader（DanmakuLaser）
-
-```
-Blend: SrcAlpha One（叠加发光）
-ZTest: Always（不深度遮挡）
-UV.x → 横向渐变：中心白芯（CoreWidth）+ 外围辉光（GlowColor）
-UV.y → 纵向纹理滚动（可选 _MainTex 流动效果）
-顶点 Color → 整体 alpha 调制
-```
-
-### Draw Call 开销
-
-激光渲染固定 **1 Draw Call**（即使有 16 条激光 × 9 段折射也是单次 DrawMesh）。
-│  EffectPool:   中/重特效           ── 3-5 DC     │
-│  SprayVFX:     喷雾 ParticleSystem ── 1-3 DC     │
-│  FairyGUI:     低频文本/UI         ── 已合批      │
-│  总计: 7-11 Draw Call                            │
-└─────────────────────────────────────────────────┘
-```
-
----
-
-## 弹丸旋转与排序
-
-### 旋转
-
-- **圆弹**（`RotateToDirection = false`）：轴对齐四边形，4 次加法
-- **米粒弹**（`RotateToDirection = true`）：`Atan2` + `Sin/Cos` 旋转顶点
-
-2048 颗全旋转额外 ~0.3-0.5ms。圆弹走快速路径跳过旋转。
-
-### 排序
-
-所有弹丸同一深度，不排序。Additive 天然不需排序，Alpha Blend 密集重叠时略有差异但弹幕游戏不在意。
-
----
-
-## 图集方案
-
-弹幕系统使用**自定义规则网格图集**，不用 Unity Sprite Atlas。
-
-| | Sprite Atlas | 自定义图集 |
-|---|-------------|-----------|
-| 和自定义 Mesh 配合 | 需查 `Sprite.uv` | 整数除法算 UV，极快 |
-| WebGL 兼容性 | Late Binding 坑 | 直接加载 Texture2D |
-| 序列帧 UV 计算 | 布局随机，需查表 | 规则网格，`row × col` |
-
-其他系统（UI、场景装饰）继续用 Sprite Atlas。图集打包工具是 Editor 菜单项：散图 → 规则网格图集 + `BulletAtlasConfig` SO。
+- `DanmakuLaser.shader`：`Blend SrcAlpha One`（叠加发光），`ZTest Always`
+- `DanmakuBullet.shader`：弹丸/VFX/飘字通用 Alpha Blend
 
 ---
 
 ## 拖尾系统
 
-通过 `BulletTypeSO.Trail` 配置，支持两种模式：
+通过 `BulletTypeSO.Trail` 配置，支持三种模式（`TrailMode` 枚举）：
 
-### Ghost 模式（Mesh 内残影）
+### Ghost 残影（TrailMode.Ghost / Both）
 
-`BulletTrail` 存储最近 3 帧历史位置，合批时额外画 2-3 个缩小 + 降低 alpha 的四边形。
+BulletRenderer 在渲染弹丸时额外画 2-3 个缩小 + 降低 alpha 的残影四边形。
 
 ```
-弹幕飞行方向 →
-  [残影3]   [残影2]   [残影1]   [弹幕本体]
+弹丸飞行方向 →
+  [残影3]   [残影2]   [残影1]   [弹丸本体]
   α=0.15    α=0.3     α=0.6     α=1.0
   scale=0.5  scale=0.7  scale=0.85  scale=1.0
 ```
 
-2048 × 4 四边形 = 8192 quads = 32K 顶点，仍然 1 Draw Call。
+**关键实现**：
+- `GhostFrameCounter` + `GhostInterval`（默认 5 帧）控制采样间隔，避免低速弹丸残影堆叠
+- `GhostFilledCount` 避免首几帧显示假残影
+- 残影使用弹丸预计算的 cos/sin 正确旋转
+- 残影写入顺序在弹丸之前（先 Ghost 后弹丸），确保弹丸覆盖残影
 
-### Trail 模式（独立曲线拖尾）
+### Trail 曲线拖尾（TrailMode.Trail / Both）
 
-连续曲线拖尾（激光蛇形弹道等），沿历史轨迹生成三角带 Mesh。`TrailPool` 预分配 16-32 条实例，共享 Material 自动 Dynamic Batching。16 条 ≈ 1-3 DC。
+`TrailPool` 管理独立 Mesh 三角带拖尾，通过 `Graphics.DrawMesh` 提交。
+
+```
+TrailPool (64 条实例容量)
+  ├── 每条 Trail：20 个采样点 × 2 顶点 = 40 顶点
+  ├── MIN_SAMPLE_DISTANCE = 0.15（低速弹丸距离门槛）
+  ├── 末尾点始终更新为弹丸当前位置（头部紧贴）
+  ├── alpha = t（t=0 尾部透明，t=1 头部不透明）
+  ├── width *= t（尾部细，头部粗）
+  └── IndexFormat.UInt32（匹配 int[] 类型）
+```
+
+- **Material**：与弹丸共享 `DanmakuBullet.shader`（Alpha Blend）
+- **renderQueue**：3090（在 Bullet 后方）
+- **统计**：已接入 `RenderBatchManagerRuntimeStats`
+
+### Both 模式
+
+同时启用 Ghost + Trail。Ghost 跟随弹丸本体渲染（RBM 内部），Trail 作为独立 Mesh 提交。
 
 ---
 
-## 爆炸特效与子弹幕触发
+## VFX 特效编排
 
-### 轻量：Mesh 内爆炸帧（零额外开销）
+### 轻量 VFX：SpriteSheetVFXSystem
 
-弹丸命中后切换到 `Phase = Exploding`，渲染时按 `ExplosionFrameCount` 偏移 UV 到爆炸帧序列，播完后回收。500 颗同时消失 → 零额外 DC，零 GC。
+R4.0 后 `SpriteSheetVFXSystem` 退化为纯 API 入口——不再自驱 `Update/LateUpdate`。
+由 `DanmakuSystem` 管线通过 `IDanmakuVFXRuntime.TickVFX(dt)` / `.RenderVFX()` 统一驱动。
 
-### 重量：对象池特效
+- 碰撞命中 → `CollisionEventBuffer` → `EffectsBridge` → `SpriteSheetVFXSystem.PlayOneShot`
+- 清屏 → `ClearAllBulletsWithEffect()` → 逐弹丸触发 VFX
+- 喷雾 VFX：Attached 走 `PlayAttached`，Detached 走 `Play`（世界空间固定位置）
 
-Boss 大招等走 `EffectPool`，通过 `PoolManager` 取预制件。同屏 ≤ 5 个。
+### 重量特效
+
+Boss 大招等走 `PoolManager` 对象池，取预制件。同屏 ≤ 5 个。
 
 ### 子弹幕触发
 
-弹丸消亡（HP=0 / 超时）且设了 `FLAG_HAS_CHILD` 时，`BulletMover` 在回收前以当前位置为 origin 发射 `ChildPattern`。
+弹丸消亡且设了 `FLAG_HAS_CHILD` 时，`BulletMover` 在回收前以当前位置发射 `ChildPattern`。
 
-> **深度限制**：`DanmakuTypeRegistry.AssignRuntimeIndices()` 初始化时 DFS 检测环引用。运行时零开销。
+> **深度限制**：`DanmakuTypeRegistry.AssignRuntimeIndices()` 初始化时 DFS 检测环引用。
 >
-> **子弹幕基准角（P2-5）**：子 Pattern 配 `AimAtPlayer` → 母弹→玩家方向；否则 → 母弹飞行方向。
+> **子弹幕基准角**：子 Pattern 配 `AimAtPlayer` → 母弹→玩家方向；否则 → 母弹飞行方向。
 
 ---
 
 ## 伤害飘字渲染
 
-### 高频飘字：数字精灵 Mesh 合批
+### DamageNumberSystem（R3 迁移到 RBM + RuntimeAtlas）
 
-- `NumberAtlas`（0-9 数字贴图）+ `DamageNumberSystem` 环形缓冲区（128 容量）
-- 每帧和弹丸一起合批，按 digit 索引 UV
-- 同屏 100 个飘字 ≈ 0 额外开销，1 DC
+- `NumberAtlas`（0-9 数字贴图）通过 RuntimeAtlas（Channel=DamageText）分配
+- 128 容量环形缓冲区，弹出+淡出动画
+- 数字 UV 计算基于 `_fallbackAtlas.width / 10` 像素宽度推导（不依赖魔法数）
+- 通过独立 RBM 实例提交，`renderQueue = 3300`（最前方，不被遮挡）
 
-### 低频飘字：FairyGUI 文本对象池
+### 低频飘字
 
 Boss 名字、技能名等走 FairyGUI 富文本，同屏 ≤ 10 个。
+
+---
+
+## Draw Call 预算
+
+| 子系统 | 典型 DC | 说明 |
+|--------|---------|------|
+| Bullet（含 Ghost） | 1-3 | 按纹理分桶，2-3 种弹丸类型 |
+| Laser + LaserWarning | 1-2 | 各 1 DC |
+| Trail | 1 | 独立 Mesh |
+| VFX | 1 | 独立 RBM |
+| DamageNumber | 1 | 独立 RBM |
+| **典型总计** | **4-8** | 远低于 50 DC 预算 |
 
 ---
 

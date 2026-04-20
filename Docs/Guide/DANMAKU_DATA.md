@@ -32,8 +32,12 @@ public struct BulletCore
     public byte    HitPoints;      // 剩余生命值（0=死亡，1=单次即死）    offset 31, size 1
     public byte    Flags;          // 位标记（8 bits，见下方）           offset 32, size 1
     public byte    Faction;        // 阵营：0=Enemy, 1=Player, 2=Neutral offset 33, size 1
-    public byte    LastHitId;      // Pierce 碰撞冷却：上次命中目标 ID    offset 34, size 1
-    public byte    _pad;           // 对齐填充                          offset 35, size 1
+    public ushort  PierceHitMask;  // Pierce 冷却位掩码（每 bit 对应 TargetRegistry 槽位 0-15） offset 34, size 2
+
+    // ── 视觉动画值（DEC-005=C：Mover 每帧写入，Renderer 直接读取，零查表） ──
+    public float   AnimScale;      // 动画缩放倍率（默认 1）             offset 36, size 4
+    public float   AnimAlpha;      // 动画透明度倍率（默认 1）            offset 40, size 4
+    public Color32 AnimColor;      // 动画颜色叠加（默认白色）            offset 44, size 4
 
     // Flags 位定义（byte，8 bits——当前用了 8 个，刚好满）
     public const byte FLAG_ACTIVE           = 1 << 0;
@@ -45,10 +49,14 @@ public struct BulletCore
     public const byte FLAG_HAS_MODIFIER     = 1 << 6;  // 有冷数据 BulletModifier
     public const byte FLAG_PIERCE_COOLDOWN  = 1 << 7;  // 正在穿透冷却中
 }
-// sizeof = 36 bytes
+// sizeof = 48 bytes
 ```
 
-> **sizeof 修正说明**：`BulletCore` 实际 36 bytes（不是此前声称的 32）。2048 颗 × 36 = **72 KB**。典型中端手机 L1 数据缓存 32-48 KB，L2 缓存 256-512 KB，因此 BulletCore 数组可完整放入 L2。L1 未命中率相比 32 bytes 方案约上升 ~12%，但仍远优于混合布局（热冷不分离 76 bytes/颗 = 152 KB）。如果后续 profiling 发现瓶颈，可将 `Flags` 压缩或把 `LastHitId` 移入 `BulletModifier`。
+> **sizeof 修正说明**：`BulletCore` 实际 48 bytes（含 DEC-005 视觉动画字段）。2048 颗 × 48 = **96 KB**。典型中端手机 L2 缓存 256-512 KB，BulletCore 数组可完整放入 L2。相比热冷分离前的混合布局仍有显著优势。
+>
+> **视觉动画字段**（DEC-005=C）：`AnimScale`/`AnimAlpha`/`AnimColor` 由 `BulletMover` 每帧根据 BulletTypeSO 的 `ScaleOverLifetime`/`AlphaOverLifetime`/`ColorOverLifetime` 曲线写入，`BulletRenderer` 直接读取，避免渲染时查表。
+>
+> **Pierce 碰撞改进**：`PierceHitMask (ushort)` 替代了旧的 `LastHitId (byte)` 方案，支持同帧穿透多个目标（每 bit 对应 TargetRegistry 中一个槽位，最多 16 个目标）。
 
 > **生命值系统**：`HitPoints` 控制弹丸在碰撞多少次后死亡。默认值 1 = 单次碰撞即死（传统弹幕行为）。设为 255 可实现"不可摧毁"弹丸。每次碰撞扣减量由 `BulletTypeSO` 的碰撞响应配置决定。
 >
@@ -120,9 +128,11 @@ public struct BulletModifier
     public float DelayEndTime;     // 延迟变速结束时刻 = DelayBeforeAccel
     public float DelaySpeedScale;  // 延迟期间速度倍率（0=完全静止）
     public float AccelEndTime;     // 加速结束时刻 = DelayBeforeAccel + AccelDuration
-    public float HomingStartTime;  // 追踪开始时刻（0=立即追踪）
+    public float HomingStartTime;  // 追踪开始时刻（0=立即追踪）。SineWave 复用为振幅
+    public float HomingStrength;   // 追踪转向速度（度/秒）。SineWave 复用为频率，Spiral 复用为角速度
+    public Vector2 InitialDirection; // 初始飞行方向（单位向量），SineWave/Spiral 基准方向
 }
-// sizeof = 16 bytes
+// sizeof = 28 bytes
 ```
 
 三个数组按索引一一对齐：`_cores[i]`、`_trails[i]`、`_modifiers[i]` 描述同一颗弹丸。
@@ -284,32 +294,36 @@ public struct DamageNumberData
 
 ### DamageNumberSystem — 伤害飘字管理器
 
-独立的 Mesh 合批渲染器（和 BulletRenderer 分开，使用 NumberAtlas 材质，1 DC）。
+R3 迁移到 `RenderBatchManager` + `RuntimeAtlas`（Channel=DamageText），独立 RBM 实例提交。
 
 ```csharp
 /// <summary>
-/// 伤害飘字系统——环形缓冲区 + 独立 Mesh 合批渲染。
-/// 写入时自动覆盖最旧条目，无需显式 Free。
+/// 伤害飘字系统——环形缓冲区 (128) + RenderBatchManager 提交。
+/// R3.1：迁移到 RuntimeAtlas / RBM，数字 UV 基于 DamageText Channel 的分配结果重映射。
 /// </summary>
 public class DamageNumberSystem
 {
-    private const int CAPACITY = 128;
+    public const int MAX_NUMBERS = 128;
+    private const int MAX_DIGITS_PER_NUMBER = 5;
 
-    private readonly DamageNumberData[] _data = new DamageNumberData[CAPACITY];
-    private int _writeIndex;   // 单调递增写指针（% CAPACITY 取模）
+    private readonly DamageNumberData[] _buffer = new DamageNumberData[MAX_NUMBERS];
+    private int _head;
+    private int _count;
 
-    // 独立 Mesh（和弹丸 Mesh 分开，使用 NumberAtlas 材质）
-    private Mesh _mesh;
-    private DanmakuVertex[] _vertices;  // CAPACITY × maxDigits × 4 顶点
-    private Material _numberMaterial;
+    // R3 迁移：使用 RBM + RuntimeAtlas 替代独立 Mesh
+    private RenderBatchManager _batchManager;
+    private RuntimeAtlasManager _runtimeAtlas;
+    private Texture2D _fallbackAtlas;
+
+    public int TotalDrawCount { get; }  // 当前帧总 Quad 数
 
     public void Initialize(DanmakuRenderConfig renderConfig) { /* ... */ }
 
     /// <summary>写入一条伤害飘字。环形覆盖，零 GC。</summary>
-    public void Spawn(Vector2 position, int damage, byte flags) { /* ... */ }
+    public void Spawn(Vector2 position, int damage, bool isCritical = false) { /* ... */ }
 
-    /// <summary>每帧更新飘字运动 + 重建 Mesh。</summary>
-    public void Update(float dt) { /* ... */ }
+    /// <summary>每帧更新飘字运动 + 重建 Mesh + 提交渲染。</summary>
+    public void Rebuild(float dt) { /* ... */ }
 
     private static byte CountDigits(int value)
     {

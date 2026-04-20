@@ -43,7 +43,8 @@
 │  喷雾子系统: SprayPool + SprayUpdater                                │
 │  障碍物:     ObstaclePool                                            │
 │  组合引擎:   PatternScheduler                                        │
-│  特效:       EffectPool / TrailPool / DamageNumberSystem             │
+│  特效:       TrailPool / DamageNumberSystem                         │
+│  VFX桥接:   IDanmakuVFXRuntime → SpriteSheetVFXSystem（R4.0）        │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -96,7 +97,7 @@ Assets/_Framework/DanmakuSystem/
 │   ├── Config/         # 全部 SO 定义
 │   ├── Core/           # Mover, Spawner, Scheduler, Collision, Renderer
 │   └── DanmakuSystem.cs
-├── Shaders/            # Unlit-Atlas / Unlit-Additive / Laser
+├── Shaders/            # DanmakuBullet（Alpha Blend）/ DanmakuLaser
 └── Editor/             # 预览器 / 测试器 / 校验器 / 图集工具
 ```
 
@@ -108,9 +109,10 @@ Assets/_Framework/DanmakuSystem/
 
 | Shader | 功能 |
 |--------|------|
-| `Danmaku-Unlit-Atlas` | 弹丸（Alpha Blend + 顶点色） |
-| `Danmaku-Unlit-Additive` | 发光弹丸（Additive 混合） |
-| `Danmaku-Laser` | 激光（UV 滚动 + 边缘发光） |
+| `DanmakuBullet` | 弹丸 / 伤害飘字 / VFX（Alpha Blend + 顶点色 + UV 动画） |
+| `DanmakuLaser` | 激光 + 激光预警线（UV 滚动 + 边缘发光） |
+
+> ADR-029 v2：Additive Blend 已移除，所有弹丸统一走 Alpha Blend。renderQueue 控制层序。
 
 ---
 
@@ -162,9 +164,9 @@ GC 预算：全部子系统每帧 0 bytes。
 | 功能 | 扩展方式 | 难度 |
 |------|---------|:---:|
 | 擦弹判定 | BulletTypeSO 加 `GrazeRadius` | 低 |
-| 清弹特效 | 批量切 `Phase = Dissolving` | 低 |
+| 清弹特效 | `ClearAllBulletsWithEffect()` + IDanmakuEffectsBridge | ✅ 已实现 |
 | 弹幕录像回放 | 序列化发射指令重新模拟 | 中 |
-| 多玩家碰撞 | SolveAll 循环多玩家 | 低 |
+| 多目标碰撞 | TargetRegistry + ICollisionTarget | ✅ 已实现 |
 | 弹丸vs弹丸 | 双层网格分区 | 中 |
 | Swept Circle | Speed > 12 启用射线检测 | 中 |
 | 手机振动 | `wx.vibrateShort` via IWeChatBridge | 低 |

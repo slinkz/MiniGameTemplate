@@ -149,17 +149,19 @@ void OnDisable() { _onGameOver.UnregisterListener(this); }
 
 **核心规则：只能向下依赖，不能向上。**
 
-6 个层级 + DanmakuSystem 独立层，从底向上：
+6 个层级 + Rendering/VFX/DanmakuSystem 独立层，从底向上：
 
 | 层 | 模块 |
 |----|------|
 | L0 | Utils（零依赖） |
 | L1 | EventSystem, DataSystem, Timer, AssetSystem |
+| L1-R | Rendering（RBM / RuntimeAtlasSystem）— 零业务依赖 |
 | L2 | UISystem, AudioSystem, ObjectPool |
 | L3 | FSM, WeChatBridge |
 | L4 | GameLifecycle（启动入口） |
 | L5 | DebugTools |
-| L-Danmaku | DanmakuSystem（依赖 L0+L1） |
+| L-VFX | VFXSystem（SpriteSheetVFXSystem / VFXBatchRenderer）— 依赖 L1-R |
+| L-Danmaku | DanmakuSystem（依赖 L0 + L1 + L1-R + L-VFX via IDanmakuVFXRuntime） |
 | Game | _Game/, _Example/（可引用全部框架模块） |
 
 **实际意义**：

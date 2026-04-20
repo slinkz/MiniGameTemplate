@@ -13,7 +13,7 @@ Assets/_Game/ScriptableObjects/Danmaku/
 ├── BulletTypes/              # 弹丸视觉+行为
 │   ├── SmallOrb.asset
 │   ├── Needle.asset          # 米粒弹（rotateToDirection=true）
-│   └── BigOrb_Glow.asset    # 大玉发光弹（renderLayer=Additive）
+│   └── SineWave.asset        # 正弦波弹丸（MotionType=SineWave）
 ├── LaserTypes/               # 激光视觉+行为
 ├── SprayTypes/               # 喷雾视觉+行为
 ├── ObstacleTypes/            # 障碍物类型
@@ -21,7 +21,7 @@ Assets/_Game/ScriptableObjects/Danmaku/
 ├── PatternGroups/            # 弹幕组合
 ├── Config/
 │   ├── WorldConfig.asset     # 容量、世界边界、碰撞网格
-│   ├── RenderConfig.asset    # 材质、贴图、图集
+│   ├── RenderConfig.asset    # 材质、贴图、图集、RuntimeAtlasConfig
 │   ├── TypeRegistry.asset    # 弹丸/激光/喷雾类型注册表
 │   └── TimeScale.asset       # 时间缩放
 ├── Difficulty/               # Easy / Normal / Hard
@@ -40,14 +40,51 @@ Assets/_Game/ScriptableObjects/Danmaku/
 [CreateAssetMenu(menuName = "MiniGameTemplate/Danmaku/Bullet Type")]
 public class BulletTypeSO : ScriptableObject
 {
+    // ── 统一资源描述 ──
+    [Header("资源描述（统一）")]
+    public Texture2D SourceTexture;              // 源贴图（每个弹丸类型可引用独立贴图）
+    [FormerlySerializedAs("AtlasUV")]
+    public Rect UVRect = new Rect(0, 0, 1, 1);  // 静态弹丸的 UV 区域
+    public BulletSamplingMode SamplingMode;      // Static / SpriteSheet
+
+    [Header("序列帧配置（SpriteSheet 时有效）")]
+    public int SheetColumns = 1;
+    public int SheetRows = 1;
+    public int SheetTotalFrames = 1;
+    public BulletPlaybackMode PlaybackMode;      // StretchToLifetime / FixedFps
+    public float FixedFps = 12f;
+
+    [Header("Atlas 绑定（可选优化）")]
+    public AtlasMappingSO AtlasBinding;          // null = 独立模式，非 null = Atlas 派生
+    public int SchemaVersion = 1;                // 迁移版本号
+
+    // ── 视觉 ──
     [Header("视觉")]
-    public Rect AtlasUV;                  // 图集 UV 矩形
     public Color Tint = Color.white;
     public Vector2 Size = new(0.2f, 0.2f);
-    public bool RotateToDirection;        // 朝飞行方向旋转（米粒弹等）
+    public bool RotateToDirection;               // 朝飞行方向旋转
 
     [Header("碰撞")]
     public float CollisionRadius = 0.1f;
+
+    // ── 运动策略 ──
+    [Header("运动")]
+    public MotionType MotionType;                // Default / SineWave / Spiral
+
+    [Header("正弦波参数（SineWave）")]
+    public float SineAmplitude = 1.0f;
+    public float SineFrequency = 3.0f;
+
+    [Header("螺旋参数（Spiral）")]
+    public float SpiralAngularVelocity = 180f;
+
+    public AnimationCurve SpeedOverLifetime;     // 速度曲线
+
+    [Header("视觉动画")]
+    public bool UseVisualAnimation;
+    public AnimationCurve ScaleOverLifetime;
+    public AnimationCurve AlphaOverLifetime;
+    public Gradient ColorOverLifetime;
 
     [Header("伤害")]
     [Min(0)] public int Damage = 1;
@@ -81,6 +118,7 @@ public class BulletTypeSO : ScriptableObject
     [Header("拖尾")]
     public TrailMode Trail = TrailMode.None;
     public byte GhostCount = 3;
+    [Range(1, 15)] public byte GhostInterval = 5; // 残影采样间隔（帧数）
     public int TrailPointCount = 20;
     public float TrailWidth = 0.3f;
     public AnimationCurve TrailWidthCurve;
@@ -89,21 +127,28 @@ public class BulletTypeSO : ScriptableObject
     [Header("爆炸")]
     public ExplosionMode Explosion = ExplosionMode.MeshFrame;
     public int ExplosionFrameCount = 4;
+    public Rect ExplosionAtlasUV;                // 爆炸帧第一帧 UV
     public PoolDefinition HeavyExplosionPrefab;
 
     [Header("子弹幕")]
     public BulletPatternSO ChildPattern;
 
-    [Header("渲染层")]
-    public RenderLayer Layer = RenderLayer.Normal;
-
     [HideInInspector] public ushort RuntimeIndex;
+
+    // ── 辅助方法 ──
+    public int MaxFrameCount => ...;             // 序列帧总有效帧数
+    public Texture2D GetResolvedTexture();       // AtlasBinding > SourceTexture
+    public Rect GetResolvedBaseUV();             // Atlas 映射 > UVRect
+    public Rect GetFrameUV(int frameIndex, Rect baseUV); // 序列帧子区域计算
 }
 
 public enum TrailMode { None, Ghost, Trail, Both }
 public enum ExplosionMode { None, MeshFrame, PooledPrefab }
-public enum RenderLayer { Normal, Additive }
 ```
+
+> **注意**：ADR-029 v2 已移除 Additive Blend，不再有 `RenderLayer.Additive`。所有弹丸统一走 `RenderLayer.Normal` + Alpha Blend。
+>
+> **MotionType 参数可见性**：`BulletTypeSOEditor` (Custom Editor) 根据 MotionType 条件显示 SineWave/Spiral 参数，根据 TrailMode 条件显示 Ghost/Trail 参数。
 
 ---
 
@@ -120,22 +165,34 @@ public class LaserTypeSO : ScriptableObject
     public float UVScrollSpeed = 2f;
     public Color CoreColor = Color.white;
     public Color EdgeColor = Color.cyan;
-    public AnimationCurve WidthProfile;
+    public AnimationCurve WidthProfile;          // 沿长度的宽度曲线（中间粗两头细）
 
     [Header("宽度生命周期曲线")]
     public AnimationCurve WidthOverLifetime = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     [Header("阶段时长")]
-    public float ChargeDuration = 0.5f;
-    public float FiringDuration = 2f;
-    public float FadeDuration = 0.3f;
+    public float ChargeDuration = 0.5f;          // 蓄力（细线闪烁，不造成伤害）
+    public float FiringDuration = 2f;            // 发射（全宽光柱，造成伤害）
+    public float FadeDuration = 0.3f;            // 消散
 
     [Header("伤害")]
     public float DamagePerTick = 10f;
     public float TickInterval = 0.1f;
 
     [Header("碰撞")]
+    public BulletFaction Faction = BulletFaction.Enemy;
     public float MaxWidth = 0.8f;
+
+    [Header("碰撞响应 — 障碍物")]
+    public LaserObstacleResponse OnHitObstacle = LaserObstacleResponse.Ignore;
+
+    [Header("碰撞响应 — 屏幕边缘")]
+    public LaserScreenEdgeResponse OnHitScreenEdge = LaserScreenEdgeResponse.Clip;
+    public float ScreenEdgeRecycleMargin = 1f;   // Origin 越界回收的边缘余量
+
+    [Header("折射")]
+    [Range(0, 8)]
+    public byte MaxReflections = 0;              // 最大折射次数（0=直线不折射）
 
     [HideInInspector] public byte RuntimeIndex;
 
@@ -143,7 +200,13 @@ public class LaserTypeSO : ScriptableObject
 }
 ```
 
-> **字段语义补充**：`CoreColor` = 激光主体主色，当前版本也作为 Charging 阶段预警线颜色；`EdgeColor` 设计意图是边缘色，但当前版本尚未完整接入为设计师直觉中的明显边缘渐变控制。\n> **宽度驱动方式**：`LaserUpdater` 根据 `elapsed / TotalDuration` 采样 `WidthOverLifetime` 曲线，乘以 `MaxWidth` 得到当前宽度；`WidthProfile` 负责沿激光长度方向的局部粗细分布。Phase 仅控制碰撞开关。
+> **字段语义补充**：
+> - `Faction`：决定激光与哪些目标碰撞（同弹丸阵营过滤逻辑）
+> - `OnHitObstacle`：`Ignore`=穿透障碍物、`Reflect`=折射（消耗 MaxReflections）
+> - `OnHitScreenEdge`：`Clip`=裁剪到屏幕边缘、`Reflect`=边缘折射、`Recycle`=Origin 出界时回收
+> - `WidthOverLifetime`：LaserUpdater 按 `elapsed/TotalDuration` 采样，乘以 `MaxWidth` 得到当前宽度
+> - `WidthProfile`：沿激光长度方向的局部粗细分布
+> - Phase 仅控制碰撞开关
 
 
 ### SprayTypeSO
@@ -332,16 +395,16 @@ public class DanmakuWorldConfig : ScriptableObject
     public int MaxBullets = 2048;
     public int MaxLasers = 16;
     public int MaxSprays = 8;
+    public int MaxTrails = 64;
 
     [Header("世界边界")]
     public Rect WorldBounds = new(-6, -10, 12, 20);
 
-    [Header("碰撞网格")]
-    public int GridCellsX = 12;
-    public int GridCellsY = 20;
+    [Header("碰撞事件缓冲")]
+    public int CollisionEventBufferCapacity = 256;  // 旁路表现通道，溢出不影响主逻辑
 
     [Header("无敌帧")]
-    public float InvincibleDuration = 0f;
+    public float InvincibleDuration = 0f;  // 真实时间，不受弹幕 TimeScale 影响
 }
 ```
 
@@ -351,11 +414,16 @@ public class DanmakuWorldConfig : ScriptableObject
 [CreateAssetMenu(menuName = "MiniGameTemplate/Danmaku/Config/Render")]
 public class DanmakuRenderConfig : ScriptableObject
 {
-    public Material BulletMaterial;
-    public Material BulletAdditiveMaterial;
+    [Header("材质")]
+    public Material BulletMaterial;       // Alpha Blend（ADR-029 v2：Additive 已移除）
     public Material LaserMaterial;
-    public Texture2D BulletAtlas;
-    public Texture2D NumberAtlas;
+
+    [Header("贴图")]
+    public Texture2D BulletAtlas;         // 弹丸图集（规则网格布局）
+    public Texture2D NumberAtlas;         // 数字精灵图集（0-9 飘字用）
+
+    [Header("Runtime Atlas")]
+    public RuntimeAtlasConfig RuntimeAtlasConfig;  // 为空时保持旧渲染路径
 }
 ```
 

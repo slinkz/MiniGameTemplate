@@ -36,10 +36,17 @@ MiniGameTemplate.Audio      // AudioSystem
 MiniGameTemplate.Pool       // ObjectPool
 MiniGameTemplate.FSM        // FSM
 MiniGameTemplate.Timing     // Timer
+MiniGameTemplate.Asset      // AssetSystem
 MiniGameTemplate.Platform   // WeChatBridge
 MiniGameTemplate.Debug      // DebugTools
 MiniGameTemplate.Utils      // Utils
-MiniGameTemplate.EditorTools // Editor
+MiniGameTemplate.Rendering  // Rendering（RBM / RuntimeAtlasSystem / RenderVertex）
+MiniGameTemplate.VFX        // VFXSystem（SpriteSheetVFXSystem / VFXBatchRenderer）
+MiniGameTemplate.Danmaku    // DanmakuSystem（弹幕系统核心）
+MiniGameTemplate.EditorTools       // Editor 通用工具
+MiniGameTemplate.Editor.Rendering  // Editor: Atlas 工具
+MiniGameTemplate.Editor.Danmaku    // Editor: 弹幕 SO 编辑器
+MiniGameTemplate.Danmaku.Editor    // Editor: DanmakuSystem 编辑器
 MiniGameTemplate.Game       // _Game（游戏逻辑）
 ```
 
@@ -593,12 +600,15 @@ request.timeout = 10; // 秒
 ```
 L0: Utils (GameLog, Singleton, MathUtils, CoroutineRunner)
 L1: EventSystem, DataSystem, Timer, AssetSystem
+L1-R: Rendering (RBM / RuntimeAtlasSystem / RenderVertex) — 零业务依赖
 L2: UISystem, AudioSystem, ObjectPool
 L3: FSM, WeChatBridge
 L4: GameLifecycle (GameBootstrapper, SceneLoader)
 L5: DebugTools
+L-VFX: VFXSystem (SpriteSheetVFXSystem / VFXBatchRenderer) — 依赖 L1-R
+L-Danmaku: DanmakuSystem — 依赖 L0 + L1 + L1-R + L-VFX (via IDanmakuVFXRuntime)
 ──────────────────────────────
-L6: Game（_Game/ 目录，可引用 L0-L5）
+L6: Game（_Game/ 目录，可引用以上所有层）
 ```
 
 ### 规则

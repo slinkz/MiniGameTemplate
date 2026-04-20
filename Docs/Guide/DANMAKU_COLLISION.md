@@ -159,18 +159,23 @@ void ApplyCollisionResponse(ref BulletCore core, BulletTypeSO type,
 
 ### Pierce 碰撞冷却
 
-穿透弹命中后继续飞行，`LastHitId`（1 byte）记录上次命中目标，防止多帧重复碰撞：
+穿透弹命中后继续飞行，`PierceHitMask`（ushort，16 bits）位掩码记录已命中的目标槽位，防止多帧重复碰撞：
 
 ```csharp
-// 碰撞检测时
-if ((c.Flags & FLAG_PIERCE_COOLDOWN) != 0 && c.LastHitId == targetId) continue;
+// 碰撞检测时——按目标在 TargetRegistry 中的槽位号检查对应 bit
+ushort targetBit = (ushort)(1 << targetSlotIndex);
+if ((c.Flags & FLAG_PIERCE_COOLDOWN) != 0 && (c.PierceHitMask & targetBit) != 0) continue;
+
+// 命中时设置对应 bit
+c.PierceHitMask |= targetBit;
+c.Flags |= FLAG_PIERCE_COOLDOWN;
 
 // BulletMover 每帧：不再重叠时清除冷却
 c.Flags &= unchecked((byte)~FLAG_PIERCE_COOLDOWN);
-c.LastHitId = 0;
+c.PierceHitMask = 0;
 ```
 
-> **为什么 1 byte 够用**：弹幕游戏中穿透弹同时穿越两个目标的概率极低。如确需同时穿越多目标，可升级为 `ushort LastHitId1, LastHitId2`。
+> **为什么升级为 ushort 位掩码**：弹丸可能同帧穿越多个目标（TargetRegistry 支持多目标注册），单字节 `LastHitId` 无法同时跟踪多个已命中目标。16 bits 支持最多 16 个碰撞目标同时追踪。
 
 ---
 
@@ -248,10 +253,14 @@ if (result.HasPlayerHit && _invincibleTimer <= 0f)
 所有时间计算用 `DanmakuTimeScaleSO.DeltaTime`：
 
 ```csharp
-float dt = _timeScale.DeltaTime;  // 循环外缓存
+// RunUpdatePipeline（Update 阶段——逻辑 + 碰撞）
+float dt = _timeScale.DeltaTime;
 BulletMover.UpdateAll(_bulletWorld, ..., dt);
 LaserUpdater.UpdateAll(_laserPool, dt);
-_damageNumbers.Update(dt);
+_damageNumbers.Rebuild(dt);   // 注：Rebuild 在 LateUpdate 管线中执行
+
+// RunLateUpdatePipeline（LateUpdate 阶段——渲染提交）
+// 见 DANMAKU_RENDERING.md 管线详解
 ```
 
 ---
@@ -297,74 +306,75 @@ for (int i = 0; i < world.Capacity; i++)
 
 ## DanmakuSystem — 唯一的 MonoBehaviour
 
+DanmakuSystem 采用 `partial class` 拆分为 4 个文件，职责清晰：
+
+| 文件 | 职责 |
+|------|------|
+| `DanmakuSystem.cs` | Facade：Awake / Update / LateUpdate / 单例 |
+| `DanmakuSystem.Runtime.cs` | 持有所有子系统引用、InitializeSubsystems / DisposeSubsystems |
+| `DanmakuSystem.API.cs` | Fire / Register / Clear 等公开 API + RuntimeAtlas 统计 |
+| `DanmakuSystem.UpdatePipeline.cs` | RunUpdatePipeline / RunLateUpdatePipeline 管线驱动 |
+
 ```csharp
-public class DanmakuSystem : MonoBehaviour
+public partial class DanmakuSystem : MonoBehaviour
 {
+    // ── 配置（DanmakuSystem.cs） ──
     [SerializeField] private DanmakuWorldConfig _worldConfig;
     [SerializeField] private DanmakuRenderConfig _renderConfig;
     [SerializeField] private DanmakuTypeRegistry _typeRegistry;
     [SerializeField] private DanmakuTimeScaleSO _timeScale;
+    [SerializeField] private DifficultyProfileSO _difficulty;
     [SerializeField] private GameEvent _onPlayerHit;
     [SerializeField] private IntGameEvent _onDamageDealt;
 
+    public static DanmakuSystem Instance { get; private set; }
+
+    // ── 子系统（Runtime.cs） ──
     private BulletWorld _bulletWorld;
     private LaserPool _laserPool;
     private SprayPool _sprayPool;
     private ObstaclePool _obstaclePool;
-    private CollisionSolver _collision;
+    private AttachSourceRegistry _attachRegistry;   // 激光/喷雾挂载源
+    private TargetRegistry _targetRegistry;          // 多目标碰撞
+    private CollisionSolver _collisionSolver;
+    private CollisionEventBuffer _collisionEventBuffer;
+    private PatternScheduler _scheduler;
+    private SpawnerDriver _spawnerDriver;
     private BulletRenderer _bulletRenderer;
+    private LaserRenderer _laserRenderer;
+    private LaserWarningRenderer _laserWarningRenderer;
     private DamageNumberSystem _damageNumbers;
     private TrailPool _trailPool;
-    private PatternScheduler _patternScheduler;
+    private IDanmakuEffectsBridge _effectsBridge;    // 碰撞特效桥接
+    private IDanmakuVFXRuntime _vfxRuntime;          // R4.0 VFX 管线桥接
 
-    private void Awake()
-    {
-        _typeRegistry.AssignRuntimeIndices();   // + DFS 环引用检测
-        _bulletWorld = new BulletWorld(_worldConfig.MaxBullets);
-        _bulletRenderer = new BulletRenderer();
-        _bulletRenderer.Initialize(_worldConfig.MaxBullets * 4, _renderConfig);
-        _patternScheduler = new PatternScheduler();
-    }
+    // ── 生命周期（DanmakuSystem.cs） ──
+    void Awake()  → InitializeSubsystems()
+    void Update() → RunUpdatePipeline()        // 逻辑 + 碰撞
+    void LateUpdate() → RunLateUpdatePipeline() // 渲染提交
 
-    private void Update()
-    {
-        float dt = _timeScale.DeltaTime;
-        // 0. 同步玩家碰撞体
-        // 1. 弹幕组合调度
-        _patternScheduler.Update(dt, this);
-        // 2. 运动更新
-        BulletMover.UpdateAll(_bulletWorld, _typeRegistry, _worldConfig.WorldBounds, dt);
-        LaserUpdater.UpdateAll(_laserPool, dt);
-        SprayUpdater.UpdateAll(_sprayPool, dt);
-        // 3. 碰撞检测
-        var hitResult = _collision.SolveAll(...);
-        // 4. 无敌帧伤害控制
-        // 5. 渲染
-        _bulletRenderer.Rebuild(_bulletWorld, _typeRegistry);
-        _damageNumbers.Update(dt);
-        _trailPool.Update(dt);
-    }
-
-    // —— 公开 API ——
-    public void FireBullets(BulletPatternSO pattern, Vector2 origin, float angle) { }
-    public void FirePatternGroup(PatternGroupSO group, Vector2 origin, float angle, Transform aimTarget = null) { }
-    public int FireLaser(LaserTypeSO type, Vector2 origin, float angle) { }
-    public int FireSpray(SprayTypeSO type, Vector2 origin, float direction) { }
-    public int AddObstacle(ObstacleTypeSO type, Vector2 center) { }
-    public void RemoveObstacle(int index) { }
-    public void ClearAllBullets() { }
-    public void ClearAllObstacles() { }
-    public void SetPlayer(Transform player, float radius) { }
-    public int ActiveBulletCount => _bulletWorld.ActiveCount;
+    // ── 公开 API（API.cs） ──
+    public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle);
+    public void FireGroup(PatternGroupSO group, Vector2 origin, float baseAngle);
+    public int  FireLaser(byte typeIndex, Vector2 origin, float angle, float length, float lifetime = 0f);
+    public int  FireLaser(byte typeIndex, Transform source, float length, ...);  // Attached 模式
+    public int  FireSpray(byte typeIndex, Vector2 origin, float direction, ...);
+    public int  FireSpray(byte typeIndex, Transform source, ...);                // Attached 模式
+    public void SetPlayer(Transform playerTransform, float radius);
+    public bool RegisterTarget(ICollisionTarget target);
+    public void UnregisterTarget(ICollisionTarget target);
+    public void ClearAll();
+    public void ClearAllBulletsWithEffect();
+    public (string Label, RuntimeAtlasStats? Stats)[] GetAllAtlasStats();  // R4.3 Debug HUD
 }
 ```
 
 ### 生命周期管理
 
-**DontDestroyOnLoad + FreeAll 清场**：
-- **Awake**：一次性预分配所有数组/Mesh/池。后续零 GC
-- **场景切换**：`FreeAll()` 重置状态（清零 + 空闲栈回满），不释放内存
-- **OnDestroy**：销毁 Mesh、释放 Trail 等 Unity 对象
+**DontDestroyOnLoad + ClearAll 清场**：
+- **Awake**：一次性预分配所有数组/Mesh/池（含 MotionRegistry.Initialize）。后续零 GC
+- **场景切换**：`ClearAll()` 重置状态（先停所有喷雾附着 VFX，再逐池 FreeAll），不释放内存
+- **OnDestroy**：`DisposeSubsystems()` 销毁 Mesh、释放 RBM 等 Unity 对象
 
 > 保持内存常驻，避免场景切换时 128 KB+ 的 GC spike。
 

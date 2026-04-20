@@ -258,14 +258,17 @@ DanmakuSystem.RunUpdatePipeline()
 
 DanmakuSystem.RunLateUpdatePipeline()
   RenderBatchManagerRuntimeStats.BeginFrame()
-  ├── BulletRenderer.Rebuild              → RBM（RuntimeAtlas 纹理）
-  ├── LaserRenderer.Rebuild               → RBM（独立贴图）
-  ├── LaserWarningRenderer.Rebuild        → RBM（独立贴图）
-  ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 新增（VFXBatchRenderer → 独立 RBM）
-  ├── DamageNumberSystem.Rebuild(dt)      → RBM（RuntimeAtlas DamageText）
-  ├── RBM.UploadAndDrawAll()              ← 统一提交（桶按 SortingOrder 升序遍历）
-  └── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh
+  ├── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh（renderQueue=3090）
+  ├── BulletRenderer.Rebuild + UploadAndDrawAll    → 独立 RBM（RuntimeAtlas 纹理）
+  ├── LaserRenderer.Rebuild + UploadAndDrawAll     → 独立 RBM（独立贴图）
+  ├── LaserWarningRenderer.Rebuild + UploadAndDrawAll → 独立 RBM（独立贴图）
+  ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 收编（VFXBatchRenderer → 独立 RBM）
+  └── DamageNumberSystem.Rebuild(dt) + UploadAndDrawAll → 独立 RBM（RuntimeAtlas DamageText）
   RenderBatchManagerRuntimeStats.EndFrame()
+
+  注意：每个 Renderer 内部持有独立的 RBM 实例，各自在 Rebuild 末尾调用
+  UploadAndDrawAll()。渲染层序由 material.renderQueue 值控制（GPU 级排序），
+  不依赖代码调用顺序。
 ```
 
 ### 关键设计决策摘要
@@ -279,7 +282,7 @@ DanmakuSystem.RunLateUpdatePipeline()
 | DC 排序 | material.renderQueue | Graphics.DrawMesh 跨 RBM 实例的层级控制必须靠 renderQueue，不能靠调用顺序 |
 | VFX 编排 | DanmakuSystem 管线统一驱动 | SpriteSheetVFXSystem 退化为纯 API，TickVFX/RenderVFX 由管线调用 |
 
-> 详细设计文档：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.8.1）
+> 详细设计文档：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.10.1）
 
 ## DanmakuSystem 架构详解
 
@@ -300,7 +303,7 @@ DanmakuSystem (MonoBehaviour, DontDestroyOnLoad)
 │   ├── LaserSegmentSolver (折射段解算)
 │   └── CollisionSolver (7 阶段碰撞)
 ├── 调度：PatternScheduler (64 槽)
-├── 渲染：BulletRenderer / LaserRenderer / DamageNumberSystem / TrailPool
+├── 渲染：BulletRenderer / LaserRenderer / LaserWarningRenderer / DamageNumberSystem / TrailPool / VFXBatchRenderer（via IDanmakuVFXRuntime）
 └── 配置：12 种 SO
 ```
 

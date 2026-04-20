@@ -12,7 +12,7 @@ RuntimeAtlasSystem 是**统一渲染管线的核心基础设施**——借鉴 RV
 - 缓存命中零 GC、切关清空、RT Lost 自动恢复
 - WebGL 2.0 兼容（CommandBuffer.Blit，不依赖 Graphics.CopyTexture）
 
-**设计文档**：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.8.1）
+**设计文档**：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.10.1）
 
 ## 实施状态：Phase R0 ~ R4 全部验收通过 ✅
 
@@ -59,6 +59,6 @@ RuntimeAtlasSystem 是**统一渲染管线的核心基础设施**——借鉴 RV
 | 项目 | 优先级 | 说明 |
 |------|--------|------|
 | Editor 预览窗口 | P2 | `RuntimeAtlasDebugWindow.cs` — 可视化 Atlas 占用情况 |
-| Debug HUD 接入 | P1 | 全局统一 DC 统计（含 Trail 独立 DC） |
+| Debug HUD 接入 | ✅ 已完成 (R4.3) | `DanmakuDebugHUD` 已新增 RuntimeAtlas section（页数/分配/填充率/内存/命中率/overflow），0.5s 刷新间隔 |
 | 真机 WebGL 验收 | P0 | 微信小游戏环境下 RT Lost 恢复 + 性能指标 |
 | ShelfPacker 单元测试 | P2 | 引入 Unity Test Framework 后补齐 |

@@ -371,7 +371,7 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 
 | 需求 ID | 需求 | 覆盖阶段 | 状态 |
 |---------|------|----------|------|
-| GD-001 | 多贴图共存 | Phase 1 | 🔲 |
+| GD-001 | 多贴图共存 | Phase 1 | ✅ BulletTypeSO.SourceTexture + RBM 按贴图分桶 |
 | GD-002 | 弹丸视觉动画（含缩放/透明/颜色与序列帧子弹） | Phase 1 + Phase 3 | ✅ BulletCore 48B + AnimationCurve/Gradient 采样 + Renderer 读取 |
 
 | GD-003 | VFX×弹幕联动 | Phase 2 | ✅ IDanmakuEffectsBridge + DefaultDanmakuEffectsBridge |
@@ -387,7 +387,7 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 | GD-013 | VFX 时间缩放 | Phase 3 | ✅ SpriteSheetVFXSystem.SetTimeScale() |
 | GD-014 | 相机震动 | 不在本轮范围（可独立模块）| ➖ |
 | GD-015 | 音效分层 | 不在本轮范围（AudioManager 侧）| ➖ |
-| GD-016 | 粒子拖尾 | Phase 3（可选）| 🔲 |
+| GD-016 | 粒子拖尾 | Phase 3（可选）| ✅ TrailPool（Mesh Trail）+ Ghost 残影（BulletRenderer 内置）— 不使用 ParticleSystem |
 | GD-017 | 统计与调试 | Phase 4 | ✅ RenderBatchManagerRuntimeStats + DanmakuDebugHUD 扩展（DrawCall/Batch avg/peak + Gizmos） |
 | GD-018 | 配置热重载 | Phase 4 | ✅ DanmakuEditorRefreshCoordinator（标脏→Registry重建→Batch预热→报告） |
 | GD-019 | 容量可配置 | Phase 0 | ✅ 主链路已完成 |

@@ -59,6 +59,7 @@ DanmakuSystem/
 │       ├── DefaultDanmakuEffectsBridge.cs # [Phase 2] 默认桥接实现（消费事件 → 触发 VFX）
 │       ├── BulletRenderer.cs  # 弹丸 Mesh 渲染（BatchManager 分桶）
 │       ├── LaserRenderer.cs   # 激光 Mesh 渲染（Quad 条带 + WidthProfile + BatchManager）
+│       ├── LaserWarningRenderer.cs # 激光预警线渲染（RBM 独立贴图）
 │       ├── PatternScheduler.cs # 弹幕调度（含调试统计）
 │       ├── SpawnerDriver.cs   # 发射器驱动（驱动 SpawnerProfileSO 自动发射）
 │       ├── LaserUpdater.cs    # 激光更新（含 FreeLaser 统一回收）
@@ -66,6 +67,8 @@ DanmakuSystem/
 │       ├── SprayUpdater.cs    # 喷雾更新（含 FreeSpray 统一回收）
 │       ├── IDanmakuVFXRuntime.cs  # [R4.0] VFX 管线驱动接口（TickVFX/RenderVFX/Play/PlayAttached/StopAttached）
 │       ├── DanmakuVFXRuntimeBridge.cs # [R4.0] 桥接实现（转发到 SpriteSheetVFXSystem）
+│       ├── DanmakuAttachSourceResolver.cs # IVFXPositionResolver 实现（将 VFX attachId 解析为 DanmakuSystem 世界坐标）
+│       ├── DanmakuEffectsBridgeConfig.cs # 碰撞特效桥接配置组件（序列化 VFX 类型引用 + 音效引用）
 │       ├── DamageNumberSystem.cs # 伤害飘字（R3 迁移到 RBM + RuntimeAtlas）
 │       └── TrailPool.cs       # 拖尾曲线池（方案 A：独立 Mesh + 接入统计）
 └── Shaders/
@@ -228,14 +231,17 @@ Update() → RunUpdatePipeline()
 
 LateUpdate() → RunLateUpdatePipeline()
   RenderBatchManagerRuntimeStats.BeginFrame()
-  ├── BulletRenderer.Rebuild              → RBM（RuntimeAtlas 纹理）
-  ├── LaserRenderer.Rebuild               → RBM（独立贴图）
-  ├── LaserWarningRenderer.Rebuild        → RBM（独立贴图）
-  ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 收编（VFXBatchRenderer → 独立 RBM 实例）
-  ├── DamageNumberSystem.Rebuild(dt)      → RBM（RuntimeAtlas DamageText）
-  ├── RBM.UploadAndDrawAll()              ← 统一提交（桶按 SortingOrder 升序）
-  └── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh
+  ├── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh（renderQueue=3090）
+  ├── BulletRenderer.Rebuild + UploadAndDrawAll    → 独立 RBM（RuntimeAtlas 纹理）
+  ├── LaserRenderer.Rebuild + UploadAndDrawAll     → 独立 RBM（独立贴图）
+  ├── LaserWarningRenderer.Rebuild + UploadAndDrawAll → 独立 RBM（独立贴图）
+  ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 收编（VFXBatchRenderer → 独立 RBM）
+  └── DamageNumberSystem.Rebuild(dt) + UploadAndDrawAll → 独立 RBM（RuntimeAtlas DamageText）
   RenderBatchManagerRuntimeStats.EndFrame()
+
+  注意：每个 Renderer 内部持有独立的 RBM 实例，各自在 Rebuild 末尾
+  调用 UploadAndDrawAll()。渲染层序由 material.renderQueue 值控制（GPU 级排序），
+  不依赖代码调用顺序。
 ```
 
 ## 性能预算
