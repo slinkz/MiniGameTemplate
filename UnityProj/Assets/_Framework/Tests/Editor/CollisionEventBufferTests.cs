@@ -96,7 +96,7 @@ namespace MiniGameTemplate.Tests.Editor
                 Damage = 5,
                 SourceFaction = BulletFaction.Player,
                 TargetFaction = BulletFaction.Enemy,
-                EventType = CollisionEventType.Hit,
+                EventType = CollisionEventType.BulletHit,
             };
         }
     }
