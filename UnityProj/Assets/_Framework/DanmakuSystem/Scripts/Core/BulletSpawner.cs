@@ -14,7 +14,7 @@ namespace MiniGameTemplate.Danmaku
         /// 发射一组弹丸（单次，不含 Burst 连射）。
         /// PatternScheduler 的 Burst 连射通过多次调用本方法实现。
         /// </summary>
-        public static void Fire(
+        internal static void Fire(
             BulletPatternSO pattern,
             Vector2 origin,
             float baseAngleDeg,
@@ -61,7 +61,7 @@ namespace MiniGameTemplate.Danmaku
                 core.Lifetime = pattern.Lifetime * (difficulty?.LifetimeMultiplier ?? 1f);
                 core.Elapsed = 0;
                 core.Radius = type.CollisionRadius;
-                core.TypeIndex = type.RuntimeIndex;
+                core.TypeIndex = registry.GetOrRegisterBullet(type);
                 core.Phase = (byte)BulletPhase.Active;
                 core.HitPoints = type.InitialHitPoints;
                 core.Flags = BulletCore.FLAG_ACTIVE;

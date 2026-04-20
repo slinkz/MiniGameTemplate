@@ -20,9 +20,10 @@ namespace MiniGameTemplate.Danmaku
         [Header("配置")]
         [SerializeField] private DanmakuWorldConfig _worldConfig;
         [SerializeField] private DanmakuRenderConfig _renderConfig;
-        [SerializeField] private DanmakuTypeRegistry _typeRegistry;
         [SerializeField] private DanmakuTimeScaleSO _timeScale;
         [SerializeField] private DifficultyProfileSO _difficulty;
+
+        private DanmakuTypeRegistry _typeRegistry;
 
         [Header("事件")]
         [Tooltip("玩家被命中时触发")]
@@ -75,10 +76,15 @@ namespace MiniGameTemplate.Danmaku
         public void EditorWarmupBatches()
         {
 #if UNITY_EDITOR
-            if (_typeRegistry == null || _renderConfig == null || _worldConfig == null)
+            if (_renderConfig == null || _worldConfig == null)
                 throw new System.InvalidOperationException("DanmakuSystem missing config references for editor warmup.");
 
-            _typeRegistry.AssignRuntimeIndices();
+            _typeRegistry ??= new DanmakuTypeRegistry();
+            _typeRegistry.WarmUp(
+                Danmaku.Editor.DanmakuEditorRefreshCoordinator.FindAllBulletTypes(),
+                Danmaku.Editor.DanmakuEditorRefreshCoordinator.FindAllLaserTypes(),
+                Danmaku.Editor.DanmakuEditorRefreshCoordinator.FindAllSprayTypes());
+
             _bulletRenderer?.Dispose();
             _laserRenderer?.Dispose();
             _laserWarningRenderer?.Dispose();

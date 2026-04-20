@@ -11,7 +11,7 @@ namespace MiniGameTemplate.Danmaku
     /// </summary>
     public static class SprayUpdater
     {
-        public static void UpdateAll(
+        internal static void UpdateAll(
             SprayPool pool,
             AttachSourceRegistry attachRegistry,
             DanmakuTypeRegistry typeRegistry,
@@ -42,7 +42,7 @@ namespace MiniGameTemplate.Danmaku
                 // ── VFX 启动（首帧，VfxSlot == -1 时尝试启动） ──
                 if (spray.VfxSlot < 0 && vfxRuntime != null && typeRegistry != null)
                 {
-                    var sprayType = typeRegistry.SprayTypes[spray.SprayTypeIndex];
+                    var sprayType = typeRegistry.GetSprayType(spray.SprayTypeIndex);
                     if (sprayType != null && sprayType.SprayVFXType != null)
                     {
                         bool followTarget = sprayType.SprayVFXType.AttachMode == VFXAttachMode.FollowTarget && spray.AttachId != 0;

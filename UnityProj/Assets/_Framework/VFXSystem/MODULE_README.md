@@ -21,7 +21,7 @@ VFXSystem/
     ├── SpriteSheetVFXSystem.cs     # 唯一 MonoBehaviour 入口（纯 API 入口，R4.0 后由管线驱动）
     ├── Config/
     │   ├── VFXTypeSO.cs            # 特效类型 SO（SourceTexture / UVRect / 帧动画参数）
-    │   ├── VFXTypeRegistrySO.cs    # 类型注册表 SO（VFXTypeSO[] 索引映射）
+    │   ├── VFXTypeRegistry.cs       # 类型注册表（ADR-030：运行时 internal 类，懒注册）
     │   └── VFXRenderConfig.cs      # 渲染配置 SO（模板材质 / fallback 贴图 / RuntimeAtlasConfig）
     ├── Core/
     │   ├── VFXBatchRenderer.cs     # 通过 RBM 按桶渲染（RuntimeAtlas → AtlasBinding → SourceTexture 回退链）

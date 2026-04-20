@@ -293,7 +293,7 @@
 - 多智能体流水线：开发者 → 架构师评审 → 代码评审专家 → 文档工程师
 - **4.3 SO 配置热重载**：
   - 新建 `DanmakuEditorRefreshCoordinator`（9.2 KB），固化 `标脏 → Registry 重建 → Batch 预热 → 结果报告` 四阶段链路
-  - `BulletTypeSO/LaserTypeSO/SprayTypeSO/DanmakuTypeRegistry/VFXTypeRegistrySO` 的 OnValidate 统一接入 `MarkDirty()`
+  - `BulletTypeSO/LaserTypeSO/SprayTypeSO/DanmakuTypeRegistry/VFXTypeRegistry` 的 OnValidate 统一接入 `MarkDirty()`
   - 新建 `DanmakuSystemEditor` Inspector 面板，提供 "Run Controlled Refresh" 按钮 + 刷新报告面板
   - `DanmakuSystem.EditorWarmupBatches()` 提供受控预热入口
 - **4.4 碰撞可视化 Gizmos**：
@@ -323,7 +323,7 @@
   - `IDanmakuVFXRuntime.cs`
   - `DanmakuVFXRuntimeBridge.cs`
 - **新增共享文件（1 个）**：`RenderBatchManagerRuntimeStats.cs`（Rendering/）
-- **修改文件（12 个）**：DanmakuSystem.cs、DanmakuSystem.Runtime.cs、DanmakuSystem.UpdatePipeline.cs、DanmakuSystem.API.cs、CollisionSolver.cs、SprayUpdater.cs、BulletTypeSO.cs、LaserTypeSO.cs、SprayTypeSO.cs、DanmakuTypeRegistry.cs、VFXTypeRegistrySO.cs、DanmakuDebugHUD.cs
+- **修改文件（12 个）**：DanmakuSystem.cs、DanmakuSystem.Runtime.cs、DanmakuSystem.UpdatePipeline.cs、DanmakuSystem.API.cs、CollisionSolver.cs、SprayUpdater.cs、BulletTypeSO.cs、LaserTypeSO.cs、SprayTypeSO.cs、DanmakuTypeRegistry.cs、VFXTypeRegistry.cs、DanmakuDebugHUD.cs
 - **4.1/4.2 Atlas 打包工具与子图选择器**：已完成（Phase 4 子任务，2026-04-15）
   - 新建 `AtlasMappingSO.cs`（`_Framework/Rendering/`）：Atlas 映射数据模型，双键查找（引用+GUID），ADR-019 可逆派生产物
   - 新建 `DanmakuAtlasPackerWindow.cs`（`_Framework/Editor/Rendering/`）：Atlas 打包 Editor 窗口，域分离（Bullet/VFX），拖拽/文件夹导入，利用率预览

@@ -118,7 +118,7 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 每帧由 DanmakuSystem 调用——推进时间，到期的任务触发发射。
         /// </summary>
-        public void Tick(float dt, BulletWorld world, DanmakuTypeRegistry registry,
+        internal void Tick(float dt, BulletWorld world, DanmakuTypeRegistry registry,
             DifficultyProfileSO difficulty = null, TrailPool trailPool = null)
         {
             for (int i = 0; i < MAX_TASKS; i++)

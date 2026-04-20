@@ -142,38 +142,16 @@ namespace MiniGameTemplate.Danmaku.Editor
         {
             try
             {
-                string[] danmakuGuids = AssetDatabase.FindAssets("t:DanmakuTypeRegistry");
-                foreach (string guid in danmakuGuids)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    var registry = AssetDatabase.LoadAssetAtPath<DanmakuTypeRegistry>(path);
-                    if (registry == null)
-                        continue;
-
-                    registry.AssignRuntimeIndices();
-                    EditorUtility.SetDirty(registry);
-                    report.RebuiltRegistryCount++;
-                }
-
-                string[] vfxGuids = AssetDatabase.FindAssets("t:VFXTypeRegistrySO");
-                foreach (string guid in vfxGuids)
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    var registry = AssetDatabase.LoadAssetAtPath<VFXTypeRegistrySO>(path);
-                    if (registry == null)
-                        continue;
-
-                    registry.RebuildRuntimeIndices();
-                    EditorUtility.SetDirty(registry);
-                    report.RebuiltRegistryCount++;
-                }
-
-                AssetDatabase.SaveAssets();
+                // ADR-030：Registry SO 已移除。编辑器侧只做发现统计，不再回写任何运行时索引。
+                report.RebuiltRegistryCount += FindAllBulletTypes().Count;
+                report.RebuiltRegistryCount += FindAllLaserTypes().Count;
+                report.RebuiltRegistryCount += FindAllSprayTypes().Count;
+                report.RebuiltRegistryCount += FindAllVFXTypes().Count;
                 return true;
             }
             catch (Exception ex)
             {
-                report.Failures.Add("Registry rebuild failed: " + ex.Message);
+                report.Failures.Add("Registry discovery failed: " + ex.Message);
                 return false;
             }
         }
@@ -245,6 +223,25 @@ namespace MiniGameTemplate.Danmaku.Editor
                 report.Failures.Add(system.name + " warmup failed: " + ex.Message);
                 return false;
             }
+        }
+
+        public static IReadOnlyList<BulletTypeSO> FindAllBulletTypes() => FindAssetsOfType<BulletTypeSO>();
+        public static IReadOnlyList<LaserTypeSO> FindAllLaserTypes() => FindAssetsOfType<LaserTypeSO>();
+        public static IReadOnlyList<SprayTypeSO> FindAllSprayTypes() => FindAssetsOfType<SprayTypeSO>();
+        public static IReadOnlyList<VFXTypeSO> FindAllVFXTypes() => FindAssetsOfType<VFXTypeSO>();
+
+        private static List<T> FindAssetsOfType<T>() where T : UnityEngine.Object
+        {
+            string[] guids = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
+            var assets = new List<T>(guids.Length);
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+                if (asset != null)
+                    assets.Add(asset);
+            }
+            return assets;
         }
 
         private static void LogReport(RefreshReport report)

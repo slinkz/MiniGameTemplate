@@ -18,7 +18,7 @@ namespace MiniGameTemplate.Danmaku
         /// <param name="dt">弹幕 deltaTime（已乘 TimeScale）</param>
         /// <param name="system">弹幕系统引用（子弹幕发射用）</param>
         /// <param name="trailPool">重量拖尾池（FLAG_HEAVY_TRAIL 弹丸用）</param>
-        public static void UpdateAll(
+        internal static void UpdateAll(
             BulletWorld world,
             DanmakuTypeRegistry registry,
             Vector2 playerPos,
@@ -43,7 +43,7 @@ namespace MiniGameTemplate.Danmaku
                 {
                     // 爆炸帧倒计时（复用 Elapsed 字段）
                     core.Elapsed += dt;
-                    var bulletType = registry.BulletTypes[core.TypeIndex];
+                    var bulletType = registry.GetBulletType(core.TypeIndex);
                     float explosionDuration = bulletType.ExplosionFrameCount / 60f;
                     if (core.Elapsed >= explosionDuration)
                     {
@@ -83,7 +83,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var trail = ref trails[i];
                 if (trail.TrailLength > 0)
                 {
-                    var ghostInterval = registry.BulletTypes[core.TypeIndex].GhostInterval;
+                    var ghostInterval = registry.GetBulletType(core.TypeIndex).GhostInterval;
                     trail.GhostFrameCounter++;
                     if (trail.GhostFrameCounter >= ghostInterval)
                     {
@@ -97,7 +97,7 @@ namespace MiniGameTemplate.Danmaku
                 }
 
                 // 运动策略委托——通过 MotionRegistry 查表执行
-                var type = registry.BulletTypes[core.TypeIndex];
+                var type = registry.GetBulletType(core.TypeIndex);
                 var strategy = MotionRegistry.Get(type.MotionType);
                 strategy(ref core, ref modifiers[i], type, playerPos, dt);
 
@@ -146,7 +146,7 @@ namespace MiniGameTemplate.Danmaku
             DanmakuTypeRegistry registry,
             DanmakuSystem system)
         {
-            var bulletType = registry.BulletTypes[core.TypeIndex];
+            var bulletType = registry.GetBulletType(core.TypeIndex);
 
             // 子弹幕触发
             if ((core.Flags & BulletCore.FLAG_HAS_CHILD) != 0 && bulletType.ChildPattern != null)

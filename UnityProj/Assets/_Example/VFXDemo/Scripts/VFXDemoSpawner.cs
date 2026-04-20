@@ -104,7 +104,7 @@ namespace MiniGameTemplate.Example.VFXDemo
             if (_types != null && _fixedTypeIndex < _types.Length)
             {
                 var type = _types[_fixedTypeIndex];
-                Debug.Log($"[VFXDemoSpawner] Selection mode -> Fixed index={_fixedTypeIndex} type={(type == null ? "<null>" : type.name)} tint={(type == null ? "<null>" : type.Tint.ToString())} runtimeIndex={(type == null ? -1 : type.RuntimeIndex)}");
+                Debug.Log($"[VFXDemoSpawner] Selection mode -> Fixed index={_fixedTypeIndex} type={(type == null ? "<null>" : type.name)} tint={(type == null ? "<null>" : type.Tint.ToString())}");
                 return;
             }
 
@@ -117,7 +117,7 @@ namespace MiniGameTemplate.Example.VFXDemo
                 return;
 
             Vector2 pos2D = _start + _step * _cursor;
-            Debug.Log($"[VFXDemoSpawner] ManualSpawn mode={_selectionMode} fixedIndex={_fixedTypeIndex} cursor={_cursor} selectedType={(type == null ? "<null>" : type.name)} tint={(type == null ? "<null>" : type.Tint.ToString())} runtimeIndex={(type == null ? -1 : type.RuntimeIndex)} pos={pos2D}");
+            Debug.Log($"[VFXDemoSpawner] ManualSpawn mode={_selectionMode} fixedIndex={_fixedTypeIndex} cursor={_cursor} selectedType={(type == null ? "<null>" : type.name)} tint={(type == null ? "<null>" : type.Tint.ToString())} pos={pos2D}");
             _vfxSystem.Play(type, new Vector3(pos2D.x, pos2D.y, 0f));
             AdvanceSpawnCursor();
         }

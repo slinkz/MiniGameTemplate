@@ -195,12 +195,6 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("弹丸消亡时触发的子弹幕模式。null = 无子弹幕")]
         public BulletPatternSO ChildPattern;
 
-        // ──── 运行时 ────
-
-        /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
-        [HideInInspector]
-        public ushort RuntimeIndex;
-
         // ──── 序列帧辅助方法 ────
 
         /// <summary>

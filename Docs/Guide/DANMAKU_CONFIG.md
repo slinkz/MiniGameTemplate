@@ -232,8 +232,8 @@ public class SprayTypeSO : ScriptableObject
 ```
 
 > **AttachMode 语义**：`SprayTypeSO` 只决定喷雾判定范围与伤害；喷雾 VFX 是否持续跟随目标，由 `SprayVFXType.AttachMode` 决定。`World` = 仅在生成瞬间取一次 `spray.Origin` 播放 world-space VFX，后续不跟随；`FollowTarget` = 使用 `AttachSourceId` 持续跟随喷雾源位置移动。
-> **运行时前置规则**：如果 `SprayVFXType` 已赋值，但未注册到当前 SpriteSheetVFXSystem 使用的 `VFXTypeRegistrySO`，运行时 `SpriteSheetVFXSystem.CanPlay()` 会返回 false，喷雾特效不会播放，并输出 **Error** 日志：`[SpriteSheetVFXSystem] Type not found in registry: ...`。
-> **修复步骤**：把对应 `VFXTypeSO` 加入当前 SpriteSheetVFXSystem 引用的 `VFXTypeRegistrySO._types` 列表，或改回已注册的 VFXType。
+> **运行时前置规则**：如果 `SprayVFXType` 已赋值，VFX 会在首次播放时通过 `VFXTypeRegistry` 自动懒注册（ADR-030）。若 `VFXTypeSO.SourceTexture` 为 null，运行时 `SpriteSheetVFXSystem.CanPlay()` 会返回 false，喷雾特效不会播放，并输出 **Error** 日志：`[SpriteSheetVFXSystem] Type not found in registry: ...`。
+> **修复步骤**：确保对应 `VFXTypeSO.SourceTexture` 正确引用了源贴图资产。
 
 
 ---

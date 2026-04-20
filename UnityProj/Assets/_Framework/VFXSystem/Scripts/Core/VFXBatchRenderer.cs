@@ -12,18 +12,20 @@ namespace MiniGameTemplate.VFX
         private RenderBatchManager _batchManager;
         private RuntimeAtlasManager _runtimeAtlas;
         private Texture2D _fallbackAtlas; // 旧资产 SourceTexture 为空时的 fallback
+        private Material _normalMaterial;
         private int _totalQuadCount;
 
         /// <summary>上帧绘制的 VFX 总 Quad 数</summary>
         public int TotalDrawCount => _totalQuadCount;
 
         /// <summary>
-        /// 初始化渲染器——从 VFXTypeRegistrySO 收集所有 Texture 预热桶。
+        /// 初始化渲染器——从 VFXTypeRegistry 收集所有 Texture 预热桶。
         /// </summary>
-        public void Initialize(VFXRenderConfig renderConfig, VFXTypeRegistrySO registry, int maxQuadsPerBucket)
+        internal void Initialize(VFXRenderConfig renderConfig, VFXTypeRegistry registry, int maxQuadsPerBucket)
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig != null ? renderConfig.AtlasTexture : null;
+            _normalMaterial = renderConfig != null ? renderConfig.NormalMaterial : null;
             _runtimeAtlas = null;
 
             if (renderConfig != null && renderConfig.RuntimeAtlasConfig != null)
@@ -32,40 +34,14 @@ namespace MiniGameTemplate.VFX
                 _runtimeAtlas.Initialize(renderConfig.RuntimeAtlasConfig);
             }
 
-            Material mat = renderConfig != null ? renderConfig.NormalMaterial : null;
             var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
 
-            if (registry != null)
-            {
-                for (int i = 0; i < registry.Count; i++)
-                {
-                    if (!registry.TryGet((ushort)i, out var vfxType)) continue;
-
-                    var binding = RuntimeAtlasBindingResolver.ResolveVFX(_runtimeAtlas, _fallbackAtlas, vfxType);
-                    if (!binding.IsValid) continue;
-
-                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
-                    bool exists = false;
-                    for (int j = 0; j < registrations.Count; j++)
-                    {
-                        if (registrations[j].Key.Equals(key))
-                        {
-                            exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!exists)
-                        registrations.Add(new RenderBatchManager.BucketRegistration(key, mat, RenderSortingOrder.VFX));
-                }
-            }
-
             // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建一个 fallback 桶
-            if (registrations.Count == 0 && _fallbackAtlas != null)
+            if (_fallbackAtlas != null)
             {
                 registrations.Add(new RenderBatchManager.BucketRegistration(
                     new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas),
-                    mat,
+                    _normalMaterial,
                     RenderSortingOrder.VFX));
             }
 
@@ -75,7 +51,7 @@ namespace MiniGameTemplate.VFX
         /// <summary>
         /// 每帧由 VFX 系统调用——遍历活跃实例，填充顶点，统一提交。
         /// </summary>
-        public void Rebuild(VFXPool pool, VFXTypeRegistrySO registry)
+        internal void Rebuild(VFXPool pool, VFXTypeRegistry registry)
         {
             _batchManager.ResetAll();
             _totalQuadCount = 0;
@@ -100,7 +76,8 @@ namespace MiniGameTemplate.VFX
                 Rect baseUV = binding.UVRect;
 
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
-                if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
+                if (!_batchManager.TryGetOrCreateBucket(bucketKey, _normalMaterial, RenderSortingOrder.VFX, out var bucket))
+                    continue;
 
                 WriteQuad(bucket, ref instance, type, baseUV);
             }

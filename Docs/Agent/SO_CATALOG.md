@@ -194,7 +194,7 @@
 | 类 | 菜单路径 | 命名空间 | 用途 |
 |----|---------|----------|------|
 | `VFXTypeSO` | MiniGameTemplate/VFX/VFX Type | `MiniGameTemplate.VFX` | Sprite Sheet 特效类型完整配置 |
-| `VFXTypeRegistrySO` | MiniGameTemplate/VFX/Type Registry | `MiniGameTemplate.VFX` | VFX 类型注册表（集中管理所有 VFXTypeSO） |
+| ~~`VFXTypeRegistrySO`~~ | _(ADR-030：已降级为 `internal class VFXTypeRegistry`，不再是 SO)_ | `MiniGameTemplate.VFX` | 运行时 VFX 类型注册表（懒注册） |
 | `VFXRenderConfig` | MiniGameTemplate/VFX/Render Config | `MiniGameTemplate.VFX` | VFX 渲染配置（材质、贴图、RuntimeAtlas） |
 
 ### VFXTypeSO 字段详情

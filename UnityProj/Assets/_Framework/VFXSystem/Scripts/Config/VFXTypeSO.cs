@@ -65,10 +65,6 @@ namespace MiniGameTemplate.VFX
         [Tooltip("World=世界空间固定位置, FollowTarget=跟随附着源")]
         public VFXAttachMode AttachMode = VFXAttachMode.World;
 
-        [Header("运行时")]
-        [System.NonSerialized]
-        public ushort RuntimeIndex;
-
         public int MaxFrameCount => Mathf.Max(1, Mathf.Min(TotalFrames, Columns * Rows));
         public float Duration => MaxFrameCount / Mathf.Max(1f, FramesPerSecond);
 

@@ -9,7 +9,7 @@ namespace MiniGameTemplate.Danmaku
     /// </summary>
     public static class LaserUpdater
     {
-        public static void UpdateAll(
+        internal static void UpdateAll(
             LaserPool pool,
             DanmakuTypeRegistry registry,
             ObstaclePool obstaclePool,
@@ -36,7 +36,7 @@ namespace MiniGameTemplate.Danmaku
                 }
 
                 laser.Elapsed += dt;
-                var type = registry.LaserTypes[laser.LaserTypeIndex];
+                var type = registry.GetLaserType(laser.LaserTypeIndex);
 
                 // Phase 推进
                 if (laser.Elapsed < type.ChargeDuration)

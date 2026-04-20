@@ -45,10 +45,6 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("Origin 越界回收的边缘余量（世界单位）")]
         public float ScreenEdgeRecycleMargin = 1f;
 
-        /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
-        [HideInInspector]
-        public byte RuntimeIndex;
-
 #if UNITY_EDITOR
         private void OnValidate()
         {

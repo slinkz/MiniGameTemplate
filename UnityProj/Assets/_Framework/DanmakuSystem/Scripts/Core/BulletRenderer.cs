@@ -12,6 +12,7 @@ namespace MiniGameTemplate.Danmaku
         private RenderBatchManager _batchManager;
         private RuntimeAtlasManager _runtimeAtlas;
         private Texture2D _fallbackAtlas; // 旧资产 SourceTexture 为空时的 fallback
+        private Material _bulletMaterial;
         private int _totalQuadCount;
 
         /// <summary>上帧绘制的弹丸总 Quad 数（含残影）</summary>
@@ -20,10 +21,11 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 初始化渲染器——从 TypeRegistry 收集所有 Texture 预热桶。
         /// </summary>
-        public void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
+        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig.BulletAtlas;
+            _bulletMaterial = renderConfig.BulletMaterial;
             _runtimeAtlas = null;
 
             if (renderConfig != null && renderConfig.RuntimeAtlasConfig != null)
@@ -32,41 +34,15 @@ namespace MiniGameTemplate.Danmaku
                 _runtimeAtlas.Initialize(renderConfig.RuntimeAtlasConfig);
             }
 
-            // 收集所有唯一的 Texture 组合（ADR-029 v2：Layer 统一 Normal）
+            // ADR-030：不再依赖预先枚举全部 BulletTypeSO，桶允许运行时按需创建。
             var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
 
-            if (registry.BulletTypes != null)
-            {
-                for (int i = 0; i < registry.BulletTypes.Length; i++)
-                {
-                    var bt = registry.BulletTypes[i];
-                    if (bt == null) continue;
-
-                    var binding = RuntimeAtlasBindingResolver.ResolveBullet(_runtimeAtlas, _fallbackAtlas, bt);
-                    if (!binding.IsValid) continue;
-
-                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
-                    bool exists = false;
-                    for (int j = 0; j < registrations.Count; j++)
-                    {
-                        if (registrations[j].Key.Equals(key))
-                        {
-                            exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!exists)
-                        registrations.Add(new RenderBatchManager.BucketRegistration(key, renderConfig.BulletMaterial, RenderSortingOrder.Bullet));
-                }
-            }
-
             // 兼容：如果没有任何桶被收集但全局 Atlas 存在，至少建一个 fallback 桶
-            if (registrations.Count == 0 && _fallbackAtlas != null)
+            if (_fallbackAtlas != null)
             {
                 registrations.Add(new RenderBatchManager.BucketRegistration(
                     new RenderBatchManager.BucketKey(RenderLayer.Normal, _fallbackAtlas),
-                    renderConfig.BulletMaterial,
+                    _bulletMaterial,
                     RenderSortingOrder.Bullet));
             }
 
@@ -76,7 +52,7 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 每帧由 DanmakuSystem.LateUpdate 调用——收集弹丸 -> 填充顶点 -> 上传 -> DrawMesh。
         /// </summary>
-        public void Rebuild(BulletWorld world, BulletTrail[] trails, DanmakuTypeRegistry registry)
+        internal void Rebuild(BulletWorld world, BulletTrail[] trails, DanmakuTypeRegistry registry)
         {
             _batchManager.ResetAll();
             _totalQuadCount = 0;
@@ -89,7 +65,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var core = ref cores[i];
                 if ((core.Flags & BulletCore.FLAG_ACTIVE) == 0) continue;
 
-                var bulletType = registry.BulletTypes[core.TypeIndex];
+                var bulletType = registry.GetBulletType(core.TypeIndex);
 
                 var binding = RuntimeAtlasBindingResolver.ResolveBullet(_runtimeAtlas, _fallbackAtlas, bulletType);
                 if (!binding.IsValid) continue;
@@ -98,7 +74,11 @@ namespace MiniGameTemplate.Danmaku
                 Rect baseUV = binding.UVRect;
 
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, texture);
-                if (!_batchManager.TryGetBucket(bucketKey, out var bucket))
+                if (!_batchManager.TryGetOrCreateBucket(
+                        bucketKey,
+                        _bulletMaterial,
+                        RenderSortingOrder.Bullet,
+                        out var bucket))
                 {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                     var allocation = (_runtimeAtlas != null && bulletType != null && bulletType.SourceTexture != null)

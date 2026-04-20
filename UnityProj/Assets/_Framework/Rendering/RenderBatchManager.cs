@@ -87,13 +87,18 @@ namespace MiniGameTemplate.Rendering
         };
 
         private Dictionary<BucketKey, int> _bucketIndex;
-        private RenderBucket[] _buckets;
-        private int _bucketCount;
+        private List<RenderBucket> _buckets;
         private int _unknownBucketErrorCount;
+        private int _dynamicBucketCreatedCount;
+        private int _peakBucketCountThisFrame;
+        private int _maxQuadsPerBucket;
+        private int _maxBuckets;
         private bool _initialized;
 
         public int UnknownBucketErrorCount => _unknownBucketErrorCount;
-        public int BucketCount => _bucketCount;
+        public int BucketCount => _buckets != null ? _buckets.Count : 0;
+        public int DynamicBucketCreatedCount => _dynamicBucketCreatedCount;
+        public int PeakBucketCountThisFrame => _peakBucketCountThisFrame;
 
         public void Initialize(IReadOnlyList<BucketRegistration> registrations, int maxQuadsPerBucket)
         {
@@ -109,9 +114,12 @@ namespace MiniGameTemplate.Rendering
                 throw new ArgumentOutOfRangeException(nameof(maxQuadsPerBucket), "maxQuadsPerBucket 必须 > 0");
 
             _bucketIndex = new Dictionary<BucketKey, int>(registrations.Count);
-            _buckets = new RenderBucket[registrations.Count];
-            _bucketCount = 0;
+            _buckets = new List<RenderBucket>(registrations.Count);
             _unknownBucketErrorCount = 0;
+            _dynamicBucketCreatedCount = 0;
+            _peakBucketCountThisFrame = registrations.Count;
+            _maxQuadsPerBucket = maxQuadsPerBucket;
+            _maxBuckets = Mathf.Max(64, registrations.Count == 0 ? 256 : registrations.Count * 4);
 
             for (int i = 0; i < registrations.Count; i++)
             {
@@ -133,58 +141,12 @@ namespace MiniGameTemplate.Rendering
                 if (_bucketIndex.ContainsKey(key))
                     continue;
 
-                Material matInstance = new Material(registration.TemplateMaterial)
-                {
-                    name = $"BatchMat_{key.Layer}_{key.Texture.name} (Instance)",
-                };
-                matInstance.mainTexture = key.Texture;
-                if (matInstance.HasProperty("_Color"))
-                    matInstance.SetColor("_Color", new Color(1f, 1f, 1f, 1f));
+                RenderBucket bucket = CreateBucket(key, registration.TemplateMaterial, registration.SortingOrder, maxQuadsPerBucket);
+                if (bucket == null)
+                    continue;
 
-                // 通过 renderQueue 确保 GPU 级层序——不依赖 DrawMesh 调用顺序
-                // Transparent 基础值 = 3000，加上 SortingOrder 偏移
-                matInstance.renderQueue = 3000 + registration.SortingOrder;
-
-                int vertexCount = maxQuadsPerBucket * 4;
-                int indexCount = maxQuadsPerBucket * 6;
-
-                Mesh mesh = new Mesh
-                {
-                    name = $"BatchMesh_{key.Layer}_{key.Texture.name}",
-                    indexFormat = vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16,
-                };
-
-                mesh.SetVertexBufferParams(vertexCount, VertexLayout);
-                mesh.SetIndexBufferParams(indexCount, vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16);
-
-                int[] indices = new int[indexCount];
-                for (int q = 0; q < maxQuadsPerBucket; q++)
-                {
-                    int vi = q * 4;
-                    int ii = q * 6;
-                    indices[ii + 0] = vi + 0;
-                    indices[ii + 1] = vi + 1;
-                    indices[ii + 2] = vi + 2;
-                    indices[ii + 3] = vi + 2;
-                    indices[ii + 4] = vi + 3;
-                    indices[ii + 5] = vi + 0;
-                }
-                mesh.SetIndices(indices, MeshTopology.Triangles, 0, false);
-
-                RenderBucket bucket = new RenderBucket
-                {
-                    Key = key,
-                    Vertices = new RenderVertex[vertexCount],
-                    QuadCount = 0,
-                    MaxQuads = maxQuadsPerBucket,
-                    Mesh = mesh,
-                    Material = matInstance,
-                    SortingOrder = registration.SortingOrder,
-                };
-
-                _bucketIndex[key] = _bucketCount;
-                _buckets[_bucketCount] = bucket;
-                _bucketCount++;
+                _bucketIndex[key] = _buckets.Count;
+                _buckets.Add(bucket);
             }
 
             SortBucketsBySortingOrder();
@@ -207,9 +169,44 @@ namespace MiniGameTemplate.Rendering
             return false;
         }
 
+        public bool TryGetOrCreateBucket(BucketKey key, Material templateMaterial, int sortingOrder, out RenderBucket bucket)
+        {
+            // 热路径：O(1) 字典命中——不走 TryGetBucket 避免副作用
+            if (_bucketIndex != null && _bucketIndex.TryGetValue(key, out int idx))
+            {
+                bucket = _buckets[idx];
+                return true;
+            }
+
+            // 冷路径：首次遇到新类型，动态建桶
+            if (!_initialized || key.Texture == null || templateMaterial == null)
+            {
+                bucket = null;
+                return false;
+            }
+
+            if (_buckets.Count >= _maxBuckets)
+            {
+                bucket = null;
+                return false;
+            }
+
+            bucket = CreateBucket(key, templateMaterial, sortingOrder, _maxQuadsPerBucket);
+            if (bucket == null)
+                return false;
+
+            _buckets.Add(bucket);
+            _dynamicBucketCreatedCount++;
+            SortBucketsBySortingOrder();
+            if (_buckets.Count > _peakBucketCountThisFrame)
+                _peakBucketCountThisFrame = _buckets.Count;
+            return true;
+        }
+
         public void ResetAll()
         {
-            for (int i = 0; i < _bucketCount; i++)
+            _peakBucketCountThisFrame = BucketCount;
+            for (int i = 0; i < _buckets.Count; i++)
             {
                 _buckets[i].QuadCount = 0;
             }
@@ -220,7 +217,7 @@ namespace MiniGameTemplate.Rendering
             int drawCalls = 0;
             int activeBatches = 0;
 
-            for (int i = 0; i < _bucketCount; i++)
+            for (int i = 0; i < _buckets.Count; i++)
             {
                 RenderBucket bucket = _buckets[i];
                 if (bucket.QuadCount == 0) continue;
@@ -250,7 +247,7 @@ namespace MiniGameTemplate.Rendering
         {
             if (_buckets != null)
             {
-                for (int i = 0; i < _bucketCount; i++)
+                for (int i = 0; i < _buckets.Count; i++)
                 {
                     RenderBucket bucket = _buckets[i];
                     if (bucket.Mesh != null) UnityEngine.Object.Destroy(bucket.Mesh);
@@ -260,26 +257,81 @@ namespace MiniGameTemplate.Rendering
 
             _buckets = null;
             _bucketIndex = null;
-            _bucketCount = 0;
+            _dynamicBucketCreatedCount = 0;
+            _peakBucketCountThisFrame = 0;
+            _maxQuadsPerBucket = 0;
+            _maxBuckets = 0;
             _initialized = false;
         }
 
         private void SortBucketsBySortingOrder()
         {
-            if (_bucketCount <= 1)
+            if (_buckets == null || _buckets.Count <= 1)
                 return;
 
-            Array.Sort(_buckets, 0, _bucketCount, Comparer<RenderBucket>.Create((a, b) => a.SortingOrder.CompareTo(b.SortingOrder)));
+            _buckets.Sort((a, b) => a.SortingOrder.CompareTo(b.SortingOrder));
             RebuildBucketIndex();
         }
 
         private void RebuildBucketIndex()
         {
             _bucketIndex.Clear();
-            for (int i = 0; i < _bucketCount; i++)
+            for (int i = 0; i < _buckets.Count; i++)
             {
                 _bucketIndex[_buckets[i].Key] = i;
             }
+        }
+
+        private static RenderBucket CreateBucket(BucketKey key, Material templateMaterial, int sortingOrder, int maxQuadsPerBucket)
+        {
+            if (key.Texture == null || templateMaterial == null || maxQuadsPerBucket <= 0)
+                return null;
+
+            Material matInstance = new Material(templateMaterial)
+            {
+                name = $"BatchMat_{key.Layer}_{key.Texture.name} (Instance)",
+            };
+            matInstance.mainTexture = key.Texture;
+            if (matInstance.HasProperty("_Color"))
+                matInstance.SetColor("_Color", new Color(1f, 1f, 1f, 1f));
+            matInstance.renderQueue = 3000 + sortingOrder;
+
+            int vertexCount = maxQuadsPerBucket * 4;
+            int indexCount = maxQuadsPerBucket * 6;
+
+            Mesh mesh = new Mesh
+            {
+                name = $"BatchMesh_{key.Layer}_{key.Texture.name}",
+                indexFormat = vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16,
+            };
+
+            mesh.SetVertexBufferParams(vertexCount, VertexLayout);
+            mesh.SetIndexBufferParams(indexCount, vertexCount > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16);
+
+            int[] indices = new int[indexCount];
+            for (int q = 0; q < maxQuadsPerBucket; q++)
+            {
+                int vi = q * 4;
+                int ii = q * 6;
+                indices[ii + 0] = vi + 0;
+                indices[ii + 1] = vi + 1;
+                indices[ii + 2] = vi + 2;
+                indices[ii + 3] = vi + 2;
+                indices[ii + 4] = vi + 3;
+                indices[ii + 5] = vi + 0;
+            }
+            mesh.SetIndices(indices, MeshTopology.Triangles, 0, false);
+
+            return new RenderBucket
+            {
+                Key = key,
+                Vertices = new RenderVertex[vertexCount],
+                QuadCount = 0,
+                MaxQuads = maxQuadsPerBucket,
+                Mesh = mesh,
+                Material = matInstance,
+                SortingOrder = sortingOrder,
+            };
         }
     }
 }

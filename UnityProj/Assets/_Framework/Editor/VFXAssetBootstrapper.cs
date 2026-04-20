@@ -17,7 +17,6 @@ namespace MiniGameTemplate.EditorTools
         private const string MaterialFolder = Root + "/Materials";
         private const string ConfigFolder = Root + "/Config";
         private const string TypeFolder = Root + "/Type";
-        private const string RegistryFolder = Root + "/Registry";
 
         [MenuItem("Tools/MiniGame Template/VFX/Create Stage2 Demo Assets", false, 150)]
         private static void CreateStage2DemoAssets()
@@ -28,14 +27,16 @@ namespace MiniGameTemplate.EditorTools
             Material normalMat = CreateMaterial("Mat_VFX_Normal", "MiniGameTemplate/Danmaku/Bullet", atlas);
             VFXRenderConfig renderConfig = CreateRenderConfig(normalMat, atlas);
             VFXTypeSO type = CreateExplosionType();
-            VFXTypeRegistrySO registry = CreateRegistry(type);
+
+            // ADR-030: VFXTypeRegistry 已降级为运行时类，不再需要创建 Registry .asset。
+            // TypeSO 在运行时首次使用时自动注册。
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Selection.activeObject = registry;
-            EditorGUIUtility.PingObject(registry);
-            Debug.Log("[VFXAssetBootstrapper] Stage2 Demo assets created.");
+            Selection.activeObject = type;
+            EditorGUIUtility.PingObject(type);
+            Debug.Log("[VFXAssetBootstrapper] Stage2 Demo assets created (ADR-030: Registry is now runtime-only).");
         }
 
         private static void EnsureFolders()
@@ -222,26 +223,6 @@ namespace MiniGameTemplate.EditorTools
             return type;
         }
 
-        private static VFXTypeRegistrySO CreateRegistry(VFXTypeSO type)
-        {
-            string path = RegistryFolder + "/VFXTypeRegistry_Demo.asset";
-            VFXTypeRegistrySO registry = AssetDatabase.LoadAssetAtPath<VFXTypeRegistrySO>(path);
-            if (registry == null)
-            {
-                registry = ScriptableObject.CreateInstance<VFXTypeRegistrySO>();
-                AssetDatabase.CreateAsset(registry, path);
-            }
-
-            var so = new SerializedObject(registry);
-            var types = so.FindProperty("_types");
-            types.ClearArray();
-            types.InsertArrayElementAtIndex(0);
-            types.GetArrayElementAtIndex(0).objectReferenceValue = type;
-            so.ApplyModifiedProperties();
-            EditorUtility.SetDirty(registry);
-            registry.RebuildRuntimeIndices();
-            return registry;
-        }
     }
 }
 #endif

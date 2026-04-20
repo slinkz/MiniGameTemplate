@@ -64,10 +64,6 @@ namespace MiniGameTemplate.Danmaku
         [Range(0, 8)]
         public byte MaxReflections = 0;
 
-        /// <summary>DanmakuTypeRegistry 分配的运行时索引</summary>
-        [HideInInspector]
-        public byte RuntimeIndex;
-
         /// <summary>总时长（charge + fire + fade）</summary>
         public float TotalDuration => ChargeDuration + FiringDuration + FadeDuration;
 

@@ -12,8 +12,9 @@ namespace MiniGameTemplate.VFX
     {
         [Header("配置")]
         [SerializeField] private VFXRenderConfig _renderConfig;
-        [SerializeField] private VFXTypeRegistrySO _typeRegistry;
         [SerializeField, Min(1)] private int _capacity = VFXPool.DEFAULT_CAPACITY;
+
+        private VFXTypeRegistry _typeRegistry;
 
         private VFXPool _pool;
         private VFXBatchRenderer _renderer;
@@ -64,7 +65,7 @@ namespace MiniGameTemplate.VFX
             if (_pool != null)
                 return;
 
-            RebuildRegistryRuntimeIndices();
+            _typeRegistry ??= new VFXTypeRegistry();
             _pool = new VFXPool(_capacity);
             _renderer = new VFXBatchRenderer();
             _renderer.Initialize(_renderConfig, _typeRegistry, _pool.Capacity);
@@ -80,9 +81,7 @@ namespace MiniGameTemplate.VFX
 
         public bool CanPlay(VFXTypeSO type)
         {
-            return type != null
-                && _typeRegistry != null
-                && _typeRegistry.Contains(type);
+            return type != null;
         }
 
         public void PlayOneShot(VFXTypeSO type, Vector3 position, float scale = 1f, float rotationDegrees = 0f, Color? colorOverride = null)
@@ -96,16 +95,6 @@ namespace MiniGameTemplate.VFX
                 return -1;
 
             Initialize();
-            RebuildRegistryRuntimeIndices();
-
-            if (!CanPlay(type))
-            {
-                string registryName = _typeRegistry != null ? _typeRegistry.name : "<null>";
-                Debug.LogError(
-                    $"[SpriteSheetVFXSystem] Type not found in registry: {type.name}. " +
-                    $"Registry={registryName}. 修复：把该 VFXTypeSO 加入当前 SpriteSheetVFXSystem 使用的 VFXTypeRegistrySO._types 列表，或改回已注册的 VFXTypeSO。");
-                return -1;
-            }
 
             int slot = _pool.Allocate();
             if (slot < 0)
@@ -119,7 +108,7 @@ namespace MiniGameTemplate.VFX
                 RotationDegrees = rotationDegrees,
                 Scale = Mathf.Max(0.01f, scale),
                 Elapsed = 0f,
-                TypeIndex = type.RuntimeIndex,
+                TypeIndex = _typeRegistry.GetOrRegister(type),
                 CurrentFrame = 0,
                 Flags = (byte)(VFXInstance.FLAG_ACTIVE | (type.Loop ? 0 : VFXInstance.FLAG_PLAY_ONCE)),
             };
@@ -167,16 +156,9 @@ namespace MiniGameTemplate.VFX
             if (type == null || attachSourceId == 0) return -1;
 
             Initialize();
-            RebuildRegistryRuntimeIndices();
 
             if (!CanPlay(type))
-            {
-                string registryName = _typeRegistry != null ? _typeRegistry.name : "<null>";
-                Debug.LogError(
-                    $"[SpriteSheetVFXSystem] Type not found in registry: {type.name}. " +
-                    $"Registry={registryName}. 修复：把该 VFXTypeSO 加入当前 SpriteSheetVFXSystem 使用的 VFXTypeRegistrySO._types 列表，或改回已注册的 VFXTypeSO。");
                 return -1;
-            }
 
             var dedupeKey = new AttachedVFXKey(attachSourceId, type);
             if (_attachedSlots.TryGetValue(dedupeKey, out int existingSlot))
@@ -199,7 +181,7 @@ namespace MiniGameTemplate.VFX
                 RotationDegrees = 0f,
                 Scale = Mathf.Max(0.01f, scale),
                 Elapsed = 0f,
-                TypeIndex = type.RuntimeIndex,
+                TypeIndex = _typeRegistry.GetOrRegister(type),
                 CurrentFrame = 0,
                 Flags = (byte)(VFXInstance.FLAG_ACTIVE | (type.Loop ? 0 : VFXInstance.FLAG_PLAY_ONCE)),
                 AttachSourceId = attachSourceId,
@@ -271,11 +253,6 @@ namespace MiniGameTemplate.VFX
 
                 instance.CurrentFrame = (byte)frame;
             }
-        }
-
-        private void RebuildRegistryRuntimeIndices()
-        {
-            _typeRegistry?.RebuildRuntimeIndices();
         }
 
         private void RemoveAttachedSlotMapping(int slot)

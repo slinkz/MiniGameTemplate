@@ -41,8 +41,8 @@ namespace MiniGameTemplate.Danmaku
             // 运动策略注册表初始化
             MotionRegistry.Initialize();
 
-            // 类型注册表索引分配
-            _typeRegistry.AssignRuntimeIndices();
+            // 运行时类型注册表（ADR-030）
+            _typeRegistry = new DanmakuTypeRegistry();
 
             // 数据容器
             _bulletWorld = new BulletWorld(_worldConfig.MaxBullets);

@@ -356,10 +356,10 @@ public partial class DanmakuSystem : MonoBehaviour
     // ── 公开 API（API.cs） ──
     public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle);
     public void FireGroup(PatternGroupSO group, Vector2 origin, float baseAngle);
-    public int  FireLaser(byte typeIndex, Vector2 origin, float angle, float length, float lifetime = 0f);
-    public int  FireLaser(byte typeIndex, Transform source, float length, ...);  // Attached 模式
-    public int  FireSpray(byte typeIndex, Vector2 origin, float direction, ...);
-    public int  FireSpray(byte typeIndex, Transform source, ...);                // Attached 模式
+    public int  FireLaser(LaserTypeSO type, Vector2 origin, float angle, float length, float lifetime = 0f);
+    public int  FireLaser(LaserTypeSO type, Transform source, float length, ...);  // Attached 模式
+    public int  FireSpray(SprayTypeSO type, Vector2 origin, float direction, ...);
+    public int  FireSpray(SprayTypeSO type, Transform source, ...);                // Attached 模式
     public void SetPlayer(Transform playerTransform, float radius);
     public bool RegisterTarget(ICollisionTarget target);
     public void UnregisterTarget(ICollisionTarget target);

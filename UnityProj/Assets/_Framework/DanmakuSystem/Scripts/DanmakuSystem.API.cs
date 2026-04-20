@@ -32,8 +32,8 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>发射器驱动器</summary>
         public SpawnerDriver SpawnerDriver => _spawnerDriver;
 
-        /// <summary>类型注册表</summary>
-        public DanmakuTypeRegistry TypeRegistry => _typeRegistry;
+        /// <summary>类型注册表（框架内部使用）</summary>
+        internal DanmakuTypeRegistry TypeRegistry => _typeRegistry;
 
         /// <summary>当前难度配置</summary>
         public DifficultyProfileSO Difficulty
@@ -115,50 +115,56 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 发射激光（Detached 模式——发射后固定不动）。
         /// </summary>
-        public int FireLaser(byte typeIndex, Vector2 origin, float angle,
+        public int FireLaser(LaserTypeSO type, Vector2 origin, float angle,
             float length, float lifetime = 0f)
         {
-            return FireLaserInternal(typeIndex, origin, angle, length, lifetime, 0);
+            return FireLaserInternal(type, origin, angle, length, lifetime, 0);
         }
 
         /// <summary>
         /// 发射激光（Attached 模式——每帧跟随挂载 Transform 的位置和朝向）。
         /// </summary>
-        public int FireLaser(byte typeIndex, Transform source, float length,
+        public int FireLaser(LaserTypeSO type, Transform source, float length,
             float lifetime = 0f, Vector2 localOffset = default, float angleOffset = 0f)
         {
+            if (type == null || source == null)
+                return -1;
+
             byte attachId = _attachRegistry.Register(source, localOffset, angleOffset);
             if (attachId == 0) return -1;
 
             Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
             float angle = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);
 
-            return FireLaserInternal(typeIndex, origin, angle, length, lifetime, attachId);
+            return FireLaserInternal(type, origin, angle, length, lifetime, attachId);
         }
 
         /// <summary>
         /// 发射喷雾（Detached 模式——发射后固定不动）。
         /// </summary>
-        public int FireSpray(byte typeIndex, Vector2 origin, float direction,
+        public int FireSpray(SprayTypeSO type, Vector2 origin, float direction,
             float coneAngle, float range, float lifetime)
         {
-            return FireSprayInternal(typeIndex, origin, direction, coneAngle, range, lifetime, 0);
+            return FireSprayInternal(type, origin, direction, coneAngle, range, lifetime, 0);
         }
 
         /// <summary>
         /// 发射喷雾（Attached 模式——每帧跟随挂载 Transform）。
         /// </summary>
-        public int FireSpray(byte typeIndex, Transform source,
+        public int FireSpray(SprayTypeSO type, Transform source,
             float coneAngle, float range, float lifetime,
             Vector2 localOffset = default, float angleOffset = 0f)
         {
+            if (type == null || source == null)
+                return -1;
+
             byte attachId = _attachRegistry.Register(source, localOffset, angleOffset);
             if (attachId == 0) return -1;
 
             Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
             float direction = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);
 
-            return FireSprayInternal(typeIndex, origin, direction, coneAngle, range, lifetime, attachId);
+            return FireSprayInternal(type, origin, direction, coneAngle, range, lifetime, attachId);
         }
 
         /// <summary>
@@ -205,7 +211,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var core = ref cores[i];
                 if ((core.Flags & BulletCore.FLAG_ACTIVE) == 0) continue;
 
-                var bulletType = _typeRegistry.BulletTypes[core.TypeIndex];
+                var bulletType = _typeRegistry.GetBulletType(core.TypeIndex);
                 _effectsBridge?.OnBulletCleared(i, core.Position, bulletType);
             }
 
@@ -227,9 +233,15 @@ namespace MiniGameTemplate.Danmaku
             return group;
         }
 
-        private int FireLaserInternal(byte typeIndex, Vector2 origin, float angle,
+        private int FireLaserInternal(LaserTypeSO type, Vector2 origin, float angle,
             float length, float lifetime, byte attachId)
         {
+            if (type == null)
+            {
+                if (attachId != 0) _attachRegistry.Release(attachId);
+                return -1;
+            }
+
             int index = _laserPool.Allocate();
             if (index < 0)
             {
@@ -237,7 +249,7 @@ namespace MiniGameTemplate.Danmaku
                 return -1;
             }
 
-            var type = _typeRegistry.LaserTypes[typeIndex];
+            byte typeIndex = _typeRegistry.GetOrRegisterLaser(type);
             ref var laser = ref _laserPool.Data[index];
             laser.Origin = origin;
             laser.Angle = angle;
@@ -260,9 +272,15 @@ namespace MiniGameTemplate.Danmaku
             return index;
         }
 
-        private int FireSprayInternal(byte typeIndex, Vector2 origin, float direction,
+        private int FireSprayInternal(SprayTypeSO type, Vector2 origin, float direction,
             float coneAngle, float range, float lifetime, byte attachId)
         {
+            if (type == null)
+            {
+                if (attachId != 0) _attachRegistry.Release(attachId);
+                return -1;
+            }
+
             int index = _sprayPool.Allocate();
             if (index < 0)
             {
@@ -270,7 +288,7 @@ namespace MiniGameTemplate.Danmaku
                 return -1;
             }
 
-            var type = _typeRegistry.SprayTypes[typeIndex];
+            byte typeIndex = _typeRegistry.GetOrRegisterSpray(type);
             ref var spray = ref _sprayPool.Data[index];
             spray.Origin = origin;
             spray.Direction = direction;

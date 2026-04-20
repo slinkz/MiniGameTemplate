@@ -60,7 +60,7 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 统一碰撞检测入口。
         /// </summary>
-        public CollisionResult SolveAll(
+        internal CollisionResult SolveAll(
             BulletWorld bulletWorld,
             LaserPool laserPool,
             SprayPool sprayPool,
@@ -146,7 +146,7 @@ namespace MiniGameTemplate.Danmaku
 
                     // 命中
                     result.HasAnyHit = true;
-                    var bulletType = registry.BulletTypes[c.TypeIndex];
+                    var bulletType = registry.GetBulletType(c.TypeIndex);
                     int damage = bulletType.Damage;
                     result.TotalDamage += damage;
                     result.HitTargetCount++;
@@ -275,14 +275,14 @@ namespace MiniGameTemplate.Danmaku
                     // 对障碍物造成伤害（如果可摧毁）
                     if (obs.HitPoints > 0)
                     {
-                        var bulletType = registry.BulletTypes[c.TypeIndex];
+                        var bulletType = registry.GetBulletType(c.TypeIndex);
                         obs.HitPoints = Mathf.Max(0, obs.HitPoints - bulletType.Damage);
                         if (obs.HitPoints == 0)
                             obs.Phase = (byte)ObstaclePhase.Destroyed;
                     }
 
                     // 碰撞响应
-                    ApplyCollisionResponse(ref c, ref trails[i], registry.BulletTypes[c.TypeIndex],
+                    ApplyCollisionResponse(ref c, ref trails[i], registry.GetBulletType(c.TypeIndex),
                         CollisionTarget.Obstacle, (byte)j, normal);
                 }
             }
@@ -301,7 +301,7 @@ namespace MiniGameTemplate.Danmaku
                 if ((c.Flags & BulletCore.FLAG_ACTIVE) == 0) continue;
                 if (c.Phase != (byte)BulletPhase.Active) continue;
 
-                var type = registry.BulletTypes[c.TypeIndex];
+                var type = registry.GetBulletType(c.TypeIndex);
 
                 // 屏幕边缘检测
                 bool outsideBounds = c.Position.x < _worldBounds.xMin - type.ScreenEdgeRecycleDistance
@@ -502,7 +502,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var spray = ref sprayPool.Data[i];
                 if (spray.Phase == 0) continue;
 
-                var type = registry.SprayTypes[spray.SprayTypeIndex];
+                var type = registry.GetSprayType(spray.SprayTypeIndex);
                 if (type.OnHitObstacle == SprayObstacleResponse.Ignore) continue;
 
                 // 伤害 tick 检查（tick 推进已在 Phase 5 SolveSprays 完成，此处读取标记）
@@ -557,7 +557,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var spray = ref sprayPool.Data[i];
                 if (spray.Phase == 0) continue;
 
-                var type = registry.SprayTypes[spray.SprayTypeIndex];
+                var type = registry.GetSprayType(spray.SprayTypeIndex);
                 if (!type.RecycleOnOriginOutOfBounds) continue;
 
                 float margin = type.ScreenEdgeRecycleMargin;

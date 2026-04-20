@@ -37,7 +37,6 @@ namespace MiniGameTemplate.EditorTools
             DanmakuDifficultyProfile,
             DanmakuWorldConfig,
             DanmakuRenderConfig,
-            DanmakuTypeRegistry,
             DanmakuTimeScale,
         }
 
@@ -106,7 +105,6 @@ namespace MiniGameTemplate.EditorTools
                 SOType.DanmakuDifficultyProfile => ScriptableObject.CreateInstance<Danmaku.DifficultyProfileSO>(),
                 SOType.DanmakuWorldConfig => ScriptableObject.CreateInstance<Danmaku.DanmakuWorldConfig>(),
                 SOType.DanmakuRenderConfig => ScriptableObject.CreateInstance<Danmaku.DanmakuRenderConfig>(),
-                SOType.DanmakuTypeRegistry => ScriptableObject.CreateInstance<Danmaku.DanmakuTypeRegistry>(),
                 SOType.DanmakuTimeScale => ScriptableObject.CreateInstance<Danmaku.DanmakuTimeScaleSO>(),
                 _ => null
             };

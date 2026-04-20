@@ -74,16 +74,16 @@ namespace MiniGameTemplate.Example
         [SerializeField] private DifficultyProfileSO _difficultyHard;
 
         [Header("激光测试（L 键）")]
-        [Tooltip("激光类型在 TypeRegistry 中的索引（通常为 0）")]
-        [SerializeField] private byte _laserTypeIndex = 0;
+        [Tooltip("激光类型（直接拖入 LaserTypeSO 资产）")]
+        [SerializeField] private LaserTypeSO _laserType;
         [Tooltip("激光长度（世界单位）")]
         [SerializeField] private float _laserLength = 12f;
         [Tooltip("激光发射冷却（秒）")]
         [SerializeField] private float _laserCooldown = 3f;
 
         [Header("喷雾测试（K 键 / J 键）")]
-        [Tooltip("喷雾类型在 TypeRegistry 中的索引（需先在 TypeRegistry 注册 SprayTypeSO）")]
-        [SerializeField] private byte _sprayTypeIndex = 0;
+        [Tooltip("喷雾类型（直接拖入 SprayTypeSO 资产）")]
+        [SerializeField] private SprayTypeSO _sprayType;
         [Tooltip("喷雾寿命（秒），<= 0 时回退到 1 秒")]
         [SerializeField] private float _sprayLifetime = 1f;
         [Tooltip("Detached 喷雾射程（世界单位），<= 0 时使用 SprayTypeSO.Range")]
@@ -230,21 +230,20 @@ namespace MiniGameTemplate.Example
             _laserCooldownTimer -= Time.deltaTime;
             if (!_bossDestroyed && Input.GetKeyDown(KeyCode.L) && _laserCooldownTimer <= 0f)
             {
-                if (_system.TypeRegistry.LaserTypes != null &&
-                    _laserTypeIndex < _system.TypeRegistry.LaserTypes.Length)
+                if (_laserType != null)
                 {
                     int slot;
                     if (_bossTransform != null)
                     {
                         // Attached：每帧跟随 Boss 位置
-                        slot = _system.FireLaser(_laserTypeIndex, _bossTransform, _laserLength);
+                        slot = _system.FireLaser(_laserType, _bossTransform, _laserLength);
                     }
                     else
                     {
                         // Fallback Detached：Boss 不存在时用固定坐标
                         Vector2 origin = GetBossOrigin();
                         float angle = -Mathf.PI * 0.5f;
-                        slot = _system.FireLaser(_laserTypeIndex, origin, angle, _laserLength);
+                        slot = _system.FireLaser(_laserType, origin, angle, _laserLength);
                     }
 
                     if (slot >= 0)
@@ -254,7 +253,7 @@ namespace MiniGameTemplate.Example
                 }
                 else
                 {
-                    Debug.LogWarning("[DanmakuDemo] TypeRegistry 中没有激光类型，请先注册 LaserTypeSO。");
+                    Debug.LogWarning("[DanmakuDemo] 未分配 LaserTypeSO，请在 Inspector 拖入激光类型资产。");
                 }
             }
 
@@ -262,24 +261,22 @@ namespace MiniGameTemplate.Example
             _sprayCooldownTimer -= Time.deltaTime;
             if (!_bossDestroyed && _sprayCooldownTimer <= 0f && (Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.J)))
             {
-                if (_system.TypeRegistry.SprayTypes != null &&
-                    _sprayTypeIndex < _system.TypeRegistry.SprayTypes.Length)
+                if (_sprayType != null)
                 {
-                    var sprayType = _system.TypeRegistry.SprayTypes[_sprayTypeIndex];
-                    float coneAngle = _sprayConeAngleOverride > 0f ? _sprayConeAngleOverride : sprayType.ConeAngle;
-                    float range = _sprayRangeOverride > 0f ? _sprayRangeOverride : sprayType.Range;
+                    float coneAngle = _sprayConeAngleOverride > 0f ? _sprayConeAngleOverride : _sprayType.ConeAngle;
+                    float range = _sprayRangeOverride > 0f ? _sprayRangeOverride : _sprayType.Range;
                     float lifetime = _sprayLifetime > 0f ? _sprayLifetime : 1f;
 
                     int slot;
                     if (Input.GetKeyDown(KeyCode.J) && _bossTransform != null)
                     {
-                        slot = _system.FireSpray(_sprayTypeIndex, _bossTransform, coneAngle, range, lifetime);
+                        slot = _system.FireSpray(_sprayType, _bossTransform, coneAngle, range, lifetime);
                     }
                     else
                     {
                         Vector2 origin = GetBossOrigin();
                         float direction = -Mathf.PI * 0.5f;
-                        slot = _system.FireSpray(_sprayTypeIndex, origin, direction, coneAngle, range, lifetime);
+                        slot = _system.FireSpray(_sprayType, origin, direction, coneAngle, range, lifetime);
                     }
 
                     if (slot >= 0)
@@ -293,7 +290,7 @@ namespace MiniGameTemplate.Example
                 }
                 else
                 {
-                    Debug.LogWarning("[DanmakuDemo] TypeRegistry 中没有喷雾类型，请先注册 SprayTypeSO。");
+                    Debug.LogWarning("[DanmakuDemo] 未分配 SprayTypeSO，请在 Inspector 拖入喷雾类型资产。");
                 }
             }
 

@@ -16,6 +16,7 @@ namespace MiniGameTemplate.Danmaku
     public class LaserRenderer
     {
         private RenderBatchManager _batchManager;
+        private Material _laserMaterial;
         private int _quadCount;
 
         /// <summary>上帧绘制的 Quad 数（调试用）</summary>
@@ -24,43 +25,19 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 初始化渲染器——从 TypeRegistry 收集所有激光贴图预热桶。
         /// </summary>
-        public void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
+        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
         {
             _batchManager = new RenderBatchManager();
+            _laserMaterial = renderConfig.LaserMaterial;
 
-            var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
-
-            if (registry.LaserTypes != null)
-            {
-                for (int i = 0; i < registry.LaserTypes.Length; i++)
-                {
-                    var lt = registry.LaserTypes[i];
-                    if (lt == null || lt.LaserTexture == null) continue;
-
-                    // 激光统一使用 Normal 层（激光自身材质处理混合模式）
-                    var key = new RenderBatchManager.BucketKey(RenderLayer.Normal, lt.LaserTexture);
-                    bool exists = false;
-                    for (int j = 0; j < registrations.Count; j++)
-                    {
-                        if (registrations[j].Key.Equals(key))
-                        {
-                            exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!exists)
-                        registrations.Add(new RenderBatchManager.BucketRegistration(key, renderConfig.LaserMaterial, RenderSortingOrder.LaserDefault));
-                }
-            }
-
-            _batchManager.Initialize(registrations, maxQuadsPerBucket);
+            // ADR-030：激光桶允许在首次发射对应类型时按需创建。
+            _batchManager.Initialize(System.Array.Empty<RenderBatchManager.BucketRegistration>(), maxQuadsPerBucket);
         }
 
         /// <summary>
         /// 每帧由 DanmakuSystem.LateUpdate 调用——重建激光 Mesh 并 DrawMesh。
         /// </summary>
-        public void Rebuild(LaserPool pool, DanmakuTypeRegistry registry)
+        internal void Rebuild(LaserPool pool, DanmakuTypeRegistry registry)
         {
             _batchManager.ResetAll();
             _quadCount = 0;
@@ -77,11 +54,12 @@ namespace MiniGameTemplate.Danmaku
                 if (laser.Phase == 0) continue;
                 if (laser.SegmentCount == 0) continue;
 
-                var type = registry.LaserTypes[laser.LaserTypeIndex];
+                var type = registry.GetLaserType(laser.LaserTypeIndex);
                 if (type.LaserTexture == null) continue;
 
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, type.LaserTexture);
-                if (!_batchManager.TryGetBucket(bucketKey, out var bucket)) continue;
+                if (!_batchManager.TryGetOrCreateBucket(bucketKey, _laserMaterial, RenderSortingOrder.LaserDefault, out var bucket))
+                    continue;
 
                 // Phase alpha
                 float alpha = GetPhaseAlpha(ref laser, type);

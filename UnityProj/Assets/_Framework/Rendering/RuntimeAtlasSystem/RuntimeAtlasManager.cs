@@ -314,7 +314,6 @@ namespace MiniGameTemplate.Rendering
             int overflowCount = state.OverflowCount;
 
             ReleasePages(state);
-            state.Pages.Add(CreatePage(config.AtlasSize, channel, 0));
             state.AllocationCache.Clear();
             state.SourceTextures.Clear();
             state.BlitCount = 0;
