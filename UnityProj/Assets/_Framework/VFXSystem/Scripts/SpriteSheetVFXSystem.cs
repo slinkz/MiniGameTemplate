@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiniGameTemplate.VFX
@@ -17,6 +18,7 @@ namespace MiniGameTemplate.VFX
         private VFXPool _pool;
         private VFXBatchRenderer _renderer;
         private IVFXPositionResolver _positionResolver;
+        private readonly Dictionary<AttachedVFXKey, int> _attachedSlots = new();
         // R4.0 注：管线驱动模式下，TickVFX 接收的 dt 已由 DanmakuSystem 乘过 TimeScale，
         // 本字段不再影响 TickVFX。保留供独立使用场景（无 DanmakuSystem 驱动时）。
         private float _timeScale = 1f;
@@ -73,6 +75,7 @@ namespace MiniGameTemplate.VFX
             _renderer?.Dispose();
             _renderer = null;
             _pool = null;
+            _attachedSlots.Clear();
         }
 
         public bool CanPlay(VFXTypeSO type)
@@ -129,8 +132,11 @@ namespace MiniGameTemplate.VFX
             if (_pool == null || slot < 0 || slot >= _pool.Capacity)
                 return;
 
-            if (_pool.Instances[slot].IsActive)
-                _pool.Free(slot);
+            if (!_pool.Instances[slot].IsActive)
+                return;
+
+            RemoveAttachedSlotMapping(slot);
+            _pool.Free(slot);
         }
 
         // ──── 附着式 VFX API（ADR-027 §8 三阶段语义） ────
@@ -149,7 +155,7 @@ namespace MiniGameTemplate.VFX
 
         /// <summary>
         /// 播放附着式 VFX（绑定到附着源，每帧自动同步位置）。
-        /// 重复调用同一 slot 会先 Stop 旧的再创建新的（ADR-027 §8）。
+        /// 同源同类型重复调用时会先 Stop 旧实例，再创建新实例（ADR-027 §8）。
         /// </summary>
         /// <param name="type">VFX 类型</param>
         /// <param name="attachSourceId">附着源 ID（AttachSourceRegistry）</param>
@@ -170,6 +176,12 @@ namespace MiniGameTemplate.VFX
                     $"[SpriteSheetVFXSystem] Type not found in registry: {type.name}. " +
                     $"Registry={registryName}. 修复：把该 VFXTypeSO 加入当前 SpriteSheetVFXSystem 使用的 VFXTypeRegistrySO._types 列表，或改回已注册的 VFXTypeSO。");
                 return -1;
+            }
+
+            var dedupeKey = new AttachedVFXKey(attachSourceId, type);
+            if (_attachedSlots.TryGetValue(dedupeKey, out int existingSlot))
+            {
+                StopAttached(existingSlot);
             }
 
             int slot = _pool.Allocate();
@@ -193,6 +205,7 @@ namespace MiniGameTemplate.VFX
                 AttachSourceId = attachSourceId,
             };
 
+            _attachedSlots[dedupeKey] = slot;
             return slot;
         }
 
@@ -218,6 +231,7 @@ namespace MiniGameTemplate.VFX
 
                 if (!_typeRegistry.TryGet(instance.TypeIndex, out var type))
                 {
+                    RemoveAttachedSlotMapping(i);
                     _pool.Free(i);
                     continue;
                 }
@@ -234,6 +248,7 @@ namespace MiniGameTemplate.VFX
                     else
                     {
                         // 源失效——冻结在最后有效位置，播放到结束
+                        RemoveAttachedSlotMapping(i);
                         instance.Flags |= VFXInstance.FLAG_FROZEN;
                         instance.AttachSourceId = 0;  // 解除绑定，不再尝试解析
                     }
@@ -249,6 +264,7 @@ namespace MiniGameTemplate.VFX
 
                 if (frame >= type.MaxFrameCount)
                 {
+                    RemoveAttachedSlotMapping(i);
                     _pool.Free(i);
                     continue;
                 }
@@ -260,6 +276,33 @@ namespace MiniGameTemplate.VFX
         private void RebuildRegistryRuntimeIndices()
         {
             _typeRegistry?.RebuildRuntimeIndices();
+        }
+
+        private void RemoveAttachedSlotMapping(int slot)
+        {
+            if (_pool == null || slot < 0 || slot >= _pool.Capacity)
+                return;
+
+            ref var instance = ref _pool.Instances[slot];
+            if (!instance.IsActive || instance.AttachSourceId == 0)
+                return;
+
+            if (_typeRegistry != null && _typeRegistry.TryGet(instance.TypeIndex, out var type))
+            {
+                _attachedSlots.Remove(new AttachedVFXKey(instance.AttachSourceId, type));
+            }
+        }
+
+        private readonly struct AttachedVFXKey
+        {
+            public readonly byte AttachSourceId;
+            public readonly VFXTypeSO Type;
+
+            public AttachedVFXKey(byte attachSourceId, VFXTypeSO type)
+            {
+                AttachSourceId = attachSourceId;
+                Type = type;
+            }
         }
     }
 }

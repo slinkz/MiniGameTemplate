@@ -65,6 +65,7 @@ DanmakuSystem/
 │       ├── LaserUpdater.cs    # 激光更新（含 FreeLaser 统一回收）
 │       ├── LaserSegmentSolver.cs # 激光折射段解算（射线 vs AABB/屏幕边缘）
 │       ├── SprayUpdater.cs    # 喷雾更新（含 FreeSpray 统一回收）
+│       ├── MotionUtility.cs   # [2026-04-20] 运动策略共享工具（CalculateModifierSpeed 去重）
 │       ├── IDanmakuVFXRuntime.cs  # [R4.0] VFX 管线驱动接口（TickVFX/RenderVFX/Play/PlayAttached/StopAttached）
 │       ├── DanmakuVFXRuntimeBridge.cs # [R4.0] 桥接实现（转发到 SpriteSheetVFXSystem）
 │       ├── DanmakuAttachSourceResolver.cs # IVFXPositionResolver 实现（将 VFX attachId 解析为 DanmakuSystem 世界坐标）

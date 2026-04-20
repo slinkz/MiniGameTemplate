@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.10.1
+> 文档版本：v2.10.2
 > 创建日期：2026-04-18
-> 修订日期：2026-04-19（v2.10.1 — R4.1/R4.3 评审收口）
+> 修订日期：2026-04-20（v2.10.2 — 补记弹幕/VFX Backlog 清理状态）
 > 作者：广智 × 天命人
-> 状态：**R0~R5 已验收通过，R4.1/R4.3 已完成** — R4.2/R4.4/R4.5 待按需执行
+> 状态：**R0~R5 已验收通过，R4.1/R4.3 已完成** — R4.2/R4.4/R4.5 待按需执行；弹幕/VFX 遗留 Backlog（DEV-003/004/007）已清零
 
 ---
 
@@ -18,6 +18,7 @@
 | **v2.2** | **2026-04-18** | **PK Round 1 回应**：修正 BucketKey 描述矛盾（UA-001）、激光改为独立贴图不入 Atlas（UA-002）、补充分帧重建策略（UA-003）、RBM 按 SortingOrder 排序提交（UA-004） |
 | **v2.3** | **2026-04-18** | **PK Round 2 回应（终）**：RBM.Initialize 改为多模板材质 API（UA-005）、§3.3/§3.4/§7.1/§7.3 内联补全（UA-006）、排序策略明确为注册时排序（UA-007） |
 | **v2.4** | **2026-04-19** | **Phase R0 落地**：完成 R0.2/R0.4/R0.5，补齐 RuntimeAtlas 基础设施代码；R0.3 算法实现完成，单元测试因项目缺少现成测试基础设施延后补齐。另提前落地 R2.1 的 RBM v2.3 接口改造（Texture 基类、多模板材质、注册时排序），避免后续迁移返工。 |
+| **v2.10.2** | **2026-04-20** | **补记弹幕/VFX Backlog 清理**：完成 DEV-003/004/007——提取 `MotionUtility.CalculateModifierSpeed()` 消除三处重复实现；新增 `CollisionEventBufferTests` 编辑器测试程序集与边界测试；`SpriteSheetVFXSystem.PlayAttached()` 增加“同源 + 同类型”去重，并改为以 `VFXTypeSO` 引用身份作为去重键，避免 `RuntimeIndex` 重建导致映射失效。 |
 | **v2.5** | **2026-04-19** | **Phase R1 落地**：`RuntimeAtlasManager` 从可编译骨架补齐为配置驱动核心管理器；新增 `Initialize(RuntimeAtlasConfig)`、`TryGetAllocation()`、`GetPageCount()`、`RestoreDirtyPages()` 分批恢复能力；`RuntimeAtlasConfig` 增加统一 `Validate()`；`RuntimeAtlasStats` 扩展为请求数 / 命中率 / overflow / pending restore 统计。 |
 | **v2.6** | **2026-04-19** | **Phase R2 落地**：新增 `RuntimeAtlasBindingResolver` 统一 `SourceTexture / AtlasBinding / RuntimeAtlas` 三路解析；`BulletRenderer` 与 `VFXBatchRenderer` 已优先接入 `RuntimeAtlas`，Laser / LaserWarning 保持独立贴图但继续走统一 RBM；`DanmakuRenderConfig` / `VFXRenderConfig` 新增 `RuntimeAtlasConfig` 配置入口。 |
 | **v2.7** | **2026-04-19** | **Phase R3 落地**：`DamageNumberSystem` 已迁移到 `RenderBatchManager + RuntimeAtlas(DamageText)`，数字 UV 改为基于 Atlas 子区间重映射；`TrailPool` 采用方案 A，保持独立 Mesh 但已接入 `RenderBatchManagerRuntimeStats`；`DanmakuSystem.RunLateUpdatePipeline()` 已切换到新的 `DamageNumberSystem.Rebuild(dt)` 统一提交流程。`SpriteSheetVFXSystem` 在提交层面已通过 `VFXBatchRenderer` 统一到 RBM，但编排层面仍保持独立 `LateUpdate`，该边界在 R3 文档中显式保留。 |

@@ -34,6 +34,7 @@ VFXSystem/
 
 ## 架构说明
 - `SpriteSheetVFXSystem`：唯一 MonoBehaviour 入口（**纯 API 入口**）。R4.0 后不再自驱 `Update/LateUpdate`——由 `DanmakuSystem` 管线通过 `TickVFX()/RenderVFX()` 统一驱动更新和渲染
+- `PlayAttached()`：2026-04-20 起内建“同源 + 同类型”去重；重复播放时先停止旧实例再创建新实例，去重键采用 `VFXTypeSO` 引用身份而非 `RuntimeIndex`，避免 Registry 重建索引时映射失效
 - `VFXPool`：预分配实例池（64 容量），管理槽位分配/回收
 - `VFXBatchRenderer`：通过 `RenderBatchManager`（`_Framework/Rendering/`）按 `(RenderLayer, Texture)` 分桶渲染。R2 后优先使用 `RuntimeAtlas` 纹理，失败时回退 AtlasBinding / SourceTexture / fallback
 - `VFXTypeSO`：设计师可编辑的特效配置资产（支持独立贴图 SpriteSheet，atlas 仅为可选优化）

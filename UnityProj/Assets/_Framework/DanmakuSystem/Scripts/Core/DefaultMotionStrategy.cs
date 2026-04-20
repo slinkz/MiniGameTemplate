@@ -18,7 +18,7 @@ namespace MiniGameTemplate.Danmaku
             float speedMultiplier = 1f;
             if ((core.Flags & BulletCore.FLAG_HAS_MODIFIER) != 0)
             {
-                speedMultiplier = CalculateModifierSpeed(core.Elapsed, ref modifier);
+                speedMultiplier = MotionUtility.CalculateModifierSpeed(core.Elapsed, ref modifier);
             }
             // 速度曲线（与延迟变速互斥）
             else if ((core.Flags & BulletCore.FLAG_SPEED_CURVE) != 0)
@@ -61,23 +61,6 @@ namespace MiniGameTemplate.Danmaku
 
             // 位置更新
             core.Position += core.Velocity * speedMultiplier * dt;
-        }
-
-        private static float CalculateModifierSpeed(float elapsed, ref BulletModifier mod)
-        {
-            if (elapsed < mod.DelayEndTime)
-            {
-                return mod.DelaySpeedScale;
-            }
-            else if (elapsed < mod.AccelEndTime)
-            {
-                float t = (elapsed - mod.DelayEndTime) / (mod.AccelEndTime - mod.DelayEndTime);
-                return Mathf.Lerp(mod.DelaySpeedScale, 1f, t);
-            }
-            else
-            {
-                return 1f;
-            }
         }
     }
 }

@@ -441,11 +441,11 @@ P0  P0  P1  P1  P1    P1  P2  P2  P3  P3
 5. ✅ Phase 4 工作流与工具 — 2026-04-15 全部完成（含 4.1/4.2 Atlas 工具子任务）
 
 **遗留 Backlog**：
-- **DEV-003** CalculateModifierSpeed 重复（低优先级）
-- **DEV-004** Buffer overflow 累计计数边界测试（低优先级）
-- **DEV-007** PlayAttached 同源同类型去重（已文档化，非阻塞）
+- **DEV-003** ✅ 已完成（2026-04-20）：提取 `MotionUtility.CalculateModifierSpeed()`，消除 Default/SineWave/Spiral 三处重复实现
+- **DEV-004** ✅ 已完成（2026-04-20）：新增 `CollisionEventBufferTests`，覆盖 overflow 计数、0 容量、Reset 清零、Span 内容、Reset 后复用
+- **DEV-007** ✅ 已完成（2026-04-20）：`SpriteSheetVFXSystem.PlayAttached()` 增加“同源 + 同类型”去重；去重键采用 `VFXTypeSO` 引用身份，避免 `RuntimeIndex` 重建导致映射失效
 
-> 本轮弹幕 & VFX 系统重构（Phase 0~4）已全部完成，包括 4.1/4.2 Atlas 工具。剩余 Backlog 项均为低优先级改进，不阻塞正常开发工作流。
+> 本轮弹幕 & VFX 系统重构（Phase 0~4）已全部完成，包括 4.1/4.2 Atlas 工具；原遗留 Backlog（DEV-003/004/007）已于 2026-04-20 清零。后续仅剩 RuntimeAtlas 真机验收与按需补充项。
 
 
 
