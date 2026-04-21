@@ -150,6 +150,11 @@ namespace MiniGameTemplate.Rendering
             foreach (KeyValuePair<AtlasChannel, AtlasChannelState> pair in _channels)
             {
                 AtlasChannelState state = pair.Value;
+
+                // R4.4A：懒建页后空 Channel 无需标记恢复（无 RT 需要重建）
+                if (state.Pages.Count == 0 && state.SourceTextures.Count == 0)
+                    continue;
+
                 state.PendingRestore = true;
 
                 for (int i = 0; i < state.Pages.Count; i++)

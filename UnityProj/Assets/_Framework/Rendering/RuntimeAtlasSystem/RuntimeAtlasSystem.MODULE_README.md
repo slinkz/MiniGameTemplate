@@ -54,19 +54,19 @@ RuntimeAtlasSystem 是**统一渲染管线的核心基础设施**——借鉴 RV
 ### 3. RuntimeAtlasBlit.shader 的 NDC passthrough
 **踩坑经验**：在 CommandBuffer + SetRenderTarget 上下文中，`UnityObjectToClipPos` 依赖的 VP 矩阵不可控（可能是上一帧 Camera 的值），会导致全屏 quad 被变换到错误位置。必须直接 passthrough NDC 坐标：`o.vertex = float4(v.vertex.xy, 0, 1)`。
 
-## 深化任务（ADR-031，v2.11 方案设计完成，待实施）
+## 深化任务（ADR-031，v1.2 实施完成 ✅）
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
-| **R4.4A 懒建页** | 📋 待实施 | `InitChannel()` 不再无条件创建 Page 0，延迟到首次 `Allocate()`。节省最多 32 MB RT 内存。实施于 `RuntimeAtlasManager.cs` |
-| **Laser 接入** | 📋 待实施 | `LaserTypeSO.UseRuntimeAtlas` 控制：`true` 入 Atlas 合并 DC（禁用 UV 滚动）；`false` 走独立贴图 fallback。涉及 `RuntimeAtlasBindingResolver.ResolveLaser()` + `LaserRenderer` 改造 |
-| **Trail 纹理化** | 📋 待实施 | `BulletTypeSO.TrailTexture` 新增纹理字段，所有 Trail 统一走 Atlas Channel.Trail（含 whiteTexture fallback），保持 1 DC。涉及 `TrailPool` + `TrailInstance` 改造 |
+| **R4.4A 懒建页** | ✅ 完成 | `InitChannel()` 不再无条件创建 Page 0，延迟到首次 `Allocate()`。节省最多 32 MB RT 内存。CR-01：HandleRTLost 跳过空 Channel |
+| **Laser 接入** | ✅ 完成 | `LaserTypeSO.UseRuntimeAtlas` 控制：`true` 入 Atlas 合并 DC（禁用 UV 滚动）；`false` 走独立贴图 fallback。CR-03：Atlas 模式判断改为显式 bool |
+| **Trail 纹理化** | ✅ 完成 | `BulletTypeSO.TrailTexture` 新增纹理字段，所有 Trail 统一走 Atlas Channel.Trail（含 whiteTexture fallback），保持 1 DC |
 
 **架构决策**：DanmakuSystem 持有唯一 RuntimeAtlasManager 共享实例，通过 `Initialize()` 参数注入各 Renderer（PI-001）。
 
-**实施顺序**：`R4.4A` → `Laser` / `Trail`（后两者可并行），总计 5.75 天。
+**代码评审**：TDD 100% 符合 + 6 项 CR（修复 3 项）+ Unity 编译 0 errors / 0 warnings。CR-06：BulletRenderer/DamageNumberSystem.GetAtlasStats() 标注 `[Obsolete]`。
 
-**详细方案**：`UnityProj/docs/Agent/PHASED_IMPLEMENTATION_PLAN.md`（v1.1）
+**详细方案**：`UnityProj/docs/Agent/PHASED_IMPLEMENTATION_PLAN.md`（v1.2）
 
 ## 后续可选优化
 

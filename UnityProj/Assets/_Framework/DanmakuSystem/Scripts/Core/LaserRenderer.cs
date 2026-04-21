@@ -76,7 +76,8 @@ namespace MiniGameTemplate.Danmaku
                 float totalLength = laser.VisualLength > 0f ? laser.VisualLength : laser.Length;
 
                 // L2.4: Atlas 模式用 binding.UVRect，非 Atlas 模式用 full rect
-                Rect atlasUVRect = binding.UsesRuntimeAtlas ? binding.UVRect : new Rect(0, 0, 1, 1);
+                bool usesAtlas = binding.UsesRuntimeAtlas;
+                Rect atlasUVRect = usesAtlas ? binding.UVRect : new Rect(0, 0, 1, 1);
 
                 for (int s = 0; s < laser.SegmentCount; s++)
                 {
@@ -84,7 +85,7 @@ namespace MiniGameTemplate.Danmaku
                     if (seg.Length <= 0.0001f) continue;
 
                     WriteSegmentQuad(bucket, ref seg, type, laser.Width, alpha,
-                        ref uvYAccum, ref lengthAccum, totalLength, atlasUVRect);
+                        ref uvYAccum, ref lengthAccum, totalLength, atlasUVRect, usesAtlas);
                 }
             }
 
@@ -121,6 +122,7 @@ namespace MiniGameTemplate.Danmaku
         /// 写入一段激光 Quad。
         /// PI-002: Atlas 模式下 UV.y 归一化到 [0,1]（整条激光映射完整纹理一次）；
         ///         非 Atlas 模式保留原始世界空间 UV（wrapMode=Repeat 环绕）。
+        /// CR-03: 使用显式 bool 标志替代 width < 1f 浮点比较。
         /// </summary>
         private void WriteSegmentQuad(
             RenderBatchManager.RenderBucket bucket,
@@ -131,7 +133,8 @@ namespace MiniGameTemplate.Danmaku
             ref float uvYAccum,
             ref float lengthAccum,
             float totalLength,
-            Rect atlasUVRect)
+            Rect atlasUVRect,
+            bool usesAtlas)
         {
             int baseV = bucket.AllocateQuad();
             if (baseV < 0) return;
@@ -162,9 +165,9 @@ namespace MiniGameTemplate.Danmaku
 
             float uvYEnd = uvYAccum + seg.Length;
 
-            // PI-002: UV 映射语义分支
+            // PI-002: UV 映射语义分支（CR-03: 使用显式 bool 替代浮点比较）
             float u0, u1, v0, v1;
-            if (atlasUVRect.width < 1f) // Atlas 模式：归一化到子区域
+            if (usesAtlas) // Atlas 模式：归一化到子区域
             {
                 u0 = atlasUVRect.x;
                 u1 = atlasUVRect.x + atlasUVRect.width;

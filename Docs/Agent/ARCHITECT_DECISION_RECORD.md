@@ -1428,7 +1428,7 @@ After:  策划创建 TypeSO → Spawn(typeSO, ...) → 框架自动注册+建桶
 ## ADR-031：RuntimeAtlas 深化——懒建页 + Laser 接入 + Trail 纹理化
 
 - **日期**：2026-04-21
-- **状态**：✅ Accepted（方案设计完成，待实施）
+- **状态**：✅ Implemented（代码已完成 + CR 修复 + 编译通过，待真机验收）
 - **Supersedes**：无（增量扩展 ADR-028/029/030 的渲染架构）
 
 ### 背景
@@ -1463,6 +1463,21 @@ R4.4A (懒建页, 2h) → Laser (2.5d) / Trail (3d) 可并行
 ### PK 评审
 
 1 轮 5 个问题（PI-001~005）已收敛。详见 `UnityProj/docs/Agent/PHASED_IMPL_PK_Question.md`。
+
+### 代码评审（2026-04-21）
+
+TDD 符合性：100%，零偏离。代码评审发现 6 项，修复 3 项：
+
+| CR | 位置 | 严重度 | 描述 | 处置 |
+|---|---|---|---|---|
+| CR-01 | RuntimeAtlasManager.HandleRTLost() | ⚠️ 中 | 懒建页后空 Channel 被标记 PendingRestore | ✅ 修复：跳过 Pages=0 且 SourceTextures=0 的 Channel |
+| CR-02 | RuntimeAtlasManager.TryAllocateInternal() | ℹ️ 低 | 热路径额外分支（Pages.Count==0 检查） | 接受：branch predictor 学习后开销≈0 |
+| CR-03 | LaserRenderer.WriteSegmentQuad() | ⚠️ 中 | `width < 1f` 浮点比较判断 Atlas 模式不健壮 | ✅ 修复：改为显式 bool `usesAtlas` 参数传递 |
+| CR-04 | TrailPool.BuildTrailMesh() | ⚠️ 中 | `pointCount==1` 时除零风险 | 接受：上层 guard `PointCount < 2` 已保护 |
+| CR-05 | TrailPool.Render() RT Lost 恢复 | ℹ️ 低 | whiteTexture 探针可能永不命中 | 接受：设计意图——Atlas 不可用时走 fallback |
+| CR-06 | BulletRenderer/DamageNumberSystem.GetAtlasStats() | ℹ️ 低 | 共享 Atlas 后返回全局统计（遗留 API） | ✅ 修复：标注 `[Obsolete]` |
+
+编译结果：Unity 2021.3.17f1 — **0 errors / 0 warnings**。
 
 ### 关联
 - **扩展**: ADR-028（RuntimeAtlas 核心决策）, ADR-029（Additive Blend 移除）, ADR-030（TypeRegistry 内化）

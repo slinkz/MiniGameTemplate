@@ -155,7 +155,9 @@ namespace MiniGameTemplate.Danmaku
             _batchManager.UploadAndDrawAll();
         }
 
-        /// <summary>获取 RuntimeAtlas 统计快照（无 Atlas 时返回 null）。</summary>
+        /// <summary>获取 RuntimeAtlas 统计快照（无 Atlas 时返回 null）。
+        /// CR-06: 共享 Atlas 后此方法返回全局统计，建议使用 DanmakuSystem.GetAllAtlasStats() 代替。</summary>
+        [System.Obsolete("Use DanmakuSystem.GetAllAtlasStats() for shared atlas stats.")]
         public RuntimeAtlasStats? GetAtlasStats()
         {
             return _runtimeAtlas != null && _runtimeAtlas.IsInitialized
