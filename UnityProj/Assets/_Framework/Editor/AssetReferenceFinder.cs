@@ -19,6 +19,7 @@ namespace MiniGameTemplate.EditorTools
     /// Changelog:
     ///   v1.0 (2026-04-21) — 最小可用版本
     ///   v1.1 (2026-04-22) — 加进度条、菜单验证、可点击输出、扩展搜索格式
+    ///   v1.2 (2026-04-22) — 增加 Project 右键菜单入口
     /// </summary>
     public static class AssetReferenceFinder
     {
@@ -113,6 +114,7 @@ namespace MiniGameTemplate.EditorTools
         }
 
         [MenuItem("Tools/MiniGameTemplate/Find References Of Selected Asset")]
+        [MenuItem("Assets/Find References In Project", false, 30)]
         private static void FindSelectedAssetReferences()
         {
             Object target = Selection.activeObject;
@@ -146,6 +148,7 @@ namespace MiniGameTemplate.EditorTools
         }
 
         [MenuItem("Tools/MiniGameTemplate/Find References Of Selected Asset", true)]
+        [MenuItem("Assets/Find References In Project", true)]
         private static bool ValidateFindSelectedAssetReferences()
         {
             return Selection.activeObject != null
