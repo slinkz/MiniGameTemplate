@@ -59,6 +59,9 @@ UnityProj/Packages/ResolvedPackageCache
 UnityProj/.vsconfig
 UnityProj/.vs/
 
+# ===== Debug Screenshots (MCP / Editor captures) =====
+UnityProj/Assets/Screenshots/
+
 # ===== YooAsset build output =====
 UnityProj/Bundles/
 
