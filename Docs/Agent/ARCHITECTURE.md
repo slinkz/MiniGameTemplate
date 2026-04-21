@@ -213,17 +213,24 @@ Spine（可选）接入：
 │        │              │              │                │       │
 │        └──────┬───────┴──────┬───────┘                │       │
 │               ▼              ▼                        ▼       │
-│   RuntimeAtlasSystem（动态图集）    独立贴图（Laser）    Atlas   │
-│        │                              │                │      │
-│        └──────────────┬───────────────┴────────────────┘      │
-│                       ▼                                       │
+│      RuntimeAtlasSystem（动态图集，懒建页 ADR-031）            │
+│      ┌──────────────────────────────────────────┐             │
+│      │ Bullet Channel  │ VFX Channel            │             │
+│      │ Laser Channel   │ DamageText Channel     │             │
+│      │ Trail Channel   │ Character Channel      │             │
+│      └──────────────────────────────────────────┘             │
+│      ※ DanmakuSystem 持有唯一共享 RuntimeAtlasManager        │
+│      ※ Laser: UseRuntimeAtlas=true 入 Atlas / false 独立贴图 │
+│      ※ Trail: 有/无纹理统一走 Atlas（whiteTexture fallback）  │
+│               │                                               │
+│               ▼                                               │
 │            RenderBatchManager（统一分桶 + 提交）                │
 │            BucketRegistration（多模板材质 + 注册时排序）         │
 │                       │                                       │
 │                       ▼                                       │
 │            Graphics.DrawMesh（material.renderQueue 控制层序）   │
 │                                                               │
-│   TrailPool ────── 独立 Mesh（方案 A）                         │
+│   TrailPool ────── 独立 Mesh + Atlas 纹理（ADR-031）          │
 │        │                                                      │
 │        └─→ Graphics.DrawMesh（renderQueue = 3090）             │
 │                                                               │
@@ -260,8 +267,8 @@ DanmakuSystem.RunLateUpdatePipeline()
   RenderBatchManagerRuntimeStats.BeginFrame()
   ├── TrailPool.Render()                  ← 独立 Mesh + Graphics.DrawMesh（renderQueue=3090）
   ├── BulletRenderer.Rebuild + UploadAndDrawAll    → 独立 RBM（RuntimeAtlas 纹理）
-  ├── LaserRenderer.Rebuild + UploadAndDrawAll     → 独立 RBM（独立贴图）
-  ├── LaserWarningRenderer.Rebuild + UploadAndDrawAll → 独立 RBM（独立贴图）
+  ├── LaserRenderer.Rebuild + UploadAndDrawAll     → 独立 RBM（UseRuntimeAtlas ? Atlas : 独立贴图）
+  ├── LaserWarningRenderer.Rebuild + UploadAndDrawAll → 独立 RBM（同上）
   ├── IDanmakuVFXRuntime.RenderVFX()      ← R4.0 收编（VFXBatchRenderer → 独立 RBM）
   └── DamageNumberSystem.Rebuild(dt) + UploadAndDrawAll → 独立 RBM（RuntimeAtlas DamageText）
   RenderBatchManagerRuntimeStats.EndFrame()
@@ -277,12 +284,14 @@ DanmakuSystem.RunLateUpdatePipeline()
 |------|------|------|
 | 图集算法 | Shelf Packing (Best-Fit) | 零 GC、O(N) 搜索、支持混合尺寸 |
 | 纹理 Blit | CommandBuffer + SetRenderTarget | WebGL 2.0 兼容，不依赖 Graphics.CopyTexture |
-| 激光入 Atlas | ❌ 不入 | UV.y 是 world-space 累积长度，Atlas 子区域会破坏 wrap 采样 |
-| TrailPool 迁移 | 方案 A（独立 Mesh + 接入统计） | TriangleStrip 拓扑与 RBM 的 Quad 拓扑不匹配 |
+| 激光入 Atlas | ⚡ 条件入 Atlas（方案 C，ADR-031） | `UseRuntimeAtlas=true` 时入 Atlas 合并 DC；UV 滚动激光走独立贴图 fallback |
+| TrailPool 迁移 | 纹理化入 Atlas（ADR-031） | 策略 A：whiteTexture 也入 Atlas，有/无纹理 Trail 统一 1 DC |
 | DC 排序 | material.renderQueue | Graphics.DrawMesh 跨 RBM 实例的层级控制必须靠 renderQueue，不能靠调用顺序 |
 | VFX 编排 | DanmakuSystem 管线统一驱动 | SpriteSheetVFXSystem 退化为纯 API，TickVFX/RenderVFX 由管线调用 |
+| Atlas 懒建页 | 首次 Allocate 时创建 Page 0（ADR-031） | 微信小游戏节省最多 32 MB RT 内存；WarmUp 触发预热 |
+| Atlas 实例策略 | DanmakuSystem 持有唯一共享实例 | Channel 隔离保证不同 Renderer 互不干扰；避免多实例创建冗余 Channel |
 
-> 详细设计文档：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.10.1）
+> 详细设计文档：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.11）
 
 ## DanmakuSystem 架构详解
 

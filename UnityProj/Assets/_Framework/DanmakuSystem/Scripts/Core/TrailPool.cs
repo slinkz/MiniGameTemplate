@@ -8,6 +8,9 @@ namespace MiniGameTemplate.Danmaku
     /// 重量拖尾曲线池——保持独立 Mesh，但接入统一渲染统计（R3.2 / 方案 A）。
     /// 为设置 FLAG_HEAVY_TRAIL 的弹丸提供平滑曲线拖尾，与 Mesh 内 Ghost 残影互补。
     /// 渲染方式：Graphics.DrawMesh（与弹丸 RBM 走同一渲染路径，层次由调用顺序决定）。
+    /// Trail Phase T2: RuntimeAtlas 集成——纹理化拖尾 + whiteTexture fallback 统一入 Atlas。
+    /// PI-001: 接收共享 RuntimeAtlasManager。
+    /// PI-004: RT Lost 恢复路径补全。
     /// </summary>
     public class TrailPool
     {
@@ -34,6 +37,11 @@ namespace MiniGameTemplate.Danmaku
         private int _vertexCount;
         private int _indexCount;
 
+        // Trail Phase T1.2: RuntimeAtlas 支持
+        private RuntimeAtlasManager _runtimeAtlas;
+        private Rect _whiteTextureUV;  // whiteTexture 在 Atlas 中的 UV
+        private RenderTexture _atlasRT; // Atlas 贴图引用（替代 whiteTexture）
+
         private static readonly VertexAttributeDescriptor[] VertexLayout = new[]
         {
             new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3),
@@ -50,14 +58,39 @@ namespace MiniGameTemplate.Danmaku
                 _trails[i] = new TrailInstance();
         }
 
-        public void Initialize(Material material)
+        /// <summary>
+        /// PI-001: 接收共享 RuntimeAtlasManager。
+        /// 策略 A: whiteTexture 也 Blit 到 Atlas 保持 1 DC。
+        /// </summary>
+        public void Initialize(Material material, RuntimeAtlasManager sharedAtlas = null)
         {
+            _runtimeAtlas = sharedAtlas;
+
             if (material != null)
             {
                 _material = new Material(material) { name = "Danmaku Trail (Instance)" };
-                _material.mainTexture = Texture2D.whiteTexture;
-                // renderQueue 与弹丸相同（3000 Transparent），
-                // 层次由 Graphics.DrawMesh 的调用顺序控制：先调用 = 先画 = 在后面。
+
+                if (_runtimeAtlas != null && _runtimeAtlas.IsInitialized)
+                {
+                    // 策略 A: 分配 whiteTexture 到 Atlas 作为无纹理 Trail 的 fallback
+                    var whiteAlloc = _runtimeAtlas.Allocate(AtlasChannel.Trail, Texture2D.whiteTexture);
+                    if (whiteAlloc.Valid)
+                    {
+                        _atlasRT = _runtimeAtlas.GetAtlasTexture(AtlasChannel.Trail, whiteAlloc.PageIndex);
+                        _whiteTextureUV = whiteAlloc.UVRect;
+                        _material.mainTexture = _atlasRT;
+                    }
+                    else
+                    {
+                        _material.mainTexture = Texture2D.whiteTexture;
+                        _whiteTextureUV = new Rect(0, 0, 1, 1);
+                    }
+                }
+                else
+                {
+                    _material.mainTexture = Texture2D.whiteTexture;
+                    _whiteTextureUV = new Rect(0, 0, 1, 1);
+                }
             }
 
             int maxVertices = Capacity * MAX_POINTS_PER_TRAIL * 2;
@@ -78,6 +111,9 @@ namespace MiniGameTemplate.Danmaku
                 _freeSlots[_freeTop++] = i;
         }
 
+        /// <summary>
+        /// T2.2: 分配 Trail 并预解算纹理 UV。
+        /// </summary>
         public int Allocate(BulletTypeSO type)
         {
             if (_freeTop == 0)
@@ -93,6 +129,32 @@ namespace MiniGameTemplate.Danmaku
             trail.Width = type.TrailWidth;
             trail.WidthCurve = type.TrailWidthCurve;
             trail.ColorGradient = type.TrailColor;
+
+            // T2.2：解算纹理 UV
+            if (type.TrailTexture != null && _runtimeAtlas != null && _runtimeAtlas.IsInitialized)
+            {
+                var alloc = _runtimeAtlas.Allocate(AtlasChannel.Trail, type.TrailTexture);
+                if (alloc.Valid)
+                {
+                    trail.TextureUVRect = alloc.UVRect;
+                    // 确保 material 纹理指向 Atlas RT
+                    if (_atlasRT == null)
+                    {
+                        _atlasRT = _runtimeAtlas.GetAtlasTexture(AtlasChannel.Trail, alloc.PageIndex);
+                        if (_atlasRT != null)
+                            _material.mainTexture = _atlasRT;
+                    }
+                }
+                else
+                {
+                    trail.TextureUVRect = _whiteTextureUV; // 溢出 fallback
+                }
+            }
+            else
+            {
+                trail.TextureUVRect = _whiteTextureUV; // 无纹理 fallback
+            }
+
             return slot;
         }
 
@@ -162,8 +224,36 @@ namespace MiniGameTemplate.Danmaku
             }
         }
 
+        /// <summary>
+        /// PI-004: 渲染帧——含 RT Lost 检测 + 恢复尝试。
+        /// </summary>
         public void Render()
         {
+            // PI-004: RT Lost 检测 + 恢复尝试
+            if (_atlasRT != null && !_atlasRT.IsCreated())
+            {
+                // RT Lost：先回退到 whiteTexture 保证本帧可渲染
+                _material.mainTexture = Texture2D.whiteTexture;
+                _atlasRT = null;
+            }
+            else if (_atlasRT == null && _runtimeAtlas != null && _runtimeAtlas.IsInitialized)
+            {
+                // 尝试恢复：检查 Atlas 是否已被 RestoreDirtyPages 重建
+                var testAlloc = _runtimeAtlas.TryGetAllocation(AtlasChannel.Trail, Texture2D.whiteTexture);
+                if (testAlloc.Valid)
+                {
+                    _atlasRT = _runtimeAtlas.GetAtlasTexture(AtlasChannel.Trail, testAlloc.PageIndex);
+                    if (_atlasRT != null && _atlasRT.IsCreated())
+                    {
+                        _material.mainTexture = _atlasRT;
+                    }
+                    else
+                    {
+                        _atlasRT = null; // 仍未恢复
+                    }
+                }
+            }
+
             _vertexCount = 0;
             _indexCount = 0;
 
@@ -193,24 +283,28 @@ namespace MiniGameTemplate.Danmaku
 
             _mesh.bounds = new Bounds(Vector3.zero, new Vector3(100f, 100f, 1f));
 
-            // 使用 Graphics.DrawMesh 与弹丸走同一渲染路径。
-            // 层次由 UpdatePipeline 中的调用顺序决定：
-            // 先调用 TrailPool.Render() → 先提交 → 先渲染 → 在弹丸后方。
             Graphics.DrawMesh(_mesh, Matrix4x4.identity, _material, 0);
             RenderBatchManagerRuntimeStats.AccumulateBatch(1, 1, 0);
         }
 
+        /// <summary>PI-001: 共享 Atlas 由 DanmakuSystem 统一 Dispose。</summary>
         public void Dispose()
         {
             if (_mesh != null)
                 Object.Destroy(_mesh);
             if (_material != null)
                 Object.Destroy(_material);
+            _runtimeAtlas = null;
+            _atlasRT = null;
         }
 
+        /// <summary>
+        /// T2.4: BuildTrailMesh UV Remap——UV 映射到 Atlas 子区域。
+        /// </summary>
         private void BuildTrailMesh(TrailInstance trail)
         {
             int pointCount = trail.PointCount;
+            Rect uvRect = trail.TextureUVRect;
 
             for (int p = 0; p < pointCount; p++)
             {
@@ -229,8 +323,6 @@ namespace MiniGameTemplate.Danmaku
                 Vector2 normal = new Vector2(-dir.y, dir.x);
                 Vector2 pos = trail.Points[p];
 
-                // Gradient 评估：如果 Gradient 未配置或只有默认 key，
-                // 使用默认的白色→透明淡出效果
                 Color32 color;
                 if (trail.ColorGradient != null && IsGradientCustomized(trail.ColorGradient))
                     color = trail.ColorGradient.Evaluate(t);
@@ -240,17 +332,22 @@ namespace MiniGameTemplate.Danmaku
                 if (_vertexCount + 2 > _vertices.Length)
                     return;
 
+                // T2.4: UV Remap 到 Atlas 子区域
+                float u0 = uvRect.x;
+                float u1 = uvRect.x + uvRect.width;
+                float v = uvRect.y + t * uvRect.height;
+
                 _vertices[_vertexCount] = new RenderVertex
                 {
                     Position = new Vector3(pos.x + normal.x * halfWidth, pos.y + normal.y * halfWidth, 0f),
                     Color = color,
-                    UV = new Vector2(0f, t),
+                    UV = new Vector2(u0, v),
                 };
                 _vertices[_vertexCount + 1] = new RenderVertex
                 {
                     Position = new Vector3(pos.x - normal.x * halfWidth, pos.y - normal.y * halfWidth, 0f),
                     Color = color,
-                    UV = new Vector2(1f, t),
+                    UV = new Vector2(u1, v),
                 };
 
                 if (p > 0 && _indexCount + 6 <= _indices.Length)
@@ -273,18 +370,15 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 判断 Gradient 是否经过用户自定义配置。
-        /// Unity 默认 Gradient = 2 个 colorKey（白白）+ 2 个 alphaKey（1,1）。
         /// </summary>
         private static bool IsGradientCustomized(Gradient gradient)
         {
             var cKeys = gradient.colorKeys;
             var aKeys = gradient.alphaKeys;
 
-            // 非默认结构 → 用户自定义
             if (cKeys.Length != 2 || aKeys.Length != 2)
                 return true;
 
-            // 检查是否全是默认白色
             for (int i = 0; i < cKeys.Length; i++)
             {
                 var c = cKeys[i].color;
@@ -292,7 +386,6 @@ namespace MiniGameTemplate.Danmaku
                     return true;
             }
 
-            // 检查 alpha 是否全是 1.0
             for (int i = 0; i < aKeys.Length; i++)
             {
                 if (aKeys[i].alpha < 0.99f)
@@ -303,14 +396,10 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 默认拖尾颜色：头部白色全不透明 → 尾部白色全透明（淡出效果）。
-        /// Points[0] = 最老（尾部），Points[末尾] = 最新（头部），
-        /// 所以 t=0 对应尾部（透明），t=1 对应头部（不透明）。
-        /// 当 BulletTypeSO.TrailColor 未自定义时使用。
+        /// 默认拖尾颜色：头部白色全不透明 → 尾部白色全透明。
         /// </summary>
         private static Color32 DefaultTrailColor(float t)
         {
-            // DIAG: 亮青色高对比度验证（确认后改回白色）
             byte alpha = (byte)(255 * t);
             return new Color32(0, 255, 255, alpha);
         }
@@ -323,6 +412,7 @@ namespace MiniGameTemplate.Danmaku
             public float Width;
             public AnimationCurve WidthCurve;
             public Gradient ColorGradient;
+            public Rect TextureUVRect;  // T2.3: Atlas 中的 UV 子区域
             public readonly Vector2[] Points = new Vector2[MAX_POINTS_PER_TRAIL];
         }
     }

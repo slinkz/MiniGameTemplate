@@ -46,16 +46,19 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 收集所有子系统的 RuntimeAtlas 统计快照。
-        /// 返回数组：[0]=Bullet, [1]=VFX, [2]=DamageNumber。
+        /// PI-001: 共享 Atlas 后，返回唯一 Shared Atlas + VFX 两组。
         /// 对应 Atlas 未启用的条目为 null。
         /// </summary>
         public (string Label, RuntimeAtlasStats? Stats)[] GetAllAtlasStats()
         {
+            RuntimeAtlasStats? sharedStats = _sharedAtlas != null && _sharedAtlas.IsInitialized
+                ? _sharedAtlas.GetStats()
+                : (RuntimeAtlasStats?)null;
+
             return new (string, RuntimeAtlasStats?)[]
             {
-                ("Bullet", _bulletRenderer?.GetAtlasStats()),
+                ("Shared", sharedStats),
                 ("VFX", _vfxRuntime?.GetAtlasStats()),
-                ("DmgNum", _damageNumbers?.GetAtlasStats()),
             };
         }
 

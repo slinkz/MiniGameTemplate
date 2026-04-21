@@ -20,19 +20,16 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 初始化渲染器——从 TypeRegistry 收集所有 Texture 预热桶。
+        /// PI-001: 接收 DanmakuSystem 持有的共享 RuntimeAtlasManager。
         /// </summary>
-        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
+        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket, RuntimeAtlasManager sharedAtlas = null)
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig.BulletAtlas;
             _bulletMaterial = renderConfig.BulletMaterial;
-            _runtimeAtlas = null;
 
-            if (renderConfig != null && renderConfig.RuntimeAtlasConfig != null)
-            {
-                _runtimeAtlas = new RuntimeAtlasManager();
-                _runtimeAtlas.Initialize(renderConfig.RuntimeAtlasConfig);
-            }
+            // PI-001: 使用共享 Atlas 实例，不再独立创建
+            _runtimeAtlas = sharedAtlas;
 
             // ADR-030：不再依赖预先枚举全部 BulletTypeSO，桶允许运行时按需创建。
             var registrations = new System.Collections.Generic.List<RenderBatchManager.BucketRegistration>();
@@ -166,11 +163,10 @@ namespace MiniGameTemplate.Danmaku
                 : (RuntimeAtlasStats?)null;
         }
 
-        /// <summary>释放 BatchManager 资源。</summary>
+        /// <summary>释放 BatchManager 资源。PI-001: 共享 Atlas 由 DanmakuSystem 统一 Dispose。</summary>
         public void Dispose()
         {
             _batchManager?.Dispose();
-            _runtimeAtlas?.Dispose();
             _runtimeAtlas = null;
         }
 

@@ -4,31 +4,32 @@ using MiniGameTemplate.Rendering;
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 激光 Mesh 渲染器——通过 RenderBatchManager 按 (RenderLayer, LaserTexture) 分桶渲染。
+    /// 激光 Mesh 渲染器——通过 RenderBatchManager 按 (RenderLayer, Texture) 分桶渲染。
     /// <para>
-    /// 每条激光的每段 (LaserSegment) 生成一个 Quad（4 顶点 / 6 索引）：
-    /// - 宽度由 LaserTypeSO.WidthProfile 沿线段长度驱动
-    /// - UV.x 0->1 横跨宽度（中心=0.5，Shader 用于 Core/Glow 渐变）
-    /// - UV.y 沿长度方向映射（Shader 用于纹理滚动）
-    /// - 顶点 Color = 插值(CoreColor, EdgeColor) * Phase alpha
+    /// PI-001: 接收 DanmakuSystem 共享的 RuntimeAtlasManager。
+    /// Laser Phase L2: UseRuntimeAtlas=true 时走 Atlas，UV 归一化到子区域；
+    ///                  UseRuntimeAtlas=false 时保持独立贴图 + 世界空间 UV。
     /// </para>
     /// </summary>
     public class LaserRenderer
     {
         private RenderBatchManager _batchManager;
         private Material _laserMaterial;
+        private RuntimeAtlasManager _runtimeAtlas;
         private int _quadCount;
 
         /// <summary>上帧绘制的 Quad 数（调试用）</summary>
         public int DrawCount => _quadCount;
 
         /// <summary>
-        /// 初始化渲染器——从 TypeRegistry 收集所有激光贴图预热桶。
+        /// 初始化渲染器。PI-001: 接收共享 RuntimeAtlasManager。
         /// </summary>
-        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuadsPerBucket)
+        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry,
+            int maxQuadsPerBucket, RuntimeAtlasManager sharedAtlas = null)
         {
             _batchManager = new RenderBatchManager();
             _laserMaterial = renderConfig.LaserMaterial;
+            _runtimeAtlas = sharedAtlas;
 
             // ADR-030：激光桶允许在首次发射对应类型时按需创建。
             _batchManager.Initialize(System.Array.Empty<RenderBatchManager.BucketRegistration>(), maxQuadsPerBucket);
@@ -57,7 +58,11 @@ namespace MiniGameTemplate.Danmaku
                 var type = registry.GetLaserType(laser.LaserTypeIndex);
                 if (type.LaserTexture == null) continue;
 
-                var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, type.LaserTexture);
+                // L2.3: 通过 Resolver 解算纹理（PI-005: 简化签名）
+                var binding = RuntimeAtlasBindingResolver.ResolveLaser(_runtimeAtlas, type);
+                if (!binding.IsValid) continue;
+
+                var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
                 if (!_batchManager.TryGetOrCreateBucket(bucketKey, _laserMaterial, RenderSortingOrder.LaserDefault, out var bucket))
                     continue;
 
@@ -70,23 +75,27 @@ namespace MiniGameTemplate.Danmaku
                 float lengthAccum = 0f;
                 float totalLength = laser.VisualLength > 0f ? laser.VisualLength : laser.Length;
 
+                // L2.4: Atlas 模式用 binding.UVRect，非 Atlas 模式用 full rect
+                Rect atlasUVRect = binding.UsesRuntimeAtlas ? binding.UVRect : new Rect(0, 0, 1, 1);
+
                 for (int s = 0; s < laser.SegmentCount; s++)
                 {
                     ref var seg = ref laser.Segments[s];
                     if (seg.Length <= 0.0001f) continue;
 
                     WriteSegmentQuad(bucket, ref seg, type, laser.Width, alpha,
-                        ref uvYAccum, ref lengthAccum, totalLength);
+                        ref uvYAccum, ref lengthAccum, totalLength, atlasUVRect);
                 }
             }
 
             _batchManager.UploadAndDrawAll();
         }
 
-        /// <summary>释放 BatchManager 资源。</summary>
+        /// <summary>释放 BatchManager 资源。PI-001: 共享 Atlas 由 DanmakuSystem 统一 Dispose。</summary>
         public void Dispose()
         {
             _batchManager?.Dispose();
+            _runtimeAtlas = null;
         }
 
         // ──── 内部方法 ────
@@ -108,6 +117,11 @@ namespace MiniGameTemplate.Danmaku
             }
         }
 
+        /// <summary>
+        /// 写入一段激光 Quad。
+        /// PI-002: Atlas 模式下 UV.y 归一化到 [0,1]（整条激光映射完整纹理一次）；
+        ///         非 Atlas 模式保留原始世界空间 UV（wrapMode=Repeat 环绕）。
+        /// </summary>
         private void WriteSegmentQuad(
             RenderBatchManager.RenderBucket bucket,
             ref LaserSegment seg,
@@ -116,7 +130,8 @@ namespace MiniGameTemplate.Danmaku
             float alpha,
             ref float uvYAccum,
             ref float lengthAccum,
-            float totalLength)
+            float totalLength,
+            Rect atlasUVRect)
         {
             int baseV = bucket.AllocateQuad();
             if (baseV < 0) return;
@@ -147,6 +162,23 @@ namespace MiniGameTemplate.Danmaku
 
             float uvYEnd = uvYAccum + seg.Length;
 
+            // PI-002: UV 映射语义分支
+            float u0, u1, v0, v1;
+            if (atlasUVRect.width < 1f) // Atlas 模式：归一化到子区域
+            {
+                u0 = atlasUVRect.x;
+                u1 = atlasUVRect.x + atlasUVRect.width;
+                v0 = atlasUVRect.y + (totalLength > 0f ? uvYAccum / totalLength : 0f) * atlasUVRect.height;
+                v1 = atlasUVRect.y + (totalLength > 0f ? uvYEnd / totalLength : 0f) * atlasUVRect.height;
+            }
+            else // 非 Atlas 模式：保留原始世界空间 UV
+            {
+                u0 = 0f;
+                u1 = 1f;
+                v0 = uvYAccum;
+                v1 = uvYEnd;
+            }
+
             Color32 color = new Color32(
                 (byte)(type.CoreColor.r * 255),
                 (byte)(type.CoreColor.g * 255),
@@ -159,28 +191,28 @@ namespace MiniGameTemplate.Danmaku
             {
                 Position = new Vector3(startLeft.x, startLeft.y, 0f),
                 Color = color,
-                UV = new Vector2(0f, uvYAccum),
+                UV = new Vector2(u0, v0),
             };
 
             verts[baseV + 1] = new RenderVertex
             {
                 Position = new Vector3(startRight.x, startRight.y, 0f),
                 Color = color,
-                UV = new Vector2(1f, uvYAccum),
+                UV = new Vector2(u1, v0),
             };
 
             verts[baseV + 2] = new RenderVertex
             {
                 Position = new Vector3(endRight.x, endRight.y, 0f),
                 Color = color,
-                UV = new Vector2(1f, uvYEnd),
+                UV = new Vector2(u1, v1),
             };
 
             verts[baseV + 3] = new RenderVertex
             {
                 Position = new Vector3(endLeft.x, endLeft.y, 0f),
                 Color = color,
-                UV = new Vector2(0f, uvYEnd),
+                UV = new Vector2(u0, v1),
             };
 
             uvYAccum = uvYEnd;

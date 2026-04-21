@@ -12,7 +12,7 @@ RuntimeAtlasSystem 是**统一渲染管线的核心基础设施**——借鉴 RV
 - 缓存命中零 GC、切关清空、RT Lost 自动恢复
 - WebGL 2.0 兼容（CommandBuffer.Blit，不依赖 Graphics.CopyTexture）
 
-**设计文档**：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.10.1）
+**设计文档**：`Docs/Agent/RUNTIME_ATLAS_SYSTEM_TDD.md`（v2.11）
 
 ## 实施状态：Phase R0 ~ R4 全部验收通过 ✅
 
@@ -53,6 +53,20 @@ RuntimeAtlasSystem 是**统一渲染管线的核心基础设施**——借鉴 RV
 
 ### 3. RuntimeAtlasBlit.shader 的 NDC passthrough
 **踩坑经验**：在 CommandBuffer + SetRenderTarget 上下文中，`UnityObjectToClipPos` 依赖的 VP 矩阵不可控（可能是上一帧 Camera 的值），会导致全屏 quad 被变换到错误位置。必须直接 passthrough NDC 坐标：`o.vertex = float4(v.vertex.xy, 0, 1)`。
+
+## 深化任务（ADR-031，v2.11 方案设计完成，待实施）
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| **R4.4A 懒建页** | 📋 待实施 | `InitChannel()` 不再无条件创建 Page 0，延迟到首次 `Allocate()`。节省最多 32 MB RT 内存。实施于 `RuntimeAtlasManager.cs` |
+| **Laser 接入** | 📋 待实施 | `LaserTypeSO.UseRuntimeAtlas` 控制：`true` 入 Atlas 合并 DC（禁用 UV 滚动）；`false` 走独立贴图 fallback。涉及 `RuntimeAtlasBindingResolver.ResolveLaser()` + `LaserRenderer` 改造 |
+| **Trail 纹理化** | 📋 待实施 | `BulletTypeSO.TrailTexture` 新增纹理字段，所有 Trail 统一走 Atlas Channel.Trail（含 whiteTexture fallback），保持 1 DC。涉及 `TrailPool` + `TrailInstance` 改造 |
+
+**架构决策**：DanmakuSystem 持有唯一 RuntimeAtlasManager 共享实例，通过 `Initialize()` 参数注入各 Renderer（PI-001）。
+
+**实施顺序**：`R4.4A` → `Laser` / `Trail`（后两者可并行），总计 5.75 天。
+
+**详细方案**：`UnityProj/docs/Agent/PHASED_IMPLEMENTATION_PLAN.md`（v1.1）
 
 ## 后续可选优化
 

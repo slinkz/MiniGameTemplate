@@ -16,6 +16,10 @@ namespace MiniGameTemplate.Danmaku
         [Tooltip("UV 滚动速度")]
         public float UVScrollSpeed = 2f;
 
+        [Header("RuntimeAtlas")]
+        [Tooltip("是否允许将激光纹理 Blit 到 RuntimeAtlas（禁用 UV 滚动时推荐开启）")]
+        public bool UseRuntimeAtlas = false;
+
         public Color CoreColor = Color.white;
         public Color EdgeColor = Color.cyan;
 

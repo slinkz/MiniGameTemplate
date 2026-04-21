@@ -6,11 +6,13 @@ namespace MiniGameTemplate.Danmaku
     /// <summary>
     /// 激光预警线渲染器——在激光 Charging 阶段渲染一条闪烁细线，提示玩家即将有激光。
     /// 复用 RenderBatchManager 架构，使用激光材质但排序在激光本体下方。
+    /// PI-001: 接收共享 RuntimeAtlasManager。预警线天然适合入 Atlas（无 UV 滚动）。
     /// </summary>
     public class LaserWarningRenderer
     {
         private RenderBatchManager _batchManager;
         private Material _laserMaterial;
+        private RuntimeAtlasManager _runtimeAtlas;
         private int _quadCount;
 
         /// <summary>预警线固定宽度（世界单位）</summary>
@@ -23,15 +25,17 @@ namespace MiniGameTemplate.Danmaku
         public int DrawCount => _quadCount;
 
         /// <summary>
-        /// 初始化渲染器——从 TypeRegistry 收集所有激光贴图预热桶。
+        /// 初始化渲染器。PI-001: 接收共享 RuntimeAtlasManager。
         /// </summary>
-        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry, int maxQuads)
+        internal void Initialize(DanmakuRenderConfig renderConfig, DanmakuTypeRegistry registry,
+            int maxQuads, RuntimeAtlasManager sharedAtlas = null)
         {
             _batchManager = new RenderBatchManager();
             _laserMaterial = renderConfig.LaserMaterial;
+            _runtimeAtlas = sharedAtlas;
 
             // ADR-030：预警线桶允许在首次遇到激光贴图时按需创建。
-            _batchManager.Initialize(System.Array.Empty<RenderBatchManager.BucketRegistration>(), maxQuads);  // 预警线在激光本体下方
+            _batchManager.Initialize(System.Array.Empty<RenderBatchManager.BucketRegistration>(), maxQuads);
         }
 
         /// <summary>
@@ -50,30 +54,36 @@ namespace MiniGameTemplate.Danmaku
                 var type = registry.GetLaserType(laser.LaserTypeIndex);
                 if (type.LaserTexture == null) continue;
 
-                var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, type.LaserTexture);
+                // 预警线默认走 Atlas（天然无 UV 滚动需求）
+                var binding = RuntimeAtlasBindingResolver.ResolveLaser(_runtimeAtlas, type);
+                if (!binding.IsValid) continue;
+
+                var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
                 if (!_batchManager.TryGetOrCreateBucket(bucketKey, _laserMaterial, RenderSortingOrder.LaserDefault - 1, out var bucket))
                     continue;
 
                 // 闪烁 alpha：0.3 ~ 1.0 正弦波
                 float blinkAlpha = 0.3f + 0.7f * Mathf.Abs(Mathf.Sin(laser.Elapsed * BLINK_FREQUENCY));
 
-                WriteWarningLine(bucket, ref laser, type, blinkAlpha);
+                WriteWarningLine(bucket, ref laser, type, blinkAlpha, binding.UsesRuntimeAtlas ? binding.UVRect : new Rect(0, 0, 1, 1));
             }
 
             _batchManager.UploadAndDrawAll();
         }
 
-        /// <summary>释放 BatchManager 资源。</summary>
+        /// <summary>释放 BatchManager 资源。PI-001: 共享 Atlas 由 DanmakuSystem 统一 Dispose。</summary>
         public void Dispose()
         {
             _batchManager?.Dispose();
+            _runtimeAtlas = null;
         }
 
         private void WriteWarningLine(
             RenderBatchManager.RenderBucket bucket,
             ref LaserData laser,
             LaserTypeSO type,
-            float alpha)
+            float alpha,
+            Rect uvRect)
         {
             int baseV = bucket.AllocateQuad();
             if (baseV < 0) return;
@@ -101,28 +111,28 @@ namespace MiniGameTemplate.Danmaku
             {
                 Position = new Vector3(start.x + perp.x * halfW, start.y + perp.y * halfW, 0f),
                 Color = color,
-                UV = new Vector2(0f, 0f),
+                UV = new Vector2(uvRect.x, uvRect.y),
             };
 
             verts[baseV + 1] = new RenderVertex
             {
                 Position = new Vector3(start.x - perp.x * halfW, start.y - perp.y * halfW, 0f),
                 Color = color,
-                UV = new Vector2(1f, 0f),
+                UV = new Vector2(uvRect.x + uvRect.width, uvRect.y),
             };
 
             verts[baseV + 2] = new RenderVertex
             {
                 Position = new Vector3(end.x - perp.x * halfW, end.y - perp.y * halfW, 0f),
                 Color = color,
-                UV = new Vector2(1f, 1f),
+                UV = new Vector2(uvRect.x + uvRect.width, uvRect.y + uvRect.height),
             };
 
             verts[baseV + 3] = new RenderVertex
             {
                 Position = new Vector3(end.x + perp.x * halfW, end.y + perp.y * halfW, 0f),
                 Color = color,
-                UV = new Vector2(0f, 1f),
+                UV = new Vector2(uvRect.x, uvRect.y + uvRect.height),
             };
         }
     }

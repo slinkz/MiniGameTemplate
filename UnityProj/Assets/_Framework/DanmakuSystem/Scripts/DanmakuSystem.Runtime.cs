@@ -1,3 +1,4 @@
+using MiniGameTemplate.Rendering;
 using MiniGameTemplate.Utils;
 using UnityEngine;
 
@@ -22,6 +23,9 @@ namespace MiniGameTemplate.Danmaku
         private LaserWarningRenderer _laserWarningRenderer;
         private DamageNumberSystem _damageNumbers;
         private TrailPool _trailPool;
+
+        // ──── PI-001: 共享 RuntimeAtlasManager ────
+        private RuntimeAtlasManager _sharedAtlas;
 
         // ──── 特效桥接 ────
         private IDanmakuEffectsBridge _effectsBridge;
@@ -65,24 +69,32 @@ namespace MiniGameTemplate.Danmaku
             // 发射器驱动
             _spawnerDriver = new SpawnerDriver();
 
-            // 渲染
+            // PI-001: 共享 RuntimeAtlasManager — DanmakuSystem 统一持有
+            _sharedAtlas = null;
+            if (_renderConfig != null && _renderConfig.RuntimeAtlasConfig != null)
+            {
+                _sharedAtlas = new RuntimeAtlasManager();
+                _sharedAtlas.Initialize(_renderConfig.RuntimeAtlasConfig);
+            }
+
+            // 渲染——注入共享 Atlas
             _bulletRenderer = new BulletRenderer();
-            _bulletRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxBullets * 4);
+            _bulletRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxBullets * 4, _sharedAtlas);
 
             _laserRenderer = new LaserRenderer();
             _laserRenderer.Initialize(_renderConfig, _typeRegistry,
-                _worldConfig.MaxLasers * LaserPool.MAX_SEGMENTS_PER_LASER);
+                _worldConfig.MaxLasers * LaserPool.MAX_SEGMENTS_PER_LASER, _sharedAtlas);
 
             _laserWarningRenderer = new LaserWarningRenderer();
-            _laserWarningRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers);
+            _laserWarningRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers, _sharedAtlas);
 
             // 伤害飘字
             _damageNumbers = new DamageNumberSystem();
-            _damageNumbers.Initialize(_renderConfig);
+            _damageNumbers.Initialize(_renderConfig, _sharedAtlas);
 
             // 重量拖尾
             _trailPool = new TrailPool(_worldConfig.MaxTrails);
-            _trailPool.Initialize(_renderConfig.BulletMaterial);
+            _trailPool.Initialize(_renderConfig.BulletMaterial, _sharedAtlas);
 
             // 特效桥接——从 BridgeConfig 组件获取 VFX 引用（DEV-002）
             var bridgeConfig = GetComponent<DanmakuEffectsBridgeConfig>();
@@ -110,6 +122,10 @@ namespace MiniGameTemplate.Danmaku
             _laserWarningRenderer?.Dispose();
             _damageNumbers?.Dispose();
             _trailPool?.Dispose();
+
+            // PI-001: 共享 Atlas 最后统一 Dispose
+            _sharedAtlas?.Dispose();
+            _sharedAtlas = null;
         }
     }
 }

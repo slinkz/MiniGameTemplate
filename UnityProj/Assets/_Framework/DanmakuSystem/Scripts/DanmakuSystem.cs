@@ -90,13 +90,13 @@ namespace MiniGameTemplate.Danmaku
             _laserWarningRenderer?.Dispose();
 
             _bulletRenderer = new BulletRenderer();
-            _bulletRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxBullets * 4);
+            _bulletRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxBullets * 4, _sharedAtlas);
 
             _laserRenderer = new LaserRenderer();
-            _laserRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers * LaserPool.MAX_SEGMENTS_PER_LASER);
+            _laserRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers * LaserPool.MAX_SEGMENTS_PER_LASER, _sharedAtlas);
 
             _laserWarningRenderer = new LaserWarningRenderer();
-            _laserWarningRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers);
+            _laserWarningRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers, _sharedAtlas);
 #else
             throw new System.InvalidOperationException("EditorWarmupBatches is editor only.");
 #endif

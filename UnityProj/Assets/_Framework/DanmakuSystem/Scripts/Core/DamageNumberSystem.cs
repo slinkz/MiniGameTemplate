@@ -30,17 +30,16 @@ namespace MiniGameTemplate.Danmaku
 
         public int TotalDrawCount => _totalQuadCount;
 
-        public void Initialize(DanmakuRenderConfig renderConfig)
+        /// <summary>
+        /// PI-001: 接收 DanmakuSystem 持有的共享 RuntimeAtlasManager。
+        /// </summary>
+        public void Initialize(DanmakuRenderConfig renderConfig, RuntimeAtlasManager sharedAtlas = null)
         {
             _batchManager = new RenderBatchManager();
             _fallbackAtlas = renderConfig != null ? renderConfig.NumberAtlas : null;
-            _runtimeAtlas = null;
 
-            if (renderConfig != null && renderConfig.RuntimeAtlasConfig != null)
-            {
-                _runtimeAtlas = new RuntimeAtlasManager();
-                _runtimeAtlas.Initialize(renderConfig.RuntimeAtlasConfig);
-            }
+            // PI-001: 使用共享 Atlas 实例
+            _runtimeAtlas = sharedAtlas;
 
             var registrations = new List<RenderBatchManager.BucketRegistration>();
             var binding = ResolveBinding();
@@ -139,7 +138,7 @@ namespace MiniGameTemplate.Danmaku
         public void Dispose()
         {
             _batchManager?.Dispose();
-            _runtimeAtlas?.Dispose();
+            // PI-001: 共享 Atlas 由 DanmakuSystem 统一 Dispose
             _runtimeAtlas = null;
         }
 

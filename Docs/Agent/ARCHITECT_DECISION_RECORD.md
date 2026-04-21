@@ -1425,6 +1425,51 @@ After:  策划创建 TypeSO → Spawn(typeSO, ...) → 框架自动注册+建桶
 
 ---
 
+## ADR-031：RuntimeAtlas 深化——懒建页 + Laser 接入 + Trail 纹理化
+
+- **日期**：2026-04-21
+- **状态**：✅ Accepted（方案设计完成，待实施）
+- **Supersedes**：无（增量扩展 ADR-028/029/030 的渲染架构）
+
+### 背景
+
+R0~R5 + R4.1/R4.3/R4.4 完成后，Editor Play Mode 验收通过 8/12 AC。三项深化任务旨在补全 RuntimeAtlas 的完整度并优化内存占用：
+
+1. **R4.4A 懒建页（Lazy Page Creation）**：InitChannel 时不再无条件创建 Page 0，延迟到首次 Allocate。微信小游戏环境可节省最多 32 MB RT 内存。
+2. **Laser 接入 RuntimeAtlas（方案 C）**：`LaserTypeSO.UseRuntimeAtlas` 字段控制——禁用 UV 滚动的激光入 Atlas 合并 DC，保留 UV 滚动的走独立贴图 fallback。
+3. **Trail 纹理化**：`BulletTypeSO.TrailTexture` 新增纹理支持，所有 Trail（含无纹理的 whiteTexture fallback）统一走 Atlas Channel.Trail，保持 1 DC。
+
+### 关键决策
+
+| 编号 | 决策 | 理由 |
+|------|------|------|
+| PI-001 | DanmakuSystem 持有唯一 RuntimeAtlasManager 共享实例，通过 Initialize 参数注入各 Renderer | 避免多实例创建 18 个冗余 Channel；Channel 隔离已保证互不干扰 |
+| PI-002 | Laser Atlas 模式下 UV.y 归一化到 [0,1]（整条激光映射完整纹理一次） | Atlas RT wrapMode=Clamp 无法支持 UV 环绕；短激光细节清晰，长激光可接受拉伸 |
+| PI-003 | GetStats() 的 `Pages.Count` 直接使用（懒建页后 Count=0 时 fillRate=0） | 语义精确，totalPixels=0 时分母保护 |
+| PI-004 | Trail RT Lost 恢复路径：Render() 中检测 IsCreated() → 回退 whiteTexture → 下帧 TryGetAllocation 恢复 | 保证 Trail 渲染不中断 |
+| PI-005 | ResolveLaser() 签名精简：去掉冗余 fallbackTexture 参数 | 从 LaserTypeSO 直接读取 LaserTexture 即可 |
+
+### 实施顺序
+
+```
+R4.4A (懒建页, 2h) → Laser (2.5d) / Trail (3d) 可并行
+                      总计 5.75 天
+```
+
+### 验收标准
+
+见 `UnityProj/docs/Agent/PHASED_IMPLEMENTATION_PLAN.md` 中各方案的 AC 列表。
+
+### PK 评审
+
+1 轮 5 个问题（PI-001~005）已收敛。详见 `UnityProj/docs/Agent/PHASED_IMPL_PK_Question.md`。
+
+### 关联
+- **扩展**: ADR-028（RuntimeAtlas 核心决策）, ADR-029（Additive Blend 移除）, ADR-030（TypeRegistry 内化）
+- **兼容**: ADR-002, ADR-015
+
+---
+
 ## 四、最终结论
 
 

@@ -7,6 +7,7 @@ namespace MiniGameTemplate.Rendering
     /// <summary>
     /// RuntimeAtlas 核心入口。
     /// R1：补齐配置驱动初始化、WarmUp 结果输出、Stats 快照与 RT Lost 标记恢复。
+    /// R4.4A：懒建页——Channel 初始化时不创建 Page 0，延迟到首次 Allocate 时按需创建。
     /// </summary>
     public sealed class RuntimeAtlasManager : IDisposable
     {
@@ -63,7 +64,7 @@ namespace MiniGameTemplate.Rendering
                 Config = config,
             };
 
-            state.Pages.Add(CreatePage(config.AtlasSize, channel, 0));
+            // R4.4A：懒建页——Page 0 延迟到首次 Allocate 时创建，节省未使用 Channel 的 RT 内存
             _channels[channel] = state;
         }
 
@@ -225,7 +226,8 @@ namespace MiniGameTemplate.Rendering
                     }
                 }
 
-                long totalPixels = (long)state.Config.AtlasSize * state.Config.AtlasSize * Math.Max(1, state.Pages.Count);
+                // R4.4A (PI-003): Pages.Count=0 时 totalPixels=0，fillRate=0（语义精确）
+                long totalPixels = (long)state.Config.AtlasSize * state.Config.AtlasSize * state.Pages.Count;
                 fillRate[index] = totalPixels > 0 ? (float)usedPixels / totalPixels : 0f;
                 totalMemoryBytes += (long)state.Config.AtlasSize * state.Config.AtlasSize * 4L * state.Pages.Count;
             }
@@ -256,6 +258,12 @@ namespace MiniGameTemplate.Rendering
             int width = source.width;
             int height = source.height;
             AtlasChannelConfig config = state.Config;
+
+            // R4.4A：懒建页——首次分配时创建 Page 0
+            if (state.Pages.Count == 0)
+            {
+                state.Pages.Add(CreatePage(config.AtlasSize, channel, 0));
+            }
 
             for (int pageIndex = 0; pageIndex < state.Pages.Count; pageIndex++)
             {

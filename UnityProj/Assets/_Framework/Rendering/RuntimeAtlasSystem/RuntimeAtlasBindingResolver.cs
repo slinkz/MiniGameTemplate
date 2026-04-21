@@ -41,6 +41,33 @@ namespace MiniGameTemplate.Rendering
             return ResolveCommon(atlasManager, AtlasChannel.VFX, type.SourceTexture, type.AtlasBinding, type.UVRect, fallbackTexture);
         }
 
+        /// <summary>
+        /// 解算激光纹理绑定。PI-005: 直接从 type 读取 LaserTexture，无冗余 fallback 参数。
+        /// UseRuntimeAtlas=true 时走 Atlas；否则独立贴图。
+        /// </summary>
+        public static ResolvedTextureBinding ResolveLaser(
+            RuntimeAtlasManager atlasManager,
+            MiniGameTemplate.Danmaku.LaserTypeSO type)
+        {
+            if (type == null || type.LaserTexture == null)
+                return default;
+
+            // 策略：UseRuntimeAtlas=true 时走 Atlas
+            if (type.UseRuntimeAtlas && atlasManager != null && atlasManager.IsInitialized)
+            {
+                AtlasAllocation allocation = atlasManager.Allocate(AtlasChannel.Laser, type.LaserTexture);
+                if (allocation.Valid)
+                {
+                    RenderTexture atlasTexture = atlasManager.GetAtlasTexture(AtlasChannel.Laser, allocation.PageIndex);
+                    if (atlasTexture != null)
+                        return new ResolvedTextureBinding(atlasTexture, allocation.UVRect, true);
+                }
+            }
+
+            // Fallback：独立贴图
+            return new ResolvedTextureBinding(type.LaserTexture, new Rect(0, 0, 1, 1), false);
+        }
+
         private static ResolvedTextureBinding ResolveCommon(RuntimeAtlasManager atlasManager,
             AtlasChannel channel,
             Texture2D sourceTexture,

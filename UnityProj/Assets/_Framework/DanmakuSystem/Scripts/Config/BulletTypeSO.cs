@@ -161,6 +161,9 @@ namespace MiniGameTemplate.Danmaku
         [Header("拖尾")]
         public TrailMode Trail = TrailMode.None;
 
+        [Tooltip("拖尾纹理（null=纯色拖尾，使用顶点色）。配合 RuntimeAtlas 使用时自动 Blit 到 Trail Channel。")]
+        public Texture2D TrailTexture;
+
         [Tooltip("Mesh 残影数量（Ghost 模式）")]
         public byte GhostCount = 3;
 
