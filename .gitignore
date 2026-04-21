@@ -61,6 +61,7 @@ UnityProj/.vs/
 
 # ===== Debug Screenshots (MCP / Editor captures) =====
 UnityProj/Assets/Screenshots/
+UnityProj/Assets/Screenshots.meta
 
 # ===== YooAsset build output =====
 UnityProj/Bundles/
