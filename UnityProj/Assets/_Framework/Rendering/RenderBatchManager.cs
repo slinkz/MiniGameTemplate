@@ -191,13 +191,29 @@ namespace MiniGameTemplate.Rendering
                 return false;
             }
 
+            // 防御性兜底：若字典索引暂时不同步，线性扫描现有桶避免同 key 重复创建。
+            // 这是冷路径，优先保证正确性而非极致性能。
+            for (int i = 0; i < _buckets.Count; i++)
+            {
+                if (_buckets[i].Key.Equals(key))
+                {
+                    bucket = _buckets[i];
+                    if (_bucketIndex != null)
+                        _bucketIndex[key] = i;
+                    return true;
+                }
+            }
+
             bucket = CreateBucket(key, templateMaterial, sortingOrder, _maxQuadsPerBucket);
             if (bucket == null)
                 return false;
 
             _buckets.Add(bucket);
             _dynamicBucketCreatedCount++;
+
+            // 排序并重建索引（SortBucketsBySortingOrder 内部调用 RebuildBucketIndex）。
             SortBucketsBySortingOrder();
+
             if (_buckets.Count > _peakBucketCountThisFrame)
                 _peakBucketCountThisFrame = _buckets.Count;
             return true;
@@ -291,6 +307,10 @@ namespace MiniGameTemplate.Rendering
             {
                 name = $"BatchMat_{key.Layer}_{key.Texture.name} (Instance)",
             };
+
+            // 关键修复：new Material(templateMaterial) 不会可靠保留 shader keyword。
+            // Laser Atlas 依赖 _ATLASMODE_ON 变体；若 keyword 丢失，会错误走非 Atlas 分支导致不可见。
+            matInstance.shaderKeywords = templateMaterial.shaderKeywords;
             matInstance.mainTexture = key.Texture;
             if (matInstance.HasProperty("_Color"))
                 matInstance.SetColor("_Color", new Color(1f, 1f, 1f, 1f));

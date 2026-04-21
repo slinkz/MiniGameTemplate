@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44402242, g: 0.49316543, b: 0.5722324, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -325,20 +325,21 @@ MonoBehaviour:
   _autoMoveBoss: 1
   _bossMoveAmplitude: 2.5
   _bossMoveSpeed: 1.5
+  _bossRotateSpeed: 45
   _bossPosition: {x: 0, y: 4}
   _playerRadius: 0.15
-  _mode: 0
+  _mode: 2
   _spawnerProfile: {fileID: 11400000, guid: b31c4dd67e671134392347a2d206b09c, type: 2}
   _manualPatternGroup: {fileID: 11400000, guid: 024bb7e33cdf0d540b0a246c14b0bc92, type: 2}
-  _manualCooldown: 0.5
+  _manualCooldown: 0.1
   _difficulty: {fileID: 11400000, guid: a5cc13e81e3ef0747ad04eb5a7089d21, type: 2}
   _difficultyEasy: {fileID: 11400000, guid: f1a2b3c4d5e60001f1a2b3c4d5e60001, type: 2}
   _difficultyNormal: {fileID: 11400000, guid: a5cc13e81e3ef0747ad04eb5a7089d21, type: 2}
   _difficultyHard: {fileID: 11400000, guid: f1a2b3c4d5e60002f1a2b3c4d5e60002, type: 2}
-  _laserTypeIndex: 0
+  _laserType: {fileID: 11400000, guid: 695461ef1b495754491700e74588a238, type: 2}
   _laserLength: 12
   _laserCooldown: 3
-  _sprayTypeIndex: 0
+  _sprayType: {fileID: 11400000, guid: 4c7d9d6b2f6b4f4aa8a2c3d4e5f60718, type: 2}
   _sprayLifetime: 5
   _sprayRangeOverride: 0
   _sprayConeAngleOverride: 0
@@ -444,7 +445,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _worldConfig: {fileID: 11400000, guid: 62dc325cc4dd4414b9357ade196622ef, type: 2}
   _renderConfig: {fileID: 11400000, guid: bbc7d09aeb1334c45833af96042e8cef, type: 2}
-  _typeRegistry: {fileID: 11400000, guid: 591436b2d9db0914a8a7a9827e42a75a, type: 2}
   _timeScale: {fileID: 11400000, guid: a5fd9c5abf6bfae499bf53958df34427, type: 2}
   _difficulty: {fileID: 11400000, guid: a5cc13e81e3ef0747ad04eb5a7089d21, type: 2}
   _onPlayerHit: {fileID: 11400000, guid: c1a2b3d4e5f60001a1b2c3d4e5f60001, type: 2}
@@ -734,7 +734,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _renderConfig: {fileID: 11400000, guid: 6977face063bbe84682f985168a3c790, type: 2}
-  _typeRegistry: {fileID: 11400000, guid: 1ee855bfc24517040b965440599876ee, type: 2}
   _capacity: 64
 --- !u!4 &1589025273
 Transform:

@@ -15,6 +15,7 @@ namespace MiniGameTemplate.Danmaku
     {
         private RenderBatchManager _batchManager;
         private Material _laserMaterial;
+        private Material _laserMaterialAtlas;  // Atlas 模式材质克隆（启用 _ATLASMODE_ON keyword）
         private RuntimeAtlasManager _runtimeAtlas;
         private int _quadCount;
 
@@ -30,6 +31,17 @@ namespace MiniGameTemplate.Danmaku
             _batchManager = new RenderBatchManager();
             _laserMaterial = renderConfig.LaserMaterial;
             _runtimeAtlas = sharedAtlas;
+
+            // Atlas 模式材质克隆：启用 _ATLASMODE_ON keyword，
+            // 让 Shader 在 frag 中分离渐变 UV.x 和纹理采样 UV。
+            if (_laserMaterial != null)
+            {
+                _laserMaterialAtlas = new Material(_laserMaterial);
+                _laserMaterialAtlas.name = _laserMaterial.name + " (Atlas)";
+                // ADR-032: new Material() 不可靠保留 shaderKeywords，必须显式复制后再追加。
+                _laserMaterialAtlas.shaderKeywords = _laserMaterial.shaderKeywords;
+                _laserMaterialAtlas.EnableKeyword("_ATLASMODE_ON");
+            }
 
             // ADR-030：激光桶允许在首次发射对应类型时按需创建。
             _batchManager.Initialize(System.Array.Empty<RenderBatchManager.BucketRegistration>(), maxQuadsPerBucket);
@@ -62,8 +74,14 @@ namespace MiniGameTemplate.Danmaku
                 var binding = RuntimeAtlasBindingResolver.ResolveLaser(_runtimeAtlas, type);
                 if (!binding.IsValid) continue;
 
+                // L2.4: Atlas 模式用 binding.UVRect，非 Atlas 模式用 full rect
+                bool usesAtlas = binding.UsesRuntimeAtlas;
+                Rect atlasUVRect = usesAtlas ? binding.UVRect : new Rect(0, 0, 1, 1);
+
+                // Atlas 桶用启用 _ATLASMODE_ON 的材质克隆，非 Atlas 桶用原始材质
                 var bucketKey = new RenderBatchManager.BucketKey(RenderLayer.Normal, binding.Texture);
-                if (!_batchManager.TryGetOrCreateBucket(bucketKey, _laserMaterial, RenderSortingOrder.LaserDefault, out var bucket))
+                Material mat = usesAtlas ? _laserMaterialAtlas : _laserMaterial;
+                if (!_batchManager.TryGetOrCreateBucket(bucketKey, mat, RenderSortingOrder.LaserDefault, out var bucket))
                     continue;
 
                 // Phase alpha
@@ -74,10 +92,6 @@ namespace MiniGameTemplate.Danmaku
                 float uvYAccum = 0f;
                 float lengthAccum = 0f;
                 float totalLength = laser.VisualLength > 0f ? laser.VisualLength : laser.Length;
-
-                // L2.4: Atlas 模式用 binding.UVRect，非 Atlas 模式用 full rect
-                bool usesAtlas = binding.UsesRuntimeAtlas;
-                Rect atlasUVRect = usesAtlas ? binding.UVRect : new Rect(0, 0, 1, 1);
 
                 for (int s = 0; s < laser.SegmentCount; s++)
                 {
@@ -96,6 +110,11 @@ namespace MiniGameTemplate.Danmaku
         public void Dispose()
         {
             _batchManager?.Dispose();
+            if (_laserMaterialAtlas != null)
+            {
+                Object.Destroy(_laserMaterialAtlas);
+                _laserMaterialAtlas = null;
+            }
             _runtimeAtlas = null;
         }
 
@@ -120,7 +139,9 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 写入一段激光 Quad。
-        /// PI-002: Atlas 模式下 UV.y 归一化到 [0,1]（整条激光映射完整纹理一次）；
+        /// PI-002: Atlas 模式下 UV.x 保持 [0,1]（给 Shader 做横向渐变），
+        ///         UV.y 归一化到 Atlas 子区域。Shader 通过 _ATLASMODE_ON keyword
+        ///         分离渐变计算和纹理采样。
         ///         非 Atlas 模式保留原始世界空间 UV（wrapMode=Repeat 环绕）。
         /// CR-03: 使用显式 bool 标志替代 width < 1f 浮点比较。
         /// </summary>
@@ -167,10 +188,12 @@ namespace MiniGameTemplate.Danmaku
 
             // PI-002: UV 映射语义分支（CR-03: 使用显式 bool 替代浮点比较）
             float u0, u1, v0, v1;
-            if (usesAtlas) // Atlas 模式：归一化到子区域
+            if (usesAtlas)
             {
-                u0 = atlasUVRect.x;
-                u1 = atlasUVRect.x + atlasUVRect.width;
+                // Atlas 模式：UV.x = [0, 1]（渐变参数，给 Shader distFromCenter 用）
+                // UV.y = Atlas 子区域归一化（纹理纵向采样）
+                u0 = 0f;
+                u1 = 1f;
                 v0 = atlasUVRect.y + (totalLength > 0f ? uvYAccum / totalLength : 0f) * atlasUVRect.height;
                 v1 = atlasUVRect.y + (totalLength > 0f ? uvYEnd / totalLength : 0f) * atlasUVRect.height;
             }

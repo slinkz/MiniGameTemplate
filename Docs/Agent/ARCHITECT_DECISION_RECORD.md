@@ -1485,6 +1485,117 @@ TDD 符合性：100%，零偏离。代码评审发现 6 项，修复 3 项：
 
 ---
 
+## ADR-032：`new Material()` 必须显式复制 shaderKeywords — Laser Atlas 不可见 Bug 修复
+
+- **日期**：2026-04-21
+- **状态**：✅ Implemented
+- **类型**：Bug Fix + 防御性规范
+- **影响范围**：RenderBatchManager、LaserRenderer、LaserWarningRenderer、DanmakuLaser.shader
+
+### 问题现象
+
+`LaserTypeSO.UseRuntimeAtlas = true` 时，激光和预警线在 Editor Play Mode 下完全不可见（alpha=0）。
+
+### 根因分析（三层）
+
+本次 Bug 是三个独立问题叠加的结果，最终表现为同一个症状——"不可见"。
+
+| 层级 | 根因 | 影响 |
+|------|------|------|
+| **L1（Shader 变体）** | `DanmakuLaser.shader` 缺少 Atlas 模式分支。UV.x 在 Atlas 模式下被压缩到子区域（如 `[0, 0.125]`），`abs(UV.x - 0.5) * 2.0` 计算出的 `distFromCenter ≈ 0.875`，`coreMask=0, glowMask=0` → 完全透明 | 即使 keyword 正确也会透明 |
+| **L2（UV 映射）** | LaserRenderer / LaserWarningRenderer 的 UV.x 直接使用 Atlas 子区域坐标，未保持 `[0,1]` 归一化 | 渐变参数语义被破坏 |
+| **L3（Keyword 丢失 🔴 真正根因）** | `RenderBatchManager.CreateBucket()` 中 `new Material(templateMaterial)` **不可靠保留 shader keyword**。`_ATLASMODE_ON` 在模板材质上已设置，但克隆后丢失，导致 Shader 走非 Atlas 分支 → UV.x 被当作纹理 UV 而非渐变参数 | L1 和 L2 的修复全部失效 |
+
+**L3 是最隐蔽也最关键的根因**：Unity 的 `new Material(source)` 构造函数在不同版本和不同运行环境下，对 `shaderKeywords` 的复制行为不一致（尤其是 `multi_compile_local` 定义的局部 keyword）。这不是 Unity 文档中明确记载的行为差异，只能通过运行时反射诊断发现。
+
+### 修复方案
+
+#### 1. `RenderBatchManager.CreateBucket()`（核心修复）
+
+```csharp
+Material matInstance = new Material(templateMaterial);
+// 关键修复：显式复制 shaderKeywords
+matInstance.shaderKeywords = templateMaterial.shaderKeywords;
+```
+
+**规范升级**：项目内所有 `new Material(source)` 之后，必须紧跟 `shaderKeywords` 显式赋值。这是防御性要求，不依赖 Unity 版本行为。
+
+#### 2. `DanmakuLaser.shader`（Shader 变体）
+
+```hlsl
+#pragma multi_compile_local __ _ATLASMODE_ON
+
+#ifdef _ATLASMODE_ON
+    fixed4 tex = fixed4(1, 1, 1, 1);  // 跳过纹理采样，程序化渐变驱动
+#else
+    fixed4 tex = tex2D(_MainTex, i.uv);
+#endif
+```
+
+**设计权衡**：Atlas 模式跳过纹理采样意味着失去纹理细节叠加，但激光视觉 90%+ 由程序化渐变（CoreColor + GlowColor + smoothstep）驱动，影响极小。如需纹理细节，可后续用 UV2 通道传 Atlas 子区域 x 范围。
+
+#### 3. `LaserRenderer.cs` / `LaserWarningRenderer.cs`（UV 语义分离）
+
+- Atlas 模式：UV.x = `[0, 1]`（渐变参数），UV.y = Atlas 子区域归一化
+- 非 Atlas 模式：UV.x = `[0, 1]`（渐变参数），UV.y = 世界空间累积（wrapMode=Repeat）
+- 新增 `_laserMaterialAtlas` 材质克隆（`EnableKeyword("_ATLASMODE_ON")`），Dispose 时销毁
+
+#### 4. `RenderBatchManager.TryGetOrCreateBucket()`（重复桶防御）
+
+- 新增线性兜底扫描：字典索引不同步时避免同 key 重复建桶
+- 动态建桶后显式 `RebuildBucketIndex()` 再排序，不依赖排序副作用维护索引
+
+### 关键决策
+
+| 编号 | 决策 | 理由 |
+|------|------|------|
+| FIX-001 | `new Material()` 后必须显式赋值 `shaderKeywords` | Unity 行为不可靠，防御性编程，一行代码零成本 |
+| FIX-002 | Atlas Laser 跳过 `tex2D` 采样而非尝试重映射 UV.x | 避免 Atlas 子区域边缘采样溢出；激光以程序化渐变为主，纹理贡献极低 |
+| FIX-003 | UV.x 始终保持 `[0,1]` 作为渐变参数语义 | Shader 的 `distFromCenter` 计算硬编码 `abs(x-0.5)*2`，UV.x 必须是归一化的 |
+| FIX-004 | 动态建桶增加线性去重兜底 | 冷路径优先正确性；字典索引可能因排序/重建时序不一致而暂时失效 |
+
+### 踩坑经验（项目级规范化）
+
+> **🔴 铁律：Unity `new Material(source)` 不保证复制 `shaderKeywords`。**
+>
+> 在项目的**任何位置**进行材质克隆后，必须紧跟：
+> ```csharp
+> clone.shaderKeywords = source.shaderKeywords;
+> ```
+> 违反此规则的代码在 `multi_compile_local` 变体场景下会静默失败——材质看起来"创建成功"但 keyword 为空，Shader 走错分支，表现为视觉异常或不可见。
+
+### 排查思路备忘
+
+本次 Bug 的诊断路径值得记录，以便未来遇到"材质/Shader 表现不符预期"时快速定位：
+
+1. **确认渲染数据存在**：通过运行时反射检查 pool active count、draw count → 排除"根本没发射"的可能
+2. **确认纹理绑定正确**：检查 bucket material 的 `mainTexture` → 排除"纹理没绑上"
+3. **检查 shaderKeywords**：反射读取 bucket material 的 `shaderKeywords` 数组 → **发现为空**，定位到 keyword 丢失
+4. **逆推克隆链路**：`CreateBucket()` → `new Material()` → 确认是构造函数行为导致
+
+### 变更文件
+
+| 文件 | 修改类型 | 关键变更 |
+|------|----------|----------|
+| `DanmakuLaser.shader` | Shader 变体 | `_ATLASMODE_ON` keyword 分支 |
+| `LaserRenderer.cs` | 功能修复 | Atlas 材质克隆 + UV 语义分离 |
+| `LaserWarningRenderer.cs` | 功能修复 | Atlas 材质克隆 + UV 语义分离 |
+| `RenderBatchManager.cs` | 核心修复 + 防御 | `shaderKeywords` 显式复制 + 重复桶防御 |
+
+### 验证结果
+
+- Unity 编译：**0 errors / 0 warnings**
+- Editor Play Mode：`UseRuntimeAtlas=true` 时激光恢复可见
+- 运行时诊断确认：`shaderKeywords = ["_ATLASMODE_ON"]`，Shader 走正确分支
+
+### 关联
+
+- **修复对象**: ADR-031（Laser 接入 RuntimeAtlas）
+- **影响**: ADR-028（RuntimeAtlas 核心决策）、ADR-030（TypeRegistry + 懒建桶）
+- **新增规范**: 项目级 `new Material()` shaderKeywords 显式复制要求
+
+---
+
 ## 四、最终结论
 
 
