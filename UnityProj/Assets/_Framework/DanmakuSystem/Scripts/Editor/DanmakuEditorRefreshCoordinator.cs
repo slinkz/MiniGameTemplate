@@ -15,7 +15,7 @@ namespace MiniGameTemplate.Danmaku.Editor
     [InitializeOnLoad]
     public static class DanmakuEditorRefreshCoordinator
     {
-        private const string MENU_ROOT = "Tools/MiniGameTemplate/Danmaku/";
+        private const string MENU_ROOT = "Tools/MiniGame Template/Danmaku/";
         private const string LOG_PREFIX = "[DanmakuEditorRefresh]";
 
         private static readonly HashSet<UnityEngine.Object> DirtyAssets = new();

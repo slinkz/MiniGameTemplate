@@ -113,7 +113,7 @@ namespace MiniGameTemplate.EditorTools
             return results;
         }
 
-        [MenuItem("Tools/MiniGameTemplate/Find References Of Selected Asset")]
+        [MenuItem("Tools/MiniGame Template/Find References Of Selected Asset", false, 600)]
         [MenuItem("Assets/Find References In Project", false, 30)]
         private static void FindSelectedAssetReferences()
         {
@@ -147,7 +147,7 @@ namespace MiniGameTemplate.EditorTools
             }
         }
 
-        [MenuItem("Tools/MiniGameTemplate/Find References Of Selected Asset", true)]
+        [MenuItem("Tools/MiniGame Template/Find References Of Selected Asset", true)]
         [MenuItem("Assets/Find References In Project", true)]
         private static bool ValidateFindSelectedAssetReferences()
         {

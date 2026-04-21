@@ -20,7 +20,7 @@ namespace MiniGameTemplate.Editor.Rendering
 
         private enum AtlasDomain { Bullet, VFX }
 
-        [MenuItem("Tools/弹幕系统/Atlas 打包工具")]
+        [MenuItem("Tools/MiniGame Template/Danmaku/Atlas Packer")]
         public static void ShowWindow()
         {
             GetWindow<DanmakuAtlasPackerWindow>("Atlas 打包工具");
