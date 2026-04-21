@@ -43,6 +43,9 @@ Shader "Hidden/RuntimeAtlasBlit"
                 // 会导致 quad 变换到错误位置，Blit 结果为空。
                 o.vertex = float4(v.vertex.xy, 0, 1);
                 o.uv = v.uv;
+                // 写入 RenderTexture 时需要翻转源纹理 Y，
+                // 否则 SpriteSheet 在 RuntimeAtlas 子区域内会呈现上下颠倒。
+                o.uv.y = 1.0 - o.uv.y;
                 return o;
             }
 

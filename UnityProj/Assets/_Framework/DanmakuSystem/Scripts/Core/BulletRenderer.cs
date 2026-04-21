@@ -215,7 +215,8 @@ namespace MiniGameTemplate.Danmaku
                 }
             }
 
-            return type.GetFrameUV(frameIndex, baseUV);
+            Rect frameUV = type.GetFrameUV(frameIndex, baseUV);
+            return frameUV;
         }
 
         // ──── Quad 写入 ────

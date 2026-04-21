@@ -1,10 +1,10 @@
 # RuntimeAtlasSystem 技术设计文档（TDD）
 
-> 文档版本：v2.10.2
+> 文档版本：v2.13
 > 创建日期：2026-04-18
-> 修订日期：2026-04-20（v2.10.2 — 补记弹幕/VFX Backlog 清理状态）
+> 修订日期：2026-04-21（v2.13 — 启用 SDD 规则 1：AC 状态表活文档化；ADR-031/032 状态同步）
 > 作者：广智 × 天命人
-> 状态：**R0~R5 已验收通过，R4.1/R4.3 已完成** — R4.2/R4.4/R4.5 待按需执行；弹幕/VFX 遗留 Backlog（DEV-003/004/007）已清零
+> 状态：**R0~R5 + R4.1/R4.3/R4.4A + ADR-031 深化 + ADR-032 Bug 修复 全部代码完成** — 待 Editor Play Mode 15 项 AC 验收 + 真机验证
 
 ---
 
@@ -21,6 +21,7 @@
 | **v2.10.2** | **2026-04-20** | **补记弹幕/VFX Backlog 清理**：完成 DEV-003/004/007——提取 `MotionUtility.CalculateModifierSpeed()` 消除三处重复实现；新增 `CollisionEventBufferTests` 编辑器测试程序集与边界测试；`SpriteSheetVFXSystem.PlayAttached()` 增加"同源 + 同类型"去重，并改为以 `VFXTypeSO` 引用身份作为去重键，避免 `RuntimeIndex` 重建导致映射失效。 |
 | **v2.11** | **2026-04-21** | **三项 RuntimeAtlas 深化任务方案设计完成**：新增 `Docs/Agent/PHASED_IMPLEMENTATION_PLAN.md`（v1.1），设计 R4.4A 懒建页 + Laser 接入 RuntimeAtlas + Trail 纹理化三项增量任务。PK 评审 1 轮 5 个问题已收敛（PI-001~005）。关键架构决策：(1) DanmakuSystem 持有唯一 RuntimeAtlasManager 共享实例注入各 Renderer（PI-001）；(2) Laser 采用方案 C——禁用 UV 滚动时入 Atlas（`LaserTypeSO.UseRuntimeAtlas`）；(3) Trail 采用策略 A——whiteTexture 也入 Atlas 保持 1 DC；(4) GetStats `Pages.Count` 直接使用（PI-003）；(5) Trail RT Lost 恢复路径补全（PI-004）。ADR-031 记录。 |
 | **v2.12** | **2026-04-21** | **ADR-031 实施完成**：R4.4A/Laser/Trail 全部代码已落地，TDD 100% 符合性审查通过。代码评审 6 项 CR（修复 3 项）：CR-01 HandleRTLost 跳过空 Channel、CR-03 LaserRenderer Atlas 模式判断改为显式 bool、CR-06 遗留 GetAtlasStats 标注 Obsolete。Unity 编译 0 errors / 0 warnings。PHASED_IMPLEMENTATION_PLAN v1.2。下一步：天命人按 AC 列表进行 Editor Play Mode + 真机验收。 |
+| **v2.13** | **2026-04-21** | **SDD 规则 1 启用：AC 状态表活文档化**。AC 列表增加"状态"和"变更记录"两列，同步 ADR-031（深化集成）和 ADR-032（shaderKeywords 铁律）的实施状态。TDD 从此作为系统当前行为的单一信息源。 |
 | **v2.5** | **2026-04-19** | **Phase R1 落地**：`RuntimeAtlasManager` 从可编译骨架补齐为配置驱动核心管理器；新增 `Initialize(RuntimeAtlasConfig)`、`TryGetAllocation()`、`GetPageCount()`、`RestoreDirtyPages()` 分批恢复能力；`RuntimeAtlasConfig` 增加统一 `Validate()`；`RuntimeAtlasStats` 扩展为请求数 / 命中率 / overflow / pending restore 统计。 |
 | **v2.6** | **2026-04-19** | **Phase R2 落地**：新增 `RuntimeAtlasBindingResolver` 统一 `SourceTexture / AtlasBinding / RuntimeAtlas` 三路解析；`BulletRenderer` 与 `VFXBatchRenderer` 已优先接入 `RuntimeAtlas`，Laser / LaserWarning 保持独立贴图但继续走统一 RBM；`DanmakuRenderConfig` / `VFXRenderConfig` 新增 `RuntimeAtlasConfig` 配置入口。 |
 | **v2.7** | **2026-04-19** | **Phase R3 落地**：`DamageNumberSystem` 已迁移到 `RenderBatchManager + RuntimeAtlas(DamageText)`，数字 UV 改为基于 Atlas 子区间重映射；`TrailPool` 采用方案 A，保持独立 Mesh 但已接入 `RenderBatchManagerRuntimeStats`；`DanmakuSystem.RunLateUpdatePipeline()` 已切换到新的 `DamageNumberSystem.Rebuild(dt)` 统一提交流程。`SpriteSheetVFXSystem` 在提交层面已通过 `VFXBatchRenderer` 统一到 RBM，但编排层面仍保持独立 `LateUpdate`，该边界在 R3 文档中显式保留。 |
@@ -953,39 +954,46 @@ Assets/_Framework/Editor/Rendering/
 
 ### 10.1 功能验收
 
-| # | 验收项 | 通过标准 |
-|---|--------|----------|
-| AC-01 | 子弹使用 RuntimeAtlas 合批 | 10 种不同贴图的子弹，DrawCall ≤ 1（全部 Normal，ADR-029 v2 已移除 Additive） |
-| AC-02 | VFX 使用 RuntimeAtlas 合批 | 5 种不同特效，DrawCall ≤ 1 |
-| AC-03 | 混合尺寸纹理 | 32×32 和 128×128 纹理共存于同一 Atlas |
-| AC-04 | 序列帧 UV 正确 | SpriteSheet 子弹/VFX 帧动画播放正确 |
-| AC-05 | Atlas 溢出 | 超过单页自动创建新页，渲染无中断 |
-| AC-06 | 切关清空 | Reset 后所有 RT 释放 |
-| **AC-07** | **激光统一到全局 RBM** | 激光通过统一 RBM 渲染提交（纹理保持独立，不入 Atlas），UV 滚动正确 (v2.2 修正) |
-| **AC-08** | **DamageNumber 迁移到 RBM** | 飘字视觉效果与迁移前一致 |
-| **AC-09** | **TrailPool 接入统计** | Debug HUD 显示的 DC 数包含拖尾 |
-| **AC-10** | **统一 DC 统计** | Debug HUD 一个数字反映全部渲染 DC |
-| AC-11 | Editor Atlas 工具链仍可用 | `DanmakuAtlasPackerWindow` 正常运行，不报错 |
-| AC-12 | 独立贴图回退 | Atlas 分配失败时回退到逐贴图模式 |
+> **v2.13 启用 SDD 规则 1**：AC 表增加"状态"和"变更记录"列，TDD 作为系统当前行为的单一信息源。
+> 状态枚举：✅ Implemented | ⏸ 暂缓 | ❌ 废弃 | 🔄 修改 | ✅ 铁律
+
+| # | 验收项 | 通过标准 | 状态 | 变更记录 |
+|---|--------|----------|------|----------|
+| AC-01 | 子弹使用 RuntimeAtlas 合批 | 10 种不同贴图的子弹，DrawCall ≤ 1（全部 Normal，ADR-029 v2 已移除 Additive） | ✅ Implemented | R2.2（2026-04-19） |
+| AC-02 | VFX 使用 RuntimeAtlas 合批 | 5 种不同特效，DrawCall ≤ 1 | ✅ Implemented | R2.5（2026-04-19） |
+| AC-03 | 混合尺寸纹理 | 32×32 和 128×128 纹理共存于同一 Atlas | ✅ Implemented | R0.3 ShelfPacker（2026-04-19） |
+| AC-04 | 序列帧 UV 正确 | SpriteSheet 子弹/VFX 帧动画播放正确 | 🔧 Bug 修复 | 2026-04-21 经 MCP 运行时诊断确认：`BulletType_SpriteSheetDemo` 实际走 RuntimeAtlas，`baseUV` 为 Atlas 子区域而非独立贴图；`GetFrameUV()` 静态输出正确，真正根因收敛到 `RuntimeAtlasBlit.shader` 写入 RT 时的 Y 方向翻转。已在 Blit 顶点阶段增加 `o.uv.y = 1.0 - o.uv.y` 修正，待天命人回归验证 |
+| AC-05 | Atlas 溢出 | 超过单页自动创建新页，渲染无中断 | ✅ Implemented | R1.1（2026-04-19）+ R4.4A 懒建页（ADR-031） |
+| AC-06 | 切关清空 | Reset 后所有 RT 释放 | ✅ Implemented | R1.1（2026-04-19） |
+| **AC-07** | **激光统一到全局 RBM** | 激光通过统一 RBM 渲染提交；`UseRuntimeAtlas=true` 时入 Atlas（UV.y 归一化），`false` 时走独立贴图 fallback；UV 渐变/滚动正确 | 🔄 修改 | 原设计(v2.2)：不入 Atlas → ADR-031 方案 C：可选入 Atlas；ADR-032 修复 keyword 丢失 |
+| **AC-08** | **DamageNumber 迁移到 RBM** | 飘字视觉效果与迁移前一致 | ✅ Implemented | R3.1（2026-04-19） |
+| **AC-09** | **TrailPool 接入统计** | Debug HUD 显示的 DC 数包含拖尾 | ✅ Implemented | R3.2 方案 A（2026-04-19） |
+| **AC-10** | **统一 DC 统计** | Debug HUD 一个数字反映全部渲染 DC | ✅ Implemented | R4.3（2026-04-19） |
+| AC-11 | Editor Atlas 工具链仍可用 | `DanmakuAtlasPackerWindow` 正常运行，不报错 | ✅ 验收通过 | Editor 手动验证通过（2026-04-21） |
+| AC-12 | 独立贴图回退 | Atlas 分配失败时回退到逐贴图模式 | ✅ 验收通过 | Editor Play Mode 手动验证通过：AtlasSize=32 强制溢出→子弹正常渲染，Overflow>0（2026-04-21） |
+| **AC-13** | **Atlas 懒建页** | `InitChannel()` 不创建 Page 0；首次 `Allocate()` 时创建；未使用 Channel 的 `PageCount=0, FillRate=0` | ✅ Implemented | ADR-031 R4.4A（2026-04-21） |
+| **AC-14** | **Laser 可选入 Atlas** | `LaserTypeSO.UseRuntimeAtlas=true` 时激光走 Atlas（DC 不增加）；`false` 时走独立贴图（UV 滚动保留） | ✅ Implemented | ADR-031 Laser 方案 C（2026-04-21） |
+| **AC-15** | **Trail 纹理化** | `BulletTypeSO.TrailTexture` 支持自定义纹理；所有 Trail（含 whiteTexture fallback）统一走 Atlas Channel.Trail | ✅ Implemented | ADR-031 Trail 纹理化（2026-04-21） |
+| **AC-16** | **`new Material()` shaderKeywords 显式复制** | 项目内所有材质克隆后必须 `clone.shaderKeywords = source.shaderKeywords`；违反导致 `multi_compile_local` keyword 静默丢失 | ✅ 铁律 | ADR-032（2026-04-21） |
 
 ### 10.2 性能验收
 
-| # | 指标 | 基线 | 目标 |
-|---|------|------|------|
-| PC-01 | 缓存命中 Allocate 耗时 | — | < 0.001ms |
-| PC-02 | 单次 Blit 耗时（64×64） | — | < 0.1ms |
-| PC-03 | 预热 20 张纹理总耗时 | — | < 5ms |
-| PC-04 | 全局 DrawCall | N×1+ DC | **≤ 8 DC**（每 Channel 1~2 Atlas Pages + Trail 独立 DC） |
-| PC-05 | 内存增量 | — | ≤ 48MB（大 Channel 2×16MB + 小 Channel 3×1MB + Trail） |
-| PC-06 | 热路径零 GC | — | Allocate 缓存命中时零 GC |
+| # | 指标 | 基线 | 目标 | 状态 | 变更记录 |
+|---|------|------|------|------|----------|
+| PC-01 | 缓存命中 Allocate 耗时 | — | < 0.001ms | ⏸ 待真机 | — |
+| PC-02 | 单次 Blit 耗时（64×64） | — | < 0.1ms | ⏸ 待真机 | — |
+| PC-03 | 预热 20 张纹理总耗时 | — | < 5ms | ⏸ 待真机 | — |
+| PC-04 | 全局 DrawCall | N×1+ DC | **≤ 8 DC**（每 Channel 1~2 Atlas Pages + Trail 独立 DC） | ⏸ 待真机 | Editor 验收: DC=2（R4.1 报告） |
+| PC-05 | 内存增量 | — | ≤ 48MB（大 Channel 2×16MB + 小 Channel 3×1MB + Trail） | 🔄 修改 | ADR-031 R4.4A 懒建页：未使用 Channel 不建 RT，实际更低 |
+| PC-06 | 热路径零 GC | — | Allocate 缓存命中时零 GC | ⏸ 待真机 | — |
 
 ### 10.3 兼容性验收
 
-| # | 验收项 | 通过标准 |
-|---|--------|----------|
-| CC-01 | WebGL 2.0（微信小游戏） | Blit + 渲染正常，无报错 |
-| CC-02 | Editor (Windows/macOS) | 编辑器内运行正常 |
-| CC-03 | Standalone (IL2CPP) | PC 构建运行正常 |
+| # | 验收项 | 通过标准 | 状态 | 变更记录 |
+|---|--------|----------|------|----------|
+| CC-01 | WebGL 2.0（微信小游戏） | Blit + 渲染正常，无报错 | ⏸ 待真机 | — |
+| CC-02 | Editor (Windows/macOS) | 编辑器内运行正常 | ✅ Implemented | R4.1 验收通过（2026-04-19） |
+| CC-03 | Standalone (IL2CPP) | PC 构建运行正常 | ⏸ 待验证 | — |
 
 ---
 

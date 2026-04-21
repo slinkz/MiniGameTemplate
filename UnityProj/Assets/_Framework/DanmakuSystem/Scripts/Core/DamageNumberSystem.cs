@@ -205,25 +205,25 @@ namespace MiniGameTemplate.Danmaku
                 {
                     Position = new Vector3(x - halfSize, data.Position.y - halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvLeft, uvTop),
+                    UV = new Vector2(uvLeft, uvBottom),
                 };
                 verts[baseVertex + 1] = new RenderVertex
                 {
                     Position = new Vector3(x + halfSize, data.Position.y - halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvRight, uvTop),
+                    UV = new Vector2(uvRight, uvBottom),
                 };
                 verts[baseVertex + 2] = new RenderVertex
                 {
                     Position = new Vector3(x + halfSize, data.Position.y + halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvRight, uvBottom),
+                    UV = new Vector2(uvRight, uvTop),
                 };
                 verts[baseVertex + 3] = new RenderVertex
                 {
                     Position = new Vector3(x - halfSize, data.Position.y + halfSize, 0f),
                     Color = color,
-                    UV = new Vector2(uvLeft, uvBottom),
+                    UV = new Vector2(uvLeft, uvTop),
                 };
             }
         }
