@@ -6,8 +6,19 @@ using UnityEngine;
 namespace MiniGameTemplate.EditorTools
 {
     /// <summary>
-    /// 最小可用的资源引用反查工具：基于 GUID 扫描 YAML 文本，查找谁引用了目标资源。
-    /// 适用于 .unity / .prefab / .asset / .mat / .controller 等文本序列化资产。
+    /// 资源引用反查工具：基于 GUID 扫描 YAML 文本资产，查找谁引用了目标资源。
+    /// 支持 .unity / .prefab / .asset / .mat / .controller / .anim / .overrideController / .playable / .sbn
+    /// 
+    /// 用法：
+    ///   1. 在 Project 视图中选中资源
+    ///   2. 菜单 Tools/MiniGameTemplate/Find References Of Selected Asset
+    ///   3. 结果输出到 Console，每条可点击跳转
+    /// 
+    /// 也可代码调用：AssetReferenceFinder.FindReferencers(target)
+    /// 
+    /// Changelog:
+    ///   v1.0 (2026-04-21) — 最小可用版本
+    ///   v1.1 (2026-04-22) — 加进度条、菜单验证、可点击输出、扩展搜索格式
     /// </summary>
     public static class AssetReferenceFinder
     {
@@ -18,8 +29,15 @@ namespace MiniGameTemplate.EditorTools
             "*.asset",
             "*.mat",
             "*.controller",
+            "*.overrideController",
+            "*.anim",
+            "*.playable",
+            "*.sbn",
         };
 
+        /// <summary>
+        /// 查找引用了目标资产的所有文本序列化资产路径。
+        /// </summary>
         public static List<string> FindReferencers(Object target)
         {
             if (target == null)
@@ -29,7 +47,10 @@ namespace MiniGameTemplate.EditorTools
             return FindReferencers(assetPath);
         }
 
-        public static List<string> FindReferencers(string assetPath)
+        /// <summary>
+        /// 查找引用了目标资产（按路径）的所有文本序列化资产路径。
+        /// </summary>
+        public static List<string> FindReferencers(string assetPath, bool showProgress = false)
         {
             var results = new List<string>();
             if (string.IsNullOrEmpty(assetPath))
@@ -39,11 +60,10 @@ namespace MiniGameTemplate.EditorTools
             if (string.IsNullOrEmpty(guid))
                 return results;
 
-            string projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
-            if (string.IsNullOrEmpty(projectRoot))
-                return results;
-
+            // 收集所有待扫描文件
+            var filesToScan = new List<string>();
             var visited = new HashSet<string>();
+
             foreach (string pattern in SearchPatterns)
             {
                 string[] files = Directory.GetFiles(Application.dataPath, pattern, SearchOption.AllDirectories);
@@ -51,14 +71,42 @@ namespace MiniGameTemplate.EditorTools
                 {
                     string normalized = fullPath.Replace('\\', '/');
                     string relativePath = "Assets" + normalized.Substring(Application.dataPath.Length);
-                    if (relativePath == assetPath || !visited.Add(relativePath))
-                        continue;
-
-                    string text = File.ReadAllText(fullPath);
-                    if (text.Contains(guid))
-                        results.Add(relativePath);
+                    if (relativePath != assetPath && visited.Add(relativePath))
+                        filesToScan.Add(fullPath);
                 }
             }
+
+            // 扫描并匹配 GUID
+            int total = filesToScan.Count;
+            for (int i = 0; i < total; i++)
+            {
+                string fullPath = filesToScan[i];
+
+                if (showProgress && i % 50 == 0)
+                {
+                    string normalized = fullPath.Replace('\\', '/');
+                    string relativePath = "Assets" + normalized.Substring(Application.dataPath.Length);
+                    if (EditorUtility.DisplayCancelableProgressBar(
+                            "查找引用中...",
+                            $"[{i + 1}/{total}] {relativePath}",
+                            (float)i / total))
+                    {
+                        EditorUtility.ClearProgressBar();
+                        Debug.LogWarning("[AssetReferenceFinder] 用户取消了搜索。");
+                        return results;
+                    }
+                }
+
+                string text = File.ReadAllText(fullPath);
+                if (text.Contains(guid))
+                {
+                    string norm = fullPath.Replace('\\', '/');
+                    results.Add("Assets" + norm.Substring(Application.dataPath.Length));
+                }
+            }
+
+            if (showProgress)
+                EditorUtility.ClearProgressBar();
 
             results.Sort();
             return results;
@@ -75,7 +123,7 @@ namespace MiniGameTemplate.EditorTools
             }
 
             string assetPath = AssetDatabase.GetAssetPath(target);
-            List<string> referencers = FindReferencers(assetPath);
+            List<string> referencers = FindReferencers(assetPath, showProgress: true);
 
             if (referencers.Count == 0)
             {
@@ -83,7 +131,25 @@ namespace MiniGameTemplate.EditorTools
                 return;
             }
 
-            Debug.Log($"[AssetReferenceFinder] 目标资源：{assetPath}\n引用者数量：{referencers.Count}\n- " + string.Join("\n- ", referencers));
+            // 汇总日志
+            Debug.Log($"[AssetReferenceFinder] 目标资源：{assetPath}\n引用者数量：{referencers.Count}");
+
+            // 每条引用单独输出，点击可跳转到对应资产
+            foreach (string refPath in referencers)
+            {
+                Object refAsset = AssetDatabase.LoadAssetAtPath<Object>(refPath);
+                if (refAsset != null)
+                    Debug.Log($"  → {refPath}", refAsset);
+                else
+                    Debug.Log($"  → {refPath}");
+            }
+        }
+
+        [MenuItem("Tools/MiniGameTemplate/Find References Of Selected Asset", true)]
+        private static bool ValidateFindSelectedAssetReferences()
+        {
+            return Selection.activeObject != null
+                && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Selection.activeObject));
         }
     }
 }
