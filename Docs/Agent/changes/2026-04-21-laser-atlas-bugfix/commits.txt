@@ -1,0 +1,1 @@
+2f5afb9 fix(Laser): Atlas mode invisible bug — shaderKeywords not preserved by Material clone (ADR-032)
