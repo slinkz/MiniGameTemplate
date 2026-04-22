@@ -34,10 +34,13 @@ MonoBehaviour:
     width: 0
     height: 0
   Tint: {r: 1, g: 1, b: 1, a: 1}
-  Size: {x: 0.5, y: 0.5}
+  Size: {x: 1, y: 1}
   RotateToDirection: 0
   CollisionRadius: 0.2
   MotionType: 0
+  SineAmplitude: 1
+  SineFrequency: 3
+  SpiralAngularVelocity: 180
   SpeedOverLifetime:
     serializedVersion: 3
     m_Curve:
@@ -168,7 +171,9 @@ MonoBehaviour:
   DamageFlashTint: {r: 1, g: 0.3, b: 0.3, a: 1}
   DamageFlashFrames: 3
   Trail: 0
+  TrailTexture: {fileID: 0}
   GhostCount: 3
+  GhostInterval: 5
   TrailPointCount: 20
   TrailWidth: 0.3
   TrailWidthCurve:
@@ -220,5 +225,3 @@ MonoBehaviour:
     height: 0
   HeavyExplosionPrefab: {fileID: 0}
   ChildPattern: {fileID: 0}
-  Layer: 0
-  RuntimeIndex: 0

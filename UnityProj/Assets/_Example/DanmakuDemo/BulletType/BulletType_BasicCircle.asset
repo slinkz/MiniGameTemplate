@@ -12,19 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf6c8c972e4d1a54db94c601aec6c0eb, type: 3}
   m_Name: BulletType_BasicCircle
   m_EditorClassIdentifier: 
-  SourceTexture: {fileID: 2800000, guid: 2c580c869842fe94ebb0ebf64f0544f7, type: 3}
+  SourceTexture: {fileID: 2800000, guid: ce2075cd2687f2c49883a0d5592dc0fc, type: 3}
   UVRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1
     height: 1
-  SamplingMode: 0
-  SheetColumns: 1
-  SheetRows: 1
-  SheetTotalFrames: 1
+  SamplingMode: 1
+  SheetColumns: 4
+  SheetRows: 3
+  SheetTotalFrames: 11
   PlaybackMode: 0
-  FixedFps: 12
+  FixedFps: 11
   AtlasBinding: {fileID: 0}
   SchemaVersion: 1
   _legacyAtlasUV:
@@ -171,6 +171,7 @@ MonoBehaviour:
   DamageFlashTint: {r: 1, g: 0.3, b: 0.3, a: 1}
   DamageFlashFrames: 3
   Trail: 2
+  TrailTexture: {fileID: 0}
   GhostCount: 3
   GhostInterval: 12
   TrailPointCount: 20
@@ -224,4 +225,3 @@ MonoBehaviour:
     height: 0
   HeavyExplosionPrefab: {fileID: 0}
   ChildPattern: {fileID: 0}
-  RuntimeIndex: 0

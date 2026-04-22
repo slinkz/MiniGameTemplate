@@ -11,7 +11,7 @@ namespace MiniGameTemplate.EditorTools
     /// Rules:
     /// - Max texture size: 1024 (mini game budget constraint)
     /// - Normal maps: auto-detected by _N suffix
-    /// - UI textures (under UI/): disable mipmaps
+    /// - MipMaps: always disabled (mini game does not use mipmaps — saves ~33% texture memory)
     /// - Read/Write: always disabled (saves memory)
     /// - Compression: ASTC for mobile, DXT for standalone
     ///
@@ -22,8 +22,6 @@ namespace MiniGameTemplate.EditorTools
         // === Configurable Rules ===
         private const int MAX_TEXTURE_SIZE = 1024;
         private const string NORMAL_SUFFIX = "_N";
-        private const string UI_PATH_MARKER = "/UI/";
-        private const string FAIRY_GUI_EXPORT_MARKER = "FairyGUI_Export";
 
         void OnPreprocessTexture()
         {
@@ -55,19 +53,12 @@ namespace MiniGameTemplate.EditorTools
                 changed = true;
             }
 
-            // --- Rule: UI textures — disable mipmaps ---
-            if (path.Contains(UI_PATH_MARKER) || path.Contains(FAIRY_GUI_EXPORT_MARKER))
+            // --- Rule: Disable mipmaps globally (mini game — no camera distance LOD) ---
+            if (importer.mipmapEnabled)
             {
-                if (importer.mipmapEnabled)
-                {
-                    importer.mipmapEnabled = false;
-                    changed = true;
-                }
-                if (importer.textureType != TextureImporterType.Sprite &&
-                    importer.textureType != TextureImporterType.GUI)
-                {
-                    // Don't override if already set correctly
-                }
+                importer.mipmapEnabled = false;
+                Debug.LogWarning($"[TextureEnforcer] Disabled mipmaps on '{path}' (mini game does not use mipmaps).");
+                changed = true;
             }
 
             // --- Rule: Disable Read/Write (saves memory) ---

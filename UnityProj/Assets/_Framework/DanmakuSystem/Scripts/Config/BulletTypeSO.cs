@@ -249,7 +249,10 @@ namespace MiniGameTemplate.Danmaku
             int y = clampedFrame / cols;
             float fw = baseUV.width / cols;
             float fh = baseUV.height / rows;
-            return new Rect(baseUV.x + x * fw, baseUV.y + y * fh, fw, fh);
+            // 序列帧贴图从左上角开始排列（第 0 帧 = 左上），但 UV 原点在左下角，
+            // 所以需要翻转 y：row 0 对应 UV 最顶部（baseUV.y + (rows-1)*fh）
+            int flippedY = rows - 1 - y;
+            return new Rect(baseUV.x + x * fw, baseUV.y + flippedY * fh, fw, fh);
         }
 
         /// <summary>

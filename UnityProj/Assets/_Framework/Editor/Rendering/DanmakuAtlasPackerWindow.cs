@@ -297,7 +297,7 @@ namespace MiniGameTemplate.Editor.Rendering
             IsPackingInProgress = true;
 
             // 确保所有源贴图可读——必须先全部设置 isReadable，再统一 reimport，
-            // 最后重新加载引用，否则 PackTextures 拿到的仍是不可读的旧对象。
+            // 最后重新加载引用，否则像素数据拿到的仍是不可读的旧对象。
             var originalReadable = new Dictionary<string, bool>();
             var texPaths = new string[_sourceTextures.Count];
             for (int i = 0; i < _sourceTextures.Count; i++)
@@ -328,25 +328,37 @@ namespace MiniGameTemplate.Editor.Rendering
 
             try
             {
-                // 打包
-                var atlas = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                Rect[] rects = atlas.PackTextures(texArray, _padding, maxSize);
-
-                if (rects == null || rects.Length != texArray.Length)
+                // 检测是否所有子图同尺寸——同尺寸时用网格排列（支持序列帧），
+                // 混合尺寸时用 PackTextures 自动布局 + Y 翻转。
+                bool allSameSize = true;
+                int firstW = texArray[0].width, firstH = texArray[0].height;
+                for (int i = 1; i < texArray.Length; i++)
                 {
-                    EditorUtility.DisplayDialog("打包失败", "贴图打包失败，可能超过最大尺寸限制。", "确定");
-                    Object.DestroyImmediate(atlas);
-                    return;
+                    if (texArray[i].width != firstW || texArray[i].height != firstH)
+                    {
+                        allSameSize = false;
+                        break;
+                    }
                 }
 
-                // 安全校验：PackTextures 在源贴图不可读时不报错，只返回 2×2 白点
-                if (atlas.width <= 2 && atlas.height <= 2 && texArray.Length > 0)
+                Texture2D atlas;
+                Rect[] rects;
+
+                if (allSameSize)
                 {
-                    EditorUtility.DisplayDialog("打包失败",
-                        "Atlas 输出为 2×2，源贴图像素数据不可读。\n" +
-                        "请检查源贴图的 Read/Write Enabled 设置。", "确定");
-                    Object.DestroyImmediate(atlas);
-                    return;
+                    // ========== 同尺寸：手动网格排列，从左上角开始 ==========
+                    PackResult result = PackGrid(texArray, firstW, firstH, _padding, maxSize);
+                    if (result == null) return; // PackGrid 内部已显示错误对话框
+                    atlas = result.Atlas;
+                    rects = result.UVRects;
+                }
+                else
+                {
+                    // ========== 混合尺寸：PackTextures + 整图 Y 翻转 ==========
+                    PackResult result = PackMixed(texArray, _padding, maxSize);
+                    if (result == null) return;
+                    atlas = result.Atlas;
+                    rects = result.UVRects;
                 }
 
                 // 保存 Atlas PNG
@@ -421,10 +433,12 @@ namespace MiniGameTemplate.Editor.Rendering
                 long atlasPixels = (long)atlas.width * atlas.height;
                 float utilization = atlasPixels > 0 ? (float)totalSourcePixels / atlasPixels * 100f : 0f;
 
+                string layoutMode = allSameSize ? "网格排列（左上角起）" : "自动排列";
                 _previewAtlas = atlasTexture;
                 _existingMapping = mapping;
                 _lastReport = $"✅ 打包完成\n" +
                     $"域: {domainName}\n" +
+                    $"排列: {layoutMode}\n" +
                     $"源贴图: {texArray.Length} 张\n" +
                     $"Atlas 尺寸: {atlas.width}×{atlas.height}\n" +
                     $"利用率: {utilization:F1}%\n" +
@@ -451,6 +465,109 @@ namespace MiniGameTemplate.Editor.Rendering
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 打包结果——Atlas 贴图 + 每张子图的 UV Rect。
+        /// </summary>
+        private class PackResult
+        {
+            public Texture2D Atlas;
+            public Rect[] UVRects;
+        }
+
+        /// <summary>
+        /// 同尺寸子图：手动网格排列，从左上角开始，逐行从左到右。
+        /// 输出的 PNG 在图片查看器中看到的顺序就是 frame 0 在左上角。
+        /// UV 坐标已正确换算（PNG 图片空间 Y 轴翻转为 UV 空间）。
+        /// </summary>
+        private PackResult PackGrid(Texture2D[] textures, int cellW, int cellH, int padding, int maxSize)
+        {
+            int count = textures.Length;
+            int cellPaddedW = cellW + padding;
+            int cellPaddedH = cellH + padding;
+
+            // 计算最优列数——尽量接近正方形
+            int cols = Mathf.CeilToInt(Mathf.Sqrt(count));
+            int rows = Mathf.CeilToInt((float)count / cols);
+
+            int atlasW = cols * cellPaddedW - padding; // 最后一列不需要右侧 padding
+            int atlasH = rows * cellPaddedH - padding; // 最后一行不需要底部 padding
+
+            // 向上对齐到 4 的倍数（纹理压缩友好）
+            atlasW = ((atlasW + 3) / 4) * 4;
+            atlasH = ((atlasH + 3) / 4) * 4;
+
+            if (atlasW > maxSize || atlasH > maxSize)
+            {
+                EditorUtility.DisplayDialog("打包失败",
+                    $"网格排列需要 {atlasW}×{atlasH}，超过最大尺寸 {maxSize}。\n" +
+                    $"请减少贴图数量或增大最大尺寸。", "确定");
+                return null;
+            }
+
+            var atlas = new Texture2D(atlasW, atlasH, TextureFormat.RGBA32, false);
+            // 清空为透明
+            var clearPixels = new Color[atlasW * atlasH];
+            atlas.SetPixels(clearPixels);
+
+            var uvRects = new Rect[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                int col = i % cols;
+                int row = i / cols;
+
+                // 图片空间坐标（左上角原点）：子图 i 的左上角
+                int imgX = col * cellPaddedW;
+                int imgY = row * cellPaddedH;
+
+                // Unity 纹理坐标（左下角原点）：SetPixels 需要左下角的 (x, y)
+                // 图片空间 Y → 纹理空间 Y 的转换：texY = atlasH - imgY - cellH
+                int texX = imgX;
+                int texY = atlasH - imgY - cellH;
+
+                atlas.SetPixels(texX, texY, cellW, cellH, textures[i].GetPixels());
+
+                // UV Rect（归一化，左下角原点）
+                uvRects[i] = new Rect(
+                    (float)texX / atlasW,
+                    (float)texY / atlasH,
+                    (float)cellW / atlasW,
+                    (float)cellH / atlasH);
+            }
+
+            atlas.Apply();
+            return new PackResult { Atlas = atlas, UVRects = uvRects };
+        }
+
+        /// <summary>
+        /// 混合尺寸子图：使用 PackTextures 自动布局，保持原始排列不做翻转。
+        /// 混合尺寸场景下每个子图通过独立 UVRect 寻址，不用于序列帧播放。
+        /// </summary>
+        private PackResult PackMixed(Texture2D[] textures, int padding, int maxSize)
+        {
+            var atlas = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            Rect[] rects = atlas.PackTextures(textures, padding, maxSize);
+
+            if (rects == null || rects.Length != textures.Length)
+            {
+                EditorUtility.DisplayDialog("打包失败", "贴图打包失败，可能超过最大尺寸限制。", "确定");
+                Object.DestroyImmediate(atlas);
+                return null;
+            }
+
+            // 安全校验：PackTextures 在源贴图不可读时不报错，只返回 2×2 白点
+            if (atlas.width <= 2 && atlas.height <= 2 && textures.Length > 0)
+            {
+                EditorUtility.DisplayDialog("打包失败",
+                    "Atlas 输出为 2×2，源贴图像素数据不可读。\n" +
+                    "请检查源贴图的 Read/Write Enabled 设置。", "确定");
+                Object.DestroyImmediate(atlas);
+                return null;
+            }
+
+            return new PackResult { Atlas = atlas, UVRects = rects };
         }
     }
 }
