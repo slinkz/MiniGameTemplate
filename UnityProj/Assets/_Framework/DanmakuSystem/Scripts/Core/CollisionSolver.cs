@@ -80,7 +80,7 @@ namespace MiniGameTemplate.Danmaku
             // Phase 1: 弹丸 vs 目标对象
             SolveBulletVsTarget(cores, bulletWorld.Trails, capacity, registry, targetRegistry, _eventBuffer, ref result);
 
-            // Phase 2: 弹丸 vs 障碍物（圆 vs AABB）
+            // Phase 2: 弹丸 vs 障碍物（圆 vs OBB）
             SolveBulletVsObstacle(cores, bulletWorld.Trails, capacity, obstaclePool, registry, ref result);
 
             // Phase 3: 弹丸 vs 屏幕边缘
@@ -234,7 +234,7 @@ namespace MiniGameTemplate.Danmaku
             return true;
         }
 
-        // ──── Phase 2: 弹丸 vs 障碍物（圆 vs AABB） ────
+        // ──── Phase 2: 弹丸 vs 障碍物（圆 vs OBB） ────
 
         private static void SolveBulletVsObstacle(
             BulletCore[] cores, BulletTrail[] trails, int capacity,
@@ -259,18 +259,9 @@ namespace MiniGameTemplate.Danmaku
                     if (c.Faction == (byte)BulletFaction.Player && obs.Faction == (byte)BulletFaction.Player) continue;
                     if (c.Faction == (byte)BulletFaction.Enemy && obs.Faction == (byte)BulletFaction.Enemy) continue;
 
-                    // 圆 vs AABB
-                    Vector2 center = (obs.Min + obs.Max) * 0.5f;
-                    Vector2 halfSize = (obs.Max - obs.Min) * 0.5f;
-                    Vector2 closest = ClampToAABB(c.Position, center, halfSize);
-                    float dx = c.Position.x - closest.x;
-                    float dy = c.Position.y - closest.y;
-                    float distSq = dx * dx + dy * dy;
-
-                    if (distSq >= c.Radius * c.Radius) continue;
-
-                    // 命中——计算法线
-                    Vector2 normal = GetAABBNormal(c.Position, center, halfSize);
+                    // 圆 vs OBB
+                    if (!ObstacleCollisionMath.CircleVsOBB(c.Position, c.Radius, in obs, out Vector2 normal))
+                        continue;
 
                     // 对障碍物造成伤害（如果可摧毁）
                     if (obs.HitPoints > 0)
@@ -486,7 +477,7 @@ namespace MiniGameTemplate.Danmaku
             }
         }
 
-        // ──── Phase 6: 喷雾 vs 障碍物 ────
+        // ──── Phase 6: 喷雾 vs 障碍物（扇形 vs OBB） ────
 
         private void SolveSprayVsObstacle(
             SprayPool sprayPool,
@@ -514,23 +505,17 @@ namespace MiniGameTemplate.Danmaku
                     ref var obs = ref obstacles[j];
                     if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
-                    // 扇形 vs AABB 近似检测：先圆 vs AABB（射程圆），再角度检查
-                    Vector2 center = (obs.Min + obs.Max) * 0.5f;
-                    Vector2 halfSize = (obs.Max - obs.Min) * 0.5f;
-                    Vector2 closest = ClampToAABB(spray.Origin, center, halfSize);
-
-                    float dx = spray.Origin.x - closest.x;
-                    float dy = spray.Origin.y - closest.y;
-                    float distSq = dx * dx + dy * dy;
+                    // 距离检查——封装在 DistanceSqToOBB 中（OBB 局部空间 clamp）
+                    float distSq = ObstacleCollisionMath.DistanceSqToOBB(spray.Origin, in obs);
                     if (distSq > spray.Range * spray.Range) continue;
 
-                    // 角度检查——AABB 中心相对于喷雾方向
-                    Vector2 toObs = center - spray.Origin;
+                    // 角度检查——仍使用世界空间 OBB 中心点（与旧 AABB 行为一致的近似）
+                    Vector2 toObs = obs.Center - spray.Origin;
                     float angle = Mathf.Atan2(toObs.y, toObs.x);
                     float angleDiff = Mathf.Abs(Mathf.DeltaAngle(
                         angle * Mathf.Rad2Deg,
                         spray.Direction * Mathf.Rad2Deg));
-                    if (angleDiff > spray.ConeAngle * Mathf.Rad2Deg) continue;
+                    if (angleDiff > spray.ConeAngle * Mathf.Rad2Deg) continue;  // ConeAngle 是半角（弧度）
 
                     // 命中——对障碍物造成伤害
                     if (canDamage && obs.HitPoints > 0)
@@ -680,25 +665,7 @@ namespace MiniGameTemplate.Danmaku
         }
 
         // ──── 几何工具函数 ────
-
-        private static Vector2 ClampToAABB(Vector2 point, Vector2 center, Vector2 halfSize)
-        {
-            return new Vector2(
-                Mathf.Clamp(point.x, center.x - halfSize.x, center.x + halfSize.x),
-                Mathf.Clamp(point.y, center.y - halfSize.y, center.y + halfSize.y));
-        }
-
-        private static Vector2 GetAABBNormal(Vector2 point, Vector2 center, Vector2 halfSize)
-        {
-            Vector2 d = point - center;
-            float overlapX = halfSize.x - Mathf.Abs(d.x);
-            float overlapY = halfSize.y - Mathf.Abs(d.y);
-
-            if (overlapX < overlapY)
-                return new Vector2(d.x > 0 ? 1 : -1, 0);
-            else
-                return new Vector2(0, d.y > 0 ? 1 : -1);
-        }
+        // ClampToAABB / GetAABBNormal 已移入 ObstacleCollisionMath 共享工具类
 
         private Vector2 GetScreenEdgeNormal(Vector2 position)
         {

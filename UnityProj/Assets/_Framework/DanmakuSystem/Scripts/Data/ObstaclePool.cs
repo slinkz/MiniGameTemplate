@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 障碍物数据容器。AABB 碰撞，容量 64。
+    /// 障碍物数据容器。OBB 碰撞，容量 64。
     /// </summary>
     public class ObstaclePool
     {
@@ -26,23 +26,27 @@ namespace MiniGameTemplate.Danmaku
         // ──── 便捷 API ────
 
         /// <summary>
-        /// 添加矩形障碍物（AABB）。
+        /// 添加矩形障碍物（OBB）。
+        /// rotationRad 放末尾（默认 0f），避免与现有调用 AddRect(center, size, hp, faction) 产生隐式类型转换。
         /// </summary>
         /// <param name="center">中心点（世界坐标）</param>
         /// <param name="size">尺寸（宽, 高）</param>
         /// <param name="hitPoints">生命值。0=不可摧毁</param>
         /// <param name="faction">阵营（同阵营弹丸穿透）</param>
+        /// <param name="rotationRad">旋转角度（弧度，逆时针为正）。默认 0 = 无旋转，等同于旧 AABB。</param>
         /// <returns>池索引，-1 表示池满</returns>
         public int AddRect(Vector2 center, Vector2 size, int hitPoints = 0,
-            BulletFaction faction = BulletFaction.Neutral)
+            BulletFaction faction = BulletFaction.Neutral, float rotationRad = 0f)
         {
             int slot = Allocate();
             if (slot < 0) return -1;
 
-            Vector2 half = size * 0.5f;
             ref var obs = ref Data[slot];
-            obs.Min = center - half;
-            obs.Max = center + half;
+            obs.Center = center;
+            obs.HalfExtents = size * 0.5f;
+            obs.RotationRad = rotationRad;
+            obs.Sin = Mathf.Sin(rotationRad);
+            obs.Cos = Mathf.Cos(rotationRad);
             obs.HitPoints = hitPoints;
             obs.Faction = (byte)faction;
             obs.Phase = (byte)ObstaclePhase.Active;
@@ -50,7 +54,7 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 添加圆形障碍物（近似为正方形 AABB）。
+        /// 添加圆形障碍物（近似为正方形 OBB，旋转固定 0°）。
         /// </summary>
         /// <param name="center">中心点（世界坐标）</param>
         /// <param name="radius">半径</param>
@@ -74,17 +78,28 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 更新障碍物位置（例如移动平台）。
+        /// 同时更新障碍物位置和旋转。
+        /// </summary>
+        public void UpdateTransform(int index, Vector2 center, float rotationRad)
+        {
+            if (index < 0 || index >= MAX_OBSTACLES) return;
+            ref var obs = ref Data[index];
+            if (obs.Phase == (byte)ObstaclePhase.Inactive) return;
+            obs.Center = center;
+            obs.RotationRad = rotationRad;
+            obs.Sin = Mathf.Sin(rotationRad);
+            obs.Cos = Mathf.Cos(rotationRad);
+        }
+
+        /// <summary>
+        /// 更新障碍物位置（BC-06：只更新位置，旋转不变）。
         /// </summary>
         public void UpdatePosition(int index, Vector2 center)
         {
             if (index < 0 || index >= MAX_OBSTACLES) return;
             ref var obs = ref Data[index];
             if (obs.Phase == (byte)ObstaclePhase.Inactive) return;
-
-            Vector2 half = (obs.Max - obs.Min) * 0.5f;
-            obs.Min = center - half;
-            obs.Max = center + half;
+            obs.Center = center;
         }
 
         // ──── 底层 API ────

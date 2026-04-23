@@ -54,7 +54,7 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>玩家/敌人等碰撞对象</summary>
         Target = 0,
 
-        /// <summary>场景障碍物（AABB）</summary>
+        /// <summary>场景障碍物（OBB，支持任意 2D Z 轴旋转）</summary>
         Obstacle = 1,
 
         /// <summary>屏幕边缘</summary>

@@ -63,7 +63,8 @@ DanmakuSystem/
 │       ├── PatternScheduler.cs # 弹幕调度（含调试统计）
 │       ├── SpawnerDriver.cs   # 发射器驱动（驱动 SpawnerProfileSO 自动发射）
 │       ├── LaserUpdater.cs    # 激光更新（含 FreeLaser 统一回收）
-│       ├── LaserSegmentSolver.cs # 激光折射段解算（射线 vs AABB/屏幕边缘）
+│       ├── ObstacleCollisionMath.cs # OBB 碰撞数学工具（CircleVsOBB/RayVsOBB/GetOBBNormal/DistanceSqToOBB）
+│       ├── LaserSegmentSolver.cs # 激光折射段解算（射线 vs OBB/屏幕边缘）
 │       ├── SprayUpdater.cs    # 喷雾更新（含 FreeSpray 统一回收）
 │       ├── MotionUtility.cs   # [2026-04-20] 运动策略共享工具（CalculateModifierSpeed 去重）
 │       ├── IDanmakuVFXRuntime.cs  # [R4.0] VFX 管线驱动接口（TickVFX/RenderVFX/Play/PlayAttached/StopAttached）
@@ -100,10 +101,11 @@ DanmakuSystem/
 
 ### 碰撞系统
 - **多目标碰撞**: 通过 ICollisionTarget + TargetRegistry（16 槽）支持任意数量碰撞目标，自动阵营过滤
-- **7 阶段碰撞**: 弹丸→目标 / 弹丸→障碍物 / 弹丸→屏幕边缘 / 激光→目标 / 喷雾→目标 / 喷雾→障碍物 / 喷雾→屏幕边缘
+- **7 阶段碰撞**: 弹丸→目标 / 弹丸→障碍物(OBB) / 弹丸→屏幕边缘 / 激光→目标 / 喷雾→目标 / 喷雾→障碍物(OBB) / 喷雾→屏幕边缘
+- **OBB 障碍物碰撞**: 通过 `ObstacleCollisionMath` 共享工具类实现圆/射线/扇形 vs OBB 检测，支持任意 2D Z 轴旋转。碰撞区域由 `BoxCollider2D` 定义，Scene View 所见即所得
 - **碰撞响应**: Die / ReduceHP / Pierce / BounceBack / Reflect / RecycleOnDistance
 - **碰撞事件 Buffer [Phase 2]**: `CollisionEventBuffer`（预分配 256 条，零 GC）作为旁路表现通道，溢出仅影响 VFX/飘字等表现，不影响伤害/击退/死亡主逻辑
-- **激光折射**: LaserSegmentSolver 解算反射/穿透路径，MAX_ITERATIONS=32 安全网
+- **激光折射**: LaserSegmentSolver 解算反射/穿透路径（射线 vs OBB），MAX_ITERATIONS=32 安全网
 
 ### 运动策略 [Phase 2]
 

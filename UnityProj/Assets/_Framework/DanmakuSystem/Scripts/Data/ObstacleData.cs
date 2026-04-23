@@ -3,15 +3,25 @@ using UnityEngine;
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 障碍物运行时数据。由 ObstaclePool 管理，AABB 碰撞检测。
+    /// 障碍物运行时数据。由 ObstaclePool 管理，OBB 碰撞检测。
+    /// 结构体布局：36 bytes（最大字段对齐 4 bytes，无额外 padding）。
     /// </summary>
     public struct ObstacleData
     {
-        /// <summary>AABB 最小点</summary>
-        public Vector2 Min;
+        /// <summary>OBB 中心（世界坐标）</summary>
+        public Vector2 Center;
 
-        /// <summary>AABB 最大点</summary>
-        public Vector2 Max;
+        /// <summary>半尺寸（局部空间宽高的一半）</summary>
+        public Vector2 HalfExtents;
+
+        /// <summary>旋转角度（弧度，逆时针为正）</summary>
+        public float RotationRad;
+
+        /// <summary>预计算 sin(RotationRad)</summary>
+        public float Sin;
+
+        /// <summary>预计算 cos(RotationRad)</summary>
+        public float Cos;
 
         /// <summary>生命值（0=不可摧毁）</summary>
         public int HitPoints;

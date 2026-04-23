@@ -193,7 +193,7 @@ namespace MiniGameTemplate.Danmaku
             laser.VisualLength = totalLen;
         }
 
-        // ──── 射线 vs 障碍物（返回最近碰撞距离） ────
+        // ──── 射线 vs 障碍物（返回最近碰撞距离）—— 使用 OBB ────
 
         private static float RaycastObstacles(
             Vector2 origin, Vector2 dir, float maxDist, float halfWidth,
@@ -208,8 +208,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var obs = ref obstacles[j];
                 if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
-                float dist = RayVsAABB(origin, dir, maxDist,
-                    obs.Min, obs.Max, halfWidth);
+                float dist = ObstacleCollisionMath.RayVsOBB(origin, dir, maxDist, in obs, halfWidth);
 
                 if (dist < closest)
                 {
@@ -235,18 +234,15 @@ namespace MiniGameTemplate.Danmaku
                 ref var obs = ref obstacles[j];
                 if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
-                float dist = RayVsAABB(origin, dir, maxDist,
-                    obs.Min, obs.Max, halfWidth);
+                float dist = ObstacleCollisionMath.RayVsOBB(origin, dir, maxDist, in obs, halfWidth);
 
                 if (dist < closest)
                 {
                     closest = dist;
                     hitIndex = j;
-                    // 碰撞点处的法线
+                    // 碰撞点处的 OBB 法线
                     Vector2 hitPoint = origin + dir * dist;
-                    Vector2 center = (obs.Min + obs.Max) * 0.5f;
-                    Vector2 halfSize = (obs.Max - obs.Min) * 0.5f;
-                    normal = GetAABBNormal(hitPoint, center, halfSize);
+                    normal = ObstacleCollisionMath.GetOBBNormal(hitPoint, in obs);
                 }
             }
 
@@ -330,61 +326,7 @@ namespace MiniGameTemplate.Danmaku
             return closest >= maxDist ? float.MaxValue : closest;
         }
 
-        // ──── 射线 vs AABB（膨胀 halfWidth） ────
-
-        /// <summary>
-        /// 射线与膨胀 AABB 的碰撞检测。返回碰撞距离，float.MaxValue 表示未碰撞。
-        /// halfWidth 用于模拟激光宽度——将 AABB 各边向外膨胀 halfWidth。
-        /// </summary>
-        private static float RayVsAABB(
-            Vector2 origin, Vector2 dir, float maxDist,
-            Vector2 aabbMin, Vector2 aabbMax, float halfWidth)
-        {
-            // 膨胀 AABB
-            Vector2 min = aabbMin - new Vector2(halfWidth, halfWidth);
-            Vector2 max = aabbMax + new Vector2(halfWidth, halfWidth);
-
-            // Slab intersection
-            float tMin = 0f;
-            float tMax = maxDist;
-
-            // X slab
-            if (Mathf.Abs(dir.x) < 0.0001f)
-            {
-                if (origin.x < min.x || origin.x > max.x) return float.MaxValue;
-            }
-            else
-            {
-                float invD = 1f / dir.x;
-                float t1 = (min.x - origin.x) * invD;
-                float t2 = (max.x - origin.x) * invD;
-                if (t1 > t2) { float tmp = t1; t1 = t2; t2 = tmp; }
-                tMin = Mathf.Max(tMin, t1);
-                tMax = Mathf.Min(tMax, t2);
-                if (tMin > tMax) return float.MaxValue;
-            }
-
-            // Y slab
-            if (Mathf.Abs(dir.y) < 0.0001f)
-            {
-                if (origin.y < min.y || origin.y > max.y) return float.MaxValue;
-            }
-            else
-            {
-                float invD = 1f / dir.y;
-                float t1 = (min.y - origin.y) * invD;
-                float t2 = (max.y - origin.y) * invD;
-                if (t1 > t2) { float tmp = t1; t1 = t2; t2 = tmp; }
-                tMin = Mathf.Max(tMin, t1);
-                tMax = Mathf.Min(tMax, t2);
-                if (tMin > tMax) return float.MaxValue;
-            }
-
-            // tMin < 0 意味着射线起点在 AABB 内部，碰撞距离为 0
-            return tMin >= 0 ? tMin : 0f;
-        }
-
-        // ──── 穿透伤害（对射线上所有障碍物造成伤害） ────
+        // ──── 穿透伤害（对射线上所有障碍物造成伤害）—— 使用 OBB ────
 
         private static void DamageAllObstaclesOnRay(
             Vector2 origin, Vector2 dir, float maxDist, float halfWidth,
@@ -396,8 +338,7 @@ namespace MiniGameTemplate.Danmaku
                 ref var obs = ref obstacles[j];
                 if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
-                float dist = RayVsAABB(origin, dir, maxDist,
-                    obs.Min, obs.Max, halfWidth);
+                float dist = ObstacleCollisionMath.RayVsOBB(origin, dir, maxDist, in obs, halfWidth);
 
                 if (dist < float.MaxValue)
                     DamageObstacle(ref obs, damage);
@@ -415,22 +356,11 @@ namespace MiniGameTemplate.Danmaku
         }
 
         // ──── 几何工具 ────
+        // RayVsAABB / GetAABBNormal 已移入 ObstacleCollisionMath 共享工具类
 
         private static Vector2 Reflect(Vector2 direction, Vector2 normal)
         {
             return direction - 2f * Vector2.Dot(direction, normal) * normal;
-        }
-
-        private static Vector2 GetAABBNormal(Vector2 point, Vector2 center, Vector2 halfSize)
-        {
-            Vector2 d = point - center;
-            float overlapX = halfSize.x - Mathf.Abs(d.x);
-            float overlapY = halfSize.y - Mathf.Abs(d.y);
-
-            if (overlapX < overlapY)
-                return new Vector2(d.x > 0 ? 1 : -1, 0);
-            else
-                return new Vector2(0, d.y > 0 ? 1 : -1);
         }
     }
 }
