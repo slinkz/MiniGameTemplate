@@ -266,8 +266,8 @@ namespace MiniGameTemplate.Rendering
                 for (int i = 0; i < _buckets.Count; i++)
                 {
                     RenderBucket bucket = _buckets[i];
-                    if (bucket.Mesh != null) UnityEngine.Object.Destroy(bucket.Mesh);
-                    if (bucket.Material != null) UnityEngine.Object.Destroy(bucket.Material);
+                    if (bucket.Mesh != null) UnityObjectDestroyUtility.Destroy(bucket.Mesh);
+                    if (bucket.Material != null) UnityObjectDestroyUtility.Destroy(bucket.Material);
                 }
             }
 

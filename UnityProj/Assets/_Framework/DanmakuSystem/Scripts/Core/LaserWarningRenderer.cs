@@ -93,7 +93,7 @@ namespace MiniGameTemplate.Danmaku
             _batchManager?.Dispose();
             if (_laserMaterialAtlas != null)
             {
-                Object.Destroy(_laserMaterialAtlas);
+                UnityObjectDestroyUtility.Destroy(_laserMaterialAtlas);
                 _laserMaterialAtlas = null;
             }
             _runtimeAtlas = null;

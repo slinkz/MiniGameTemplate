@@ -80,7 +80,7 @@ MonoBehaviour:
   TickInterval: 0.1
   Faction: 0
   MaxWidth: 0.8
-  OnHitObstacle: 0
+  OnHitObstacle: 1
   OnHitScreenEdge: 1
   ScreenEdgeRecycleMargin: 1
   MaxReflections: 1

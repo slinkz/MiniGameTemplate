@@ -155,12 +155,12 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  Damage: 26849
-  InitialHitPoints: 1
+  Damage: 167
+  InitialHitPoints: 100
   Faction: 0
   OnHitTarget: 0
   HitTargetHPCost: 1
-  OnHitObstacle: 0
+  OnHitObstacle: 4
   HitObstacleHPCost: 1
   OnHitScreenEdge: 0
   HitScreenEdgeHPCost: 1
