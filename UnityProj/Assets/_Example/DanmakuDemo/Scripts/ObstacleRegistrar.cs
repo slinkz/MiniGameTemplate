@@ -4,15 +4,17 @@ using UnityEngine;
 namespace MiniGameTemplate.Example
 {
     /// <summary>
-    /// 障碍物注册器——挂在带 SpriteRenderer + BoxCollider2D 的 GameObject 上，
+    /// 障碍物注册器——挂在带 SpriteRenderer + Collider2D 的 GameObject 上，
     /// 自动将自身注册到 DanmakuSystem.ObstaclePool。
     /// 
-    /// 使用方式：拖入预制体到场景中，调整 Transform 位置、旋转和 Scale 即可。
-    /// 运行时会根据 BoxCollider2D 尺寸 + Transform.rotation.z 自动计算 OBB。
-    /// Scene View 中 BoxCollider2D 的绿色线框即为碰撞区域所见即所得。
+    /// 碰撞形状自动识别：
+    ///   - BoxCollider2D   → AddRect（OBB，支持任意 Z 轴旋转）
+    ///   - CircleCollider2D → AddCircle（正方形 OBB 近似圆，旋转无意义）
+    /// 两种 Collider 只能挂其中一种，同时存在时优先 CircleCollider2D。
+    /// 
+    /// Scene View 中 Collider 的绿色线框即为碰撞区域所见即所得。
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
-    [RequireComponent(typeof(BoxCollider2D))]
     public class ObstacleRegistrar : MonoBehaviour
     {
         [Header("障碍物属性")]
@@ -27,16 +29,24 @@ namespace MiniGameTemplate.Example
 
         private ObstaclePool _pool;
         private SpriteRenderer _sr;
-        private BoxCollider2D _collider;
+
+        // Collider 识别——二选一
+        private BoxCollider2D _boxCollider;
+        private CircleCollider2D _circleCollider;
+        private bool _isCircle;
+
         private float _lastRotZ;
 
         /// <summary>当前在 ObstaclePool 中的索引（-1=未注册）</summary>
         public int PoolIndex => _poolIndex;
 
+        /// <summary>当前障碍物是否为圆形</summary>
+        public bool IsCircle => _isCircle;
+
         private void Awake()
         {
             _sr = GetComponent<SpriteRenderer>();
-            _collider = GetComponent<BoxCollider2D>();
+            DetectColliderType();
         }
 
         private void OnEnable()
@@ -68,24 +78,62 @@ namespace MiniGameTemplate.Example
                     return;
                 }
 
-                float curRotZ = transform.eulerAngles.z;
                 Vector2 pos = (Vector2)transform.position;
-                // worldCenter 计算：offset 非零时需旋转，为零时直接用 position（零三角函数）
-                Vector2 curCenter = (_collider.offset == Vector2.zero)
-                    ? pos
-                    : pos + RotateVector(_collider.offset, curRotZ);
 
-                if (Mathf.Approximately(curRotZ, _lastRotZ))
+                if (_isCircle)
                 {
-                    // 旋转没变——只更新位置，避免 Pool 侧三角函数调用
+                    // 圆形障碍物：只需同步位置，旋转无意义
+                    Vector2 curCenter = (_circleCollider.offset == Vector2.zero)
+                        ? pos
+                        : pos + (Vector2)(transform.localToWorldMatrix.MultiplyVector(_circleCollider.offset));
                     _pool.UpdatePosition(_poolIndex, curCenter);
                 }
                 else
                 {
-                    _pool.UpdateTransform(_poolIndex, curCenter, curRotZ * Mathf.Deg2Rad);
-                    _lastRotZ = curRotZ;
+                    // OBB 障碍物：同步位置 + 旋转
+                    float curRotZ = transform.eulerAngles.z;
+                    Vector2 curCenter = (_boxCollider.offset == Vector2.zero)
+                        ? pos
+                        : pos + RotateVector(_boxCollider.offset, curRotZ);
+
+                    if (Mathf.Approximately(curRotZ, _lastRotZ))
+                    {
+                        // 旋转没变——只更新位置，避免 Pool 侧三角函数调用
+                        _pool.UpdatePosition(_poolIndex, curCenter);
+                    }
+                    else
+                    {
+                        _pool.UpdateTransform(_poolIndex, curCenter, curRotZ * Mathf.Deg2Rad);
+                        _lastRotZ = curRotZ;
+                    }
                 }
             }
+        }
+
+        // ──── Collider 类型检测 ────
+
+        /// <summary>
+        /// 识别当前 GameObject 上的 Collider 类型。
+        /// CircleCollider2D 优先于 BoxCollider2D。
+        /// </summary>
+        private void DetectColliderType()
+        {
+            _circleCollider = GetComponent<CircleCollider2D>();
+            if (_circleCollider != null)
+            {
+                _isCircle = true;
+                _boxCollider = null;
+                return;
+            }
+
+            _boxCollider = GetComponent<BoxCollider2D>();
+            if (_boxCollider != null)
+            {
+                _isCircle = false;
+                return;
+            }
+
+            Debug.LogError($"[ObstacleRegistrar] {name} 没有 BoxCollider2D 也没有 CircleCollider2D！请添加其中一种。");
         }
 
         // ──── 注册 / 注销 ────
@@ -102,15 +150,41 @@ namespace MiniGameTemplate.Example
             _pool = system.ObstaclePool;
             if (_pool == null) return;
 
-            // 从 BoxCollider2D 尺寸 + Transform 计算 OBB 参数
+            if (_isCircle)
+                RegisterCircle();
+            else
+                RegisterBox();
+        }
+
+        private void RegisterCircle()
+        {
+            Vector2 pos = (Vector2)transform.position;
+            Vector2 worldCenter = (_circleCollider.offset == Vector2.zero)
+                ? pos
+                : pos + (Vector2)(transform.localToWorldMatrix.MultiplyVector(_circleCollider.offset));
+
+            // 取 X/Y 轴最大缩放值作为半径缩放因子
+            float maxScale = Mathf.Max(
+                Mathf.Abs(transform.lossyScale.x),
+                Mathf.Abs(transform.lossyScale.y));
+            float worldRadius = _circleCollider.radius * maxScale;
+
+            _poolIndex = _pool.AddCircle(worldCenter, worldRadius, _hitPoints, _faction);
+
+            if (_poolIndex < 0)
+                Debug.LogWarning($"[ObstacleRegistrar] {name} 注册失败——ObstaclePool 已满 (max={ObstaclePool.MAX_OBSTACLES})");
+        }
+
+        private void RegisterBox()
+        {
             float rotZ = transform.eulerAngles.z;
             Vector2 worldCenter = (Vector2)transform.position
-                                + RotateVector(_collider.offset, rotZ);
+                                + RotateVector(_boxCollider.offset, rotZ);
             // lossyScale 取 Abs 防负 scale（R6 缓解）
             // 注意：不支持有旋转的父级 Transform，lossyScale 在此场景下不准确。
             Vector2 size = new Vector2(
-                _collider.size.x * Mathf.Abs(transform.lossyScale.x),
-                _collider.size.y * Mathf.Abs(transform.lossyScale.y));
+                _boxCollider.size.x * Mathf.Abs(transform.lossyScale.x),
+                _boxCollider.size.y * Mathf.Abs(transform.lossyScale.y));
             float rotRad = rotZ * Mathf.Deg2Rad;
 
             _poolIndex = _pool.AddRect(worldCenter, size, _hitPoints, _faction, rotRad);
@@ -159,28 +233,55 @@ namespace MiniGameTemplate.Example
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Reset() 自动配置 BoxCollider2D。
+        /// Reset() 自动配置 Collider。
         /// 编辑器中添加此组件时自动调用。
+        /// 如果已有 CircleCollider2D 则配置圆形；否则自动添加并配置 BoxCollider2D。
         /// </summary>
         private void Reset()
         {
-            var col = GetComponent<BoxCollider2D>();
-            if (col != null)
+            var circle = GetComponent<CircleCollider2D>();
+            if (circle != null)
             {
-                col.isTrigger = true;
-                // 如果已有 SpriteRenderer，从其尺寸初始化 collider size
+                circle.isTrigger = true;
                 var sr = GetComponent<SpriteRenderer>();
                 if (sr != null && sr.sprite != null)
-                    col.size = sr.sprite.bounds.size;
+                {
+                    // 取 sprite 最大半边长度作为半径
+                    var bounds = sr.sprite.bounds;
+                    circle.radius = Mathf.Max(bounds.extents.x, bounds.extents.y);
+                }
+                return;
             }
+
+            var box = GetComponent<BoxCollider2D>();
+            if (box == null)
+            {
+                // 默认添加 BoxCollider2D（最常用情况）
+                box = gameObject.AddComponent<BoxCollider2D>();
+            }
+            box.isTrigger = true;
+            var spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null && spriteRenderer.sprite != null)
+                box.size = spriteRenderer.sprite.bounds.size;
         }
 
         private void OnDrawGizmosSelected()
         {
-            // 编辑器中选中时显示 OBB 碰撞区域（旋转 Gizmo）
-            var col = GetComponent<BoxCollider2D>();
-            if (col == null) return;
+            // 编辑器中选中时显示碰撞区域
+            var circle = GetComponent<CircleCollider2D>();
+            if (circle != null)
+            {
+                DrawCircleGizmo(circle);
+                return;
+            }
 
+            var box = GetComponent<BoxCollider2D>();
+            if (box != null)
+                DrawBoxGizmo(box);
+        }
+
+        private void DrawBoxGizmo(BoxCollider2D col)
+        {
             Gizmos.color = _hitPoints > 0
                 ? new Color(1f, 0.6f, 0.2f, 0.4f)
                 : new Color(0.4f, 0.8f, 1f, 0.4f);
@@ -198,6 +299,25 @@ namespace MiniGameTemplate.Example
             Gizmos.color = new Color(Gizmos.color.r, Gizmos.color.g, Gizmos.color.b, 1f);
             Gizmos.DrawWireCube(Vector3.zero, size);
             Gizmos.matrix = Matrix4x4.identity;
+        }
+
+        private void DrawCircleGizmo(CircleCollider2D col)
+        {
+            Gizmos.color = _hitPoints > 0
+                ? new Color(1f, 0.6f, 0.2f, 0.4f)
+                : new Color(0.4f, 0.8f, 1f, 0.4f);
+
+            float maxScale = Mathf.Max(
+                Mathf.Abs(transform.lossyScale.x),
+                Mathf.Abs(transform.lossyScale.y));
+            float worldRadius = col.radius * maxScale;
+            Vector3 center = transform.position
+                + (Vector3)(Vector2)(transform.localToWorldMatrix.MultiplyVector(col.offset));
+
+            // 绘制实心圆盘 + 线框圆
+            Gizmos.DrawSphere(center, worldRadius);
+            Gizmos.color = new Color(Gizmos.color.r, Gizmos.color.g, Gizmos.color.b, 1f);
+            Gizmos.DrawWireSphere(center, worldRadius);
         }
 #endif
     }

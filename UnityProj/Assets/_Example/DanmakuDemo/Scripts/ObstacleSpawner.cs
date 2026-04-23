@@ -5,20 +5,36 @@ namespace MiniGameTemplate.Example
 {
     /// <summary>
     /// 障碍物生成器——在 Inspector 中配置障碍物列表，Start 时自动注册到 DanmakuSystem.ObstaclePool。
+    /// 支持矩形（OBB）和圆形两种形状。
     /// 支持运行时通过 API 动态增删，Scene View 中通过 Gizmo 可视化所有障碍物（含旋转）。
     /// </summary>
     public class ObstacleSpawner : MonoBehaviour
     {
+        /// <summary>障碍物形状类型</summary>
+        public enum ObstacleShape
+        {
+            /// <summary>矩形（OBB，支持旋转）</summary>
+            Box = 0,
+            /// <summary>圆形（正方形 OBB 近似，旋转无意义）</summary>
+            Circle = 1,
+        }
+
         [System.Serializable]
         public struct ObstacleDefinition
         {
+            [Tooltip("障碍物形状")]
+            public ObstacleShape Shape;
+
             [Tooltip("障碍物中心位置（世界坐标）")]
             public Vector2 Center;
 
-            [Tooltip("障碍物尺寸（宽, 高）")]
+            [Tooltip("障碍物尺寸（宽, 高）——Box 模式使用")]
             public Vector2 Size;
 
-            [Tooltip("旋转角度（度，逆时针为正）")]
+            [Tooltip("障碍物半径——Circle 模式使用")]
+            public float Radius;
+
+            [Tooltip("旋转角度（度，逆时针为正）——仅 Box 模式有效")]
             public float Rotation;
 
             [Tooltip("生命值。0=不可摧毁")]
@@ -91,8 +107,12 @@ namespace MiniGameTemplate.Example
             for (int i = 0; i < _obstacles.Length; i++)
             {
                 ref var def = ref _obstacles[i];
-                float rotRad = def.Rotation * Mathf.Deg2Rad;
-                int slot = _pool.AddRect(def.Center, def.Size, def.HitPoints, def.Faction, rotRad);
+                int slot;
+                if (def.Shape == ObstacleShape.Circle)
+                    slot = _pool.AddCircle(def.Center, def.Radius, def.HitPoints, def.Faction);
+                else
+                    slot = _pool.AddRect(def.Center, def.Size, def.HitPoints, def.Faction,
+                        def.Rotation * Mathf.Deg2Rad);
                 _poolIndices[i] = slot;
 
                 if (slot < 0)
@@ -163,14 +183,24 @@ namespace MiniGameTemplate.Example
                     Gizmos.color = _indestructibleColor;
 
                 Vector3 center = new Vector3(def.Center.x, def.Center.y, 0f);
-                Vector3 size = new Vector3(def.Size.x, def.Size.y, 0.01f);
 
-                // 旋转 Gizmo
-                Gizmos.matrix = Matrix4x4.TRS(center, Quaternion.Euler(0, 0, def.Rotation), Vector3.one);
-                Gizmos.DrawCube(Vector3.zero, size);
-                Gizmos.color = new Color(Gizmos.color.r, Gizmos.color.g, Gizmos.color.b, 1f);
-                Gizmos.DrawWireCube(Vector3.zero, size);
-                Gizmos.matrix = Matrix4x4.identity;
+                if (def.Shape == ObstacleShape.Circle)
+                {
+                    // 圆形 Gizmo
+                    Gizmos.DrawSphere(center, def.Radius);
+                    Gizmos.color = new Color(Gizmos.color.r, Gizmos.color.g, Gizmos.color.b, 1f);
+                    Gizmos.DrawWireSphere(center, def.Radius);
+                }
+                else
+                {
+                    // 矩形 Gizmo（含旋转）
+                    Vector3 size = new Vector3(def.Size.x, def.Size.y, 0.01f);
+                    Gizmos.matrix = Matrix4x4.TRS(center, Quaternion.Euler(0, 0, def.Rotation), Vector3.one);
+                    Gizmos.DrawCube(Vector3.zero, size);
+                    Gizmos.color = new Color(Gizmos.color.r, Gizmos.color.g, Gizmos.color.b, 1f);
+                    Gizmos.DrawWireCube(Vector3.zero, size);
+                    Gizmos.matrix = Matrix4x4.identity;
+                }
 
                 // 显示 HP 标签（编辑器模式下）
 #if UNITY_EDITOR
