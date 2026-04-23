@@ -158,6 +158,41 @@ namespace UnityMCP.Editor
         }
 
         /// <summary>
+        /// Check whether a port can be reused by the current project.
+        /// Allows the port if it is free, or if the only registry claimant is this same project.
+        /// This is used to keep the port stable across domain reloads within the same Unity process.
+        /// </summary>
+        public static bool CanUsePortForCurrentProject(int port)
+        {
+            bool result = false;
+
+            WithRegistryLock(() =>
+            {
+                string myProjectPath = GetProjectPath();
+                var instances = ReadRegistry();
+
+                bool claimedByOther = false;
+                foreach (var inst in instances)
+                {
+                    int instPort = ExtractPort(inst);
+                    if (instPort != port)
+                        continue;
+
+                    string instPath = inst.ContainsKey("projectPath") ? inst["projectPath"].ToString() : "";
+                    if (instPath != myProjectPath)
+                    {
+                        claimedByOther = true;
+                        break;
+                    }
+                }
+
+                result = !claimedByOther && IsPortAvailable(port);
+            }, "can-use-port");
+
+            return result;
+        }
+
+        /// <summary>
         /// Extract a port number from a registry entry dictionary.
         /// Handles long, double, and string representations.
         /// </summary>
@@ -169,6 +204,7 @@ namespace UnityMCP.Editor
             if (int.TryParse(inst["port"].ToString(), out int ip)) return ip;
             return 0;
         }
+
 
         /// <summary>
         /// Get the last port this project used (stored in EditorPrefs for persistence).

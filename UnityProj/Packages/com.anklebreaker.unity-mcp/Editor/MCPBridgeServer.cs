@@ -47,7 +47,14 @@ namespace UnityMCP.Editor
         };
 
         // SessionState key to persist running state across domain reloads (Play Mode, recompile)
+
         private const string WasRunningKey = "UnityMCP_WasRunningBeforeReload";
+
+
+        // SessionState key to pin the selected port for the lifetime of the current Unity process.
+        // This survives domain reloads, but is cleared on real editor quit.
+        private const string SessionPortKey = "UnityMCP_SessionPort";
+
 
         static MCPBridgeServer()
         {
@@ -96,12 +103,32 @@ namespace UnityMCP.Editor
         private static void OnQuitting()
         {
             Stop();
+            ClearSessionPort();
             // Final cleanup of registry on quit
             MCPInstanceRegistry.Unregister();
         }
 
+        private static int GetSessionPort()
+        {
+            return SessionState.GetInt(SessionPortKey, -1);
+        }
+
+        private static void SetSessionPort(int port)
+        {
+            int previous = SessionState.GetInt(SessionPortKey, -1);
+            SessionState.SetInt(SessionPortKey, port);
+            if (previous != port)
+                Debug.Log($"[AB-UMCP] Session port pinned to {port}.");
+        }
+
+        private static void ClearSessionPort()
+        {
+            SessionState.EraseInt(SessionPortKey);
+        }
+
         /// <summary>Whether the server is currently running.</summary>
         public static bool IsRunning => _isRunning;
+
 
         public static void Start()
         {
@@ -113,7 +140,8 @@ namespace UnityMCP.Editor
             // Clean up stale entries before selecting a port
             MCPInstanceRegistry.CleanupStaleEntries();
 
-            // Resolve port: use manual override if set, otherwise auto-select
+            // Resolve port: use manual override if set, otherwise prefer the current Unity session's pinned port.
+            // This keeps the port stable across domain reloads / Play Mode transitions / recompiles.
             int port;
             if (MCPSettingsManager.UseManualPort)
             {
@@ -121,8 +149,21 @@ namespace UnityMCP.Editor
             }
             else
             {
-                port = MCPInstanceRegistry.FindAvailablePort();
+                int sessionPort = GetSessionPort();
+                if (sessionPort >= MCPInstanceRegistry.PortRangeStart
+                    && sessionPort <= MCPInstanceRegistry.PortRangeEnd
+                    && MCPInstanceRegistry.CanUsePortForCurrentProject(sessionPort))
+                {
+                    port = sessionPort;
+                    Debug.Log($"[AB-UMCP] Reusing session port {port} (same Unity process).");
+                }
+                else
+                {
+                    port = MCPInstanceRegistry.FindAvailablePort();
+                }
             }
+
+
 
             try
             {
@@ -131,9 +172,12 @@ namespace UnityMCP.Editor
                 _listener.Start();
                 _isRunning = true;
                 _activePort = port;
+                SetSessionPort(port);
 
                 // Update the settings so the UI reflects the actual port
                 MCPSettingsManager.Port = port;
+
+
 
                 _listenerThread = new Thread(ListenLoop)
                 {
