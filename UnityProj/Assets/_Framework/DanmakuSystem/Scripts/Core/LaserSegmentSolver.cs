@@ -169,7 +169,7 @@ namespace MiniGameTemplate.Danmaku
                     }
                     else
                     {
-                        // 穿透——不改方向，不算反弹次数
+                        // 穿透——不改方向，也不消耗一次反弹额度；这里 bounce-- 是为了抵消 for 末尾的 bounce++
                         pos = laser.Segments[segIndex - 1].End + dir * 0.01f;
                         bounce--;
                     }

@@ -33,12 +33,15 @@ namespace MiniGameTemplate.Danmaku
 
         // ── 碰撞原语 ──
 
-        /// <summary>圆 vs OBB。返回 true=碰撞，outNormal=世界空间法线。</summary>
-        /// <remarks>法线计算内联，消除重复 WorldToLocal 调用。</remarks>
+        /// <summary>圆 vs 障碍物。矩形走 OBB，圆形走真圆碰撞。返回 true=碰撞，outNormal=世界空间法线。</summary>
+        /// <remarks>矩形分支的法线计算内联，消除重复 WorldToLocal 调用。</remarks>
         internal static bool CircleVsOBB(
             Vector2 circleCenter, float radius,
             in ObstacleData obs, out Vector2 normal)
         {
+            if (obs.Shape == (byte)ObstacleShape.Circle)
+                return CircleVsCircle(circleCenter, radius, in obs, out normal);
+
             Vector2 local = WorldToLocal(circleCenter, in obs);
             Vector2 closest = ClampLocal(local, obs.HalfExtents);
             float dx = local.x - closest.x;
@@ -112,15 +115,42 @@ namespace MiniGameTemplate.Danmaku
 
         // ── 封装原语（供外部调用） ──
 
-        /// <summary>世界点到 OBB 的最近距离平方。供 Phase 6 使用。</summary>
+        /// <summary>世界点到障碍物的最近距离平方。供 Phase 6 使用。</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static float DistanceSqToOBB(Vector2 worldPoint, in ObstacleData obs)
         {
+            if (obs.Shape == (byte)ObstacleShape.Circle)
+            {
+                float radius = obs.HalfExtents.x;
+                Vector2 delta = worldPoint - obs.Center;
+                float centerDist = delta.magnitude;
+                if (centerDist <= radius) return 0f;
+                float edgeDist = centerDist - radius;
+                return edgeDist * edgeDist;
+            }
+
             Vector2 local = WorldToLocal(worldPoint, in obs);
             Vector2 closest = ClampLocal(local, obs.HalfExtents);
             float dx = local.x - closest.x;
             float dy = local.y - closest.y;
             return dx * dx + dy * dy;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool CircleVsCircle(Vector2 circleCenter, float radius, in ObstacleData obs, out Vector2 normal)
+        {
+            float obstacleRadius = obs.HalfExtents.x;
+            Vector2 delta = circleCenter - obs.Center;
+            float distSq = delta.sqrMagnitude;
+            float radiusSum = radius + obstacleRadius;
+            if (distSq >= radiusSum * radiusSum)
+            {
+                normal = default;
+                return false;
+            }
+
+            normal = distSq > 1e-6f ? delta / Mathf.Sqrt(distSq) : Vector2.up;
+            return true;
         }
 
         // ── 内部辅助 ──

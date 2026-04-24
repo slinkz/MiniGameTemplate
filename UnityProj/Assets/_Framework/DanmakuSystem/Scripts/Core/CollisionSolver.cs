@@ -255,9 +255,8 @@ namespace MiniGameTemplate.Danmaku
                     ref var obs = ref obstacles[j];
                     if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
-                    // 阵营穿透检查（使用 Faction 字段简化）
-                    if (c.Faction == (byte)BulletFaction.Player && obs.Faction == (byte)BulletFaction.Player) continue;
-                    if (c.Faction == (byte)BulletFaction.Enemy && obs.Faction == (byte)BulletFaction.Enemy) continue;
+                    // 阵营过滤：与 Phase 1/4/5 复用同一套规则，避免障碍物路径和目标路径语义漂移
+                    if (!ShouldCollide((BulletFaction)c.Faction, (BulletFaction)obs.Faction)) continue;
 
                     // 圆 vs OBB
                     if (!ObstacleCollisionMath.CircleVsOBB(c.Position, c.Radius, in obs, out Vector2 normal))
@@ -344,8 +343,9 @@ namespace MiniGameTemplate.Danmaku
                     for (int s = 0; s < laser.SegmentCount; s++)
                     {
                         ref var seg = ref laser.Segments[s];
-                        float dist = PointToSegmentDistance(hitbox.Center, seg.Start, seg.End);
-                        if (dist < totalRadius)
+                        float totalRadiusSq = totalRadius * totalRadius;
+                        float distSq = PointToSegmentDistanceSq(hitbox.Center, seg.Start, seg.End);
+                        if (distSq < totalRadiusSq)
                         {
                             hit = true;
                             break; // 一条激光每个目标只命中一次
@@ -505,7 +505,10 @@ namespace MiniGameTemplate.Danmaku
                     ref var obs = ref obstacles[j];
                     if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
-                    // 距离检查——封装在 DistanceSqToOBB 中（OBB 局部空间 clamp）
+                    // 阵营过滤：与 Phase 1/2/4/5 复用同一套规则，避免喷雾路径单独漂移
+                    if (!ShouldCollide((BulletFaction)spray.Faction, (BulletFaction)obs.Faction)) continue;
+
+                    // 距离检查——封装在 DistanceSqToOBB 中（矩形走 OBB clamp，圆形走真圆距离）
                     float distSq = ObstacleCollisionMath.DistanceSqToOBB(spray.Origin, in obs);
                     if (distSq > spray.Range * spray.Range) continue;
 
@@ -682,14 +685,18 @@ namespace MiniGameTemplate.Danmaku
             return Vector2.down;
         }
 
-        /// <summary>点到线段的最短距离</summary>
-        private static float PointToSegmentDistance(Vector2 point, Vector2 a, Vector2 b)
+        /// <summary>点到线段的最短距离平方</summary>
+        private static float PointToSegmentDistanceSq(Vector2 point, Vector2 a, Vector2 b)
         {
             Vector2 ab = b - a;
+            float abLenSq = Vector2.Dot(ab, ab);
+            if (abLenSq <= 1e-6f)
+                return (point - a).sqrMagnitude;
+
             Vector2 ap = point - a;
-            float t = Mathf.Clamp01(Vector2.Dot(ap, ab) / Vector2.Dot(ab, ab));
+            float t = Mathf.Clamp01(Vector2.Dot(ap, ab) / abLenSq);
             Vector2 closest = a + ab * t;
-            return (point - closest).magnitude;
+            return (point - closest).sqrMagnitude;
         }
     }
 }

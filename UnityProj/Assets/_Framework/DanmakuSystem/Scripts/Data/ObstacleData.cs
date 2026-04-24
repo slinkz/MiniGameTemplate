@@ -32,8 +32,16 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>当前阶段：0=未激活, 1=Active, 2=Destroyed</summary>
         public byte Phase;
 
+        /// <summary>1=圆形障碍物，0=矩形/OBB 障碍物</summary>
+        public byte Shape;
         public byte _pad1;
-        public byte _pad2;
+
+    }
+
+    public enum ObstacleShape : byte
+    {
+        Box = 0,
+        Circle = 1,
     }
 
     /// <summary>障碍物生命阶段</summary>

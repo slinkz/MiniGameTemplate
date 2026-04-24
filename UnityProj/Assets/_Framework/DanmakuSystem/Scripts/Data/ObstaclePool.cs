@@ -50,6 +50,7 @@ namespace MiniGameTemplate.Danmaku
             obs.HitPoints = hitPoints;
             obs.Faction = (byte)faction;
             obs.Phase = (byte)ObstaclePhase.Active;
+            obs.Shape = (byte)ObstacleShape.Box;
             return slot;
         }
 
@@ -64,7 +65,11 @@ namespace MiniGameTemplate.Danmaku
         public int AddCircle(Vector2 center, float radius, int hitPoints = 0,
             BulletFaction faction = BulletFaction.Neutral)
         {
-            return AddRect(center, new Vector2(radius * 2f, radius * 2f), hitPoints, faction);
+            int slot = AddRect(center, new Vector2(radius * 2f, radius * 2f), hitPoints, faction);
+            if (slot < 0) return -1;
+
+            Data[slot].Shape = (byte)ObstacleShape.Circle;
+            return slot;
         }
 
         /// <summary>

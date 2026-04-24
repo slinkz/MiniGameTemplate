@@ -13,6 +13,8 @@ namespace MiniGameTemplate.Example
     /// 两种 Collider 只能挂其中一种，同时存在时优先 CircleCollider2D。
     /// 
     /// Scene View 中 Collider 的绿色线框即为碰撞区域所见即所得。
+    /// 
+    /// 设计边界：BoxCollider2D 路径只支持自身 Z 轴旋转 + 无旋转父级；若父级存在旋转，请改用根节点注册或扩展为完整 TRS 变换。
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     public class ObstacleRegistrar : MonoBehaviour
