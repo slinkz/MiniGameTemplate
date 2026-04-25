@@ -1,7 +1,32 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiniGameTemplate.Utils
 {
+    /// <summary>
+    /// Non-generic helper that hosts the [RuntimeInitializeOnLoadMethod] callback.
+    /// Unity does not support this attribute on generic classes, so we collect
+    /// reset delegates from each Singleton&lt;T&gt; closed type and invoke them here.
+    /// </summary>
+    internal static class SingletonResetRegistry
+    {
+        private static readonly List<Action> _resetCallbacks = new List<Action>();
+
+        internal static void Register(Action callback)
+        {
+            if (!_resetCallbacks.Contains(callback))
+                _resetCallbacks.Add(callback);
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetAll()
+        {
+            for (int i = 0; i < _resetCallbacks.Count; i++)
+                _resetCallbacks[i]?.Invoke();
+        }
+    }
+
     /// <summary>
     /// Lightweight singleton base for MonoBehaviours.
     /// RESTRICTED: Only for framework-internal managers (AudioManager, UIManager, etc.).
@@ -15,14 +40,23 @@ namespace MiniGameTemplate.Utils
     /// Performance notes:
     /// - No lock: WebGL is single-threaded; Unity API is main-thread-only.
     /// - Uses ReferenceEquals to skip Unity's overloaded == (avoids native interop cost).
-    /// - [RuntimeInitializeOnLoadMethod] resets statics for Domain Reload disabled workflows.
+    /// - Static reset for Domain Reload disabled workflows is handled via SingletonResetRegistry.
     /// </summary>
     public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
         private static bool _applicationIsQuitting;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        /// <summary>
+        /// Static constructor runs once per closed generic type (e.g. Singleton&lt;AudioManager&gt;).
+        /// Registers a reset callback with the non-generic registry so that
+        /// [RuntimeInitializeOnLoadMethod] can reach our statics.
+        /// </summary>
+        static Singleton()
+        {
+            SingletonResetRegistry.Register(ResetStatics);
+        }
+
         private static void ResetStatics()
         {
             _instance = null;
