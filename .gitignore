@@ -66,11 +66,11 @@ UnityProj/Assets/Screenshots.meta
 # ===== YooAsset build output =====
 UnityProj/Bundles/
 
-# ===== FairyGUI SDK (Junction → ThirdParty/FairyGUI-unity/Assets, do not track) =====
+# ===== FairyGUI SDK (Junction → ThirdParty/FairyGUI-unity/Assets, source inlined in repo) =====
 UnityProj/Assets/FairyGUI/
 UnityProj/Assets/FairyGUI.meta
 
-# ===== Spine SDK (Junction → ThirdParty/spine-runtimes/..., do not track) =====
+# ===== Spine SDK (Junction → ThirdParty/spine-runtimes/..., source inlined in repo) =====
 UnityProj/Assets/Spine/
 UnityProj/Assets/Spine.meta
 UnityProj/Assets/SpineCSharp/
