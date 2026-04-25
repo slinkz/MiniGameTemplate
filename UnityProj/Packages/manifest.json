@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "com.anklebreaker.unity-mcp": "file:Packages/com.anklebreaker.unity-mcp",
-    "com.code-philosophy.luban": "https://github.com/focus-creative-games/luban_unity.git",
-    "com.qq.weixin.minigame": "https://github.com/wechat-miniprogram/minigame-tuanjie-transform-sdk.git",
+    "com.code-philosophy.luban": "file:Packages/com.code-philosophy.luban",
+    "com.qq.weixin.minigame": "file:Packages/com.qq.weixin.minigame",
     "com.tuyoogame.yooasset": "file:../ThirdParty/YooAsset",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.tilemap": "1.0.0",
