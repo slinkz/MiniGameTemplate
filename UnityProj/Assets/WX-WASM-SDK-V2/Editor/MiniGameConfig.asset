@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: MiniGameConfig
   m_EditorClassIdentifier: 
   ProjectConf:
-    projectName: 
-    Appid: 
+    projectName: MiniGameTemplate
+    Appid: wx699a4418f465d21f
     CDN: 
-    assetLoadType: 0
+    assetLoadType: 1
     compressDataPackage: 0
     VideoUrl: 
-    relativeDST: 
-    DST: C:\workspace\mini-game-template\MiniGameTemplate\UnityProj\
+    relativeDST: C:/workspace/mini-game-template/output
+    DST: C:/workspace/mini-game-template/output
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: StreamingAssets;
@@ -48,7 +48,7 @@ MonoBehaviour:
     PreloadWXFont: 0
     disableMultiTouch: 0
   CompileOptions:
-    DevelopBuild: 0
+    DevelopBuild: 1
     AutoProfile: 0
     ScriptOnly: 0
     Il2CppOptimizeSize: 1
