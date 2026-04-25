@@ -1,3 +1,0 @@
-include ':spine-libgdx:spine-libgdx'
-include ':spine-libgdx:spine-libgdx-tests'
-include ':spine-libgdx:spine-skeletonviewer'
