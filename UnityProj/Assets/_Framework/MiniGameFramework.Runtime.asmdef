@@ -4,7 +4,9 @@
     "references": [
         "FairyGUI",
         "YooAsset",
-        "Luban.Runtime"
+        "Luban.Runtime",
+        "Wx",
+        "YooAsset.MiniGame"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

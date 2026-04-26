@@ -4,7 +4,8 @@
     "references": [
         "MiniGameFramework.Runtime",
         "FairyGUI",
-        "YooAsset"
+        "YooAsset",
+        "YooAsset.Editor"
     ],
     "includePlatforms": [
         "Editor"

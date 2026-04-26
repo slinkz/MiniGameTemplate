@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using YooAsset;
 using MiniGameTemplate.Utils;
+#if UNITY_WEBGL && WEIXINMINIGAME
+using WeChatWASM;
+#endif
 
 namespace MiniGameTemplate.Asset
 {
@@ -87,35 +90,51 @@ namespace MiniGameTemplate.Asset
 
                 case EAssetPlayMode.WebGL:
                 {
-                    // WeChat Mini Game: uses WechatFileSystem for builtin + cache
-                    // This requires the YooAsset WechatFileSystem extension and WX-WASM-SDK-V2.
-                    //
-                    // HOW TO INTEGRATE:
-                    // 1. Import YooAsset's WechatFileSystem extension package
-                    // 2. Import WX-WASM-SDK-V2 (com.qq.weixin.minigame)
-                    // 3. Uncomment the real implementation below and remove the fallback
-                    //
-                    // Real implementation (uncomment after importing WechatFileSystem):
-                    // ---------------------------------------------------------------
-                    // var parameters = new HostPlayModeParameters();
-                    // parameters.BuildinFileSystemParameters =
-                    //     WechatFileSystemCreater.CreateWechatFileSystemParameters(
-                    //         "buildin");
-                    // parameters.CacheFileSystemParameters =
-                    //     WechatFileSystemCreater.CreateWechatFileSystemParameters(
-                    //         "cache",
-                    //         new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl));
-                    // initOp = _defaultPackage.InitializeAsync(parameters);
-                    // ---------------------------------------------------------------
+#if UNITY_WEBGL && WEIXINMINIGAME
+                    // Increase async operation time slice to prevent single-frame-per-load stalling.
+                    YooAssets.SetOperationSystemMaxTimeSlice(100);
 
-                    // Temporary fallback: standard Host mode (replace when SDK is imported)
-                    GameLog.LogWarning("[AssetService] WebGL mode selected but WechatFileSystem is not imported. " +
-                        "Using standard Host mode as fallback. See AssetService.cs for integration guide.");
-                    var fallbackParams = new HostPlayModeParameters();
-                    fallbackParams.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
-                    fallbackParams.CacheFileSystemParameters = FileSystemParameters.CreateDefaultCacheFileSystemParameters(
-                        new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl));
-                    initOp = _defaultPackage.InitializeAsync(fallbackParams);
+                    var webParams = new WebPlayModeParameters();
+                    // Force sync-like asset loading on WebGL to avoid frame-by-frame drip loading.
+                    webParams.WebGLForceSyncLoadAsset = true;
+
+                    bool hasRemoteUrl = !string.IsNullOrEmpty(config.HostServerUrl);
+
+                    if (hasRemoteUrl)
+                    {
+                        // --- Production CDN mode ---
+                        // WeChat Mini Game: use WechatFileSystem with CDN + WX cache.
+                        string packageRoot = $"{WX.env.USER_DATA_PATH}/__GAME_FILE_CACHE/yoo";
+                        var remoteServices = new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl);
+                        webParams.WebServerFileSystemParameters =
+                            WechatFileSystemCreater.CreateFileSystemParameters(packageRoot, remoteServices, null);
+
+                        GameLog.Log("[AssetService] WebGL CDN mode: WechatFileSystem + RemoteServices.");
+                    }
+                    else
+                    {
+                        // --- Local testing mode (no CDN) ---
+                        // Bundle files are pre-built and copied into StreamingAssets.
+                        // DefaultWebServerFileSystem loads them via UnityWebRequest from the
+                        // local HTTP server that WeChat DevTools provides.
+                        // This allows real-device testing without deploying a CDN.
+                        webParams.WebServerFileSystemParameters =
+                            FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
+
+                        GameLog.LogWarning("[AssetService] WebGL LOCAL mode: loading bundles from StreamingAssets. " +
+                            "Set HostServerUrl in AssetConfig to enable CDN mode for production.");
+                    }
+
+                    initOp = _defaultPackage.InitializeAsync(webParams);
+#else
+                    // Non-WEIXINMINIGAME WebGL builds: fall back to standard web server mode.
+                    GameLog.LogWarning("[AssetService] WebGL mode without WEIXINMINIGAME define. " +
+                        "Using DefaultWebServerFileSystem as fallback.");
+                    var webFallbackParams = new WebPlayModeParameters();
+                    webFallbackParams.WebServerFileSystemParameters =
+                        FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
+                    initOp = _defaultPackage.InitializeAsync(webFallbackParams);
+#endif
                     break;
                 }
 
@@ -339,6 +358,7 @@ namespace MiniGameTemplate.Asset
 
     /// <summary>
     /// Remote server URL provider for YooAsset Host mode.
+    /// Includes URL normalization to prevent WeChat silent-failure bugs.
     /// </summary>
     internal class RemoteServices : IRemoteServices
     {
@@ -347,18 +367,43 @@ namespace MiniGameTemplate.Asset
 
         public RemoteServices(string hostServer, string fallbackServer)
         {
-            _hostServer = hostServer;
-            _fallbackServer = fallbackServer;
+            _hostServer = hostServer?.TrimEnd('/') ?? string.Empty;
+            _fallbackServer = fallbackServer?.TrimEnd('/') ?? string.Empty;
         }
 
         public string GetRemoteMainURL(string fileName)
         {
-            return $"{_hostServer}/{fileName}";
+            return NormalizeUrl($"{_hostServer}/{fileName}");
         }
 
         public string GetRemoteFallbackURL(string fileName)
         {
-            return $"{_fallbackServer}/{fileName}";
+            return NormalizeUrl($"{_fallbackServer}/{fileName}");
+        }
+
+        /// <summary>
+        /// Normalize a URL to prevent WeChat Mini Game silent loading failures:
+        /// 1. Replace backslashes with forward slashes (Windows path leak)
+        /// 2. Collapse double slashes (except in protocol "://")
+        /// </summary>
+        private static string NormalizeUrl(string url)
+        {
+            // Replace backslashes (Windows paths leaking into URLs)
+            url = url.Replace('\\', '/');
+
+            // Collapse double slashes after the protocol prefix
+            int schemeEnd = url.IndexOf("://", StringComparison.Ordinal);
+            if (schemeEnd >= 0)
+            {
+                string scheme = url.Substring(0, schemeEnd + 3);
+                string path = url.Substring(schemeEnd + 3);
+                // Collapse all double slashes in the path portion
+                while (path.Contains("//"))
+                    path = path.Replace("//", "/");
+                url = scheme + path;
+            }
+
+            return url;
         }
     }
 }
