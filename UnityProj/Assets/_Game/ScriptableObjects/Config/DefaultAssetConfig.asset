@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: DefaultAssetConfig
   m_EditorClassIdentifier: 
   _defaultPackageName: DefaultPackage
-  _playMode: 0
+  _playMode: 3
   _hostServerUrl: http://10.31.53.95:8001/StreamingAssets/yoo/DefaultPackage
   _fallbackHostServerUrl: 
