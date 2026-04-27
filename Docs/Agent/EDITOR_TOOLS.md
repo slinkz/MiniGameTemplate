@@ -2,7 +2,7 @@
 
 > **维护规则**：新增、删除或重命名编辑器菜单项时，**同步更新本文件**。本文件是 AI Agent 获知可用编辑器工具的唯一来源。
 >
-> **最后更新**：2026-04-22（整理 commit `383e45f`）
+> **最后更新**：2026-04-27（新增 Dev Server 本地开发服务器工具）
 
 ---
 
@@ -32,7 +32,18 @@ Tools/MiniGame Template/
 │   └── Validate Integration               [510]
 ├── Debug/
 │   └── SO Runtime Viewer                  [500]
+├── Dev Server                             [450]
 └── Find References Of Selected Asset      [600]
+
+Tools/MiniGame/                            ← 构建发布专用菜单
+├── 切换到导出模式 (Build Bundle + WebGL)  [100]
+├── 切换到编辑器模式 (EditorSimulate)      [101]
+├── 拷贝 StreamingAssets 到小游戏          [110]
+└── 设置微信导出目录                       [200]
+
+微信小游戏/                                ← WX SDK 提供
+├── 转换小游戏                             [1]
+└── 转换小游戏试玩                         [2]
 ```
 
 > 方括号内数字为 `MenuItem` 的 `priority` 参数。
@@ -218,6 +229,24 @@ Tools/MiniGame Template/
 
 ---
 
+### Dev Server（本地开发服务器）
+
+| 项目 | 内容 |
+|------|------|
+| 菜单路径 | `Tools/MiniGame Template/Dev Server` |
+| 文件 | `Assets/_Framework/Editor/LocalHttpServerWindow.cs` |
+| 命名空间 | `MiniGameTemplate.EditorTools` |
+| 类型 | `EditorWindow` |
+| 功能 | 一键启动/停止本地 HTTP 文件服务器（`npx http-server`），为微信开发者工具提供 YooAsset Bundle 的本地加载服务 |
+| 端口 | 默认 `8001`，可在窗口内修改 |
+| 服务根目录 | 自动检测微信导出的 `minigame/` 目录（与 BuildModeSwitch 共享 `MiniGame_WXExportRoot` EditorPref），也可手动选择 |
+| 健康检查 | 请求 `StreamingAssets/yoo/DefaultPackage/DefaultPackage.version`，返回 HTTP 状态码 |
+| 端口冲突 | 自动检测端口占用，提示可能是上次启动的残留进程 |
+| 域重载行为 | Unity 重编译后进程引用丢失但 http-server 继续后台运行（设计如此），重新打开窗口后"刷新状态"可重新检测 |
+| 节省时间 | ~2 min/session（无需手动开终端、cd 目录、输入命令） |
+
+---
+
 ### Find References Of Selected Asset
 
 | 项目 | 内容 |
@@ -230,6 +259,64 @@ Tools/MiniGame Template/
 | 搜索范围 | `.unity` / `.prefab` / `.asset` / `.mat` / `.controller` / `.anim` / `.overrideController` / `.playable` / `.sbn` |
 | 输出 | Console 日志，每条可点击跳转到引用位置 |
 | 也可代码调用 | `AssetReferenceFinder.FindReferencers(target)` |
+
+---
+
+### MiniGame / 切换到导出模式 (Build Bundle + WebGL)
+
+| 项目 | 内容 |
+|------|------|
+| 菜单路径 | `Tools/MiniGame/切换到导出模式 (Build Bundle + WebGL)` |
+| 文件 | `Assets/_Framework/Editor/Build/BuildModeSwitch.cs` |
+| 命名空间 | `MiniGameTemplate.EditorTools` |
+| 功能 | ① 将 AssetConfig.PlayMode 切为 WebGL ② 使用 YooAsset SBP 构建 AssetBundle（LZ4 + ClearAndCopyAll） |
+| 版本号 | 自动生成 `yyyy-MM-dd-HHmm` 格式 |
+| 后续步骤 | 构建完成后提示执行「微信转换 → 拷贝 StreamingAssets」 |
+
+---
+
+### MiniGame / 切换到编辑器模式 (EditorSimulate)
+
+| 项目 | 内容 |
+|------|------|
+| 菜单路径 | `Tools/MiniGame/切换到编辑器模式 (EditorSimulate)` |
+| 文件 | 同上 `BuildModeSwitch.cs` |
+| 功能 | 将 AssetConfig.PlayMode 切回 EditorSimulate，无需构建 Bundle 即可在编辑器中运行 |
+
+---
+
+### MiniGame / 拷贝 StreamingAssets 到小游戏
+
+| 项目 | 内容 |
+|------|------|
+| 菜单路径 | `Tools/MiniGame/拷贝 StreamingAssets 到小游戏` |
+| 文件 | 同上 `BuildModeSwitch.cs` |
+| 功能 | 将 `<导出根>/webgl/StreamingAssets/` 递归拷贝到 `<导出根>/minigame/StreamingAssets/`，附带文件统计和主包大小预警 |
+| 导出目录 | 从 EditorPrefs 缓存读取（首次弹窗选择） |
+| 注意 | 每次微信转换后必须重新执行，因为转换会覆盖 minigame/ 目录 |
+
+---
+
+### MiniGame / 设置微信导出目录
+
+| 项目 | 内容 |
+|------|------|
+| 菜单路径 | `Tools/MiniGame/设置微信导出目录` |
+| 文件 | 同上 `BuildModeSwitch.cs` |
+| 功能 | 手动修改缓存的微信导出根目录（包含 webgl/ 和 minigame/ 的父目录） |
+
+---
+
+### 微信小游戏 / 转换小游戏
+
+| 项目 | 内容 |
+|------|------|
+| 菜单路径 | `微信小游戏/转换小游戏` |
+| 文件 | `Packages/com.qq.weixin.minigame/Editor/WXEditorWindow.cs` |
+| 命名空间 | `WeChatWASM` |
+| 类型 | `EditorWindow` |
+| 功能 | 打开微信小游戏转换面板，面板内的导出按钮会：① 执行 WebGL Build（C# → IL2CPP → WASM）② 将产物转换为微信小游戏格式 |
+| 核心 API | `WXConvertCore.DoExport(buildWebGL: true)` |
 
 ---
 
@@ -284,11 +371,16 @@ Tools/MiniGame Template/
 | 创建 SO 资产 | SO Creation Wizard |
 | 检查代码架构违规 | Validate / Architecture Check |
 | 检查资源预算违规 | Validate / Asset Audit |
-| 构建微信小游戏 | Build / Build WebGL |
+| 构建微信小游戏（完整流程） | ① `Tools/MiniGame/切换到导出模式` → ② `微信小游戏/转换小游戏` → ③ `Tools/MiniGame/拷贝 StreamingAssets` |
+| 构建 YooAsset Bundle | `Tools/MiniGame/切换到导出模式` |
+| 切回编辑器开发模式 | `Tools/MiniGame/切换到编辑器模式` |
+| 拷贝 Bundle 到小游戏 | `Tools/MiniGame/拷贝 StreamingAssets 到小游戏` |
+| WebGL 编译 + 微信转换 | `微信小游戏/转换小游戏` 面板导出 |
 | 检查微信构建设置 | Build / Validate WeChat Settings |
 | 打包弹幕贴图 Atlas | Danmaku / Atlas Packer |
 | 刷新弹幕编辑器状态 | Danmaku / Run Controlled Refresh |
 | 启用/禁用 Spine 集成 | Integrations / Spine |
 | 运行时查看 SO 值 | Debug / SO Runtime Viewer |
+| 启动本地文件服务器 | Dev Server（一键启动 http-server） |
 | 查找资源被谁引用 | Find References Of Selected Asset |
 | 打开文档目录 | Open Docs Folder |

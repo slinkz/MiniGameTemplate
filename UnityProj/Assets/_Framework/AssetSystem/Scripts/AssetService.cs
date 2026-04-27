@@ -98,13 +98,19 @@ namespace MiniGameTemplate.Asset
                     // Force sync-like asset loading on WebGL to avoid frame-by-frame drip loading.
                     webParams.WebGLForceSyncLoadAsset = true;
 
+                    // IMPORTANT: Always use WechatFileSystem in WeChat Mini Game environment.
+                    // DefaultWebServerFileSystem uses Application.streamingAssetsPath which resolves to
+                    // "https://game.weixin.qq.com" (when DATA_CDN is empty) — a domain we don't control.
+                    // WechatFileSystem uses WX.GetCachePath() which correctly reads local StreamingAssets
+                    // via the WeChat file system API.
+                    string packageRoot = $"{WX.env.USER_DATA_PATH}/__GAME_FILE_CACHE/yoo";
+
                     bool hasRemoteUrl = !string.IsNullOrEmpty(config.HostServerUrl);
 
                     if (hasRemoteUrl)
                     {
                         // --- Production CDN mode ---
                         // WeChat Mini Game: use WechatFileSystem with CDN + WX cache.
-                        string packageRoot = $"{WX.env.USER_DATA_PATH}/__GAME_FILE_CACHE/yoo";
                         var remoteServices = new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl);
                         webParams.WebServerFileSystemParameters =
                             WechatFileSystemCreater.CreateFileSystemParameters(packageRoot, remoteServices, null);
@@ -113,16 +119,27 @@ namespace MiniGameTemplate.Asset
                     }
                     else
                     {
-                        // --- Local testing mode (no CDN) ---
-                        // Bundle files are pre-built and copied into StreamingAssets.
-                        // DefaultWebServerFileSystem loads them via UnityWebRequest from the
-                        // local HTTP server that WeChat DevTools provides.
-                        // This allows real-device testing without deploying a CDN.
-                        webParams.WebServerFileSystemParameters =
-                            FileSystemParameters.CreateDefaultWebServerFileSystemParameters();
-
-                        GameLog.LogWarning("[AssetService] WebGL LOCAL mode: loading bundles from StreamingAssets. " +
-                            "Set HostServerUrl in AssetConfig to enable CDN mode for production.");
+                        // --- HostServerUrl is required ---
+                        // In WeChat Mini Game, ALL file loading goes through UnityWebRequest (HTTP).
+                        // There is no way to load files from local filesystem via UnityWebRequest
+                        // because WeChat's XHR layer always sends real HTTP requests.
+                        //
+                        // For local testing without a CDN:
+                        // 1. Open WeChat DevTools → Settings → Project Settings
+                        // 2. Enable "Static Resource Server" (开启静态资源服务器)
+                        // 3. Set the local resource path to your StreamingAssets directory
+                        // 4. Copy the server address (e.g. http://192.168.x.x:8001)
+                        // 5. Set HostServerUrl in DefaultAssetConfig to: http://192.168.x.x:8001/StreamingAssets/yoo
+                        //
+                        // For production: set HostServerUrl to your CDN address.
+                        GameLog.LogWarning("[AssetService] WebGL mode: HostServerUrl is empty! " +
+                            "WeChat Mini Game requires an HTTP endpoint for asset loading. " +
+                            "For local testing, enable 'Static Resource Server' in WeChat DevTools " +
+                            "(Settings → Project Settings) and set HostServerUrl in AssetConfig " +
+                            "to the local server address (e.g. http://192.168.x.x:8001/StreamingAssets/yoo).");
+                        throw new Exception(
+                            "[AssetService] HostServerUrl must be configured for WeChat Mini Game. " +
+                            "See console log for setup instructions.");
                     }
 
                     initOp = _defaultPackage.InitializeAsync(webParams);
@@ -326,7 +343,8 @@ namespace MiniGameTemplate.Asset
 
         /// <summary>
         /// SEC: Validate that remote URLs use HTTPS to prevent MITM attacks.
-        /// Logs a warning in editor (for local testing with http://), errors in builds.
+        /// Local/private network addresses (127.0.0.1, 10.x, 172.16-31.x, 192.168.x, localhost)
+        /// are exempt — HTTP is expected for local development servers.
         /// </summary>
         private static void ValidateUrlSecurity(string url, string fieldName)
         {
@@ -334,6 +352,13 @@ namespace MiniGameTemplate.Asset
 
             if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
             {
+                // Allow HTTP for local/private network addresses (development only).
+                if (IsLocalNetworkUrl(url))
+                {
+                    GameLog.Log($"[AssetService] {fieldName} uses HTTP on local network — OK for development.");
+                    return;
+                }
+
 #if UNITY_EDITOR
                 Debug.LogWarning($"[AssetService] SEC: {fieldName} uses HTTP (insecure). " +
                     "This is acceptable for local testing but MUST use HTTPS in production builds.");
@@ -343,6 +368,36 @@ namespace MiniGameTemplate.Asset
                     "Change the URL to https:// in AssetConfig.");
 #endif
             }
+        }
+
+        /// <summary>
+        /// Check if a URL points to a local/private network address.
+        /// </summary>
+        private static bool IsLocalNetworkUrl(string url)
+        {
+            try
+            {
+                var uri = new System.Uri(url);
+                string host = uri.Host;
+                return host == "127.0.0.1" ||
+                       host == "localhost" ||
+                       host.StartsWith("10.") ||
+                       host.StartsWith("192.168.") ||
+                       (host.StartsWith("172.") && IsPrivate172(host));
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsPrivate172(string host)
+        {
+            // 172.16.0.0 - 172.31.255.255
+            var parts = host.Split('.');
+            if (parts.Length >= 2 && int.TryParse(parts[1], out int second))
+                return second >= 16 && second <= 31;
+            return false;
         }
 
         protected override void OnDestroy()

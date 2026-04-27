@@ -237,14 +237,23 @@ namespace MiniGameTemplate.Asset
                     "Must be: WX.env.USER_DATA_PATH + \"/__GAME_FILE_CACHE/yoo\"");
             }
 
-            // Fallback: if RemoteServices is null, serve from StreamingAssets
+            // RemoteServices MUST be provided for WeChat Mini Game.
+            // In WebGL, all file loading goes through UnityWebRequest (HTTP only).
+            // WeChat SDK's XHR layer will prepend the page origin to relative URLs,
+            // so the RemoteServices URL must be a valid HTTP endpoint.
+            //
+            // For production: set HostServerUrl in AssetConfig to your CDN address.
+            // For local testing: enable DevTools static resource server
+            //   (Settings → Project Settings → Static Resource Server) and set
+            //   HostServerUrl to the local server address (e.g. "http://192.168.x.x:8001").
             if (RemoteServices == null)
             {
-                string webRoot = PathUtility.Combine(
-                    Application.streamingAssetsPath,
-                    YooAssetSettingsData.Setting.DefaultYooFolderName,
-                    packageName);
-                RemoteServices = new WebRemoteServices(webRoot);
+                throw new Exception(
+                    "[WechatFileSystem] RemoteServices is null! " +
+                    "WeChat Mini Game requires an HTTP endpoint for asset loading.\n" +
+                    "For local testing: enable static resource server in WeChat DevTools " +
+                    "(Settings → Project Settings), then set HostServerUrl in AssetConfig " +
+                    "to the local server address (e.g. http://192.168.x.x:8001/StreamingAssets/yoo).");
             }
 
             // CRITICAL: double slashes in URL cause WeChat to silently fail loading

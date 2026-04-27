@@ -1,0 +1,11 @@
+<linker>
+  <!-- YooAsset: FileSystem classes are instantiated via Activator.CreateInstance (reflection).
+       IL2CPP linker cannot statically detect the usage, so we must preserve them explicitly. -->
+  <assembly fullname="YooAsset">
+    <type fullname="YooAsset.DefaultWebServerFileSystem" preserve="all" />
+    <type fullname="YooAsset.DefaultBuildinFileSystem" preserve="all" />
+    <type fullname="YooAsset.DefaultCacheFileSystem" preserve="all" />
+    <type fullname="YooAsset.DefaultWebRemoteFileSystem" preserve="all" />
+    <type fullname="YooAsset.DefaultEditorFileSystem" preserve="all" />
+  </assembly>
+</linker>

@@ -34,6 +34,7 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 |------|------|----------|
 | [环境搭建与首次运行](GETTING_STARTED.md) | 从 clone 到在 Unity 中运行起来 | 15 分钟 |
 | [示例游戏代码解读](EXAMPLE_WALKTHROUGH.md) | 逐步理解"点击计数器"如何串联所有框架模块 | 20 分钟 |
+| [微信小游戏构建操作指南](BUILD_MINIGAME.md) | Bundle 构建 → 微信转换 → 验证的完整三步流程 | 10 分钟 |
 
 ### 🏗 深入理解
 
@@ -47,6 +48,7 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 | 文档 | 说明 |
 |------|------|
 | [常见问题与排错](FAQ.md) | 常见报错、微信小游戏坑点、性能优化建议 |
+| [微信小游戏导出到手机完整指南](微信小游戏导出到手机完整指南.md) | 从 Unity 到手机上玩到游戏（含 AppID 申请、开发者工具配置） |
 | [弹幕系统文档](DANMAKU_SYSTEM.md) | 弹幕系统架构总览 + 4 篇专题子文档 |
 | [Agent 调试经验手册](../Agent/DEBUG_PLAYBOOK.md) | 本次弹幕 / RuntimeAtlas 排查沉淀出的系统化 Debug 方法论与案例复盘 |
 | [Agent 文档](../Agent/) | AI 开发助手阅读的技术规范（包含编码规范、新游戏创建流程等） |
