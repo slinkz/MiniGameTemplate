@@ -183,6 +183,20 @@ namespace MiniGameTemplate.Core
             _ = UIManager.Instance;
             GameLog.Log("[Bootstrapper] UIManager initialized.");
 
+            // FIX: WeChat Mini Game touchScreen override.
+            // Problem: FairyGUI defaults WebGL to mouse mode (touchScreen=false),
+            // relying on Input.GetMouseButtonDown(). But WeChat's weapp-adapter
+            // only dispatches touch DOM events (touchstart/touchend), never mouse
+            // events (mousedown/mouseup) → GetMouseButtonDown() always returns
+            // false → clicks never register despite hover working fine.
+            // Solution: force touch mode so FairyGUI uses HandleTouchEvents()
+            // which reads Input.touchCount / Input.GetTouch() — these ARE
+            // populated by the WX Unity SDK's native touch callback bridge.
+#if UNITY_WEBGL && !UNITY_EDITOR
+            FairyGUI.Stage.touchScreen = true;
+            GameLog.Log("[Bootstrapper] FairyGUI forced to touchScreen mode for WeChat.");
+#endif
+
             // 6. Object Pool
             _ = PoolManager.Instance;
             GameLog.Log("[Bootstrapper] PoolManager initialized.");

@@ -42,11 +42,22 @@ namespace MiniGameTemplate.Asset
 
             // SEC-04: Enforce HTTPS for CDN URLs to prevent MITM attacks on asset downloads.
             // Only applies to Host and WebGL modes where remote URLs are used.
+            // Note: Use config.PlayMode here (pre-resolution) for editor-time validation;
+            // the auto-resolved mode handles runtime enforcement below.
             if (config.PlayMode == EAssetPlayMode.Host || config.PlayMode == EAssetPlayMode.WebGL)
             {
                 ValidateUrlSecurity(config.CdnUrl, "CdnUrl");
                 ValidateUrlSecurity(config.FallbackCdnUrl, "FallbackCdnUrl");
             }
+
+            // Also validate when WebGL auto-correction will kick in at runtime
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (config.PlayMode != EAssetPlayMode.WebGL)
+            {
+                ValidateUrlSecurity(config.CdnUrl, "CdnUrl");
+                ValidateUrlSecurity(config.FallbackCdnUrl, "FallbackCdnUrl");
+            }
+#endif
 
             // Initialize YooAsset
             YooAssets.Initialize();
@@ -55,10 +66,25 @@ namespace MiniGameTemplate.Asset
             _defaultPackage = YooAssets.CreatePackage(config.DefaultPackageName);
             YooAssets.SetDefaultPackage(_defaultPackage);
 
+            // Platform-aware play mode resolution:
+            // The same AssetConfig SO is shared between Editor and builds.
+            // EditorSimulate is only valid in-editor; WebGL builds MUST use WebGL mode.
+            // This auto-correction prevents the common mistake of forgetting to switch
+            // PlayMode before exporting to WeChat Mini Game.
+            EAssetPlayMode resolvedMode = config.PlayMode;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (resolvedMode != EAssetPlayMode.WebGL)
+            {
+                GameLog.LogWarning($"[AssetService] PlayMode is '{resolvedMode}' but running on WebGL. " +
+                    "Auto-switching to WebGL mode. (EditorSimulate/Offline are not supported on WebGL.)");
+                resolvedMode = EAssetPlayMode.WebGL;
+            }
+#endif
+
             // Initialize based on play mode
             InitializationOperation initOp = null;
 
-            switch (config.PlayMode)
+            switch (resolvedMode)
             {
 #if UNITY_EDITOR
                 case EAssetPlayMode.EditorSimulate:
