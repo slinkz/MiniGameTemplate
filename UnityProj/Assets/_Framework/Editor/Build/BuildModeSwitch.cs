@@ -306,19 +306,23 @@ namespace MiniGameTemplate.EditorTools
         }
 
         /// <summary>
-        /// 拷贝首包资源文件（*.webgl.data.unityweb.bin.txt）到 minigame/ 根目录。
-        /// CDN 模式下，微信插件会用 DATA_CDN/{hash}.webgl.data.unityweb.bin.txt 下载首包，
+        /// 拷贝首包资源文件到 minigame/ 根目录。
+        /// 支持未压缩（*.bin.txt）和 Brotli 压缩（*.bin.br）两种格式。
+        /// CDN 模式下，微信插件会用 DATA_CDN/{hash}.webgl.data.unityweb.bin.{txt|br} 下载首包，
         /// 而该文件只存在于 webgl/ 目录中，需要手动拷贝到 minigame/（Dev Server 服务目录）。
         /// </summary>
         private static bool CopyDataPackageFiles(string webglDir, string minigameDir,
             System.Text.StringBuilder report)
         {
-            // 扫描 webgl/ 根目录下的首包资源文件
-            string[] dataFiles = Directory.GetFiles(webglDir, "*.webgl.data.unityweb.bin.txt", SearchOption.TopDirectoryOnly);
+            // 扫描 webgl/ 根目录下的首包资源文件（未压缩 .bin.txt 或 Brotli 压缩 .bin.br）
+            string[] dataFiles = Directory.GetFiles(webglDir, "*.webgl.data.unityweb.bin.*", SearchOption.TopDirectoryOnly)
+                .Where(f => f.EndsWith(".bin.txt", StringComparison.OrdinalIgnoreCase)
+                         || f.EndsWith(".bin.br", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
 
             if (dataFiles.Length == 0)
             {
-                report.AppendLine("ℹ️ 未发现首包资源文件（*.webgl.data.unityweb.bin.txt），跳过。");
+                report.AppendLine("ℹ️ 未发现首包资源文件（*.webgl.data.unityweb.bin.txt / .bin.br），跳过。");
                 Debug.Log("[PostExport] 未发现首包资源文件，跳过。");
                 return true;
             }
