@@ -176,6 +176,10 @@ namespace MiniGameTemplate.Core
             GameLog.Log("[Bootstrapper] AudioManager ready.");
 
             // 5. UI (FairyGUI)
+            // Set default font BEFORE UIManager init — WebGL has no OS fonts,
+            // so without this all Chinese text renders as blank.
+            await InitializeFairyGUIFontAsync();
+
             _ = UIManager.Instance;
             GameLog.Log("[Bootstrapper] UIManager initialized.");
 
@@ -184,6 +188,95 @@ namespace MiniGameTemplate.Core
             GameLog.Log("[Bootstrapper] PoolManager initialized.");
 
             GameLog.Log("[Bootstrapper] All systems initialized.");
+        }
+
+        /// <summary>
+        /// Timeout in seconds for WX.GetWXFont callback.
+        /// If the JS layer fails silently (no callback), we must not block startup forever.
+        /// </summary>
+        private const float WXFontTimeoutSeconds = 5f;
+
+        /// <summary>
+        /// Initialize FairyGUI default font.
+        /// WebGL/WeChat: use WX.GetWXFont() to load the WeChat system font (supports CJK).
+        /// Editor/Standalone: use OS system font names.
+        /// Must be called BEFORE UIManager.Instance or any FairyGUI panel creation.
+        /// </summary>
+        private async System.Threading.Tasks.Task InitializeFairyGUIFontAsync()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // WeChat Mini Game: load the WeChat system font asynchronously.
+            //
+            // Flow: SDK tries getCommonFont (system font API) first.
+            //   - On real device: getCommonFont succeeds → done.
+            //   - On DevTools: getCommonFont may fail → SDK falls back to HTTP-downloading
+            //     the font from fallbackUrl.
+            //
+            // KNOWN ISSUES:
+            //   - fallbackUrl="" (empty string) causes "URL不合法" → must provide a real URL.
+            //   - When BOTH getCommonFont AND fallbackUrl fail, JS catch block does NOT fire
+            //     the C# callback → tcs.Task hangs forever → need timeout guard.
+            //
+            // Solution: provide a subset CJK font in StreamingAssets as fallback + timeout.
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+
+            // Fallback font: a 565KB subset of SimHei containing ~2100 CJK chars.
+            // Lives at StreamingAssets/fonts/fallback-cjk.ttf → accessible via CDN URL.
+            string fallbackFontUrl = UnityEngine.Application.streamingAssetsPath + "/fonts/fallback-cjk.ttf";
+            GameLog.Log($"[Bootstrapper] Loading WeChat system font... (fallback: {fallbackFontUrl})");
+            try
+            {
+                WeChatWASM.WX.GetWXFont(fallbackFontUrl, font =>
+                {
+                    if (font != null)
+                    {
+                        var fguiFont = new FairyGUI.DynamicFont();
+                        fguiFont.name = "WXFont";
+                        fguiFont.nativeFont = font;
+                        FairyGUI.FontManager.RegisterFont(fguiFont);
+
+                        FairyGUI.UIConfig.defaultFont = "WXFont";
+                        GameLog.Log("[Bootstrapper] WeChat font loaded and set as FairyGUI default.");
+                    }
+                    else
+                    {
+                        GameLog.LogWarning("[Bootstrapper] WX.GetWXFont returned null! " +
+                            "Chinese text may not display. Falling back to Arial.");
+                        FairyGUI.UIConfig.defaultFont = "Arial";
+                    }
+                    tcs.TrySetResult(true);
+                });
+            }
+            catch (System.Exception ex)
+            {
+                GameLog.LogWarning($"[Bootstrapper] WX.GetWXFont threw: {ex.Message}. Falling back to Arial.");
+                FairyGUI.UIConfig.defaultFont = "Arial";
+                tcs.TrySetResult(true);
+            }
+
+            // Timeout guard: if JS never fires the callback, don't block startup.
+            // Use a coroutine-style polling loop since WebGL is single-threaded
+            // (Task.Delay / CancellationTokenSource won't work reliably in WASM).
+            float elapsed = 0f;
+            while (!tcs.Task.IsCompleted && elapsed < WXFontTimeoutSeconds)
+            {
+                await System.Threading.Tasks.Task.Yield();
+                elapsed += UnityEngine.Time.unscaledDeltaTime;
+            }
+
+            if (!tcs.Task.IsCompleted)
+            {
+                GameLog.LogWarning($"[Bootstrapper] WX.GetWXFont timed out after {WXFontTimeoutSeconds}s. " +
+                    "Falling back to Arial.");
+                FairyGUI.UIConfig.defaultFont = "Arial";
+                tcs.TrySetResult(true);
+            }
+#else
+            // Editor & Standalone: use OS system font
+            FairyGUI.UIConfig.defaultFont = "Microsoft YaHei, SimHei";
+            GameLog.Log("[Bootstrapper] FairyGUI default font set to system fonts.");
+            await System.Threading.Tasks.Task.CompletedTask;
+#endif
         }
 
         private void LoadInitialScene()
