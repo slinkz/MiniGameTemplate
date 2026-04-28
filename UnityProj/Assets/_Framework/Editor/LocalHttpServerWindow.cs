@@ -15,11 +15,17 @@ namespace MiniGameTemplate.EditorTools
     /// Wraps "npx http-server" to serve StreamingAssets from the
     /// WeChat export directory, with one-click start/stop.
     ///
+    /// **Architecture**: MiniGameConfig.ProjectConf.CDN is the Single Source of Truth
+    /// for CDN addresses. This tool is a helper — it reads from CDN config and verifies
+    /// consistency, but does NOT write CDN addresses. Change CDN in the WeChat export panel
+    /// or AssetConfig, and this tool follows.
+    ///
     /// Saves ~2 min/session of terminal juggling.
     ///
     /// Access via: Tools → MiniGame Template → Dev Server
     ///
     /// CHANGELOG:
+    /// 2026-04-28  Refactor: Dev Server is now a follower, not the source. Reads CDN from configs, verifies consistency. Removed SyncServerUrlToConfigs write-back logic.
     /// 2026-04-27  Fix: IsPortInUse now checks IPAddress.Any (0.0.0.0) in addition to Loopback — prevents silent conflict with WeChat DevTools static server.
     /// 2026-04-27  Fix: wrap npx.cmd with "cmd /c" so the process stays alive for http-server's lifetime (npx.cmd batch exits immediately).
     /// 2026-04-27  Add: manual Node.js directory config with fallback to auto-detect.
@@ -55,6 +61,7 @@ namespace MiniGameTemplate.EditorTools
         private string _logBuffer = "";
         private bool _autoScrollLog = true;
         private bool _portConflict; // shows "kill occupying process" button
+        private string _consistencyCheckResult = ""; // CDN consistency check result for UI display
 
         // ──────────────── Menu Entry ────────────────
 
@@ -149,6 +156,11 @@ namespace MiniGameTemplate.EditorTools
                 }
                 EditorGUILayout.EndHorizontal();
             }
+
+            GUILayout.Space(4);
+
+            // ── CDN Consistency Check ──
+            DrawConsistencySection();
 
             GUILayout.Space(4);
 
@@ -307,6 +319,173 @@ namespace MiniGameTemplate.EditorTools
             }
         }
 
+        private void DrawConsistencySection()
+        {
+            EditorGUILayout.LabelField("CDN 一致性检查", EditorStyles.boldLabel);
+
+            EditorGUILayout.HelpBox(
+                "MiniGameConfig.ProjectConf.CDN 是唯一源头。\n" +
+                "AssetConfig.CdnUrl 必须与其一致。\n" +
+                "本工具仅读取和验证，不修改配置。",
+                MessageType.None);
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("🔍 检查 CDN 一致性", GUILayout.Height(24)))
+            {
+                CheckCdnConsistency();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (!string.IsNullOrEmpty(_consistencyCheckResult))
+            {
+                bool isError = _consistencyCheckResult.Contains("❌");
+                bool isWarning = _consistencyCheckResult.Contains("⚠️");
+                var msgType = isError ? MessageType.Error : (isWarning ? MessageType.Warning : MessageType.Info);
+                EditorGUILayout.HelpBox(_consistencyCheckResult, msgType);
+            }
+        }
+
+        // ──────────────── CDN Consistency Check ────────────────
+
+        /// <summary>
+        /// Read CDN values from both AssetConfig and MiniGameConfig (read-only),
+        /// compare them, and report whether they are consistent.
+        ///
+        /// This tool does NOT write to any config — MiniGameConfig.ProjectConf.CDN
+        /// is the Single Source of Truth. If they differ, the user must fix it
+        /// in the WeChat export panel or AssetConfig inspector.
+        /// </summary>
+        private void CheckCdnConsistency()
+        {
+            string assetConfigCdn = ReadAssetConfigCdn();
+            string miniGameConfigCdn = ReadMiniGameConfigCdn();
+            string result = "";
+
+            // Report what we found
+            result += $"AssetConfig.CdnUrl: {(string.IsNullOrEmpty(assetConfigCdn) ? "(空)" : assetConfigCdn)}\n";
+            result += $"MiniGameConfig.CDN: {(string.IsNullOrEmpty(miniGameConfigCdn) ? "(空)" : miniGameConfigCdn)}\n";
+
+            // Check server match
+            if (_isRunning && !string.IsNullOrEmpty(_serverUrl))
+            {
+                result += $"Dev Server URL:     {_serverUrl}\n";
+            }
+
+            result += "\n";
+
+            // Consistency logic
+            bool assetEmpty = string.IsNullOrEmpty(assetConfigCdn);
+            bool miniEmpty = string.IsNullOrEmpty(miniGameConfigCdn);
+
+            if (assetEmpty && miniEmpty)
+            {
+                result += "❌ 两个 CDN 配置都为空！请先在微信转换面板设置 CDN 地址，\n" +
+                          "然后在 AssetConfig 中填入相同的值。";
+            }
+            else if (assetEmpty)
+            {
+                result += $"⚠️ AssetConfig.CdnUrl 为空！\n" +
+                          $"请将其设为: {miniGameConfigCdn}（与 MiniGameConfig.CDN 一致）";
+            }
+            else if (miniEmpty)
+            {
+                result += $"⚠️ MiniGameConfig.CDN 为空！\n" +
+                          $"请在微信转换面板中将 CDN 设为: {assetConfigCdn}";
+            }
+            else if (NormalizeCdn(assetConfigCdn) == NormalizeCdn(miniGameConfigCdn))
+            {
+                result += "✅ CDN 配置一致！";
+
+                // Also check if server matches (when running)
+                if (_isRunning && !string.IsNullOrEmpty(_serverUrl))
+                {
+                    if (NormalizeCdn(assetConfigCdn) == NormalizeCdn(_serverUrl))
+                    {
+                        result += "\n✅ Dev Server 地址与 CDN 配置匹配。";
+                    }
+                    else
+                    {
+                        result += $"\n⚠️ Dev Server ({_serverUrl}) 与 CDN 配置 ({assetConfigCdn}) 不匹配！\n" +
+                                  "请更新 CDN 配置后重新导出，或调整 Dev Server 端口。";
+                    }
+                }
+            }
+            else
+            {
+                result += $"❌ CDN 配置不一致！\n" +
+                          $"AssetConfig: {assetConfigCdn}\n" +
+                          $"MiniGameConfig: {miniGameConfigCdn}\n" +
+                          "请确保两者填写完全相同的 CDN 基址。";
+            }
+
+            _consistencyCheckResult = result;
+            AppendLog("CDN 一致性检查完成");
+            Debug.Log($"{LOG_PREFIX} CDN 一致性检查:\n{result}");
+        }
+
+        /// <summary>
+        /// Read AssetConfig._cdnUrl from the first found AssetConfig asset. (Read-only)
+        /// </summary>
+        private static string ReadAssetConfigCdn()
+        {
+            string[] guids = AssetDatabase.FindAssets("t:AssetConfig");
+            if (guids.Length == 0) return null;
+
+            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+            if (asset == null) return null;
+
+            var so = new SerializedObject(asset);
+            var cdnProp = so.FindProperty("_cdnUrl");
+            return cdnProp?.stringValue;
+        }
+
+        /// <summary>
+        /// Read MiniGameConfig.ProjectConf.CDN from the WeChat SDK config. (Read-only)
+        /// </summary>
+        private static string ReadMiniGameConfigCdn()
+        {
+            // MiniGameConfig is stored in WX-WASM-SDK-V2 plugin
+            string[] guids = AssetDatabase.FindAssets("MiniGameConfig t:ScriptableObject");
+            if (guids.Length == 0)
+            {
+                // Fallback: search by known path
+                string knownPath = "Assets/WX-WASM-SDK-V2/Editor/MiniGameConfig.asset";
+                if (File.Exists(Path.Combine(Application.dataPath, "../", knownPath)))
+                {
+                    guids = new[] { AssetDatabase.AssetPathToGUID(knownPath) };
+                }
+            }
+
+            if (guids.Length == 0) return null;
+
+            foreach (string guid in guids)
+            {
+                if (string.IsNullOrEmpty(guid)) continue;
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                if (asset == null) continue;
+
+                var so = new SerializedObject(asset);
+                var projConfProp = so.FindProperty("ProjectConf");
+                if (projConfProp == null) continue;
+
+                var cdnProp = projConfProp.FindPropertyRelative("CDN");
+                if (cdnProp != null) return cdnProp.stringValue;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Normalize CDN URL for comparison: trim trailing slashes, lowercase scheme+host.
+        /// </summary>
+        private static string NormalizeCdn(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "";
+            return url.TrimEnd('/').ToLowerInvariant();
+        }
+
         private void DrawLogSection()
         {
             EditorGUILayout.LabelField("服务器日志", EditorStyles.boldLabel);
@@ -426,6 +605,9 @@ namespace MiniGameTemplate.EditorTools
                 AppendLog($"PID: {_serverProcess.Id}");
 
                 Debug.Log($"{LOG_PREFIX} 服务器已启动 → {_serverUrl} (PID: {_serverProcess.Id})");
+
+                // Auto-check CDN consistency after server starts
+                CheckCdnConsistency();
             }
             catch (Exception ex)
             {

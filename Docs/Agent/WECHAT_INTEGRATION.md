@@ -19,7 +19,7 @@ MiniGameTemplate 提供了 `IWeChatBridge` 抽象接口层。模板内置了桩�
 - ✅ `AssetService` WebGL 模式（WebPlayModeParameters + WechatFileSystem 完整接入）
 - ✅ `WechatFileSystem` 扩展包（IFileSystem 实现 + 6 个 Operation + WechatFileSystemCreater 工厂）
 - ✅ `RemoteServices` URL 规范化（反斜杠 / 双斜杠 / TrimEnd 防御）
-- ✅ WebGL 本地测试模式（HostServerUrl 为空时自动 fallback 到 StreamingAssets，无需 CDN）
+- ✅ CDN 单一源头架构（AssetConfig.CdnUrl → 运行时自动派生 HostServerUrl）
 - ✅ `MiniGameBuildPipeline` 微信小游戏硬性 PlayerSettings
 - ✅ 启动时隐私授权检查（PrivacyDialog → ConfirmDialog 二次确认）
 
@@ -30,7 +30,7 @@ MiniGameTemplate 提供了 `IWeChatBridge` 抽象接口层。模板内置了桩�
 1. 从 [微信小游戏官方文档](https://developers.weixin.qq.com/minigame/dev/guide/) 导入 WX-WASM-SDK-V2（com.qq.weixin.minigame）
    - 该 SDK 会自动定义 `WEIXINMINIGAME` 编译符号
 2. WechatFileSystem 扩展包已内置（`Assets/_Framework/AssetSystem/WechatFileSystem/`），无需额外导入
-3. 在 `AssetConfig` SO 中配置 CDN URL（HostServerUrl / FallbackHostServerUrl），确保 HTTPS
+3. 在 `AssetConfig` SO 中配置 `CdnUrl`（CDN 基址，如 `https://cdn.example.com`），确保与 `MiniGameConfig.ProjectConf.CDN` 一致
 
 ### 2. 配置广告位 ID（必须）
 
@@ -186,8 +186,9 @@ Access-Control-Allow-Headers: Content-Type
 
 #### 3. HTTPS 强制
 
-`AssetConfig` 中的 `HostServerUrl` 和 `FallbackHostServerUrl` **必须使用 HTTPS**。
+`AssetConfig` 中的 `CdnUrl` 和 `FallbackCdnUrl` **生产环境必须使用 HTTPS**。
 `AssetService` 已内置 URL 安全校验——非 HTTPS 在 Release 构建中会报错阻断初始化。
+本地开发时允许 HTTP（私网地址自动豁免）。
 
 #### 4. URL 路径格式
 
@@ -209,7 +210,8 @@ https://cdn.example.com/minigame/{package_name}/
 └── ...
 ```
 
-`AssetConfig.HostServerUrl` 应配置到 `https://cdn.example.com/minigame/{package_name}` 级别。
+`AssetConfig.CdnUrl` 只需配到 `https://cdn.example.com` 级别。
+运行时自动派生完整路径：`{CdnUrl}/StreamingAssets/yoo/{PackageName}`。
 
 ### 缓存空间管理
 
@@ -230,56 +232,57 @@ var clearUnusedOp = package.ClearCacheFilesAsync(new ClearCacheFilesOptions {
 });
 ```
 
-## 无 CDN 本地真机测试
+## 本地开发测试（Dev Server）
 
-没有 CDN 服务器时，可以用 **本地测试模式** 在微信开发者工具和真机上验证项目。
+没有线上 CDN 时，使用内置的 **Dev Server** 在本地提供 HTTP 文件服务进行测试。
 
-### 原理
+### CDN 地址架构
 
-`AssetService` 的 WebGL 模式在检测到 `AssetConfig.HostServerUrl` **为空** 时，
-自动切换为 `DefaultWebServerFileSystem`——从 StreamingAssets 目录加载 Bundle。
-微信开发者工具本身提供 HTTP 服务，StreamingAssets 中的文件天然可通过 HTTP 访问。
+```
+MiniGameConfig.ProjectConf.CDN  ← 唯一源头 (Single Source of Truth)
+    ↓ 微信转换导出 → game.js DATA_CDN  ✅（原生支持）
+    ↓
+AssetConfig.CdnUrl              ← 必须与 MiniGameConfig.CDN 一致
+    ↓ 运行时自动派生
+    └→ HostServerUrl = {CdnUrl}/StreamingAssets/yoo/{PackageName}
+    ↓
+Dev Server                      ← 辅助工具，读取 CDN 配置验证一致性
+```
 
 ### 操作步骤
 
 ```
-1. Unity 切换到 WebGL 平台
-   File → Build Settings → WebGL → Switch Platform
+1. 配置 CDN 地址
+   - 微信转换面板 → 游戏资源CDN: http://192.168.x.x:8001
+   - AssetConfig SO → CdnUrl: http://192.168.x.x:8001 （必须一致）
+   - AssetConfig SO → Play Mode: WebGL
 
-2. 确认编译符号
-   Player Settings → Other Settings → Scripting Define Symbols
-   确保包含 WEIXINMINIGAME（安装 WX-WASM-SDK-V2 后通常自动添加）
-
-3. 构建 AssetBundle
+2. 构建 AssetBundle
    Unity 菜单 → YooAsset → AssetBundle Builder
-   - Build Pipeline: ScriptableBuildPipeline
-   - Build Target: WebGL
-   - Compression: LZ4
-   - Copy Buildin File Option: ClearAndCopyAll  ← 关键！把 Bundle 复制到 StreamingAssets
-   - 点击 Build
+   - Build Target: WebGL / Compression: LZ4
+   - Copy Buildin File Option: ClearAndCopyAll
 
-4. 配置 AssetConfig SO（Inspector 中）
-   - Play Mode: WebGL
-   - Host Server Url: 留空           ← 触发本地测试模式
-   - Fallback Host Server Url: 留空
+3. 导出微信小游戏
+   Unity 菜单 → 微信小游戏 → 生成并转换
 
-5. 构建微信小游戏
-   Unity 菜单 → Tools → MiniGame Template → Build → Build WebGL (Release)
-   或使用微信 SDK 提供的导出工具
+4. 启动 Dev Server
+   Unity 菜单 → Tools → MiniGame Template → Dev Server
+   - 服务根目录指向 minigame/ 导出目录
+   - 点击"启动服务器"
+   - 点击"检查 CDN 一致性"确认配置正确
 
-6. 微信开发者工具
+5. 微信开发者工具
    导入构建产物 → 预览 / 真机调试
 ```
 
 ### 控制台日志
 
-本地测试模式启动时会输出：
+启动成功时会输出：
 ```
-[AssetService] WebGL LOCAL mode: loading bundles from StreamingAssets.
-Set HostServerUrl in AssetConfig to enable CDN mode for production.
+[AssetService] WebGL mode: CDN=http://192.168.x.x:8001 → HostServerUrl=http://192.168.x.x:8001/StreamingAssets/yoo/DefaultPackage
 ```
 
-看到这条日志说明本地模式生效。
+看到这条日志说明 CDN 配置生效。
 
 ### 切换到生产 CDN 模式
 

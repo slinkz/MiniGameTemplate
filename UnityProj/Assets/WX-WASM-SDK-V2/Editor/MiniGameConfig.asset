@@ -15,8 +15,8 @@ MonoBehaviour:
   ProjectConf:
     projectName: MiniGameTemplate
     Appid: wx699a4418f465d21f
-    CDN: 
-    assetLoadType: 1
+    CDN: http://10.31.53.95:8001
+    assetLoadType: 0
     compressDataPackage: 0
     VideoUrl: 
     relativeDST: C:/workspace/wx-mini-game/output

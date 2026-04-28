@@ -11,11 +11,13 @@ namespace MiniGameTemplate.EditorTools
 {
     /// <summary>
     /// 一键切换「导出模式」与「编辑器模式」，并在导出前自动构建 Bundle。
-    /// 菜单位置：Tools/MiniGame/Switch to Export Mode
-    ///           Tools/MiniGame/Switch to Editor Mode
-    ///           Tools/MiniGame/拷贝 StreamingAssets 到小游戏
+    /// 菜单位置：Tools/MiniGame/切换到导出模式 (Build Bundle + WebGL)
+    ///           Tools/MiniGame/切换到编辑器模式 (EditorSimulate)
+    ///           Tools/MiniGame/导出后处理 (Post-Export)
+    ///           Tools/MiniGame/设置微信导出目录
     ///
     /// CHANGELOG:
+    /// 2026-04-28  将「拷贝 StreamingAssets」升级为「导出后处理」，统一处理 StreamingAssets + 首包资源拷贝。
     /// 2026-04-26  新增「拷贝 StreamingAssets 到小游戏」菜单项，微信转换后自动同步 YooAsset Bundle。
     /// </summary>
     public static class BuildModeSwitch
@@ -54,18 +56,18 @@ namespace MiniGameTemplate.EditorTools
                 {
                     Debug.Log("<color=green>[BuildModeSwitch] ✅ 导出模式就绪！可以执行微信小游戏导出了。</color>");
 
-                    // 提示下一步：微信转换后拷贝 StreamingAssets
-                    bool copyNow = EditorUtility.DisplayDialog("导出模式就绪",
+                    // 提示下一步：微信转换后执行导出后处理
+                    bool postExportNow = EditorUtility.DisplayDialog("导出模式就绪",
                         "Bundle 构建完成，PlayMode 已切换为 WebGL。\n\n" +
                         "下一步操作：\n" +
                         "1. 使用微信小游戏转换工具导出\n" +
-                        "2. 导出完成后执行「拷贝 StreamingAssets 到小游戏」\n\n" +
-                        "如果已完成微信转换，可立即拷贝 StreamingAssets。",
-                        "立即拷贝 StreamingAssets", "稍后手动执行");
+                        "2. 导出完成后执行「导出后处理 (Post-Export)」\n\n" +
+                        "如果已完成微信转换，可立即执行导出后处理。",
+                        "立即执行导出后处理", "稍后手动执行");
 
-                    if (copyNow)
+                    if (postExportNow)
                     {
-                        CopyStreamingAssetsToMiniGame();
+                        PostExport();
                     }
                 }
                 else
@@ -196,85 +198,167 @@ namespace MiniGameTemplate.EditorTools
             }
         }
 
-        // ──────────────── 拷贝 StreamingAssets 到小游戏 ────────────────
+        // ──────────────── 导出后处理 (Post-Export) ────────────────
 
-        [MenuItem("Tools/MiniGame/拷贝 StreamingAssets 到小游戏", priority = 110)]
-        public static void CopyStreamingAssetsToMiniGame()
+        /// <summary>
+        /// 微信小游戏转换工具导出后的一站式后处理。
+        /// 统一执行：
+        ///   1. 拷贝 StreamingAssets（YooAsset Bundle）到 minigame/
+        ///   2. 拷贝首包资源（*.webgl.data.unityweb.bin.txt）到 minigame/（CDN 模式所需）
+        /// </summary>
+        [MenuItem("Tools/MiniGame/导出后处理 (Post-Export)", priority = 110)]
+        public static void PostExport()
         {
             // 1. 获取或选择微信导出根目录
             string exportRoot = GetOrSelectWXExportRoot();
             if (string.IsNullOrEmpty(exportRoot))
                 return;
 
-            string srcDir = Path.Combine(exportRoot, "webgl", "StreamingAssets");
-            string dstDir = Path.Combine(exportRoot, "minigame", "StreamingAssets");
+            string webglDir = Path.Combine(exportRoot, "webgl");
+            string minigameDir = Path.Combine(exportRoot, "minigame");
 
-            // 2. 校验源目录
-            if (!Directory.Exists(srcDir))
+            // 2. 校验基础目录
+            if (!Directory.Exists(webglDir))
             {
-                Debug.LogError($"[BuildModeSwitch] 源目录不存在: {srcDir}\n请先完成微信小游戏转换导出。");
-                EditorUtility.DisplayDialog("拷贝失败",
-                    $"找不到源目录:\n{srcDir}\n\n请先执行微信小游戏转换工具导出 WebGL。", "知道了");
+                Debug.LogError($"[PostExport] webgl 目录不存在: {webglDir}\n请先完成微信小游戏转换导出。");
+                EditorUtility.DisplayDialog("导出后处理失败",
+                    $"找不到 webgl 目录:\n{webglDir}\n\n请先执行微信小游戏转换工具导出。", "知道了");
                 return;
             }
 
-            // 校验 minigame 目录存在
-            string minigameDir = Path.Combine(exportRoot, "minigame");
             if (!Directory.Exists(minigameDir))
             {
-                Debug.LogError($"[BuildModeSwitch] minigame 目录不存在: {minigameDir}\n请先完成微信小游戏转换导出。");
-                EditorUtility.DisplayDialog("拷贝失败",
+                Debug.LogError($"[PostExport] minigame 目录不存在: {minigameDir}\n请先完成微信小游戏转换导出。");
+                EditorUtility.DisplayDialog("导出后处理失败",
                     $"找不到 minigame 目录:\n{minigameDir}\n\n请先执行微信小游戏转换工具导出。", "知道了");
                 return;
             }
 
-            // 3. 清理目标目录（幂等：先删后拷）
+            var report = new System.Text.StringBuilder();
+            bool hasError = false;
+
+            // ─── Step 1: 拷贝 StreamingAssets ───
+            hasError |= !CopyStreamingAssets(exportRoot, webglDir, minigameDir, report);
+
+            // ─── Step 2: 拷贝首包资源 ───
+            hasError |= !CopyDataPackageFiles(webglDir, minigameDir, report);
+
+            // ─── Step 3: 主包大小预警 ───
+            long mainPkgBytes = GetMainPackageSize(minigameDir);
+            double mainPkgMB = mainPkgBytes / (1024.0 * 1024.0);
+            if (mainPkgMB > 1.9)
+                report.AppendLine($"\n⚠️ 主包预估 {mainPkgMB:F2} MB，接近 2MB 限制！");
+            else
+                report.AppendLine($"\n主包预估 {mainPkgMB:F2} MB（2MB 限制内）。");
+
+            // ─── 汇报 ───
+            string title = hasError ? "导出后处理（部分失败）" : "导出后处理完成 ✅";
+            string logColor = hasError ? "yellow" : "green";
+            Debug.Log($"<color={logColor}>[PostExport] {title}</color>\n{report}");
+            EditorUtility.DisplayDialog(title, report.ToString(), "好的");
+        }
+
+        [MenuItem("Tools/MiniGame/导出后处理 (Post-Export)", true)]
+        private static bool ValidatePostExport()
+        {
+            return !EditorApplication.isCompiling && !EditorApplication.isPlaying;
+        }
+
+        /// <summary>
+        /// 拷贝 StreamingAssets（YooAsset Bundle）到 minigame/。
+        /// </summary>
+        private static bool CopyStreamingAssets(string exportRoot, string webglDir, string minigameDir,
+            System.Text.StringBuilder report)
+        {
+            string srcDir = Path.Combine(webglDir, "StreamingAssets");
+            string dstDir = Path.Combine(minigameDir, "StreamingAssets");
+
+            if (!Directory.Exists(srcDir))
+            {
+                report.AppendLine($"⚠️ StreamingAssets 源目录不存在，跳过: {srcDir}");
+                Debug.LogWarning($"[PostExport] StreamingAssets 源目录不存在: {srcDir}");
+                return true; // 不算致命错误，可能还没构建 Bundle
+            }
+
+            // 幂等：先删后拷
             if (Directory.Exists(dstDir))
             {
                 Directory.Delete(dstDir, true);
-                Debug.Log($"[BuildModeSwitch] 已清理旧的 StreamingAssets: {dstDir}");
             }
 
-            // 4. 递归拷贝
             try
             {
                 CopyDirectoryRecursive(srcDir, dstDir);
+                var copiedFiles = Directory.GetFiles(dstDir, "*", SearchOption.AllDirectories);
+                long totalBytes = copiedFiles.Sum(f => new FileInfo(f).Length);
+                double totalMB = totalBytes / (1024.0 * 1024.0);
+
+                report.AppendLine($"✅ StreamingAssets: {copiedFiles.Length} 个文件, {totalMB:F2} MB");
+                Debug.Log($"[PostExport] StreamingAssets 拷贝完成 → {dstDir} ({copiedFiles.Length} files, {totalMB:F2} MB)");
+                return true;
             }
             catch (Exception e)
             {
-                Debug.LogError($"[BuildModeSwitch] 拷贝失败: {e.Message}\n{e.StackTrace}");
-                EditorUtility.DisplayDialog("拷贝失败", $"发生异常:\n{e.Message}", "知道了");
-                return;
+                report.AppendLine($"❌ StreamingAssets 拷贝失败: {e.Message}");
+                Debug.LogError($"[PostExport] StreamingAssets 拷贝失败: {e.Message}\n{e.StackTrace}");
+                return false;
             }
-
-            // 5. 统计结果
-            var copiedFiles = Directory.GetFiles(dstDir, "*", SearchOption.AllDirectories);
-            long totalBytes = copiedFiles.Sum(f => new FileInfo(f).Length);
-            double totalMB = totalBytes / (1024.0 * 1024.0);
-
-            // 检查主包大小预警
-            long mainPkgBytes = GetMainPackageSize(minigameDir);
-            double mainPkgMB = mainPkgBytes / (1024.0 * 1024.0);
-            string sizeWarning = mainPkgMB > 1.9
-                ? $"\n\n⚠️ 主包预估 {mainPkgMB:F2} MB，接近 2MB 限制！建议考虑分包或 CDN 模式。"
-                : $"\n\n主包预估 {mainPkgMB:F2} MB（2MB 限制内）。";
-
-            string msg = $"拷贝完成！\n\n" +
-                         $"文件数: {copiedFiles.Length}\n" +
-                         $"StreamingAssets 大小: {totalMB:F2} MB\n" +
-                         $"目标: {dstDir}" +
-                         sizeWarning;
-
-            Debug.Log($"<color=green>[BuildModeSwitch] ✅ StreamingAssets 拷贝完成 → {dstDir}</color>\n" +
-                      $"  文件数: {copiedFiles.Length}, 大小: {totalMB:F2} MB, 主包预估: {mainPkgMB:F2} MB");
-
-            EditorUtility.DisplayDialog("StreamingAssets 拷贝完成", msg, "好的");
         }
 
-        [MenuItem("Tools/MiniGame/拷贝 StreamingAssets 到小游戏", true)]
-        private static bool ValidateCopyStreamingAssets()
+        /// <summary>
+        /// 拷贝首包资源文件（*.webgl.data.unityweb.bin.txt）到 minigame/ 根目录。
+        /// CDN 模式下，微信插件会用 DATA_CDN/{hash}.webgl.data.unityweb.bin.txt 下载首包，
+        /// 而该文件只存在于 webgl/ 目录中，需要手动拷贝到 minigame/（Dev Server 服务目录）。
+        /// </summary>
+        private static bool CopyDataPackageFiles(string webglDir, string minigameDir,
+            System.Text.StringBuilder report)
         {
-            return !EditorApplication.isCompiling && !EditorApplication.isPlaying;
+            // 扫描 webgl/ 根目录下的首包资源文件
+            string[] dataFiles = Directory.GetFiles(webglDir, "*.webgl.data.unityweb.bin.txt", SearchOption.TopDirectoryOnly);
+
+            if (dataFiles.Length == 0)
+            {
+                report.AppendLine("ℹ️ 未发现首包资源文件（*.webgl.data.unityweb.bin.txt），跳过。");
+                Debug.Log("[PostExport] 未发现首包资源文件，跳过。");
+                return true;
+            }
+
+            int copied = 0;
+            long totalBytes = 0;
+
+            foreach (string srcFile in dataFiles)
+            {
+                string fileName = Path.GetFileName(srcFile);
+                string dstFile = Path.Combine(minigameDir, fileName);
+
+                try
+                {
+                    File.Copy(srcFile, dstFile, true);
+                    long size = new FileInfo(dstFile).Length;
+                    totalBytes += size;
+                    copied++;
+                    Debug.Log($"[PostExport] 首包资源拷贝: {fileName} ({size / (1024.0 * 1024.0):F2} MB)");
+                }
+                catch (Exception e)
+                {
+                    report.AppendLine($"❌ 首包资源拷贝失败: {fileName} — {e.Message}");
+                    Debug.LogError($"[PostExport] 首包资源拷贝失败: {fileName}\n{e.Message}");
+                    return false;
+                }
+            }
+
+            double totalMB = totalBytes / (1024.0 * 1024.0);
+            report.AppendLine($"✅ 首包资源: {copied} 个文件, {totalMB:F2} MB");
+            return true;
+        }
+
+        /// <summary>
+        /// [向后兼容] 仅拷贝 StreamingAssets 的旧入口。
+        /// 新代码请使用 PostExport()。
+        /// </summary>
+        public static void CopyStreamingAssetsToMiniGame()
+        {
+            PostExport();
         }
 
         [MenuItem("Tools/MiniGame/设置微信导出目录", priority = 200)]

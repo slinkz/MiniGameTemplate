@@ -206,17 +206,17 @@ public partial class MyDialog : IUIPanel, IModalDialog
 **可能原因**：
 - **EditorSimulate 模式**：YooAsset 的模拟构建文件损坏。尝试删除 `Library/ScriptAssemblies` 和 `Bundles/` 目录后重新打开 Unity
 - **Offline 模式**：`StreamingAssets` 中没有预构建的 Bundle 文件
-- **Host 模式**：CDN 地址不可达。检查 `AssetConfig` 中的 `HostServerUrl`
+- **Host 模式**：CDN 地址不可达。检查 `AssetConfig` 中的 `CdnUrl`
 - **WebGL 模式**：未导入 WechatFileSystem 扩展（见下方构建章节）
 
-### Q: "[AssetService] SEC: HostServerUrl uses HTTP (insecure)."
+### Q: "[AssetService] SEC: CdnUrl uses HTTP (insecure)."
 
 **原因**：CDN 地址使用了 HTTP 而非 HTTPS。
 
 - **编辑器中**：这只是警告，本地测试可以忽略
 - **正式构建中**：这是错误，**必须改为 HTTPS**。HTTP 会导致中间人攻击风险，微信小游戏平台也强制要求 HTTPS
 
-**解决**：在 `AssetConfig` SO 资产中把 URL 改为 `https://`。
+**解决**：在 `AssetConfig` SO 资产中把 `CdnUrl` 改为 `https://`。
 
 ### Q: 微信小游戏下 Bundle 加载失败
 

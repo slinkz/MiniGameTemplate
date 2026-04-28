@@ -44,8 +44,8 @@ namespace MiniGameTemplate.Asset
             // Only applies to Host and WebGL modes where remote URLs are used.
             if (config.PlayMode == EAssetPlayMode.Host || config.PlayMode == EAssetPlayMode.WebGL)
             {
-                ValidateUrlSecurity(config.HostServerUrl, "HostServerUrl");
-                ValidateUrlSecurity(config.FallbackHostServerUrl, "FallbackHostServerUrl");
+                ValidateUrlSecurity(config.CdnUrl, "CdnUrl");
+                ValidateUrlSecurity(config.FallbackCdnUrl, "FallbackCdnUrl");
             }
 
             // Initialize YooAsset
@@ -80,10 +80,22 @@ namespace MiniGameTemplate.Asset
 
                 case EAssetPlayMode.Host:
                 {
+                    string hostUrl = config.HostServerUrl;
+                    string fallbackUrl = config.FallbackHostServerUrl;
+
+                    if (string.IsNullOrEmpty(hostUrl))
+                    {
+                        Debug.LogError("[AssetService] Host mode requires CdnUrl to be configured in AssetConfig. " +
+                            "Set it to your CDN base URL (e.g. https://cdn.example.com).");
+                        return;
+                    }
+
+                    GameLog.Log($"[AssetService] Host mode: CDN={config.CdnUrl} → HostServerUrl={hostUrl}");
+
                     var parameters = new HostPlayModeParameters();
                     parameters.BuildinFileSystemParameters = FileSystemParameters.CreateDefaultBuildinFileSystemParameters();
                     parameters.CacheFileSystemParameters = FileSystemParameters.CreateDefaultCacheFileSystemParameters(
-                        new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl));
+                        new RemoteServices(hostUrl, fallbackUrl));
                     initOp = _defaultPackage.InitializeAsync(parameters);
                     break;
                 }
@@ -98,49 +110,42 @@ namespace MiniGameTemplate.Asset
                     // Force sync-like asset loading on WebGL to avoid frame-by-frame drip loading.
                     webParams.WebGLForceSyncLoadAsset = true;
 
-                    // IMPORTANT: Always use WechatFileSystem in WeChat Mini Game environment.
-                    // DefaultWebServerFileSystem uses Application.streamingAssetsPath which resolves to
-                    // "https://game.weixin.qq.com" (when DATA_CDN is empty) — a domain we don't control.
-                    // WechatFileSystem uses WX.GetCachePath() which correctly reads local StreamingAssets
-                    // via the WeChat file system API.
-                    string packageRoot = $"{WX.env.USER_DATA_PATH}/__GAME_FILE_CACHE/yoo";
+                    // CDN URL is the Single Source of Truth — derived HostServerUrl points to
+                    // the YooAsset package directory on CDN.
+                    string hostUrl = config.HostServerUrl;
 
-                    bool hasRemoteUrl = !string.IsNullOrEmpty(config.HostServerUrl);
-
-                    if (hasRemoteUrl)
+                    if (string.IsNullOrEmpty(hostUrl))
                     {
-                        // --- Production CDN mode ---
-                        // WeChat Mini Game: use WechatFileSystem with CDN + WX cache.
-                        var remoteServices = new RemoteServices(config.HostServerUrl, config.FallbackHostServerUrl);
-                        webParams.WebServerFileSystemParameters =
-                            WechatFileSystemCreater.CreateFileSystemParameters(packageRoot, remoteServices, null);
-
-                        GameLog.Log("[AssetService] WebGL CDN mode: WechatFileSystem + RemoteServices.");
-                    }
-                    else
-                    {
-                        // --- HostServerUrl is required ---
-                        // In WeChat Mini Game, ALL file loading goes through UnityWebRequest (HTTP).
-                        // There is no way to load files from local filesystem via UnityWebRequest
-                        // because WeChat's XHR layer always sends real HTTP requests.
+                        // CDN URL is required for WeChat Mini Game.
+                        // In WeChat environment, ALL asset loading goes through HTTP (UnityWebRequest → wx.request).
+                        // There is no local file:// fallback.
                         //
-                        // For local testing without a CDN:
-                        // 1. Open WeChat DevTools → Settings → Project Settings
-                        // 2. Enable "Static Resource Server" (开启静态资源服务器)
-                        // 3. Set the local resource path to your StreamingAssets directory
-                        // 4. Copy the server address (e.g. http://192.168.x.x:8001)
-                        // 5. Set HostServerUrl in DefaultAssetConfig to: http://192.168.x.x:8001/StreamingAssets/yoo
-                        //
-                        // For production: set HostServerUrl to your CDN address.
-                        GameLog.LogWarning("[AssetService] WebGL mode: HostServerUrl is empty! " +
-                            "WeChat Mini Game requires an HTTP endpoint for asset loading. " +
-                            "For local testing, enable 'Static Resource Server' in WeChat DevTools " +
-                            "(Settings → Project Settings) and set HostServerUrl in AssetConfig " +
-                            "to the local server address (e.g. http://192.168.x.x:8001/StreamingAssets/yoo).");
+                        // Setup:
+                        // 1. Set CdnUrl in AssetConfig to your CDN base URL
+                        //    - Production: https://cdn.example.com
+                        //    - Dev testing: http://192.168.x.x:8001 (use Dev Server tool)
+                        // 2. Set the SAME value in MiniGameConfig.ProjectConf.CDN (WeChat export panel)
+                        // 3. Re-export WebGL + WeChat conversion
+                        GameLog.LogWarning("[AssetService] WebGL mode: CdnUrl is empty! " +
+                            "WeChat Mini Game requires a CDN URL for asset loading. " +
+                            "Set CdnUrl in AssetConfig (e.g. https://cdn.example.com for production, " +
+                            "or http://192.168.x.x:8001 for local Dev Server). " +
+                            "MUST also set the same value in MiniGameConfig.ProjectConf.CDN.");
                         throw new Exception(
-                            "[AssetService] HostServerUrl must be configured for WeChat Mini Game. " +
+                            "[AssetService] CdnUrl must be configured in AssetConfig for WeChat Mini Game. " +
                             "See console log for setup instructions.");
                     }
+
+                    // Always use WechatFileSystem in WeChat Mini Game environment.
+                    // DefaultWebServerFileSystem uses Application.streamingAssetsPath which resolves to
+                    // "https://game.weixin.qq.com" (when DATA_CDN is empty) — a domain we don't control.
+                    string packageRoot = $"{WX.env.USER_DATA_PATH}/__GAME_FILE_CACHE/yoo";
+                    string fallbackUrl = config.FallbackHostServerUrl;
+                    var remoteServices = new RemoteServices(hostUrl, fallbackUrl);
+                    webParams.WebServerFileSystemParameters =
+                        WechatFileSystemCreater.CreateFileSystemParameters(packageRoot, remoteServices, null);
+
+                    GameLog.Log($"[AssetService] WebGL mode: CDN={config.CdnUrl} → HostServerUrl={hostUrl}");
 
                     initOp = _defaultPackage.InitializeAsync(webParams);
 #else
