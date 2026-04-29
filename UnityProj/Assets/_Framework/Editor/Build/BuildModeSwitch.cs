@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using WeChatWASM;
 using YooAsset;
 using YooAsset.Editor;
 
@@ -14,9 +15,9 @@ namespace MiniGameTemplate.EditorTools
     /// 菜单位置：Tools/MiniGame/切换到导出模式 (Build Bundle + WebGL)
     ///           Tools/MiniGame/切换到编辑器模式 (EditorSimulate)
     ///           Tools/MiniGame/导出后处理 (Post-Export)
-    ///           Tools/MiniGame/设置微信导出目录
     ///
     /// CHANGELOG:
+    /// 2026-04-30  移除多余的「设置微信导出目录」菜单项和 EditorPrefs，导出路径改为直接读取微信转换工具配置。
     /// 2026-04-28  将「拷贝 StreamingAssets」升级为「导出后处理」，统一处理 StreamingAssets + 首包资源拷贝。
     /// 2026-04-26  新增「拷贝 StreamingAssets 到小游戏」菜单项，微信转换后自动同步 YooAsset Bundle。
     /// </summary>
@@ -27,9 +28,6 @@ namespace MiniGameTemplate.EditorTools
 
         private const string PACKAGE_NAME = "DefaultPackage";
         private const string PIPELINE_NAME = "ScriptableBuildPipeline";
-
-        /// <summary>EditorPrefs key: 微信小游戏导出根目录（包含 webgl/ 和 minigame/ 的父目录）。</summary>
-        private const string PREF_WX_EXPORT_ROOT = "MiniGame_WXExportRoot";
 
         // ──────────────────────────── 导出模式 ────────────────────────────
         [MenuItem("Tools/MiniGame/切换到导出模式 (Build Bundle + WebGL)", priority = 100)]
@@ -209,8 +207,8 @@ namespace MiniGameTemplate.EditorTools
         [MenuItem("Tools/MiniGame/导出后处理 (Post-Export)", priority = 110)]
         public static void PostExport()
         {
-            // 1. 获取或选择微信导出根目录
-            string exportRoot = GetOrSelectWXExportRoot();
+            // 1. 从微信转换工具配置读取导出根目录
+            string exportRoot = GetWXExportRoot();
             if (string.IsNullOrEmpty(exportRoot))
                 return;
 
@@ -365,66 +363,32 @@ namespace MiniGameTemplate.EditorTools
             PostExport();
         }
 
-        [MenuItem("Tools/MiniGame/设置微信导出目录", priority = 200)]
-        public static void SetWXExportRoot()
-        {
-            string current = EditorPrefs.GetString(PREF_WX_EXPORT_ROOT, "");
-            string selected = EditorUtility.OpenFolderPanel(
-                "选择微信小游戏导出根目录（包含 webgl/ 和 minigame/ 的目录）",
-                string.IsNullOrEmpty(current) ? Application.dataPath : current,
-                "");
-
-            if (!string.IsNullOrEmpty(selected))
-            {
-                EditorPrefs.SetString(PREF_WX_EXPORT_ROOT, selected);
-                Debug.Log($"[BuildModeSwitch] 微信导出目录已设置: {selected}");
-            }
-        }
-
         // ──────────────── 拷贝相关内部方法 ────────────────
 
         /// <summary>
-        /// 获取缓存的微信导出根目录。若未配置，弹窗让用户选择并缓存。
+        /// 从微信小游戏转换工具的配置中读取导出根目录（ProjectConf.DST）。
+        /// 单一数据源，零同步问题。
         /// </summary>
-        private static string GetOrSelectWXExportRoot()
+        private static string GetWXExportRoot()
         {
-            string root = EditorPrefs.GetString(PREF_WX_EXPORT_ROOT, "");
-
-            // 已有缓存且目录存在，直接用
-            if (!string.IsNullOrEmpty(root) && Directory.Exists(root))
-                return root;
-
-            // 首次使用或目录失效，弹窗选择
-            if (!string.IsNullOrEmpty(root))
-                Debug.LogWarning($"[BuildModeSwitch] 缓存的导出目录不存在: {root}，请重新选择。");
-
-            root = EditorUtility.OpenFolderPanel(
-                "选择微信小游戏导出根目录（包含 webgl/ 和 minigame/ 的目录）",
-                Application.dataPath,
-                "");
-
-            if (string.IsNullOrEmpty(root))
+            var wxConfig = UnityUtil.GetEditorConf();
+            if (wxConfig == null)
             {
-                Debug.LogWarning("[BuildModeSwitch] 用户取消了目录选择。");
+                Debug.LogError("[BuildModeSwitch] 无法获取微信转换工具配置（UnityUtil.GetEditorConf() 返回 null）。");
                 return null;
             }
 
-            // 校验：选中的目录下应该有 webgl 或 minigame 子目录
-            bool hasWebgl = Directory.Exists(Path.Combine(root, "webgl"));
-            bool hasMinigame = Directory.Exists(Path.Combine(root, "minigame"));
-            if (!hasWebgl && !hasMinigame)
+            string dst = wxConfig.ProjectConf.DST;
+            if (string.IsNullOrEmpty(dst))
             {
-                bool proceed = EditorUtility.DisplayDialog("目录校验",
-                    $"选中的目录下没有找到 webgl/ 或 minigame/ 子目录:\n{root}\n\n" +
-                    "确认这是正确的微信导出根目录吗？",
-                    "确认使用", "重新选择");
-                if (!proceed)
-                    return null;
+                Debug.LogError("[BuildModeSwitch] 微信转换工具的导出路径为空，请先在转换工具面板中设置导出路径。");
+                EditorUtility.DisplayDialog("导出路径未配置",
+                    "微信小游戏转换工具的导出路径为空。\n\n请先打开 微信小游戏转换工具 面板，设置导出路径后重试。",
+                    "知道了");
+                return null;
             }
 
-            EditorPrefs.SetString(PREF_WX_EXPORT_ROOT, root);
-            Debug.Log($"[BuildModeSwitch] 微信导出目录已保存: {root}");
-            return root;
+            return dst;
         }
 
         /// <summary>递归拷贝目录。</summary>

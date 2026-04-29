@@ -19,8 +19,8 @@ MonoBehaviour:
     assetLoadType: 0
     compressDataPackage: 1
     VideoUrl: 
-    relativeDST: C:/workspace/wx-mini-game/output
-    DST: C:/workspace/wx-mini-game/output
+    relativeDST: C:/workspace/mini-game-template/output
+    DST: C:/workspace/mini-game-template/output
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: StreamingAssets;
