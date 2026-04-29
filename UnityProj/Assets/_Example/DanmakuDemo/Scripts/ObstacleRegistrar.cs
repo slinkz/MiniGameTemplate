@@ -24,7 +24,7 @@ namespace MiniGameTemplate.Example
         [SerializeField] private int _hitPoints;
 
         [Tooltip("阵营（同阵营弹丸穿透）")]
-        [SerializeField] private BulletFaction _faction = BulletFaction.Neutral;
+        [SerializeField] private EnumCamp _faction = EnumCamp.Neutral;
 
         [Header("状态（只读）")]
         [SerializeField, HideInInspector] private int _poolIndex = -1;

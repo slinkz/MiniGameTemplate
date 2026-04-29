@@ -131,7 +131,7 @@ namespace MiniGameTemplate.Danmaku
                 return new CircleHitbox(_transform.position, _radius);
             }
         }
-        public BulletFaction Faction => BulletFaction.Player;
+        public EnumCamp Faction => EnumCamp.Player;
 
         public void OnBulletHit(int damage, int bulletIndex) { }
         public void OnLaserHit(int damage, int laserIndex) { }

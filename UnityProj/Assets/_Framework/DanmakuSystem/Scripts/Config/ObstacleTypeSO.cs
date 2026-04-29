@@ -19,7 +19,7 @@ namespace MiniGameTemplate.Danmaku
 
         [Header("阵营")]
         [Tooltip("自己阵营的弹丸可穿透")]
-        public BulletFaction Faction = BulletFaction.Enemy;
+        public EnumCamp Faction = EnumCamp.Enemy;
 
         [Header("视觉")]
         [Tooltip("被摧毁时播放的特效")]

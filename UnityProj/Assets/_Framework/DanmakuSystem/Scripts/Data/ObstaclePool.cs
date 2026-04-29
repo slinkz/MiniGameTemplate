@@ -36,7 +36,7 @@ namespace MiniGameTemplate.Danmaku
         /// <param name="rotationRad">旋转角度（弧度，逆时针为正）。默认 0 = 无旋转，等同于旧 AABB。</param>
         /// <returns>池索引，-1 表示池满</returns>
         public int AddRect(Vector2 center, Vector2 size, int hitPoints = 0,
-            BulletFaction faction = BulletFaction.Neutral, float rotationRad = 0f)
+            EnumCamp faction = EnumCamp.Neutral, float rotationRad = 0f)
         {
             int slot = Allocate();
             if (slot < 0) return -1;
@@ -63,7 +63,7 @@ namespace MiniGameTemplate.Danmaku
         /// <param name="faction">阵营</param>
         /// <returns>池索引，-1 表示池满</returns>
         public int AddCircle(Vector2 center, float radius, int hitPoints = 0,
-            BulletFaction faction = BulletFaction.Neutral)
+            EnumCamp faction = EnumCamp.Neutral)
         {
             int slot = AddRect(center, new Vector2(radius * 2f, radius * 2f), hitPoints, faction);
             if (slot < 0) return -1;

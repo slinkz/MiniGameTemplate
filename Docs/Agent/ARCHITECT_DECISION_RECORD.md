@@ -51,6 +51,12 @@
 | ADR-028 | RuntimeAtlasSystem（v2.1 已接受） | 统一渲染管线核心：替代割裂的 6 路渲染架构，按需 Blit，Shelf Packing，Channel 隔离，统一 RBM 提交。Supersedes ADR-007/008/010 运行时约束。全部 12 个未决项已确认 |
 | ADR-029 | 彻底移除 Additive Blend | v2：彻底移除 Additive 代码/Shader/配置，统一 Normal。BucketKey 降维为纯 Texture。YAGNI 原则 |
 | ADR-030 | TypeRegistry 内化 + 懒注册 + 懒建桶 | TypeRegistry 从 public SO 降级为框架内部运行时类；首次 Spawn 时懒注册类型 + 懒建桶；运行时零手工注册。Supersedes ADR-017、修正 ADR-015/ADR-025。PK 3 轮 6 问题已收敛 |
+| ADR-031 | RuntimeAtlas 深化——懒建页 + Laser 接入 + Trail 纹理化 | 扩展 ADR-028，实现 Laser/Trail 接入 Atlas |
+| ADR-032 | `new Material()` 必须显式复制 shaderKeywords | 运行时 Material 构造函数不可靠保留 keyword，必须手动复制 |
+| ADR-033 | Entity-Component 通用角色框架 | Entity 纯逻辑容器 + 8 组件 + 本地事件总线 + 数据池。碰撞桥接现有 TargetRegistry。Phase 1 不做渲染 |
+
+
+
 
 
 
@@ -1593,6 +1599,87 @@ matInstance.shaderKeywords = templateMaterial.shaderKeywords;
 - **修复对象**: ADR-031（Laser 接入 RuntimeAtlas）
 - **影响**: ADR-028（RuntimeAtlas 核心决策）、ADR-030（TypeRegistry + 懒建桶）
 - **新增规范**: 项目级 `new Material()` shaderKeywords 显式复制要求
+
+---
+
+## ADR-033: Entity-Component 通用角色框架
+
+### 状态
+
+已接受（2026-04-25）
+
+### 上下文
+
+MiniGameTemplate 需要一套品类无关的通用角色管理框架，支撑塔防、射击、ARPG、跑酷、放置等不同类型小游戏。当前模板有完善的弹幕系统（DanmakuSystem）、碰撞系统（CollisionSolver + TargetRegistry）、对象池（PoolManager）、事件系统（GameEvent SO）、渲染管线（RBM + RuntimeAtlas），但没有"角色"这一层抽象。
+
+设计草案 v1.0 提出了 Entity + 8 组件的架构，但存在以下未解决问题：
+1. 碰撞系统是弹幕专用的，TargetRegistry 限 16 槽位，如何桥接角色？
+2. GameEvent SO 是全局广播模式，角色内部通信需要本地事件总线
+3. 现有 PoolManager 是 GameObject 池，Entity 需要纯数据池
+4. 渲染管线是 instanced quad（弹幕优化），角色渲染走不同管线
+
+### 决策
+
+#### D1: Entity 纯逻辑层，不绑 GameObject
+
+Entity 是纯 C# 对象，不继承 MonoBehaviour，不持有 GameObject。渲染表现由游戏层的 EntityView 桥接。
+
+**放弃了什么**：不能直接拖 Inspector 配置 Entity 组件。
+**换来了什么**：可单元测试、零 MonoBehaviour 开销、逻辑/表现完全解耦。
+
+#### D2: CollisionComponent 实现 ICollisionTarget，桥接到现有 TargetRegistry
+
+不新建碰撞系统，复用弹幕碰撞管线。TargetRegistry 16 槽位不扩容，改用动态注册/注销策略（按距离优先级选 16 个注册）。
+
+**放弃了什么**：不是所有 Entity 都能同时被弹幕命中。
+**换来了什么**：零碰撞系统重建、与弹幕系统天然联动、性能模型不变。
+
+#### D3: Entity 本地事件总线（EntityEventBus），独立于全局 GameEvent SO
+
+每个 Entity 独立事件总线，用 struct 事件 + 泛型分发，零 GC。跨 Entity 通信仍走全局 GameEvent SO。
+
+**放弃了什么**：Entity 内部事件不能在 Inspector 可视化连线。
+**换来了什么**：事件不跨 Entity 污染、零 GC、池化时自动清订阅。
+
+#### D4: EntityPool 采用预分配数组 + 空闲槽位栈（参考 BulletWorld 模式）
+
+不复用 PoolManager（那是 GameObject 池），为 Entity 专建纯数据池。
+
+**放弃了什么**：不能复用已有 PoolManager 代码。
+**换来了什么**：零 GC、O(1) 取出/归还、与弹幕 SoA 模式一致。
+
+#### D5: Phase 1 不做渲染集成
+
+Entity 层纯逻辑，渲染集成推迟到 Phase 2。Phase 1 的 AnimationComponent 只管状态→动画 ID 映射，不操作任何渲染对象。
+
+**放弃了什么**：Phase 1 看不到角色视觉。
+**换来了什么**：减少 Phase 1 范围、渲染方案可以延迟决策（Spine vs 序列帧）。
+
+#### D6: Luban 配置驱动，新增 4 张配置表
+
+TbEntityConfig / TbStateConfig / TbAIBehavior / TbAnimMapping，通过 ConfigManager.Tables 访问。
+
+### 后果
+
+**变得更容易的**：
+- 新增角色类型：只加配置表行 + 美术资源
+- 新增组件类型：实现接口 + 注册到工厂
+- 单元测试：Entity/组件不依赖 Unity 运行时
+- 快速换皮：配置表驱动，代码不改
+
+**变得更难的**：
+- Phase 2 需要设计 EntityView 桥接层（逻辑→视觉）
+- TargetRegistry 16 槽位限制需要动态注册策略（额外复杂度）
+- Entity vs Entity 碰撞需要独立 Solver（Phase 2）
+- Luban 配置表数量增加（4 张新表）
+
+### 关联
+
+- **TDD 文档**：Docs/Agent/ENTITY_COMPONENT_TDD.md v2.0
+- **设计草案**：MiniGameTemplate-EntityComponent-Design.md v1.0
+- **碰撞集成依赖**：ADR-012（多阵营碰撞模型）
+- **对象池参考**：BulletWorld（DanmakuSystem/Scripts/Data/BulletWorld.cs）
+- **事件系统参考**：EventSystem/Scripts/GameEvent.cs + GameEvent_T.cs
 
 ---
 

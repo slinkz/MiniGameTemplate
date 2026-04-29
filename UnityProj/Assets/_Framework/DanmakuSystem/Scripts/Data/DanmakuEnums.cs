@@ -35,16 +35,20 @@ namespace MiniGameTemplate.Danmaku
         RecycleOnDistance = 5,
     }
 
-    /// <summary>弹丸阵营</summary>
-    public enum BulletFaction : byte
+    /// <summary>
+    /// 通用阵营枚举（全项目统一使用）。
+    /// Entity-Component 系统与弹幕系统共享此枚举，实现跨系统阵营一致性。
+    /// 原名 BulletFaction，P1.0 统一迁移为 EnumCamp（ADR-033 / TDD v2.6 SA-002）。
+    /// </summary>
+    public enum EnumCamp : byte
     {
-        /// <summary>敌方弹丸，与玩家阵营碰撞</summary>
+        /// <summary>敌方阵营</summary>
         Enemy = 0,
 
-        /// <summary>玩家弹丸，与敌方阵营碰撞</summary>
+        /// <summary>玩家阵营</summary>
         Player = 1,
 
-        /// <summary>中立弹丸，与所有对象碰撞</summary>
+        /// <summary>中立阵营（与所有对象碰撞）</summary>
         Neutral = 2,
     }
 

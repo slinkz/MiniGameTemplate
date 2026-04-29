@@ -94,8 +94,8 @@ namespace MiniGameTemplate.Tests.Editor
                 TargetSlot = 2,
                 Position = new Vector2(3f, 4f),
                 Damage = 5,
-                SourceFaction = BulletFaction.Player,
-                TargetFaction = BulletFaction.Enemy,
+                SourceFaction = EnumCamp.Player,
+                TargetFaction = EnumCamp.Enemy,
                 EventType = CollisionEventType.BulletHit,
             };
         }

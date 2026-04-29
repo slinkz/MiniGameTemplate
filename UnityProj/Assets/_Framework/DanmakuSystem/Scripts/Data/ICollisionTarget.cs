@@ -16,7 +16,7 @@ namespace MiniGameTemplate.Danmaku
         /// - Enemy 阵营目标只被 Player/Neutral 弹丸命中
         /// - Neutral 阵营目标被所有弹丸命中
         /// </summary>
-        BulletFaction Faction { get; }
+        EnumCamp Faction { get; }
 
         /// <summary>
         /// 被弹丸命中时回调。由 CollisionSolver 在碰撞检测阶段调用。

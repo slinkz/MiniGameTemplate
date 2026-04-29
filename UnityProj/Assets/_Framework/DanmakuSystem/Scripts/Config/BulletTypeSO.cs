@@ -110,7 +110,7 @@ namespace MiniGameTemplate.Danmaku
         public byte InitialHitPoints = 1;
 
         [Header("阵营")]
-        public BulletFaction Faction = BulletFaction.Enemy;
+        public EnumCamp Faction = EnumCamp.Enemy;
 
         // ──── 碰撞响应 ────
 

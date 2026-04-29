@@ -20,7 +20,7 @@ namespace MiniGameTemplate.Danmaku
 
         [Header("判定")]
         [Tooltip("喷雾阵营（决定与哪些目标碰撞）")]
-        public BulletFaction Faction = BulletFaction.Enemy;
+        public EnumCamp Faction = EnumCamp.Enemy;
 
         [Tooltip("扇形半角（度）")]
         public float ConeAngle = 30f;

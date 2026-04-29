@@ -41,7 +41,7 @@ namespace MiniGameTemplate.Example
             public int HitPoints;
 
             [Tooltip("阵营（同阵营弹丸穿透）")]
-            public BulletFaction Faction;
+            public EnumCamp Faction;
         }
 
         [Header("预配置障碍物")]
@@ -49,9 +49,9 @@ namespace MiniGameTemplate.Example
         [SerializeField] private ObstacleDefinition[] _obstacles = new[]
         {
             // 默认布局：3 个挡板，模拟竖版射击游戏中的掩体
-            new ObstacleDefinition { Center = new Vector2(-2f, 0f), Size = new Vector2(1.5f, 0.4f), Rotation = 0f, HitPoints = 0, Faction = BulletFaction.Neutral },
-            new ObstacleDefinition { Center = new Vector2(0f, -0.5f), Size = new Vector2(1f, 1f), Rotation = 0f, HitPoints = 50, Faction = BulletFaction.Neutral },
-            new ObstacleDefinition { Center = new Vector2(2f, 0f), Size = new Vector2(1.5f, 0.4f), Rotation = 0f, HitPoints = 0, Faction = BulletFaction.Neutral },
+            new ObstacleDefinition { Center = new Vector2(-2f, 0f), Size = new Vector2(1.5f, 0.4f), Rotation = 0f, HitPoints = 0, Faction = EnumCamp.Neutral },
+            new ObstacleDefinition { Center = new Vector2(0f, -0.5f), Size = new Vector2(1f, 1f), Rotation = 0f, HitPoints = 50, Faction = EnumCamp.Neutral },
+            new ObstacleDefinition { Center = new Vector2(2f, 0f), Size = new Vector2(1.5f, 0.4f), Rotation = 0f, HitPoints = 0, Faction = EnumCamp.Neutral },
         };
 
         [Header("可视化")]

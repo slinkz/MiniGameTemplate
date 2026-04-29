@@ -48,7 +48,7 @@ namespace MiniGameTemplate.Danmaku
 
         [Header("碰撞")]
         [Tooltip("激光阵营（决定与哪些目标碰撞）")]
-        public BulletFaction Faction = BulletFaction.Enemy;
+        public EnumCamp Faction = EnumCamp.Enemy;
 
         public float MaxWidth = 0.8f;
 

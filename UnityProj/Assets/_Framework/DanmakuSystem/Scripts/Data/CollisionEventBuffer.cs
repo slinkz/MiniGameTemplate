@@ -24,10 +24,10 @@ namespace MiniGameTemplate.Danmaku
         public int Damage;
 
         /// <summary>弹丸/激光/喷雾的阵营</summary>
-        public BulletFaction SourceFaction;
+        public EnumCamp SourceFaction;
 
         /// <summary>目标的阵营</summary>
-        public BulletFaction TargetFaction;
+        public EnumCamp TargetFaction;
 
         /// <summary>碰撞事件类型</summary>
         public CollisionEventType EventType;

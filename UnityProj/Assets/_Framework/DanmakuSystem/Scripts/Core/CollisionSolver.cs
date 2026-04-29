@@ -119,7 +119,7 @@ namespace MiniGameTemplate.Danmaku
                 if ((c.Flags & BulletCore.FLAG_ACTIVE) == 0) continue;
                 if (c.Phase != (byte)BulletPhase.Active) continue;
 
-                var bulletFaction = (BulletFaction)c.Faction;
+                var sourceCamp = (EnumCamp)c.Faction;
 
                 for (int t = 0; t < TargetRegistry.MAX_TARGETS; t++)
                 {
@@ -127,7 +127,7 @@ namespace MiniGameTemplate.Danmaku
                     if (target == null) continue;
 
                     // 阵营过滤
-                    if (!ShouldCollide(bulletFaction, target.Faction)) continue;
+                    if (!ShouldCollide(sourceCamp, target.Faction)) continue;
 
                     // Pierce 冷却检查（位掩码：每 bit 对应一个 target 槽位）
                     ushort targetBit = (ushort)(1 << t);
@@ -152,7 +152,7 @@ namespace MiniGameTemplate.Danmaku
                     result.HitTargetCount++;
 
                     // 记录命中位置
-                    if (target.Faction == BulletFaction.Player)
+                    if (target.Faction == EnumCamp.Player)
                     {
                         result.PlayerHit = true;
                         result.PlayerDamage += damage;
@@ -176,7 +176,7 @@ namespace MiniGameTemplate.Danmaku
                             TargetSlot = t,
                             Position = hitbox.Center,
                             Damage = damage,
-                            SourceFaction = bulletFaction,
+                            SourceFaction = sourceCamp,
                             TargetFaction = target.Faction,
                             EventType = CollisionEventType.BulletHit,
                         };
@@ -224,12 +224,12 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>阵营碰撞判定</summary>
-        private static bool ShouldCollide(BulletFaction bulletFaction, BulletFaction targetFaction)
+        private static bool ShouldCollide(EnumCamp sourceCamp, EnumCamp targetCamp)
         {
             // 同阵营不碰撞
-            if (bulletFaction == targetFaction) return false;
-            // Neutral 弹丸 / Neutral 目标 → 与所有碰撞
-            if (bulletFaction == BulletFaction.Neutral || targetFaction == BulletFaction.Neutral) return true;
+            if (sourceCamp == targetCamp) return false;
+            // Neutral 来源 / Neutral 目标 → 与所有碰撞
+            if (sourceCamp == EnumCamp.Neutral || targetCamp == EnumCamp.Neutral) return true;
             // 不同非 Neutral 阵营 → 碰撞
             return true;
         }
@@ -256,7 +256,7 @@ namespace MiniGameTemplate.Danmaku
                     if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
                     // 阵营过滤：与 Phase 1/4/5 复用同一套规则，避免障碍物路径和目标路径语义漂移
-                    if (!ShouldCollide((BulletFaction)c.Faction, (BulletFaction)obs.Faction)) continue;
+                    if (!ShouldCollide((EnumCamp)c.Faction, (EnumCamp)obs.Faction)) continue;
 
                     // 圆 vs OBB
                     if (!ObstacleCollisionMath.CircleVsOBB(c.Position, c.Radius, in obs, out Vector2 normal))
@@ -333,7 +333,7 @@ namespace MiniGameTemplate.Danmaku
                     if (target == null) continue;
 
                     // 阵营过滤：读取激光实际阵营
-                    if (!ShouldCollide((BulletFaction)laser.Faction, target.Faction)) continue;
+                    if (!ShouldCollide((EnumCamp)laser.Faction, target.Faction)) continue;
 
                     var hitbox = target.Hitbox;
                     float totalRadius = laser.Width * 0.5f + hitbox.Radius;
@@ -360,7 +360,7 @@ namespace MiniGameTemplate.Danmaku
                     result.HitTargetCount++;
 
                     // 记录命中位置
-                    if (target.Faction == BulletFaction.Player)
+                    if (target.Faction == EnumCamp.Player)
                     {
                         result.PlayerHit = true;
                         result.PlayerDamage += damage;
@@ -383,7 +383,7 @@ namespace MiniGameTemplate.Danmaku
                             TargetSlot = t,
                             Position = hitbox.Center,
                             Damage = damage,
-                            SourceFaction = (BulletFaction)laser.Faction,
+                            SourceFaction = (EnumCamp)laser.Faction,
                             TargetFaction = target.Faction,
                             EventType = CollisionEventType.LaserHit,
                         };
@@ -422,7 +422,7 @@ namespace MiniGameTemplate.Danmaku
                     if (target == null) continue;
 
                     // 阵营过滤：读取喷雾实际阵营
-                    if (!ShouldCollide((BulletFaction)spray.Faction, target.Faction)) continue;
+                    if (!ShouldCollide((EnumCamp)spray.Faction, target.Faction)) continue;
 
                     var hitbox = target.Hitbox;
 
@@ -444,7 +444,7 @@ namespace MiniGameTemplate.Danmaku
                     result.HitTargetCount++;
 
                     // 记录命中位置
-                    if (target.Faction == BulletFaction.Player)
+                    if (target.Faction == EnumCamp.Player)
                     {
                         result.PlayerHit = true;
                         result.PlayerDamage += damage;
@@ -467,7 +467,7 @@ namespace MiniGameTemplate.Danmaku
                             TargetSlot = t,
                             Position = hitbox.Center,
                             Damage = damage,
-                            SourceFaction = (BulletFaction)spray.Faction,
+                            SourceFaction = (EnumCamp)spray.Faction,
                             TargetFaction = target.Faction,
                             EventType = CollisionEventType.SprayHit,
                         };
@@ -506,7 +506,7 @@ namespace MiniGameTemplate.Danmaku
                     if (obs.Phase != (byte)ObstaclePhase.Active) continue;
 
                     // 阵营过滤：与 Phase 1/2/4/5 复用同一套规则，避免喷雾路径单独漂移
-                    if (!ShouldCollide((BulletFaction)spray.Faction, (BulletFaction)obs.Faction)) continue;
+                    if (!ShouldCollide((EnumCamp)spray.Faction, (EnumCamp)obs.Faction)) continue;
 
                     // 距离检查——封装在 DistanceSqToOBB 中（矩形走 OBB clamp，圆形走真圆距离）
                     float distSq = ObstacleCollisionMath.DistanceSqToOBB(spray.Origin, in obs);
