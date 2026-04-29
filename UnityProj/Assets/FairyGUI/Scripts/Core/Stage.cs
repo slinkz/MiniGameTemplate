@@ -941,7 +941,9 @@ namespace FairyGUI
                     {
                         touch = free;
                         if (touch == null || uTouch.phase != UnityEngine.TouchPhase.Began)
+                        {
                             continue;
+                        }
 
                         touch.touchId = touchId;
                     }
@@ -1101,6 +1103,32 @@ namespace FairyGUI
 
         void HandleEvents()
         {
+            // ---- WebGL touch 自动检测必须在 GetHitTarget() 之前 ----
+            if (!_customInput && !_touchSupportDetected)
+            {
+                if (Application.platform == RuntimePlatform.WebGLPlayer)
+                {
+#if FAIRYGUI_INPUT_SYSTEM
+                    if (_useLegacyInput)
+                    {
+                        int tc = Input.touchCount;
+                        if (tc > 0)
+                            touchScreen = true;
+                    }
+                    else
+                    {
+                        if (Touch.activeTouches.Count > 0)
+                            touchScreen = true;
+                    }
+#else
+                    if (Input.touchCount > 0)
+                        touchScreen = true;
+#endif
+                }
+                else
+                    _touchSupportDetected = true;
+            }
+
             GetHitTarget();
 
             UpdateTouchPosition();
@@ -1112,29 +1140,6 @@ namespace FairyGUI
             }
             else
             {
-                if (!_touchSupportDetected)
-                {
-                    if (Application.platform == RuntimePlatform.WebGLPlayer)
-                    {
-#if FAIRYGUI_INPUT_SYSTEM
-                        if (_useLegacyInput)
-                        {
-                            if (Input.touchCount > 0)
-                                touchScreen = true;
-                        }
-                        else
-                        {
-                            if (Touch.activeTouches.Count > 0)
-                                touchScreen = true;
-                        }
-#else
-                        if (Input.touchCount > 0)
-                            touchScreen = true;
-#endif
-                    }
-                    else
-                        _touchSupportDetected = true;
-                }
                 if (touchScreen)
                     HandleTouchEvents();
                 else
@@ -1367,13 +1372,20 @@ namespace FairyGUI
         /// </summary>
         void HandleMouseEventsLegacy(TouchInfo touch)
         {
-            if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2))
+            bool mbDown0 = Input.GetMouseButtonDown(0);
+            bool mbDown1 = Input.GetMouseButtonDown(1);
+            bool mbDown2 = Input.GetMouseButtonDown(2);
+            bool mbUp0 = Input.GetMouseButtonUp(0);
+            bool mbUp1 = Input.GetMouseButtonUp(1);
+            bool mbUp2 = Input.GetMouseButtonUp(2);
+
+            if (mbDown0 || mbDown1 || mbDown2)
             {
                 if (!touch.began)
                 {
                     _touchCount = 1;
                     touch.Begin();
-                    touch.button = Input.GetMouseButtonDown(2) ? 2 : (Input.GetMouseButtonDown(1) ? 1 : 0);
+                    touch.button = mbDown2 ? 2 : (mbDown1 ? 1 : 0);
                     SetFocus(touch.target);
 
                     touch.UpdateEvent();
@@ -1381,7 +1393,7 @@ namespace FairyGUI
                 }
             }
 
-            if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(2))
+            if (mbUp0 || mbUp1 || mbUp2)
             {
                 if (touch.began)
                 {
@@ -1393,7 +1405,7 @@ namespace FairyGUI
                     {
                         touch.UpdateEvent();
 
-                        if (Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(2))
+                        if (mbUp1 || mbUp2)
                             clickTarget.BubbleEvent("onRightClick", touch.evt);
                         else
                             clickTarget.BubbleEvent("onClick", touch.evt);
@@ -1403,7 +1415,7 @@ namespace FairyGUI
                 }
             }
 
-            if (Input.GetMouseButtonUp(0) && _currentCursor != null)
+            if (mbUp0 && _currentCursor != null)
                 _ChangeCursor(_currentCursor);
         }
 #endif
@@ -1474,6 +1486,13 @@ namespace FairyGUI
                 {
                     if (!touch.began)
                     {
+                        // [FIX] HandleRollOver 可能触发 GButton.__rollover → SetState → Controller 切页
+                        // 导致 touch.target（原 Shape）被移出显示树。此处检测并重新 HitTest。
+                        if (touch.target == null || touch.target.stage == null)
+                        {
+                            touch.target = HitTest(pos, true) ?? this;
+                        }
+
                         _touchCount++;
                         touch.Begin();
                         touch.button = 0;
@@ -1526,7 +1545,8 @@ namespace FairyGUI
         /// </summary>
         void HandleTouchEventsLegacy()
         {
-            for (int i = 0; i < Input.touchCount; i++)
+            int tc = Input.touchCount;
+            for (int i = 0; i < tc; i++)
             {
                 UnityEngine.Touch uTouch = Input.GetTouch(i);
 
@@ -2079,20 +2099,33 @@ namespace FairyGUI
             }
 
             DisplayObject obj = downTargets[0];
-            if (obj.stage != null) //依然派发到原来的downTarget，虽然可能它已经偏离当前位置，主要是为了正确处理点击缩放的效果
+            if (obj.stage != null)
             {
                 downTargets.Clear();
                 return obj;
             }
 
+            // L2: 当前 target 冒泡链匹配 downTargets
             obj = target;
             while (obj != null)
             {
                 int i = downTargets.IndexOf(obj);
                 if (i != -1 && obj.stage != null)
                     break;
-
                 obj = obj.parent;
+            }
+
+            // L3: 扫描 downTargets 找第一个仍在 stage 上的祖先
+            if (obj == null)
+            {
+                for (int i = 1; i < downTargets.Count; i++)
+                {
+                    if (downTargets[i].stage != null)
+                    {
+                        obj = downTargets[i];
+                        break;
+                    }
+                }
             }
 
             downTargets.Clear();
