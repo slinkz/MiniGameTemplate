@@ -2,7 +2,7 @@
 
 > **版本**：v2.6  
 > **日期**：2026-04-27  
-> **状态**：Phase 1 编码进行中（P1.0 ✅ 完成 2026-04-30）  
+> **状态**：Phase 1 编码进行中（P1.0 ✅ 2026-04-30 / P1.1 ✅ 2026-04-30）  
 > **前置文档**：MiniGameTemplate-EntityComponent-Design.md（v1.0 草案）  
 > **决策记录**：ADR-033  
 > **PK 评审记录**：ENTITY_COMPONENT_PK.md（R1 技术 PK）、ENTITY_COMPONENT_PK_R2.md（R2 策划工作流 PK）、ENTITY_COMPONENT_PK_R3.md（R3 软件架构师 PK）、ENTITY_COMPONENT_PK_R4.md（R4 游戏设计师 PK）、ENTITY_COMPONENT_PK_R5.md（R5 编辑器工具 PK）、ENTITY_COMPONENT_PK_R6.md（R6 策划落地性 PK）  
@@ -96,30 +96,30 @@
 
 | 编号 | 契约 | 状态 |
 |------|------|------|
-| BC-01.1 | Entity 是纯数据容器，不继承 MonoBehaviour，不持有 GameObject | 待实现 |
-| BC-01.2 | Entity 通过 `GetComponent(ComponentType)` 按枚举索引 O(1) 查询组件；泛型版 `GetComponent<T>()` 为 O(N)（N≤16，线性扫描 + 类型检查）（见 §3.2） | 待实现 |
-| BC-01.3 | Entity 在生命周期节点（Init/Tick/Reset）统一驱动所有 Tickable 组件 | 待实现 |
-| BC-01.4 | Entity 持有本地事件总线（EntityEventBus），组件只在本 Entity 范围内通信 | 待实现 |
-| BC-01.5 | Entity 持有唯一 ID（EntityId，uint32），用于跨系统引用 | 待实现 |
-| BC-01.6 | Entity 持有 Camp（阵营），Phase 1 统一使用 `EnumCamp` 枚举（天命人决策 D-02，替代原 BulletFaction）；如未来需扩展阵营，引入独立枚举 + 映射层（见 §3.11） | 待实现 |
+| BC-01.1 | Entity 是纯数据容器，不继承 MonoBehaviour，不持有 GameObject | ✅ P1.1 |
+| BC-01.2 | Entity 通过 `GetComponent(ComponentType)` 按枚举索引 O(1) 查询组件；泛型版 `GetComponent<T>()` 为 O(N)（N≤16，线性扫描 + 类型检查）（见 §3.2） | ✅ P1.1 |
+| BC-01.3 | Entity 在生命周期节点（Init/Tick/Reset）统一驱动所有 Tickable 组件 | ✅ P1.1 |
+| BC-01.4 | Entity 持有本地事件总线（EntityEventBus），组件只在本 Entity 范围内通信 | ✅ P1.1 |
+| BC-01.5 | Entity 持有唯一 ID（EntityId，uint32），用于跨系统引用 | ✅ P1.1 |
+| BC-01.6 | Entity 持有 Camp（阵营），Phase 1 统一使用 `EnumCamp` 枚举（天命人决策 D-02，替代原 BulletFaction）；如未来需扩展阵营，引入独立枚举 + 映射层（见 §3.11） | ✅ P1.1 |
 
 ### BC-02 组件基类契约
 
 | 编号 | 契约 | 状态 |
 |------|------|------|
-| BC-02.1 | 所有组件实现 `IEntityComponent` 接口：`Init(Entity owner)` / `Reset()` / `SetActive(bool)`。组件通过 `owner` 间接访问配置（见 §3.2） | 待实现 |
-| BC-02.2 | Tickable 组件额外实现 `ITickable`：`Tick(float dt)` + `TickOrder` 属性 | 待实现 |
-| BC-02.3 | 组件通过 `SetActive(false)` 休眠——从 TickList 移除，不响应事件，零开销 | 待实现 |
-| BC-02.4 | 组件之间**禁止直接引用**，只通过 EntityEventBus 或 Entity.GetComponent 通信 | 待实现 |
+| BC-02.1 | 所有组件实现 `IEntityComponent` 接口：`Init(Entity owner)` / `Reset()` / `SetActive(bool)`。组件通过 `owner` 间接访问配置（见 §3.2） | ✅ P1.1 |
+| BC-02.2 | Tickable 组件额外实现 `ITickable`：`Tick(float dt)` + `TickOrder` 属性 | ✅ P1.1 |
+| BC-02.3 | 组件通过 `SetActive(false)` 休眠——从 TickList 移除，不响应事件，零开销 | ✅ P1.1 |
+| BC-02.4 | 组件之间**禁止直接引用**，只通过 EntityEventBus 或 Entity.GetComponent 通信 | ✅ P1.1（接口约束） |
 
 ### BC-03 Entity 本地事件总线契约
 
 | 编号 | 契约 | 状态 |
 |------|------|------|
-| BC-03.1 | EntityEventBus 为每个 Entity 独立实例，事件不跨 Entity 传播 | 待实现 |
-| BC-03.2 | 支持 `Publish<T>(T evt)` / `Subscribe<T>(Action<T>)` / `Unsubscribe<T>(Action<T>)` | 待实现 |
-| BC-03.3 | 事件类型用 struct（零 GC），通过泛型类型 ID 分发 | 待实现 |
-| BC-03.4 | Reset 时自动清空所有订阅（防池化后事件泄漏） | 待实现 |
+| BC-03.1 | EntityEventBus 为每个 Entity 独立实例，事件不跨 Entity 传播 | ✅ P1.1 |
+| BC-03.2 | 支持 `Publish<T>(T evt)` / `Subscribe<T>(Action<T>)` / `Unsubscribe<T>(Action<T>)` | ✅ P1.1 |
+| BC-03.3 | 事件类型用 struct（零 GC），通过泛型类型 ID 分发 | ✅ P1.1 |
+| BC-03.4 | Reset 时自动清空所有订阅（防池化后事件泄漏） | ✅ P1.1 |
 
 ### BC-04 Entity 池管理器契约
 
@@ -288,7 +288,8 @@ namespace MiniGameTemplate.Entity
         Skill = 6,
         Control = 7,
         AI = 8,
-        // 预留 9~15
+        Attack = 9,  // v2.4: Phase 1 最小攻击组件
+        // 预留 10~15
         MAX = 16
     }
 
@@ -366,6 +367,7 @@ public class Entity
 public static class TickOrders
 {
     public const int Decision   = 100;  // ControlComponent / AIComponent
+    public const int Attack     = 150;  // AttackComponent（v2.4）
     public const int AutoAim    = 200;  // AutoAimComponent
     public const int Movement   = 300;  // MovementComponent
     public const int Animation  = 400;  // AnimationComponent
@@ -1606,7 +1608,7 @@ public class EntityConfigSO : ScriptableObject
 | 步骤 | 内容 | AC（全部需满足） |
 |------|------|-----------------|
 | P1.0 | ~~阵营枚举统一迁移（BulletFaction → EnumCamp）~~ ✅ 2026-04-30 | ✅ 全项目零 `BulletFaction` 引用 + 编译通过 + DanmakuDemo 行为不变（SA-002，v2.3 新增） |
-| P1.1 | IEntityComponent / ITickable / Entity 容器 | ✅ 编译通过 + GetComponent(ComponentType) O(1) 返回正确组件 + GetComponent 未注册类型返回 null |
+| P1.1 | ~~IEntityComponent / ITickable / Entity 容器~~ ✅ 2026-04-30 | ✅ 编译通过 + GetComponent(ComponentType) O(1) 返回正确组件 + GetComponent 未注册类型返回 null |
 | P1.2 | EntityEventBus（零 GC 泛型事件总线） | ✅ 编译通过 + Publish→Subscribe 正确分发 + ClearAll 后无残留 + Profiler 验证 100 次 Pub/Sub 周期 GC = 0 |
 | P1.3 | EntityPool + EntityManager | ✅ 编译通过 + Profiler 验证 50 次 Acquire+Release 周期 GC = 0 + 池满 LogWarning 不崩 + 延迟销毁在 Tick 中不崩 |
 | P1.4 | StateComponent + HealthComponent | ✅ 编译通过 + 互斥状态冲突时正确阻止 + OnDamaged 事件携带正确来源 + HP=0 触发 OnDeath |
