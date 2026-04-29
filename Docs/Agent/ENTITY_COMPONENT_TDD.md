@@ -2,7 +2,7 @@
 
 > **版本**：v2.6  
 > **日期**：2026-04-27  
-> **状态**：Phase 1 编码进行中（P1.0 ✅ 2026-04-30 / P1.1 ✅ 2026-04-30）  
+> **状态**：Phase 1 编码进行中（P1.0 ✅ 2026-04-30 / P1.1 ✅ 2026-04-30 / P1.2 ✅ 2026-04-30）  
 > **前置文档**：MiniGameTemplate-EntityComponent-Design.md（v1.0 草案）  
 > **决策记录**：ADR-033  
 > **PK 评审记录**：ENTITY_COMPONENT_PK.md（R1 技术 PK）、ENTITY_COMPONENT_PK_R2.md（R2 策划工作流 PK）、ENTITY_COMPONENT_PK_R3.md（R3 软件架构师 PK）、ENTITY_COMPONENT_PK_R4.md（R4 游戏设计师 PK）、ENTITY_COMPONENT_PK_R5.md（R5 编辑器工具 PK）、ENTITY_COMPONENT_PK_R6.md（R6 策划落地性 PK）  
@@ -1609,7 +1609,7 @@ public class EntityConfigSO : ScriptableObject
 |------|------|-----------------|
 | P1.0 | ~~阵营枚举统一迁移（BulletFaction → EnumCamp）~~ ✅ 2026-04-30 | ✅ 全项目零 `BulletFaction` 引用 + 编译通过 + DanmakuDemo 行为不变（SA-002，v2.3 新增） |
 | P1.1 | ~~IEntityComponent / ITickable / Entity 容器~~ ✅ 2026-04-30 | ✅ 编译通过 + GetComponent(ComponentType) O(1) 返回正确组件 + GetComponent 未注册类型返回 null |
-| P1.2 | EntityEventBus（零 GC 泛型事件总线） | ✅ 编译通过 + Publish→Subscribe 正确分发 + ClearAll 后无残留 + Profiler 验证 100 次 Pub/Sub 周期 GC = 0 |
+| P1.2 | ~~EntityEventBus（零 GC 泛型事件总线）~~ ✅ 2026-04-30 | ✅ 编译通过 + Publish→Subscribe 正确分发 + ClearAll 后无残留 + Profiler 验证 100 次 Pub/Sub 周期 GC = 0 |
 | P1.3 | EntityPool + EntityManager | ✅ 编译通过 + Profiler 验证 50 次 Acquire+Release 周期 GC = 0 + 池满 LogWarning 不崩 + 延迟销毁在 Tick 中不崩 |
 | P1.4 | StateComponent + HealthComponent | ✅ 编译通过 + 互斥状态冲突时正确阻止 + OnDamaged 事件携带正确来源 + HP=0 触发 OnDeath |
 | P1.5 | CollisionComponent（ICollisionTarget 桥接） | ✅ 编译通过 + DanmakuDemo 中弹丸命中 Entity 触发 OnCollisionHit + 注册/注销不泄漏槽位 |
