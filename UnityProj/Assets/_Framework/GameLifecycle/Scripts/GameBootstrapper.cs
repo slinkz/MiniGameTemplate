@@ -186,14 +186,14 @@ namespace MiniGameTemplate.Core
             // NOTE: 不再强制 Stage.touchScreen = true。
             // 之前强制设为 true 导致"按钮点两次才响应"——因为微信 touch 回调
             // 存在一帧延迟，首次点击时 HandleTouchEvents() 读到 touchCount==0
-            // → 空循环 → 点击丢失。而 HandleMouseEvents() 本可立即响应
-            // (weapp-adapter 同时派发 mouse DOM 事件 → emscripten → Input.GetMouseButtonDown)
-            // 但被 touchScreen=true 封死了。
+            // → 空循环 → 点击丢失。
             //
-            // 现在依赖 FairyGUI 原生自动检测：
-            //   启动时 touchScreen=false → mouse 模式 → 首次点击立即响应
-            //   真机首次触摸 → Input.touchCount>0 → 自动切换到 touch 模式
-            // 两端都能正常工作，且不存在首次点击丢失。
+            // 现在依赖 FairyGUI 原生自动检测 + Stage.cs 中的 _useLegacyInput fallback：
+            //   Stage 构造函数检测 WebGL + Mouse.current==null → _useLegacyInput=true
+            //   所有 Input System API 调用自动 fallback 到旧 Input.xxx API
+            //   启动时 touchScreen=false → mouse 模式 → HandleMouseEventsLegacy → 首次点击立即响应
+            //   真机首次触摸 → Input.touchCount>0 → 自动切换 touch 模式 → HandleTouchEventsLegacy
+            // 前提：Player Settings → Active Input Handling = Both
             GameLog.Log("[Bootstrapper] FairyGUI touchScreen auto-detect (no forced override).");
 
             // 6. Object Pool
