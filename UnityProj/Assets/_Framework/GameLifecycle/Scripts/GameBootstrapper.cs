@@ -183,19 +183,18 @@ namespace MiniGameTemplate.Core
             _ = UIManager.Instance;
             GameLog.Log("[Bootstrapper] UIManager initialized.");
 
-            // FIX: WeChat Mini Game touchScreen override.
-            // Problem: FairyGUI defaults WebGL to mouse mode (touchScreen=false),
-            // relying on Input.GetMouseButtonDown(). But WeChat's weapp-adapter
-            // only dispatches touch DOM events (touchstart/touchend), never mouse
-            // events (mousedown/mouseup) → GetMouseButtonDown() always returns
-            // false → clicks never register despite hover working fine.
-            // Solution: force touch mode so FairyGUI uses HandleTouchEvents()
-            // which reads Input.touchCount / Input.GetTouch() — these ARE
-            // populated by the WX Unity SDK's native touch callback bridge.
-#if UNITY_WEBGL && !UNITY_EDITOR
-            FairyGUI.Stage.touchScreen = true;
-            GameLog.Log("[Bootstrapper] FairyGUI forced to touchScreen mode for WeChat.");
-#endif
+            // NOTE: 不再强制 Stage.touchScreen = true。
+            // 之前强制设为 true 导致"按钮点两次才响应"——因为微信 touch 回调
+            // 存在一帧延迟，首次点击时 HandleTouchEvents() 读到 touchCount==0
+            // → 空循环 → 点击丢失。而 HandleMouseEvents() 本可立即响应
+            // (weapp-adapter 同时派发 mouse DOM 事件 → emscripten → Input.GetMouseButtonDown)
+            // 但被 touchScreen=true 封死了。
+            //
+            // 现在依赖 FairyGUI 原生自动检测：
+            //   启动时 touchScreen=false → mouse 模式 → 首次点击立即响应
+            //   真机首次触摸 → Input.touchCount>0 → 自动切换到 touch 模式
+            // 两端都能正常工作，且不存在首次点击丢失。
+            GameLog.Log("[Bootstrapper] FairyGUI touchScreen auto-detect (no forced override).");
 
             // 6. Object Pool
             _ = PoolManager.Instance;
