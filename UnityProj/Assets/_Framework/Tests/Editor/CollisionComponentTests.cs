@@ -2,6 +2,7 @@ using NUnit.Framework;
 using MiniGameTemplate.Entity;
 using MiniGameTemplate.Danmaku;
 using UnityEngine;
+using CollisionEventType = MiniGameTemplate.Entity.CollisionEventType;
 
 /// <summary>
 /// Phase 1.5 验证测试：CollisionComponent
