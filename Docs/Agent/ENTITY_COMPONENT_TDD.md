@@ -1627,7 +1627,7 @@ public class EntityConfigSO : ScriptableObject
 | 步骤 | 内容 | 状态 |
 |------|------|------|
 | P2.1 | 正式 ViewPrefab 渲染（IEntityView + EntitySpriteAnimator + dual-path ViewBridge） | ✅ 2026-04-30 |
-| P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） | 🔲 |
+| P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） | ✅ 2026-04-30 |
 | P2.3 | Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载） | 🔲 |
 | P2.4 | 受击扩展参数（击退/无敌帧/击退曲线） | 🔲 |
 | P2.5 | WaveTriggerMode.OnEnterArea + TriggerZone 组件 | 🔲 |

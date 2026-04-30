@@ -116,6 +116,15 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
+        /// 直接设置位置（P2.2 碰撞分离用，绕过速度系统）。
+        /// </summary>
+        public void SetPosition(Vector2 pos)
+        {
+            if (_owner != null)
+                _owner.Position = pos;
+        }
+
+        /// <summary>
         /// 面向目标位置（立即转向，Phase 2 扩展平滑转向）。
         /// </summary>
         public void LookAt(Vector2 targetPos)

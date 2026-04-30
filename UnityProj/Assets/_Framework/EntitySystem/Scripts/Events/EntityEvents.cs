@@ -10,6 +10,7 @@ namespace MiniGameTemplate.Entity
         BulletHit = 0,
         LaserHit = 1,
         SprayHit = 2,
+        ContactHit = 3, // P2.2: Entity vs Entity 接触碰撞
     }
 
     // ──────────────── 伤害上下文（v2.4 GD-R4-001）────────────────

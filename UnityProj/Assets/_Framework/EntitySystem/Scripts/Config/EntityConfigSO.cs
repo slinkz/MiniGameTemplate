@@ -47,6 +47,19 @@ namespace MiniGameTemplate.Entity
         [Tooltip("击退持续时间（秒）")]
         public float KnockbackDuration = 0.2f;
 
+        [Header("Entity vs Entity 碰撞（P2.2）")]
+        [Tooltip("是否参与 Entity vs Entity 碰撞检测")]
+        public bool EnableEntityCollision = true;
+
+        [Tooltip("碰撞层（0=默认，与所有层碰撞。相同非零层才碰撞。）")]
+        public int CollisionLayer = 0;
+
+        [Tooltip("接触伤害值（0=不造成接触伤害）")]
+        public int ContactDamage = 0;
+
+        [Tooltip("接触伤害间隔（秒）。防止每帧重复伤害。")]
+        public float ContactDamageInterval = 0.5f;
+
         [Header("攻击（v2.4 新增）")]
         [Tooltip("攻击间隔（秒），0 = 不攻击")]
         public float AttackInterval = 1f;

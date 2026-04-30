@@ -5,13 +5,14 @@ namespace MiniGameTemplate.Entity
 {
     /// <summary>
     /// Entity 系统启动器——策划拖到场景根 GO 即可激活整个 Entity 系统。
-    /// 负责创建 EntityManager / EntityViewBridge / EntitySpawner / HitReactionHandler 实例并每帧驱动。
+    /// 负责创建 EntityManager / EntityViewBridge / EntitySpawner / HitReactionHandler / EntityCollisionSolver 实例并每帧驱动。
     /// 这是策划工作流的"引擎启动钥匙"（v2.6 WF-001）。
     /// 
-    /// 时序（§3.12，P1.11 更新）：
+    /// 时序（§3.12，P2.2 更新）：
     ///   EntityManager.Tick(dt)                ← Phase A: Entity 组件更新 + Phase B: 延迟销毁
     ///   EntitySpawner.Tick(dt, mgr)           ← 波次推进（AllCleared 判定在延迟销毁后，SA-006）
-    ///   EntityViewBridge.SyncAll(mgr)         ← 视觉层位置同步
+    ///   EntityCollisionSolver.Solve(mgr, dt)  ← Entity vs Entity 碰撞检测+分离+接触伤害（P2.2）
+    ///   EntityViewBridge.SyncAll(mgr)         ← 视觉层位置同步（碰撞分离后的修正位置）
     ///   HitReactionHandler.Tick(dt, mgr)      ← 受击表现管线（闪白淡出/伤害数字漂浮/死亡延迟）
     /// </summary>
     public class EntitySystemBootstrap : MonoBehaviour
@@ -24,13 +25,21 @@ namespace MiniGameTemplate.Entity
         [Tooltip("伤害数字 Prefab 的 PoolDefinition（可选，为空则不显示伤害数字）")]
         public PoolDefinition DamageNumberPool;
 
+        [Header("Entity 碰撞（P2.2）")]
+        [Tooltip("是否启用 Entity vs Entity 碰撞检测")]
+        public bool EnableEntityCollision = true;
+
         private EntityManager _entityManager;
         private EntityViewBridge _viewBridge;
         private EntitySpawner _spawner;
         private EntityHitReactionHandler _hitHandler;
+        private EntityCollisionSolver _collisionSolver;
 
         /// <summary>受击表现管理器（供外部查询闪白状态等）</summary>
         public EntityHitReactionHandler HitReactionHandler => _hitHandler;
+
+        /// <summary>Entity 碰撞求解器（P2.2）</summary>
+        public EntityCollisionSolver CollisionSolver => _collisionSolver;
 
         // ──────────── 生命周期 ────────────
 
@@ -41,6 +50,7 @@ namespace MiniGameTemplate.Entity
             _viewBridge = new EntityViewBridge(PoolManager.Instance, DebugViewPool);
             _spawner = new EntitySpawner();
             _hitHandler = new EntityHitReactionHandler(PoolManager.Instance, DamageNumberPool);
+            _collisionSolver = new EntityCollisionSolver();
 
             // ViewBridge ↔ HitHandler 关联（闪白颜色查询）
             _viewBridge.SetHitReactionHandler(_hitHandler);
@@ -70,13 +80,16 @@ namespace MiniGameTemplate.Entity
         {
             float dt = Time.deltaTime;
 
-            // 时序保证（§3.12 / SA-006 / P1.11）：
+            // 时序保证（§3.12 / SA-006 / P1.11 / P2.2）：
             // 1. EntityManager.Tick → Phase A + Phase B（延迟销毁执行完毕）
             // 2. EntitySpawner.Tick → 波次推进（此时 CountAliveByConfig 准确）
-            // 3. EntityViewBridge.SyncAll → 视觉同步
-            // 4. HitReactionHandler.Tick → 受击表现管线（闪白/伤害数字/死亡延迟）
+            // 3. EntityCollisionSolver.Solve → Entity vs Entity 碰撞分离+接触伤害
+            // 4. EntityViewBridge.SyncAll → 视觉同步（碰撞修正后的位置）
+            // 5. HitReactionHandler.Tick → 受击表现管线（闪白/伤害数字/死亡延迟）
             _entityManager.Tick(dt);
             _spawner.Tick(dt, _entityManager);
+            if (EnableEntityCollision)
+                _collisionSolver.Solve(_entityManager, dt);
             _viewBridge.SyncAll(_entityManager);
             _hitHandler.Tick(dt, _entityManager);
         }
@@ -94,6 +107,7 @@ namespace MiniGameTemplate.Entity
             // 清理
             _hitHandler?.ClearAll();
             _viewBridge?.ClearAllViews();
+            _collisionSolver?.ClearCooldowns();
 
             // 注销全局访问点
             EntityManagerAccessor.Instance = null;
