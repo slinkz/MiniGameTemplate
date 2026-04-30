@@ -2,7 +2,7 @@
 
 > **版本**：v2.6  
 > **日期**：2026-04-27  
-> **状态**：Phase 1 编码进行中（P1.0 ✅ 2026-04-30 / P1.1 ✅ 2026-04-30 / P1.2 ✅ 2026-04-30 / P1.3 ✅ 2026-04-30 / P1.4 ✅ 2026-04-30 / P1.5 ✅ 2026-04-30 / P1.6 ✅ 2026-04-30 / P1.7 ✅ 2026-04-30 / P1.8 ✅ 2026-04-30 / P1.9 ✅ 2026-04-30 / P1.10 ✅ 2026-04-30）  
+> **状态**：**Phase 1 全部完成 ✅**（P1.0~P1.11 全部 2026-04-30）  
 > **前置文档**：MiniGameTemplate-EntityComponent-Design.md（v1.0 草案）  
 > **决策记录**：ADR-033  
 > **PK 评审记录**：ENTITY_COMPONENT_PK.md（R1 技术 PK）、ENTITY_COMPONENT_PK_R2.md（R2 策划工作流 PK）、ENTITY_COMPONENT_PK_R3.md（R3 软件架构师 PK）、ENTITY_COMPONENT_PK_R4.md（R4 游戏设计师 PK）、ENTITY_COMPONENT_PK_R5.md（R5 编辑器工具 PK）、ENTITY_COMPONENT_PK_R6.md（R6 策划落地性 PK）  
@@ -1618,7 +1618,7 @@ public class EntityConfigSO : ScriptableObject
 | P1.8 | ~~EntityConfigSO 配置驱动验证 + Editor 工具~~ ✅ 2026-04-30 | ✅ 从 EntityConfigSO 创建完整 Entity（含正确组件列表）+ Inspector 可编辑所有 Phase 1 字段（含 AIBehavior/Attack/Effect 新增字段）+ **EntityConfigSOEditor 条件显示 + HelpBox 警告正常工作**（ET-001/002）+ **Components CheckboxGrid 互斥校验正常**（ET-002）+ **EntityConfigValidator MenuItem 批量校验输出正确**（ET-006）+ **AIBehaviorSOEditor 可读摘要标题正常显示**（ET-005）+ **EntitySpawnWaveSOEditor 摘要面板正常显示**（ET-007）+ **EntityDebugWindow Play Mode 概览面板可打开并显示数据**（ET-008）+ **SOCreationWizard 含 Entity 系列 3 种 SO 类型**（ET-010）(**v2.5 扩展**) |
 | P1.9 | ~~EntityViewBridge + Debug View~~ ✅ 2026-04-30 | ✅ Entity 生成时自动创建 Debug GO（彩色圆 + HP 文本）+ Despawn 时归还 PoolManager + 每帧位置同步 |
 | P1.10 | ~~刷怪系统（EntitySpawner + EntitySpawnPoint）+ EntitySystemBootstrap~~ ✅ 2026-04-30 | ✅ 场景放置 EntitySpawnPoint + 配置 EntitySpawnWaveSO → 按波次生成 Entity + Timer/AllCleared/OnCallback 三种触发模式 + Loop 循环正常工作 + **场景中放 EntitySystemBootstrap → 自动驱动刷怪系统（v2.6 WF-001）** |
-| P1.11 | 集成验收 | ✅ Demo 场景：1 玩家（ControlComponent 手动发射）+ 3 敌人（AIBehaviorSO 驱动追击+AttackComponent 自动射击）+ 双向弹幕交互 + 敌人被命中→DamageContext 传递→受击闪白→击退→伤害数字弹出→死亡延迟→死亡特效→回收 + Entity 总内存 < 2MB + **Demo SO 资产保留为模板（存放 `Assets/_Game/Configs/_Template/`，文件名 `Template_` 前缀）（v2.6 WF-009）** |
+| P1.11 | ~~集成验收~~ ✅ 2026-04-30 | ✅ Demo 场景：1 玩家（ControlComponent 手动发射）+ 3 敌人（AIBehaviorSO 驱动追击+AttackComponent 自动射击）+ 双向弹幕交互 + 敌人被命中→DamageContext 传递→受击闪白→击退→伤害数字弹出→死亡延迟→死亡特效→回收 + Entity 总内存 < 2MB + **Demo SO 资产保留为模板（存放 `Assets/_Game/Configs/_Template/`，文件名 `Template_` 前缀）（v2.6 WF-009）** |
 
 ### Phase 2：渲染升级 + Entity vs Entity 碰撞 + Luban 迁移（预估 4 天）
 

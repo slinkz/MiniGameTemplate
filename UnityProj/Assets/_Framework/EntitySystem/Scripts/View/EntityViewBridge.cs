@@ -25,6 +25,7 @@ namespace MiniGameTemplate.Entity
 
         private readonly PoolManager _poolManager;
         private readonly PoolDefinition _debugViewPool; // Phase 1 内置 Debug Prefab 的池
+        private EntityHitReactionHandler _hitHandler; // P1.11: 闪白查询用
 
         /// <summary>当前活跃视图数量</summary>
         public int ActiveViewCount => _activeCount;
@@ -33,6 +34,12 @@ namespace MiniGameTemplate.Entity
         {
             _poolManager = poolManager;
             _debugViewPool = debugViewPool;
+        }
+
+        /// <summary>设置受击管线引用（Bootstrap 初始化后调用）</summary>
+        public void SetHitReactionHandler(EntityHitReactionHandler handler)
+        {
+            _hitHandler = handler;
         }
 
         /// <summary>
@@ -112,8 +119,8 @@ namespace MiniGameTemplate.Entity
                 go.transform.position = new Vector3(entity.Position.x, entity.Position.y, 0f);
                 go.transform.rotation = Quaternion.Euler(0f, 0f, entity.Rotation);
 
-                // Phase 1 Debug View: 更新 HP 文本
-                // TODO Phase 2 优化：缓存 TextMesh 引用到预分配数组，避免每帧 GetComponentInChildren
+                // Phase 1 Debug View: 更新 HP 文本 + 闪白颜色
+                // TODO Phase 2 优化：缓存 TextMesh/SpriteRenderer 引用到预分配数组
                 if (_viewConfigs[i] != null && _viewConfigs[i].ViewPrefab == null)
                 {
                     var tm = go.GetComponentInChildren<TextMesh>();
@@ -122,6 +129,27 @@ namespace MiniGameTemplate.Entity
                         var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
                         if (health != null)
                             tm.text = health.CurrentHp + "/" + health.MaxHp;
+                    }
+
+                    // P1.11: 闪白表现——SpriteRenderer 颜色闪白
+                    if (_hitHandler != null)
+                    {
+                        var sr = go.GetComponentInChildren<SpriteRenderer>();
+                        if (sr != null)
+                        {
+                            if (_hitHandler.IsFlashing(entity.Id))
+                            {
+                                float progress = _hitHandler.GetFlashProgress(entity.Id);
+                                sr.color = Color.Lerp(
+                                    _viewConfigs[i].HitFlashColor,
+                                    _viewConfigs[i].DebugColor,
+                                    progress);
+                            }
+                            else
+                            {
+                                sr.color = _viewConfigs[i].DebugColor;
+                            }
+                        }
                     }
                 }
             }

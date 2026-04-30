@@ -73,12 +73,29 @@ namespace MiniGameTemplate.Entity
         [Tooltip("Debug View 颜色（Phase 1 Debug Prefab 的 SpriteRenderer 色调）")]
         public Color DebugColor = Color.white;
 
-        // ──────────────── 视觉特效（Phase 1.10 填充）────────────────
-        // public Pool.PoolDefinition SpawnEffect;
-        // public Pool.PoolDefinition HitEffect;
-        // public Pool.PoolDefinition DeathEffect;
-        // public float HitFlashDuration = 0.1f;
-        // public float DeathDelay = 0.5f;
-        // public bool ShowDamageNumber = true;
+        // ──────────────── 受击反馈 + 视觉特效（P1.11 启用）────────────────
+
+        [Header("受击反馈")]
+        [Tooltip("受击闪白持续时间")]
+        public float HitFlashDuration = 0.1f;
+
+        [Tooltip("受击闪白颜色")]
+        public Color HitFlashColor = Color.white;
+
+        [Tooltip("是否显示伤害数字")]
+        public bool ShowDamageNumber = true;
+
+        [Header("视觉特效")]
+        [Tooltip("生成特效（走 PoolManager，可选）")]
+        public Pool.PoolDefinition SpawnEffect;
+
+        [Tooltip("受击特效（走 PoolManager，可选）")]
+        public Pool.PoolDefinition HitEffect;
+
+        [Tooltip("死亡特效（走 PoolManager，可选）")]
+        public Pool.PoolDefinition DeathEffect;
+
+        [Tooltip("死亡延迟（播完表现再回收，秒）")]
+        public float DeathDelay = 0.3f;
     }
 }
