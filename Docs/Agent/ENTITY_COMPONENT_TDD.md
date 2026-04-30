@@ -2,7 +2,7 @@
 
 > **版本**：v2.6  
 > **日期**：2026-04-27  
-> **状态**：Phase 1 编码进行中（P1.0 ✅ 2026-04-30 / P1.1 ✅ 2026-04-30 / P1.2 ✅ 2026-04-30）  
+> **状态**：Phase 1 编码进行中（P1.0 ✅ 2026-04-30 / P1.1 ✅ 2026-04-30 / P1.2 ✅ 2026-04-30 / P1.3 ✅ 2026-04-30）  
 > **前置文档**：MiniGameTemplate-EntityComponent-Design.md（v1.0 草案）  
 > **决策记录**：ADR-033  
 > **PK 评审记录**：ENTITY_COMPONENT_PK.md（R1 技术 PK）、ENTITY_COMPONENT_PK_R2.md（R2 策划工作流 PK）、ENTITY_COMPONENT_PK_R3.md（R3 软件架构师 PK）、ENTITY_COMPONENT_PK_R4.md（R4 游戏设计师 PK）、ENTITY_COMPONENT_PK_R5.md（R5 编辑器工具 PK）、ENTITY_COMPONENT_PK_R6.md（R6 策划落地性 PK）  
@@ -125,10 +125,10 @@
 
 | 编号 | 契约 | 状态 |
 |------|------|------|
-| BC-04.1 | EntityPool 按配置类型分池（EntityConfigId → 独立池） | 待实现 |
-| BC-04.2 | 池中 Entity + 组件整体预分配，取出/归还零 GC | 待实现 |
-| BC-04.3 | 取出时调用所有组件 `Init()`，归还时调用所有组件 `Reset()` | 待实现 |
-| BC-04.4 | 每池设 InitialCapacity（预热）+ MaxCapacity（硬上限），超限 LogWarning 不崩溃 | 待实现 |
+| BC-04.1 | EntityPool 按配置类型分池（EntityConfigId → 独立池） | ✅ P1.3 |
+| BC-04.2 | 池中 Entity + 组件整体预分配，取出/归还零 GC | ✅ P1.3 |
+| BC-04.3 | 取出时调用所有组件 `Init()`，归还时调用所有组件 `Reset()` | ✅ P1.3 |
+| BC-04.4 | 每池设 InitialCapacity（预热）+ MaxCapacity（硬上限），超限 LogWarning 不崩溃 | ✅ P1.3 |
 | BC-04.5 | 池采用预分配数组 + 空闲槽位栈（参考 BulletWorld 模式），非 Queue\<Entity\> | 待实现 |
 
 ### BC-05 碰撞集成契约
@@ -146,10 +146,10 @@
 
 | 编号 | 契约 | 状态 |
 |------|------|------|
-| BC-06.1 | EntityManager 统一驱动所有活跃 Entity 的 Tick，不依赖 MonoBehaviour.Update | 待实现 |
-| BC-06.2 | Tickable 组件按 TickOrder 升序执行（数字越小越先） | 待实现 |
-| BC-06.3 | 定频 Tick 组件内部自行计帧，间隔未到时跳过 | 待实现 |
-| BC-06.4 | EntityManager.Tick() 在 DanmakuSystem.Update() 之后、LateUpdate 之前调用。**已知限制**：Entity 位置更新与碰撞检测存在 1 帧延迟，小游戏场景可接受（见 §3.12） | 待实现 |
+| BC-06.1 | EntityManager 统一驱动所有活跃 Entity 的 Tick，不依赖 MonoBehaviour.Update | ✅ P1.3 |
+| BC-06.2 | Tickable 组件按 TickOrder 升序执行（数字越小越先） | ✅ P1.1+P1.3 |
+| BC-06.3 | 定频 Tick 组件内部自行计帧，间隔未到时跳过 | ✅ P1.3（框架层不干预，组件自行实现） |
+| BC-06.4 | EntityManager.Tick() 在 DanmakuSystem.Update() 之后、LateUpdate 之前调用。**已知限制**：Entity 位置更新与碰撞检测存在 1 帧延迟，小游戏场景可接受（见 §3.12） | ✅ P1.3（调用时机由 Bootstrap 控制） |
 
 ### BC-07 决策接口契约
 
@@ -166,9 +166,9 @@
 
 | 编号 | 契约 | 状态 |
 |------|------|------|
-| BC-08.1 | Entity 配置（组件列表、属性）通过**配置资产**驱动（Phase 1: EntityConfigSO；Phase 2+: 可选 Luban 导表） | 待实现 |
-| BC-08.2 | 配置资产通过 EntityManager 内部解析，外部通过 `EntityConfigSO` 引用或 `int ConfigId` 访问 | 待实现 |
-| BC-08.3 | 新增状态标签/AI 行为只加配置，不改代码（Phase 1: 扩展 SO 字段；Phase 2+: 扩展 Luban 表） | 待实现 |
+| BC-08.1 | Entity 配置（组件列表、属性）通过**配置资产**驱动（Phase 1: EntityConfigSO；Phase 2+: 可选 Luban 导表） | ✅ P1.3（最小版） |
+| BC-08.2 | 配置资产通过 EntityManager 内部解析，外部通过 `EntityConfigSO` 引用或 `int ConfigId` 访问 | ✅ P1.3 |
+| BC-08.3 | 新增状态标签/AI 行为只加配置，不改代码（Phase 1: 扩展 SO 字段；Phase 2+: 扩展 Luban 表） | ✅ P1.3（结构支持） |
 
 ---
 
@@ -1610,7 +1610,7 @@ public class EntityConfigSO : ScriptableObject
 | P1.0 | ~~阵营枚举统一迁移（BulletFaction → EnumCamp）~~ ✅ 2026-04-30 | ✅ 全项目零 `BulletFaction` 引用 + 编译通过 + DanmakuDemo 行为不变（SA-002，v2.3 新增） |
 | P1.1 | ~~IEntityComponent / ITickable / Entity 容器~~ ✅ 2026-04-30 | ✅ 编译通过 + GetComponent(ComponentType) O(1) 返回正确组件 + GetComponent 未注册类型返回 null |
 | P1.2 | ~~EntityEventBus（零 GC 泛型事件总线）~~ ✅ 2026-04-30 | ✅ 编译通过 + Publish→Subscribe 正确分发 + ClearAll 后无残留 + Profiler 验证 100 次 Pub/Sub 周期 GC = 0 |
-| P1.3 | EntityPool + EntityManager | ✅ 编译通过 + Profiler 验证 50 次 Acquire+Release 周期 GC = 0 + 池满 LogWarning 不崩 + 延迟销毁在 Tick 中不崩 |
+| P1.3 | ~~EntityPool + EntityManager~~ ✅ 2026-04-30 | ✅ 编译通过 + Profiler 验证 50 次 Acquire+Release 周期 GC = 0 + 池满 LogWarning 不崩 + 延迟销毁在 Tick 中不崩 |
 | P1.4 | StateComponent + HealthComponent | ✅ 编译通过 + 互斥状态冲突时正确阻止 + OnDamaged 事件携带正确来源 + HP=0 触发 OnDeath |
 | P1.5 | CollisionComponent（ICollisionTarget 桥接） | ✅ 编译通过 + DanmakuDemo 中弹丸命中 Entity 触发 OnCollisionHit + 注册/注销不泄漏槽位 |
 | P1.6 | MovementComponent + AnimationComponent（纯逻辑） | ✅ 编译通过 + Entity 位置按速度更新 + CurrentAnimId 随状态切换 |

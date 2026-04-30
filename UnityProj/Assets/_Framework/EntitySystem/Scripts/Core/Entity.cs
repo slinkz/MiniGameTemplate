@@ -72,10 +72,22 @@ namespace MiniGameTemplate.Entity
         /// <summary>Entity 本地事件总线（组件间解耦通信）</summary>
         public EntityEventBus EventBus { get; } = new EntityEventBus();
 
-        // ──────────────── 配置引用（P1.8 填充）────────────────
+        // ──────────────── 池化管理 ────────────────
 
-        // Phase 1.8 将添加 EntityConfigSO 引用
-        // public EntityConfigSO Config { get; internal set; }
+        /// <summary>在池数组中的槽位索引（Release 时归还用）</summary>
+        public int PoolSlot { get; internal set; }
+
+        /// <summary>在 EntityManager._activeEntities 中的索引（swap-remove 用）</summary>
+        public int ActiveListIndex { get; internal set; }
+
+        /// <summary>所属配置 SO（由 EntityPool 创建时设置）</summary>
+        public EntityConfigSO ConfigSO { get; internal set; }
+
+        /// <summary>是否处于待销毁状态（Tick 期间标记，帧尾统一执行）</summary>
+        public bool IsPendingDespawn { get; private set; }
+
+        /// <summary>标记为待销毁（由 EntityManager.Despawn 在 Tick 期间调用）</summary>
+        internal void MarkPendingDespawn() => IsPendingDespawn = true;
 
         // ──────────────── 组件管理 ────────────────
 
@@ -112,26 +124,32 @@ namespace MiniGameTemplate.Entity
         // ──────────────── 生命周期 ────────────────
 
         /// <summary>
-        /// 初始化所有已注册组件，并构建 Tickable 排序缓存。
+        /// 从池取出时初始化：设置位置/朝向 → 标记存活 → Init 所有组件 → 构建 Tickable 缓存。
         /// 由 EntityPool.Acquire() 调用。
         /// </summary>
-        internal void InitAllComponents()
+        internal void InitAll(Vector2 position, float rotation)
         {
-            // 1. Init 所有非空组件
+            Position = position;
+            Rotation = rotation;
+            IsAlive = true;
+            IsPendingDespawn = false;
+            _pauseFrames = 0;
+
+            // Init 所有非空组件
             for (int i = 0; i < (int)ComponentType.MAX; i++)
             {
                 _components[i]?.Init(this);
             }
 
-            // 2. 构建 Tickable 排序缓存
+            // 构建 Tickable 排序缓存
             RebuildTickableCache();
         }
 
         /// <summary>
-        /// 重置所有组件 + 清空事件总线。
+        /// 归还池时重置：Reset 所有组件 → 清空事件总线 → 标记非存活。
         /// 由 EntityPool.Release() 调用。
         /// </summary>
-        internal void ResetAllComponents()
+        internal void ResetAll()
         {
             for (int i = 0; i < (int)ComponentType.MAX; i++)
             {
@@ -140,6 +158,7 @@ namespace MiniGameTemplate.Entity
             EventBus.ClearAll();
             _pauseFrames = 0;
             IsAlive = false;
+            IsPendingDespawn = false;
         }
 
         /// <summary>
