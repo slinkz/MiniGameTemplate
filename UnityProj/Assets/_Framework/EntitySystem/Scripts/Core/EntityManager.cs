@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,6 +33,14 @@ namespace MiniGameTemplate.Entity
         /// <summary>分配唯一 EntityId（从 1 开始递增）</summary>
         private EntityId AllocateId() => new EntityId(_nextId++);
 
+        // ──────────── 事件回调（ViewBridge 等外部系统订阅）────────────
+
+        /// <summary>Entity 生成后回调（参数：entity, configSO）。由 Bootstrap 注册 ViewBridge.OnEntitySpawned。</summary>
+        public Action<Entity, EntityConfigSO> OnSpawned;
+
+        /// <summary>Entity 回收后回调（参数：entity, configSO）。由 Bootstrap 注册 ViewBridge.OnEntityDespawned。</summary>
+        public Action<Entity, EntityConfigSO> OnDespawned;
+
         // ──────────── 公共 API ────────────
 
         /// <summary>当前活跃 Entity 数量</summary>
@@ -48,10 +57,12 @@ namespace MiniGameTemplate.Entity
         /// </summary>
         public void DespawnAll()
         {
-            // 直接归还池（Release 内部会 ResetAll），不走 ExecuteDespawn 的 swap-remove
             for (int i = 0; i < _activeEntities.Count; i++)
             {
                 var entity = _activeEntities[i];
+                // 先通知 ViewBridge 回收 View GO（entity.Id 仍有效）
+                OnDespawned?.Invoke(entity, entity.ConfigSO);
+                // 再归还池（Release 内部会 ResetAll）
                 if (_pools.TryGetValue(entity.ConfigSO, out var pool))
                     pool.Release(entity);
             }
@@ -112,6 +123,9 @@ namespace MiniGameTemplate.Entity
                 entity.Id = AllocateId();
                 entity.ActiveListIndex = _activeEntities.Count;
                 _activeEntities.Add(entity);
+
+                // 通知 ViewBridge 等外部系统
+                OnSpawned?.Invoke(entity, config);
             }
             return entity;
         }
@@ -164,9 +178,12 @@ namespace MiniGameTemplate.Entity
 
         // ──────────── 内部方法 ────────────
 
-        /// <summary>实际销毁：swap-remove O(1) + 归还池</summary>
+        /// <summary>实际销毁：swap-remove O(1) + 通知 ViewBridge + 归还池</summary>
         private void ExecuteDespawn(Entity entity)
         {
+            // 通知 ViewBridge（在 Release 前，entity.Id 仍有效）
+            OnDespawned?.Invoke(entity, entity.ConfigSO);
+
             // swap-remove: 将最后一个 Entity 移到被删位置
             int idx = entity.ActiveListIndex;
             int last = _activeEntities.Count - 1;

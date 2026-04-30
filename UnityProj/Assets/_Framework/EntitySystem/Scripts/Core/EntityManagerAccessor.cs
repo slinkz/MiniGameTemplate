@@ -13,9 +13,10 @@ namespace MiniGameTemplate.Entity
         /// <summary>当前场景的 EntityManager 实例</summary>
         public static EntityManager Instance { get; internal set; }
 
+        /// <summary>当前场景的 EntityViewBridge 实例（Phase 1.9）</summary>
+        public static EntityViewBridge ViewBridge { get; internal set; }
+
         // Phase 1.10 填充：
-        // public static EntityViewBridge ViewBridge { get; internal set; }
-        // Phase 1.9 填充：
         // public static EntitySpawner Spawner { get; internal set; }
     }
 }

@@ -52,6 +52,13 @@ namespace MiniGameTemplate.EditorTools
             EditorGUILayout.LabelField("Entity Manager 概览", EditorStyles.boldLabel);
             EditorGUILayout.LabelField($"活跃 Entity：{mgr.ActiveCount}");
 
+            // ViewBridge 信息（Phase 1.9）
+            var viewBridge = EntityManagerAccessor.ViewBridge;
+            if (viewBridge != null)
+                EditorGUILayout.LabelField($"活跃 View：{viewBridge.ActiveViewCount}");
+            else
+                EditorGUILayout.LabelField("ViewBridge：未初始化", EditorStyles.miniLabel);
+
             // Pool 使用率
             var pools = mgr.Pools;
             if (pools != null && pools.Count > 0)

@@ -30,6 +30,10 @@ namespace MiniGameTemplate.EditorTools
         private SerializedProperty _attackBulletPattern;
         private SerializedProperty _attackFireOffset;
         private SerializedProperty _aiBehavior;
+        // View 桥接（Phase 1.9）
+        private SerializedProperty _viewPrefab;
+        private SerializedProperty _viewPoolDef;
+        private SerializedProperty _debugColor;
 
         private static readonly ComponentType[] AllTypes = (ComponentType[])System.Enum.GetValues(typeof(ComponentType));
 
@@ -50,6 +54,10 @@ namespace MiniGameTemplate.EditorTools
             _attackBulletPattern = serializedObject.FindProperty("AttackBulletPattern");
             _attackFireOffset = serializedObject.FindProperty("AttackFireOffset");
             _aiBehavior = serializedObject.FindProperty("AIBehavior");
+            // View 桥接（Phase 1.9）
+            _viewPrefab = serializedObject.FindProperty("ViewPrefab");
+            _viewPoolDef = serializedObject.FindProperty("ViewPoolDef");
+            _debugColor = serializedObject.FindProperty("DebugColor");
         }
 
         public override void OnInspectorGUI()
@@ -114,6 +122,22 @@ namespace MiniGameTemplate.EditorTools
                 DrawSectionTitle("AI 组件配置（因勾选了 AI 而显示）");
                 EditorGUILayout.PropertyField(_aiBehavior);
             }
+
+            // ──── 视觉 View（Phase 1.9）────
+            EditorGUILayout.Space(8);
+            DrawSectionTitle("视觉 View（Phase 1: DebugColor 生效 / Phase 2: ViewPrefab 生效）");
+            EditorGUILayout.PropertyField(_viewPrefab);
+            if (_viewPrefab.objectReferenceValue != null)
+            {
+                EditorGUILayout.PropertyField(_viewPoolDef);
+                if (_viewPoolDef.objectReferenceValue == null)
+                {
+                    EditorGUILayout.HelpBox(
+                        "已填 ViewPrefab 但 ViewPoolDef 为空——ViewBridge 将 fallback 到 Debug View。",
+                        MessageType.Warning);
+                }
+            }
+            EditorGUILayout.PropertyField(_debugColor);
 
             serializedObject.ApplyModifiedProperties();
         }

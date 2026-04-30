@@ -1,5 +1,6 @@
 using UnityEngine;
 using MiniGameTemplate.Danmaku;
+using MiniGameTemplate.Pool;
 
 namespace MiniGameTemplate.Entity
 {
@@ -60,10 +61,22 @@ namespace MiniGameTemplate.Entity
         [Tooltip("AI 行为配置资产（条件-动作表）")]
         public AIBehaviorSO AIBehavior;
 
-        // ──────────────── 视觉（Phase 1.10 填充）────────────────
-        // public PoolDefinition SpawnEffect;
-        // public PoolDefinition HitEffect;
-        // public PoolDefinition DeathEffect;
+        // ──────────────── View 桥接（Phase 1.9）────────────────
+
+        [Header("视觉 View")]
+        [Tooltip("正式 View Prefab（Phase 2 使用）。为空时 ViewBridge 使用内置 Debug Prefab。")]
+        public GameObject ViewPrefab;
+
+        [Tooltip("正式 View 对象池定义（Phase 2 使用）。与 ViewPrefab 配套。")]
+        public Pool.PoolDefinition ViewPoolDef;
+
+        [Tooltip("Debug View 颜色（Phase 1 Debug Prefab 的 SpriteRenderer 色调）")]
+        public Color DebugColor = Color.white;
+
+        // ──────────────── 视觉特效（Phase 1.10 填充）────────────────
+        // public Pool.PoolDefinition SpawnEffect;
+        // public Pool.PoolDefinition HitEffect;
+        // public Pool.PoolDefinition DeathEffect;
         // public float HitFlashDuration = 0.1f;
         // public float DeathDelay = 0.5f;
         // public bool ShowDamageNumber = true;
