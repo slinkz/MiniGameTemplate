@@ -29,6 +29,16 @@ namespace MiniGameTemplate.Entity
         [Tooltip("是否启用 Entity vs Entity 碰撞检测")]
         public bool EnableEntityCollision = true;
 
+        [Header("边界击杀")]
+        [Tooltip("是否启用边界击杀（Entity 移出边界后自动死亡回收）")]
+        public bool EnableBoundaryKill = true;
+
+        [Tooltip("活动区域边界（超出此范围的 Entity 会被击杀）。默认竖屏 6×10")]
+        public Rect KillBounds = new Rect(-6f, -10f, 12f, 20f);
+
+        [Tooltip("超出边界多远后才击杀（缓冲区，避免刚出边缘就死）")]
+        public float KillMargin = 1f;
+
         private EntityManager _entityManager;
         private EntityViewBridge _viewBridge;
         private EntitySpawner _spawner;
@@ -102,11 +112,42 @@ namespace MiniGameTemplate.Entity
             // 4. EntityViewBridge.SyncAll → 视觉同步（碰撞修正后的位置）
             // 5. HitReactionHandler.Tick → 受击表现管线（闪白/伤害数字/死亡延迟）
             _entityManager.Tick(dt);
+            if (EnableBoundaryKill)
+                KillOutOfBoundsEntities();
             _spawner.Tick(dt, _entityManager);
             if (EnableEntityCollision)
                 _collisionSolver.Solve(_entityManager, dt);
             _viewBridge.SyncAll(_entityManager);
             _hitHandler.Tick(dt, _entityManager);
+        }
+
+        // ──────────── 边界击杀 ────────────
+
+        /// <summary>
+        /// 扫描所有活跃 Entity，超出 KillBounds + KillMargin 的直接秒杀。
+        /// 放在 EntityManager.Tick 之后（延迟销毁已执行），Spawner.Tick 之前。
+        /// 不走 TakeDamage（避免触发击退等无意义表现），直接 Despawn。
+        /// </summary>
+        private void KillOutOfBoundsEntities()
+        {
+            float xMin = KillBounds.xMin - KillMargin;
+            float xMax = KillBounds.xMax + KillMargin;
+            float yMin = KillBounds.yMin - KillMargin;
+            float yMax = KillBounds.yMax + KillMargin;
+
+            var entities = _entityManager.ActiveEntities;
+            for (int i = entities.Count - 1; i >= 0; i--)
+            {
+                var entity = entities[i];
+                if (entity.IsPendingDespawn) continue;
+
+                var pos = entity.Position;
+                if (pos.x < xMin || pos.x > xMax || pos.y < yMin || pos.y > yMax)
+                {
+                    // 直接 Despawn（不走伤害流程，避免无意义的死亡特效/击退/伤害数字）
+                    _entityManager.Despawn(entity);
+                }
+            }
         }
 
         private void OnDestroy()

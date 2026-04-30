@@ -16,7 +16,7 @@ MonoBehaviour:
   DisplayName: Slime
   Camp: 0
   Components: 000103040809
-  PoolMax: 16
+  PoolMax: 128
   MaxHp: 30
   MoveSpeed: 2
   TurnSpeed: 360

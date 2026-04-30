@@ -82,3 +82,4 @@ UIProject/.objs/
 
 # ===== Luban Generated (keep tracked, but ignore temp) =====
 UnityProj/Tools/Luban/.cache/
+/UnityProj/Assets/nul ; echo ---.meta

@@ -33,7 +33,7 @@ namespace MiniGameTemplate.Entity
         [Header("对象池")]
         [Tooltip("对象池最大容量（预分配数量）")]
         [Min(1)]
-        public int PoolMax = 16;
+        public int PoolMax = 128;
 
         [Header("属性")]
         public int MaxHp = 100;
