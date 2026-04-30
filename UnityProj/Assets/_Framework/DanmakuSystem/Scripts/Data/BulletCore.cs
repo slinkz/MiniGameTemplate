@@ -5,7 +5,7 @@ namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
     /// 弹丸热数据（运动 + 碰撞 + 生命周期 + 视觉动画）。
-    /// 每帧必遍历，sizeof = 48 bytes，2048 颗 × 48 = 96 KB，可完整放入 L2 缓存。
+    /// 每帧必遍历，sizeof ≈ 56 bytes（PierceHitMask 扩容至 ulong 后）。
     /// DEC-005=C：Mover 每帧写入 AnimScale/AnimAlpha/AnimColor，Renderer 直接读取，零查表。
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
@@ -41,8 +41,8 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>阵营：0=Enemy, 1=Player, 2=Neutral</summary>
         public byte Faction;           // offset 33, size 1
 
-        /// <summary>Pierce 碰撞冷却：位掩码，每 bit 对应 TargetRegistry 的一个槽位 (0-15)</summary>
-        public ushort PierceHitMask;   // offset 34, size 2
+        /// <summary>Pierce 碰撞冷却：位掩码，每 bit 对应 TargetRegistry 的一个槽位 (0-63)</summary>
+        public ulong PierceHitMask;    // offset 34, size 8
 
         // ──── 视觉动画值（DEC-005=C：Mover 写入，Renderer 读取） ────
 

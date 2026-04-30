@@ -130,7 +130,7 @@ namespace MiniGameTemplate.Danmaku
                     if (!ShouldCollide(sourceCamp, target.Faction)) continue;
 
                     // Pierce 冷却检查（位掩码：每 bit 对应一个 target 槽位）
-                    ushort targetBit = (ushort)(1 << t);
+                    ulong targetBit = 1UL << t;
                     if ((c.Flags & BulletCore.FLAG_PIERCE_COOLDOWN) != 0
                         && (c.PierceHitMask & targetBit) != 0)
                         continue;
@@ -192,10 +192,10 @@ namespace MiniGameTemplate.Danmaku
                 // Pierce 冷却清除：逐 bit 检查，如果弹丸不再与该目标重叠则清除对应 bit
                 if ((c.Flags & BulletCore.FLAG_PIERCE_COOLDOWN) != 0 && c.HitPoints > 0)
                 {
-                    ushort mask = c.PierceHitMask;
+                    ulong mask = c.PierceHitMask;
                     for (int t = 0; t < TargetRegistry.MAX_TARGETS && mask != 0; t++)
                     {
-                        ushort bit = (ushort)(1 << t);
+                        ulong bit = 1UL << t;
                         if ((mask & bit) == 0) continue;
 
                         var target = targets[t];
@@ -212,7 +212,7 @@ namespace MiniGameTemplate.Danmaku
 
                         if (!stillOverlapping)
                         {
-                            c.PierceHitMask &= (ushort)~bit;
+                            c.PierceHitMask &= ~bit;
                         }
                     }
 
@@ -567,7 +567,7 @@ namespace MiniGameTemplate.Danmaku
             ref BulletTrail trail,
             BulletTypeSO type,
             CollisionTarget target,
-            ushort targetBit,
+            ulong targetBit,
             Vector2 normal)
         {
             CollisionResponse response;

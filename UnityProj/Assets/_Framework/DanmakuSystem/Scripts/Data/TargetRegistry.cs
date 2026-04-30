@@ -1,13 +1,13 @@
 namespace MiniGameTemplate.Danmaku
 {
     /// <summary>
-    /// 碰撞目标注册表——预分配 16 槽位，管理所有 <see cref="ICollisionTarget"/> 实例。
+    /// 碰撞目标注册表——预分配 64 槽位，管理所有 <see cref="ICollisionTarget"/> 实例。
     /// CollisionSolver 每帧遍历本注册表进行弹丸 vs 目标碰撞检测。
     /// </summary>
     public class TargetRegistry
     {
-        /// <summary>最大注册目标数</summary>
-        public const int MAX_TARGETS = 16;
+        /// <summary>最大注册目标数（与 BulletCore.PierceHitMask ulong 64 bit 对齐）</summary>
+        public const int MAX_TARGETS = 64;
 
         private readonly ICollisionTarget[] _targets = new ICollisionTarget[MAX_TARGETS];
         private int _count;
