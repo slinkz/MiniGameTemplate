@@ -47,7 +47,7 @@ namespace MiniGameTemplate.Entity
         // Phase 1.7 填充：BulletTypeSO AttackBulletType
         // Phase 1.7 填充：Vector2 AttackFireOffset
 
-        [Header("视觉（Phase 1.10 填充）")]
+        // ──────────────── 视觉（Phase 1.10 填充）────────────────
         // public PoolDefinition SpawnEffect;
         // public PoolDefinition HitEffect;
         // public PoolDefinition DeathEffect;
