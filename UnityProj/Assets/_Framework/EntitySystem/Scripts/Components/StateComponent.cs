@@ -52,7 +52,8 @@ namespace MiniGameTemplate.Entity
         public const int Stunned = 3;
         public const int Dead = 4;
         public const int Invincible = 5;
-        // 预留 6~63
+        public const int Hit = 6;       // 受击状态（短暂，用于动画/闪白）
+        // 预留 7~63
 
         public const int MAX_STATES = 64;
     }

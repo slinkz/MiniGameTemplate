@@ -40,6 +40,12 @@ namespace MiniGameTemplate.Entity
         public float TurnSpeed = 360f;
         public float CollisionRadius = 0.5f;
 
+        [Tooltip("击退距离（v2.4 GD-R4-004）")]
+        public float KnockbackDistance = 0.5f;
+
+        [Tooltip("击退持续时间（秒）")]
+        public float KnockbackDuration = 0.2f;
+
         [Header("攻击（v2.4 新增）")]
         [Tooltip("攻击间隔（秒），0 = 不攻击")]
         public float AttackInterval = 1f;
