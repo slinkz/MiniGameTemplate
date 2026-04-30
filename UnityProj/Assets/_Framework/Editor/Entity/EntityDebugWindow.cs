@@ -59,6 +59,18 @@ namespace MiniGameTemplate.EditorTools
             else
                 EditorGUILayout.LabelField("ViewBridge：未初始化", EditorStyles.miniLabel);
 
+            // Spawner 信息（Phase 1.10）
+            var spawner = EntityManagerAccessor.Spawner;
+            if (spawner != null)
+            {
+                EditorGUILayout.LabelField($"活跃刷怪点：{spawner.ActivePointCount}");
+                EditorGUILayout.LabelField($"全部完成：{(spawner.IsAllWavesCleared ? "✅" : "⏳")}");
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Spawner：未初始化", EditorStyles.miniLabel);
+            }
+
             // Pool 使用率
             var pools = mgr.Pools;
             if (pools != null && pools.Count > 0)
@@ -81,7 +93,9 @@ namespace MiniGameTemplate.EditorTools
             if (GUILayout.Button("🔄 Restart All Waves", GUILayout.Height(30)))
             {
                 mgr.DespawnAll();
-                Debug.Log("[EntityDebug] DespawnAll 完成。（注：Spawner 重启需 P1.10 实现）");
+                if (spawner != null)
+                    spawner.RestartAll();
+                Debug.Log("[EntityDebug] DespawnAll + Spawner.RestartAll() 完成。");
             }
 
             EditorGUILayout.Space(8);
