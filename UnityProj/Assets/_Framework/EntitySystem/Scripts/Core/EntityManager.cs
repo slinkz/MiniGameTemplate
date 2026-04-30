@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// ReSharper disable MemberCanBePrivate.Global
+
 namespace MiniGameTemplate.Entity
 {
     /// <summary>
@@ -34,6 +36,31 @@ namespace MiniGameTemplate.Entity
 
         /// <summary>当前活跃 Entity 数量</summary>
         public int ActiveCount => _activeEntities.Count;
+
+        /// <summary>只读活跃 Entity 列表（Editor 工具 / Gizmo 遍历用）</summary>
+        public IReadOnlyList<Entity> ActiveEntities => _activeEntities;
+
+        /// <summary>
+        /// 立即回收所有活跃 Entity（Tick 外调用）。
+        /// 用途：Editor Debug Window "Restart All Waves" / 场景切换清理。
+        /// 注意：不使用 ExecuteDespawn（swap-remove 在批量操作中索引会乱），
+        /// 而是直接 Reset+Release 每个 Entity，最后一次性 Clear。
+        /// </summary>
+        public void DespawnAll()
+        {
+            // 直接归还池（Release 内部会 ResetAll），不走 ExecuteDespawn 的 swap-remove
+            for (int i = 0; i < _activeEntities.Count; i++)
+            {
+                var entity = _activeEntities[i];
+                if (_pools.TryGetValue(entity.ConfigSO, out var pool))
+                    pool.Release(entity);
+            }
+            _activeEntities.Clear();
+            _pendingDespawn.Clear();
+        }
+
+        /// <summary>按池获取使用率信息（Editor Debug 用）</summary>
+        public IReadOnlyDictionary<EntityConfigSO, EntityPool> Pools => _pools;
 
         /// <summary>
         /// 每帧驱动所有活跃 Entity。

@@ -38,6 +38,10 @@ namespace MiniGameTemplate.EditorTools
             DanmakuWorldConfig,
             DanmakuRenderConfig,
             DanmakuTimeScale,
+            // ── Entity ──
+            EntityConfig,
+            AIBehavior,
+            EntitySpawnWave,
         }
 
         private SOType _selectedType = SOType.IntVariable;
@@ -106,6 +110,10 @@ namespace MiniGameTemplate.EditorTools
                 SOType.DanmakuWorldConfig => ScriptableObject.CreateInstance<Danmaku.DanmakuWorldConfig>(),
                 SOType.DanmakuRenderConfig => ScriptableObject.CreateInstance<Danmaku.DanmakuRenderConfig>(),
                 SOType.DanmakuTimeScale => ScriptableObject.CreateInstance<Danmaku.DanmakuTimeScaleSO>(),
+                // ── Entity ──
+                SOType.EntityConfig => CreateEntityConfig(),
+                SOType.AIBehavior => ScriptableObject.CreateInstance<Entity.AIBehaviorSO>(),
+                SOType.EntitySpawnWave => ScriptableObject.CreateInstance<Entity.EntitySpawnWaveSO>(),
                 _ => null
             };
 
@@ -115,6 +123,14 @@ namespace MiniGameTemplate.EditorTools
                 return;
             }
 
+            // Entity 系列默认路径覆盖
+            if (_selectedType == SOType.EntityConfig && _savePath == "Assets/_Game/ScriptableObjects")
+                _savePath = "Assets/_Game/Configs/Entity";
+            else if (_selectedType == SOType.AIBehavior && _savePath == "Assets/_Game/ScriptableObjects")
+                _savePath = "Assets/_Game/Configs/AI";
+            else if (_selectedType == SOType.EntitySpawnWave && _savePath == "Assets/_Game/ScriptableObjects")
+                _savePath = "Assets/_Game/Configs/SpawnWave";
+
             var fullPath = $"{_savePath}/{_assetName}.asset";
             fullPath = AssetDatabase.GenerateUniqueAssetPath(fullPath);
             AssetDatabase.CreateAsset(asset, fullPath);
@@ -123,6 +139,22 @@ namespace MiniGameTemplate.EditorTools
             Selection.activeObject = asset;
             EditorGUIUtility.PingObject(asset);
             Debug.Log($"[SOWizard] Created {_selectedType}: {fullPath}");
+        }
+        /// <summary>
+        /// WF-006: EntityConfigSO 创建时预填默认 Components。
+        /// 策划"改默认"比"从零开始"更直观。
+        /// </summary>
+        private static ScriptableObject CreateEntityConfig()
+        {
+            var config = ScriptableObject.CreateInstance<Entity.EntityConfigSO>();
+            config.Components = new Entity.ComponentType[]
+            {
+                Entity.ComponentType.State,
+                Entity.ComponentType.Health,
+                Entity.ComponentType.Movement,
+                Entity.ComponentType.Collision,
+            };
+            return config;
         }
     }
 }
