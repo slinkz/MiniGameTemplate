@@ -6,26 +6,33 @@ namespace MiniGameTemplate.Entity
     /// <summary>
     /// Entity 逻辑层与视觉层的桥接器。
     /// 持有 EntityId → View GO 映射，Entity 本身不持有 GO 引用（BC-01.1 不变）。
+    /// 
     /// Phase 1: 使用内置 Debug Prefab（彩色圆 + HP 文本）
-    /// Phase 2: 使用 EntityConfigSO.ViewPrefab（策划指定的正式 Prefab）
+    /// Phase 2: 使用 EntityConfigSO.ViewPrefab（策划指定的正式 Prefab）+ IEntityView 接口
     /// 
     /// v2.3 变更（SA-005）：内部存储从 Dictionary 改为预分配数组。
-    /// 原因：Mono 运行时 Dictionary.GetEnumerator() 每次 foreach 产生 ~40 bytes GC Alloc（装箱），
-    /// 违反零 GC 承诺。改为平铺数组 + for 循环遍历，彻底消除 GC。
+    /// P2.1 变更：缓存 SpriteRenderer/TextMesh/IEntityView 引用（消除每帧 GetComponentInChildren GC）。
     /// </summary>
     public class EntityViewBridge
     {
-        private const int MAX_VIEWS = 256; // 预分配上限（远超 Phase 1 需求，可调）
+        private const int MAX_VIEWS = 256; // 预分配上限
 
-        // 预分配数组——零 GC 遍历
+        // ──────────── 预分配数组——零 GC 遍历 ────────────
         private readonly GameObject[] _viewGOs = new GameObject[MAX_VIEWS];
         private readonly uint[] _viewEntityIds = new uint[MAX_VIEWS];
         private readonly EntityConfigSO[] _viewConfigs = new EntityConfigSO[MAX_VIEWS];
+
+        // P2.1 新增：缓存组件引用（消除每帧 GetComponentInChildren）
+        private readonly IEntityView[] _entityViews = new IEntityView[MAX_VIEWS];
+        private readonly SpriteRenderer[] _cachedSRs = new SpriteRenderer[MAX_VIEWS];
+        private readonly TextMesh[] _cachedTMs = new TextMesh[MAX_VIEWS];
+        private readonly bool[] _isOfficialView = new bool[MAX_VIEWS]; // true = 正式 View，false = Debug View
+
         private int _activeCount;
 
         private readonly PoolManager _poolManager;
-        private readonly PoolDefinition _debugViewPool; // Phase 1 内置 Debug Prefab 的池
-        private EntityHitReactionHandler _hitHandler; // P1.11: 闪白查询用
+        private readonly PoolDefinition _debugViewPool;
+        private EntityHitReactionHandler _hitHandler;
 
         /// <summary>当前活跃视图数量</summary>
         public int ActiveViewCount => _activeCount;
@@ -54,7 +61,8 @@ namespace MiniGameTemplate.Entity
                 return;
             }
 
-            PoolDefinition pool = config.ViewPrefab != null
+            bool isOfficial = config.ViewPrefab != null;
+            PoolDefinition pool = isOfficial
                 ? config.ViewPoolDef   // Phase 2: 正式 View
                 : _debugViewPool;      // Phase 1: Debug View
 
@@ -72,22 +80,43 @@ namespace MiniGameTemplate.Entity
             _viewGOs[idx] = go;
             _viewEntityIds[idx] = entity.Id.Value;
             _viewConfigs[idx] = config;
+            _isOfficialView[idx] = isOfficial;
 
-            // Phase 1: 设置 Debug 颜色
-            if (config.ViewPrefab == null)
+            // P2.1：缓存组件引用（一次性 GetComponent，不再每帧查找）
+            _cachedSRs[idx] = go.GetComponentInChildren<SpriteRenderer>();
+            _cachedTMs[idx] = go.GetComponentInChildren<TextMesh>();
+            _entityViews[idx] = go.GetComponent<IEntityView>();
+
+            if (isOfficial)
             {
-                var sr = go.GetComponentInChildren<SpriteRenderer>();
-                if (sr != null) sr.color = config.DebugColor;
+                // 正式 View：通过 IEntityView 接口初始化
+                if (_entityViews[idx] != null)
+                {
+                    var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
+                    _entityViews[idx].OnViewInit(new EntityViewContext
+                    {
+                        Config = config,
+                        EntityId = entity.Id,
+                        Position = entity.Position,
+                        Rotation = entity.Rotation,
+                        MaxHp = health != null ? health.MaxHp : config.MaxHp,
+                        CurrentHp = health != null ? health.CurrentHp : config.MaxHp,
+                    });
+                }
+            }
+            else
+            {
+                // Debug View：设置颜色和初始 HP 文本
+                if (_cachedSRs[idx] != null)
+                    _cachedSRs[idx].color = config.DebugColor;
 
-                // 设置 HP 文本初始值
-                var tm = go.GetComponentInChildren<TextMesh>();
-                if (tm != null)
+                if (_cachedTMs[idx] != null)
                 {
                     var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
                     if (health != null)
-                        tm.text = health.CurrentHp + "/" + health.MaxHp;
+                        _cachedTMs[idx].text = health.CurrentHp + "/" + health.MaxHp;
                     else
-                        tm.text = config.DisplayName;
+                        _cachedTMs[idx].text = config.DisplayName;
                 }
             }
         }
@@ -111,7 +140,6 @@ namespace MiniGameTemplate.Entity
                 Entity entity = FindEntityById(activeEntities, entityId);
                 if (entity == null || !entity.IsAlive)
                 {
-                    // Entity 已不存在但 View 还在——异常情况，跳过（OnEntityDespawned 会处理回收）
                     continue;
                 }
 
@@ -119,22 +147,60 @@ namespace MiniGameTemplate.Entity
                 go.transform.position = new Vector3(entity.Position.x, entity.Position.y, 0f);
                 go.transform.rotation = Quaternion.Euler(0f, 0f, entity.Rotation);
 
-                // Phase 1 Debug View: 更新 HP 文本 + 闪白颜色
-                // TODO Phase 2 优化：缓存 TextMesh/SpriteRenderer 引用到预分配数组
-                if (_viewConfigs[i] != null && _viewConfigs[i].ViewPrefab == null)
+                if (_isOfficialView[i])
                 {
-                    var tm = go.GetComponentInChildren<TextMesh>();
+                    // ── 正式 View：通过 IEntityView 接口同步 ──
+                    var view = _entityViews[i];
+                    if (view != null)
+                    {
+                        var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
+                        var anim = entity.GetComponent(ComponentType.Animation) as AnimationComponent;
+
+                        view.OnViewSync(new EntityViewSyncData
+                        {
+                            Position = entity.Position,
+                            Rotation = entity.Rotation,
+                            CurrentHp = health != null ? health.CurrentHp : 0,
+                            MaxHp = health != null ? health.MaxHp : 0,
+                            CurrentAnimId = anim != null ? anim.CurrentAnimId : 0,
+                            IsAlive = entity.IsAlive,
+                        });
+
+                        // P2.1：闪白通知走 IEntityView
+                        if (_hitHandler != null)
+                        {
+                            if (_hitHandler.IsFlashing(entity.Id))
+                            {
+                                float progress = _hitHandler.GetFlashProgress(entity.Id);
+                                if (progress < 0.01f) // 刚开始闪
+                                {
+                                    view.OnViewHitFlash(
+                                        _viewConfigs[i].HitFlashColor,
+                                        _viewConfigs[i].HitFlashDuration);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // ── Debug View：直接操作缓存的组件引用 ──
+                    var tm = _cachedTMs[i];
                     if (tm != null)
                     {
                         var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
                         if (health != null)
                             tm.text = health.CurrentHp + "/" + health.MaxHp;
+
+                        // HP 文本不跟随 Entity 旋转
+                        tm.transform.rotation = Quaternion.identity;
+                        tm.transform.position = go.transform.position + new Vector3(0f, 0.6f, 0f);
                     }
 
-                    // P1.11: 闪白表现——SpriteRenderer 颜色闪白
+                    // 闪白表现——SpriteRenderer 颜色
                     if (_hitHandler != null)
                     {
-                        var sr = go.GetComponentInChildren<SpriteRenderer>();
+                        var sr = _cachedSRs[i];
                         if (sr != null)
                         {
                             if (_hitHandler.IsFlashing(entity.Id))
@@ -166,6 +232,10 @@ namespace MiniGameTemplate.Entity
             {
                 if (_viewEntityIds[i] == targetId)
                 {
+                    // P2.1：通知 IEntityView 重置
+                    if (_entityViews[i] != null)
+                        _entityViews[i].OnViewReset();
+
                     // 归还 GO 到池
                     PoolDefinition pool = config.ViewPrefab != null
                         ? config.ViewPoolDef
@@ -181,9 +251,16 @@ namespace MiniGameTemplate.Entity
                         _viewGOs[i] = _viewGOs[last];
                         _viewEntityIds[i] = _viewEntityIds[last];
                         _viewConfigs[i] = _viewConfigs[last];
+                        _entityViews[i] = _entityViews[last];
+                        _cachedSRs[i] = _cachedSRs[last];
+                        _cachedTMs[i] = _cachedTMs[last];
+                        _isOfficialView[i] = _isOfficialView[last];
                     }
                     _viewGOs[last] = null;
                     _viewConfigs[last] = null;
+                    _entityViews[last] = null;
+                    _cachedSRs[last] = null;
+                    _cachedTMs[last] = null;
                     _activeCount--;
                     return;
                 }
@@ -191,13 +268,16 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
-        /// 清除所有视图（DespawnAll 时调用）——不归还池（由 DespawnAll 自行处理）。
-        /// 安全版本：通过池回收所有 View GO 再清空数组。
+        /// 清除所有视图（DespawnAll 时调用）。
         /// </summary>
         public void ClearAllViews()
         {
             for (int i = 0; i < _activeCount; i++)
             {
+                // 通知 IEntityView 重置
+                if (_entityViews[i] != null)
+                    _entityViews[i].OnViewReset();
+
                 if (_viewGOs[i] != null)
                 {
                     PoolDefinition pool = (_viewConfigs[i] != null && _viewConfigs[i].ViewPrefab != null)
@@ -209,6 +289,9 @@ namespace MiniGameTemplate.Entity
                 }
                 _viewGOs[i] = null;
                 _viewConfigs[i] = null;
+                _entityViews[i] = null;
+                _cachedSRs[i] = null;
+                _cachedTMs[i] = null;
             }
             _activeCount = 0;
         }

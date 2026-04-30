@@ -70,6 +70,9 @@ namespace MiniGameTemplate.Entity
         [Tooltip("正式 View 对象池定义（Phase 2 使用）。与 ViewPrefab 配套。")]
         public Pool.PoolDefinition ViewPoolDef;
 
+        [Tooltip("序列帧动画数据（Phase 2 使用）。可选——为空时 View Prefab 自身配置的 AnimData 生效。")]
+        public SpriteAnimDataSO SpriteAnimData;
+
         [Tooltip("Debug View 颜色（Phase 1 Debug Prefab 的 SpriteRenderer 色调）")]
         public Color DebugColor = Color.white;
 

@@ -10,30 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 104333c424327d1409c656f1f269a462, type: 3}
-  m_Name: Template_Player
+  m_Name: Template_Slime
   m_EditorClassIdentifier: 
   ConfigId: 0
-  DisplayName: Player
-  Camp: 1
-  Components: 000103040709
-  PoolMax: 1
-  MaxHp: 500
-  MoveSpeed: 5
+  DisplayName: Slime
+  Camp: 0
+  Components: 000103040809
+  PoolMax: 16
+  MaxHp: 30
+  MoveSpeed: 2
   TurnSpeed: 360
-  CollisionRadius: 0.3
-  KnockbackDistance: 0
-  KnockbackDuration: 0
-  AttackInterval: 0.15
-  AttackBulletPattern: {fileID: 11400000, guid: 85c434b47651ddb4f9e7c9333de12c57, type: 2}
-  AttackFireOffset: {x: 0, y: 0.5}
-  AIBehavior: {fileID: 0}
+  CollisionRadius: 0.4
+  KnockbackDistance: 0.5
+  KnockbackDuration: 0.15
+  AttackInterval: 1.5
+  AttackBulletPattern: {fileID: 0}
+  AttackFireOffset: {x: 0, y: 0}
+  AIBehavior: {fileID: 11400000, guid: c5441721da5bfa9458624581d03c7196, type: 2}
   ViewPrefab: {fileID: 0}
   ViewPoolDef: {fileID: 0}
-  DebugColor: {r: 0.2, g: 0.8, b: 1, a: 1}
-  HitFlashDuration: 0.08
+  DebugColor: {r: 0.8, g: 0.2, b: 0.2, a: 1}
+  HitFlashDuration: 0.12
   HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
-  ShowDamageNumber: 0
+  ShowDamageNumber: 1
   SpawnEffect: {fileID: 0}
   HitEffect: {fileID: 0}
   DeathEffect: {fileID: 0}
-  DeathDelay: 0
+  DeathDelay: 0.3

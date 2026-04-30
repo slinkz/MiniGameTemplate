@@ -173,8 +173,8 @@ namespace MiniGameTemplate.Entity
                     // 计算生成位置（Phase 1 只实现 Random）
                     Vector2 pos = GetSpawnPosition(state.Point, gs.Group.Formation, gs.SpawnedCount, gs.Group.Count);
 
-                    // 生成 Entity
-                    var entity = entityManager.Spawn(gs.Group.EntityConfig, pos, 0f);
+                    // 生成 Entity（竖屏默认朝下=270°）
+                    var entity = entityManager.Spawn(gs.Group.EntityConfig, pos, 270f);
                     if (entity != null)
                     {
                         entity.Camp = gs.Group.Camp;
