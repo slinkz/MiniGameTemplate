@@ -1628,7 +1628,7 @@ public class EntityConfigSO : ScriptableObject
 |------|------|------|
 | P2.1 | 正式 ViewPrefab 渲染（IEntityView + EntitySpriteAnimator + dual-path ViewBridge） | ✅ 2026-04-30 |
 | P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） | ✅ 2026-04-30 |
-| P2.3 | Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载） | 🔲 |
+| P2.3 | ~~Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载）~~ ✅ 2026-05-01 | ✅ tables.xml EntityConfig bean + entityconfig.xlsx(3条模板数据) + gen_config 生成 C#/.bytes + EntityConfigRegistry(ConfigId↔SO O(1)桥接) + EntityManager.Spawn(int configId) 重载 + Bootstrap 自动注册 |
 | P2.4 | 受击扩展参数（击退/无敌帧/击退曲线） | 🔲 |
 | P2.5 | WaveTriggerMode.OnEnterArea + TriggerZone 组件 | 🔲 |
 | P2.6 | 集成验收 | 🔲 |

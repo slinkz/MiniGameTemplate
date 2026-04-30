@@ -67,10 +67,25 @@ namespace MiniGameTemplate.Entity
             EntityManagerAccessor.ViewBridge = _viewBridge;
             EntityManagerAccessor.Spawner = _spawner;
 
-            // 自动发现场景中的 EntitySpawnPoint 并启动
+            // P2.3: 自动注册场景中 SpawnPoint 引用的 EntityConfigSO 到 ConfigRegistry
+            // （确保 Spawn(int configId, ...) 能查到 SO）
             var points = FindObjectsOfType<EntitySpawnPoint>();
             foreach (var point in points)
             {
+                // 注册波次中引用的所有 EntityConfigSO
+                if (point.WaveConfig != null && point.WaveConfig.Waves != null)
+                {
+                    foreach (var wave in point.WaveConfig.Waves)
+                    {
+                        if (wave.Groups == null) continue;
+                        foreach (var group in wave.Groups)
+                        {
+                            if (group.EntityConfig != null)
+                                EntityConfigRegistry.Register(group.EntityConfig);
+                        }
+                    }
+                }
+
                 if (point.AutoStartOnEnable && point.WaveConfig != null)
                     _spawner.StartWave(point);
             }
@@ -108,6 +123,9 @@ namespace MiniGameTemplate.Entity
             _hitHandler?.ClearAll();
             _viewBridge?.ClearAllViews();
             _collisionSolver?.ClearCooldowns();
+
+            // P2.3: 清空 ConfigId 注册表
+            EntityConfigRegistry.Clear();
 
             // 注销全局访问点
             EntityManagerAccessor.Instance = null;

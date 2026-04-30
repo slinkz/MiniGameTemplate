@@ -131,6 +131,22 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
+        /// P2.3: 通过 Luban configId 生成 Entity（双路桥接入口）。
+        /// 内部流程：configId → EntityConfigRegistry 查 SO → Spawn(SO, pos, rot)。
+        /// 视觉/弹幕 Pattern 等资产引用仍由 SO 提供（Luban 只管数值数据）。
+        /// </summary>
+        /// <param name="configId">Luban 表中的 EntityConfig.Id</param>
+        /// <param name="position">初始位置</param>
+        /// <param name="rotation">初始朝向角度</param>
+        /// <returns>已初始化的 Entity，或 null（注册表未找到/池满）</returns>
+        public Entity Spawn(int configId, Vector2 position, float rotation)
+        {
+            var configSO = EntityConfigRegistry.GetOrThrow(configId);
+            if (configSO == null) return null;
+            return Spawn(configSO, position, rotation);
+        }
+
+        /// <summary>
         /// 回收 Entity（延迟模式：Tick 期间调用只加入待销毁队列，帧尾统一执行）。
         /// Tick 外调用则立即执行。
         /// </summary>

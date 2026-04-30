@@ -21,6 +21,7 @@ namespace cfg
         {
             return new string[]
             {
+                "tbentityconfig",
                 "tbglobalconst",
                 "tbitem",
             };

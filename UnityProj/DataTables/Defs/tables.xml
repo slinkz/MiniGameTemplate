@@ -13,6 +13,31 @@
         <var name="intValue" type="int"/>
     </bean>
 
+    <!-- P2.3: Entity 角色配置表 -->
+    <bean name="EntityConfig">
+        <var name="id" type="int"/>
+        <var name="name" type="string"/>
+        <var name="camp" type="int" comment="阵营 0=Enemy 1=Player 2=Neutral"/>
+        <var name="maxHp" type="int"/>
+        <var name="moveSpeed" type="float"/>
+        <var name="turnSpeed" type="float"/>
+        <var name="collisionRadius" type="float"/>
+        <var name="knockbackDistance" type="float"/>
+        <var name="knockbackDuration" type="float"/>
+        <var name="enableEntityCollision" type="bool"/>
+        <var name="collisionLayer" type="int"/>
+        <var name="contactDamage" type="int"/>
+        <var name="contactDamageInterval" type="float"/>
+        <var name="attackInterval" type="float"/>
+        <var name="hitFlashDuration" type="float"/>
+        <var name="showDamageNumber" type="bool"/>
+        <var name="deathDelay" type="float"/>
+        <var name="poolMax" type="int"/>
+        <var name="components" type="(list#sep=|),int" comment="ComponentType 枚举值列表"/>
+        <var name="soAssetName" type="string" comment="对应 EntityConfigSO 资产名（桥接 Prefab/Pattern 等引用）"/>
+    </bean>
+
     <table name="TbItem" value="Item" input="item.xlsx" mode="map" index="id"/>
     <table name="TbGlobalConst" value="GlobalConst" input="globalconst.xlsx" mode="map" index="key"/>
+    <table name="TbEntityConfig" value="EntityConfig" input="entityconfig.xlsx" mode="map" index="id"/>
 </module>
