@@ -50,8 +50,15 @@ namespace MiniGameTemplate.Entity
         [Tooltip("攻击间隔（秒），0 = 不攻击")]
         public float AttackInterval = 1f;
 
-        // Phase 1.7 填充：BulletTypeSO AttackBulletType
-        // Phase 1.7 填充：Vector2 AttackFireOffset
+        [Tooltip("攻击弹幕 Pattern（BulletPatternSO，发射配置）")]
+        public Danmaku.BulletPatternSO AttackBulletPattern;
+
+        [Tooltip("发射点偏移（相对 Entity 位置）")]
+        public Vector2 AttackFireOffset;
+
+        [Header("AI 行为（v2.4 新增）")]
+        [Tooltip("AI 行为配置资产（条件-动作表）")]
+        public AIBehaviorSO AIBehavior;
 
         // ──────────────── 视觉（Phase 1.10 填充）────────────────
         // public PoolDefinition SpawnEffect;
