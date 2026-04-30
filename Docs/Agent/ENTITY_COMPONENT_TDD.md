@@ -1624,14 +1624,14 @@ public class EntityConfigSO : ScriptableObject
 
 > **v2.2 变更**：EntityViewBridge 已提前到 Phase 1（P1.9）；Phase 2 聚焦渲染升级和 Luban。
 
-| 步骤 | 内容 |
-|------|------|
-| P2.1 | 正式 ViewPrefab 渲染（Spine / 序列帧选型 + EntityViewBridge 自动切换） |
-| P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） |
-| P2.3 | Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载） |
-| P2.4 | 受击扩展参数（击退/无敌帧/击退曲线） |
-| P2.5 | WaveTriggerMode.OnEnterArea + TriggerZone 组件 |
-| P2.6 | 集成验收 |
+| 步骤 | 内容 | 状态 |
+|------|------|------|
+| P2.1 | 正式 ViewPrefab 渲染（IEntityView + EntitySpriteAnimator + dual-path ViewBridge） | ✅ 2026-04-30 |
+| P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） | 🔲 |
+| P2.3 | Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载） | 🔲 |
+| P2.4 | 受击扩展参数（击退/无敌帧/击退曲线） | 🔲 |
+| P2.5 | WaveTriggerMode.OnEnterArea + TriggerZone 组件 | 🔲 |
+| P2.6 | 集成验收 | 🔲 |
 
 ### Phase 3：高级功能（预估 3 天）
 
