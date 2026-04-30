@@ -81,7 +81,7 @@ namespace MiniGameTemplate.Entity
 
         /// <summary>
         /// 根据配置创建 Entity 并注册组件。
-        /// Phase 1：根据 config.Components 数组实例化对应组件占位（具体组件类在后续 Phase 实现）。
+        /// 按 config.Components 数组实例化对应组件并 RegisterComponent。
         /// </summary>
         private static Entity CreateEntityFromConfig(EntityConfigSO config, int slotIndex)
         {
@@ -90,11 +90,40 @@ namespace MiniGameTemplate.Entity
             entity.ConfigSO = config;
             entity.Camp = config.Camp;
 
-            // Phase 1.4~1.7 会在此处创建具体组件实例
-            // 目前 P1.3 只创建空 Entity 容器（组件在后续 Phase 注册）
-            // 当具体组件类实现后，这里会根据 config.Components 数组实例化
+            // 根据配置的组件列表实例化并注册
+            if (config.Components != null)
+            {
+                for (int i = 0; i < config.Components.Length; i++)
+                {
+                    var comp = CreateComponent(config.Components[i]);
+                    if (comp != null)
+                        entity.RegisterComponent(comp);
+                }
+            }
 
             return entity;
+        }
+
+        /// <summary>
+        /// 工厂方法：根据 ComponentType 创建对应组件实例。
+        /// Phase 1 支持：State, Health, Movement, Collision, Control, AI, Attack, Animation。
+        /// </summary>
+        private static IEntityComponent CreateComponent(ComponentType type)
+        {
+            switch (type)
+            {
+                case ComponentType.State:     return new StateComponent();
+                case ComponentType.Health:    return new HealthComponent();
+                case ComponentType.Movement:  return new MovementComponent();
+                case ComponentType.Collision: return new CollisionComponent();
+                case ComponentType.Control:   return new ControlComponent();
+                case ComponentType.AI:        return new AIComponent();
+                case ComponentType.Attack:    return new AttackComponent();
+                case ComponentType.Animation: return new AnimationComponent();
+                default:
+                    Debug.LogWarning($"[EntityPool] 未知组件类型：{type}，跳过创建。");
+                    return null;
+            }
         }
     }
 }
