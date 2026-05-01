@@ -57,6 +57,16 @@ namespace MiniGameTemplate.Entity
         public bool IsCritical;
 
         /// <summary>
+        /// 伤害来源位置（子弹/激光/喷雾命中点）。
+        /// 用于计算击退方向——从 SourcePosition 指向被击者位置。
+        /// 当 HasSourcePosition=false 时忽略此字段。
+        /// </summary>
+        public Vector2 SourcePosition;
+
+        /// <summary>SourcePosition 是否有效（避免 Vector2.zero 歧义）</summary>
+        public bool HasSourcePosition;
+
+        /// <summary>
         /// 经 IDamageModifier 链修正后的最终伤害。
         /// HealthComponent 实际扣血使用此值（而非 BaseDamage）。
         /// 未经修正时默认 = 0，HealthComponent 内部 fallback 到 BaseDamage。

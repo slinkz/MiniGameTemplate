@@ -26,6 +26,19 @@ namespace MiniGameTemplate.EditorTools
         private SerializedProperty _collisionRadius;
         private SerializedProperty _knockbackDistance;
         private SerializedProperty _knockbackDuration;
+        // P2.4 受击参数
+        private SerializedProperty _iFrameCount;
+        private SerializedProperty _hitStopFrames;
+        private SerializedProperty _knockbackCurve;
+        // P2.2 Entity 碰撞
+        private SerializedProperty _enableEntityCollision;
+        private SerializedProperty _collisionLayer;
+        private SerializedProperty _contactDamage;
+        private SerializedProperty _contactDamageInterval;
+        // 攻击
+        private SerializedProperty _attackPower;
+        private SerializedProperty _critRate;
+        private SerializedProperty _critDamageMultiplier;
         private SerializedProperty _attackInterval;
         private SerializedProperty _attackBulletPattern;
         private SerializedProperty _attackFireOffset;
@@ -33,7 +46,16 @@ namespace MiniGameTemplate.EditorTools
         // View 桥接（Phase 1.9）
         private SerializedProperty _viewPrefab;
         private SerializedProperty _viewPoolDef;
+        private SerializedProperty _spriteAnimData;
         private SerializedProperty _debugColor;
+        // 受击反馈 + 视觉特效（P1.11）
+        private SerializedProperty _hitFlashDuration;
+        private SerializedProperty _hitFlashColor;
+        private SerializedProperty _showDamageNumber;
+        private SerializedProperty _spawnEffect;
+        private SerializedProperty _hitEffect;
+        private SerializedProperty _deathEffect;
+        private SerializedProperty _deathDelay;
 
         private static readonly ComponentType[] AllTypes = (ComponentType[])System.Enum.GetValues(typeof(ComponentType));
 
@@ -50,6 +72,19 @@ namespace MiniGameTemplate.EditorTools
             _collisionRadius = serializedObject.FindProperty("CollisionRadius");
             _knockbackDistance = serializedObject.FindProperty("KnockbackDistance");
             _knockbackDuration = serializedObject.FindProperty("KnockbackDuration");
+            // P2.4 受击参数
+            _iFrameCount = serializedObject.FindProperty("IFrameCount");
+            _hitStopFrames = serializedObject.FindProperty("HitStopFrames");
+            _knockbackCurve = serializedObject.FindProperty("KnockbackCurve");
+            // P2.2 Entity 碰撞
+            _enableEntityCollision = serializedObject.FindProperty("EnableEntityCollision");
+            _collisionLayer = serializedObject.FindProperty("CollisionLayer");
+            _contactDamage = serializedObject.FindProperty("ContactDamage");
+            _contactDamageInterval = serializedObject.FindProperty("ContactDamageInterval");
+            // 攻击
+            _attackPower = serializedObject.FindProperty("AttackPower");
+            _critRate = serializedObject.FindProperty("CritRate");
+            _critDamageMultiplier = serializedObject.FindProperty("CritDamageMultiplier");
             _attackInterval = serializedObject.FindProperty("AttackInterval");
             _attackBulletPattern = serializedObject.FindProperty("AttackBulletPattern");
             _attackFireOffset = serializedObject.FindProperty("AttackFireOffset");
@@ -57,7 +92,16 @@ namespace MiniGameTemplate.EditorTools
             // View 桥接（Phase 1.9）
             _viewPrefab = serializedObject.FindProperty("ViewPrefab");
             _viewPoolDef = serializedObject.FindProperty("ViewPoolDef");
+            _spriteAnimData = serializedObject.FindProperty("SpriteAnimData");
             _debugColor = serializedObject.FindProperty("DebugColor");
+            // 受击反馈 + 视觉特效（P1.11）
+            _hitFlashDuration = serializedObject.FindProperty("HitFlashDuration");
+            _hitFlashColor = serializedObject.FindProperty("HitFlashColor");
+            _showDamageNumber = serializedObject.FindProperty("ShowDamageNumber");
+            _spawnEffect = serializedObject.FindProperty("SpawnEffect");
+            _hitEffect = serializedObject.FindProperty("HitEffect");
+            _deathEffect = serializedObject.FindProperty("DeathEffect");
+            _deathDelay = serializedObject.FindProperty("DeathDelay");
         }
 
         public override void OnInspectorGUI()
@@ -104,12 +148,43 @@ namespace MiniGameTemplate.EditorTools
             // 击退
             EditorGUILayout.PropertyField(_knockbackDistance);
             EditorGUILayout.PropertyField(_knockbackDuration);
+            EditorGUILayout.PropertyField(_knockbackCurve);
+
+            // ──── 受击参数（P2.4）────
+            if (HasComponent(ComponentType.Health))
+            {
+                EditorGUILayout.Space(4);
+                DrawSectionTitle("受击参数（因勾选了 Health 而显示）");
+                EditorGUILayout.PropertyField(_iFrameCount);
+                EditorGUILayout.PropertyField(_hitStopFrames);
+            }
+
+            // ──── Entity vs Entity 碰撞（P2.2）────
+            if (HasComponent(ComponentType.Collision))
+            {
+                EditorGUILayout.Space(4);
+                DrawSectionTitle("Entity 碰撞（P2.2）");
+                EditorGUILayout.PropertyField(_enableEntityCollision);
+                if (_enableEntityCollision.boolValue)
+                {
+                    EditorGUILayout.PropertyField(_collisionLayer);
+                    EditorGUILayout.PropertyField(_contactDamage);
+                    if (_contactDamage.intValue > 0)
+                    {
+                        EditorGUILayout.PropertyField(_contactDamageInterval);
+                    }
+                }
+            }
 
             // ──── 攻击组件配置（条件显示）────
             if (HasComponent(ComponentType.Attack))
             {
                 EditorGUILayout.Space(8);
                 DrawSectionTitle("攻击组件配置（因勾选了 Attack 而显示）");
+                EditorGUILayout.PropertyField(_attackPower);
+                EditorGUILayout.PropertyField(_critRate);
+                EditorGUILayout.PropertyField(_critDamageMultiplier);
+                EditorGUILayout.Space(4);
                 EditorGUILayout.PropertyField(_attackInterval);
                 EditorGUILayout.PropertyField(_attackBulletPattern);
                 EditorGUILayout.PropertyField(_attackFireOffset);
@@ -136,8 +211,20 @@ namespace MiniGameTemplate.EditorTools
                         "已填 ViewPrefab 但 ViewPoolDef 为空——ViewBridge 将 fallback 到 Debug View。",
                         MessageType.Warning);
                 }
+                EditorGUILayout.PropertyField(_spriteAnimData);
             }
             EditorGUILayout.PropertyField(_debugColor);
+
+            // ──── 受击反馈 + 视觉特效（P1.11）────
+            EditorGUILayout.Space(8);
+            DrawSectionTitle("受击反馈 + 视觉特效");
+            EditorGUILayout.PropertyField(_hitFlashDuration);
+            EditorGUILayout.PropertyField(_hitFlashColor);
+            EditorGUILayout.PropertyField(_showDamageNumber);
+            EditorGUILayout.PropertyField(_spawnEffect);
+            EditorGUILayout.PropertyField(_hitEffect);
+            EditorGUILayout.PropertyField(_deathEffect);
+            EditorGUILayout.PropertyField(_deathDelay);
 
             serializedObject.ApplyModifiedProperties();
         }

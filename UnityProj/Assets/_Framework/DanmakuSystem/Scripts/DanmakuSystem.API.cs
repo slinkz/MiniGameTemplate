@@ -109,10 +109,10 @@ namespace MiniGameTemplate.Danmaku
             _scheduler.Schedule(group, origin, baseAngle, playerPos);
         }
 
-        /// <summary>发射单个弹幕。</summary>
-        public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle)
+        /// <summary>发射单个弹幕。ownerEntityId = 发射者 Entity ID（0=无 Owner）。</summary>
+        public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle, uint ownerEntityId = 0)
         {
-            _scheduler.ScheduleSingle(pattern, origin, baseAngle);
+            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId);
         }
 
         /// <summary>

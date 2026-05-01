@@ -22,6 +22,7 @@ namespace MiniGameTemplate.Entity
         public const int Decision  = 100;  // ControlComponent / AIComponent
         public const int Attack    = 150;  // AttackComponent
         public const int AutoAim   = 200;  // AutoAimComponent
+        public const int Health    = 250;  // HealthComponent（P2.4：无敌帧/HitStop 计时）
         public const int Movement  = 300;  // MovementComponent
         public const int Animation = 400;  // AnimationComponent
     }

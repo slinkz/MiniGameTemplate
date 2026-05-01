@@ -23,12 +23,28 @@ MonoBehaviour:
   CollisionRadius: 0.3
   KnockbackDistance: 0
   KnockbackDuration: 0
+  IFrameCount: 0
+  HitStopFrames: 0
+  KnockbackCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  EnableEntityCollision: 1
+  CollisionLayer: 0
+  ContactDamage: 0
+  ContactDamageInterval: 0.5
+  AttackPower: 10
+  CritRate: 1
+  CritDamageMultiplier: 2
   AttackInterval: 0.15
   AttackBulletPattern: {fileID: 11400000, guid: 85c434b47651ddb4f9e7c9333de12c57, type: 2}
   AttackFireOffset: {x: 0, y: 0.5}
   AIBehavior: {fileID: 0}
   ViewPrefab: {fileID: 0}
   ViewPoolDef: {fileID: 0}
+  SpriteAnimData: {fileID: 0}
   DebugColor: {r: 0.2, g: 0.8, b: 1, a: 1}
   HitFlashDuration: 0.08
   HitFlashColor: {r: 1, g: 1, b: 1, a: 1}

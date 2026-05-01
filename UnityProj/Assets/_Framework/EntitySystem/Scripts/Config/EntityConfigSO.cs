@@ -72,6 +72,19 @@ namespace MiniGameTemplate.Entity
         [Tooltip("接触伤害间隔（秒）。防止每帧重复伤害。")]
         public float ContactDamageInterval = 0.5f;
 
+        [Header("战斗属性")]
+        [Tooltip("攻击力（覆盖弹幕 BulletTypeSO.Damage，0 = 使用弹幕配置的固定伤害）")]
+        [Min(0)]
+        public int AttackPower = 0;
+
+        [Tooltip("暴击率（0~1，0.3 = 30% 暴击率）")]
+        [Range(0f, 1f)]
+        public float CritRate = 0f;
+
+        [Tooltip("暴击伤害倍率（如 2.0 = 200% 伤害）")]
+        [Min(1f)]
+        public float CritDamageMultiplier = 2f;
+
         [Header("攻击（v2.4 新增）")]
         [Tooltip("攻击间隔（秒），0 = 不攻击")]
         public float AttackInterval = 1f;

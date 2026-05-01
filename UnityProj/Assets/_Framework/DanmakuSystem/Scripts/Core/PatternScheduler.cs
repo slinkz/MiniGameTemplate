@@ -85,8 +85,9 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 调度单个弹幕（无 PatternGroup，直接发射含 Burst）。
+        /// ownerEntityId = 发射者 Entity ID（0=无 Owner）。
         /// </summary>
-        public void ScheduleSingle(BulletPatternSO pattern, Vector2 origin, float baseAngle)
+        public void ScheduleSingle(BulletPatternSO pattern, Vector2 origin, float baseAngle, uint ownerEntityId = 0)
         {
             if (pattern == null) return;
 
@@ -109,6 +110,7 @@ namespace MiniGameTemplate.Danmaku
                 task.Delay = b * pattern.BurstInterval;
                 task.Elapsed = 0f;
                 task.Active = true;
+                task.OwnerEntityId = ownerEntityId;
                 _activeTasks++;
                 _totalScheduled++;
                 if (_activeTasks > _peakTasks) _peakTasks = _activeTasks;
@@ -130,7 +132,7 @@ namespace MiniGameTemplate.Danmaku
                 if (task.Elapsed < task.Delay) continue;
 
                 // 到期——执行发射
-                BulletSpawner.Fire(task.Pattern, task.Origin, task.Angle, world, registry, difficulty, trailPool);
+                BulletSpawner.Fire(task.Pattern, task.Origin, task.Angle, world, registry, difficulty, trailPool, task.OwnerEntityId);
 
                 // 任务完成，释放槽位
                 task.Active = false;
@@ -172,6 +174,7 @@ namespace MiniGameTemplate.Danmaku
             public float Delay;
             public float Elapsed;
             public bool Active;
+            public uint OwnerEntityId;
         }
     }
 }

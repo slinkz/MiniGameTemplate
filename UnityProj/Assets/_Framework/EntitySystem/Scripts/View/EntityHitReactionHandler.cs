@@ -100,15 +100,23 @@ namespace MiniGameTemplate.Entity
                 RequestFlash(entity.Id, config.HitFlashDuration);
             }
 
-            // 3. 击退（P2.4：支持 KnockbackCurve）
+            // 3. 击退（P2.4：支持 KnockbackCurve + SourcePosition 精确方向）
             if (config.KnockbackDistance > 0f && config.KnockbackDuration > 0f)
             {
                 var movement = entity.GetComponent(ComponentType.Movement) as MovementComponent;
                 if (movement != null)
                 {
-                    // 击退方向：从攻击者朝向被击者
+                    // 击退方向优先级：SourcePosition（弹丸位置）> AttackerId（攻击者Entity位置）> fallback 右
                     Vector2 knockDir = Vector2.right; // fallback
-                    if (context.AttackerId.Value != 0)
+
+                    if (context.HasSourcePosition)
+                    {
+                        // 从弹丸/激光/喷雾位置 → 被击者位置
+                        Vector2 dir = entity.Position - context.SourcePosition;
+                        if (dir.sqrMagnitude > 0.001f)
+                            knockDir = dir.normalized;
+                    }
+                    else if (context.AttackerId.Value != 0)
                     {
                         var mgr = EntityManagerAccessor.Instance;
                         if (mgr != null)

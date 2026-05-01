@@ -15,7 +15,7 @@ namespace MiniGameTemplate.Entity
     /// - BC-05.5: Hitbox 每帧从 Entity.Position + ConfigSO.CollisionRadius 计算
     /// 
     /// v2.4：碰撞回调构造 DamageContext 发布到 EntityEventBus。
-    /// Phase 1：AttackerId = EntityId.Invalid（BulletCore 暂无 OwnerEntityId 字段）。
+    /// OwnerEntityId → 查找发射者 Entity → 暴击 Roll + AttackPower 覆盖。
     /// </summary>
     public class CollisionComponent : IEntityComponent, ICollisionTarget
     {
@@ -104,53 +104,94 @@ namespace MiniGameTemplate.Entity
         /// <summary>
         /// 弹丸命中回调（BC-05.4）。
         /// 构造 DamageContext 发布 OnCollisionHit 到 EntityEventBus。
-        /// Phase 1：AttackerId = Invalid（无 OwnerEntityId 映射）。
+        /// SourcePosition = 子弹当前位置（从 BulletWorld 读取），用于精确击退方向。
+        /// OwnerEntityId → 查找发射者 Entity → 暴击 Roll + AttackPower 覆盖。
         /// </summary>
         public void OnBulletHit(int damage, int bulletIndex)
         {
             if (!_isActive || !_isCollisionEnabled || _owner == null) return;
 
-            _owner.EventBus.Publish(new OnCollisionHit
+            var ctx = new DamageContext
             {
-                Context = new DamageContext
+                BaseDamage = damage,
+                AttackerId = EntityId.Invalid,
+                HitType = CollisionEventType.BulletHit
+            };
+
+            var ds = DanmakuSystem.Instance;
+            if (ds != null && bulletIndex >= 0 && bulletIndex < ds.BulletWorld.Capacity)
+            {
+                ref var core = ref ds.BulletWorld.Cores[bulletIndex];
+                ctx.SourcePosition = core.Position;
+                ctx.HasSourcePosition = true;
+
+                // 从 OwnerEntityId 查找发射者 Entity，读取战斗属性
+                if (core.OwnerEntityId != 0)
                 {
-                    BaseDamage = damage,
-                    AttackerId = EntityId.Invalid,
-                    HitType = CollisionEventType.BulletHit
+                    ctx.AttackerId = new EntityId(core.OwnerEntityId);
+                    var ownerEntity = FindEntityById(core.OwnerEntityId);
+                    if (ownerEntity != null)
+                    {
+                        var ownerConfig = ownerEntity.ConfigSO;
+                        // AttackPower 覆盖伤害（0 = 使用弹幕配置的固定 Damage）
+                        if (ownerConfig.AttackPower > 0)
+                            ctx.BaseDamage = ownerConfig.AttackPower;
+
+                        // 暴击 Roll
+                        if (ownerConfig.CritRate > 0f && Random.value < ownerConfig.CritRate)
+                        {
+                            ctx.IsCritical = true;
+                            ctx.CritMultiplier = ownerConfig.CritDamageMultiplier;
+                        }
+                    }
                 }
-            });
+            }
+
+            _owner.EventBus.Publish(new OnCollisionHit { Context = ctx });
         }
 
-        /// <summary>激光命中回调（BC-05.4）</summary>
+        /// <summary>激光命中回调（BC-05.4）。SourcePosition = 激光 Origin。</summary>
         public void OnLaserHit(int damage, int laserIndex)
         {
             if (!_isActive || !_isCollisionEnabled || _owner == null) return;
 
-            _owner.EventBus.Publish(new OnCollisionHit
+            var ctx = new DamageContext
             {
-                Context = new DamageContext
-                {
-                    BaseDamage = damage,
-                    AttackerId = EntityId.Invalid,
-                    HitType = CollisionEventType.LaserHit
-                }
-            });
+                BaseDamage = damage,
+                AttackerId = EntityId.Invalid,
+                HitType = CollisionEventType.LaserHit
+            };
+
+            var ds = DanmakuSystem.Instance;
+            if (ds != null && laserIndex >= 0 && laserIndex < ds.LaserPool.Capacity)
+            {
+                ctx.SourcePosition = ds.LaserPool.Data[laserIndex].Origin;
+                ctx.HasSourcePosition = true;
+            }
+
+            _owner.EventBus.Publish(new OnCollisionHit { Context = ctx });
         }
 
-        /// <summary>喷雾命中回调（BC-05.4）</summary>
+        /// <summary>喷雾命中回调（BC-05.4）。SourcePosition = 喷雾 Origin。</summary>
         public void OnSprayHit(int damage, int sprayIndex)
         {
             if (!_isActive || !_isCollisionEnabled || _owner == null) return;
 
-            _owner.EventBus.Publish(new OnCollisionHit
+            var ctx = new DamageContext
             {
-                Context = new DamageContext
-                {
-                    BaseDamage = damage,
-                    AttackerId = EntityId.Invalid,
-                    HitType = CollisionEventType.SprayHit
-                }
-            });
+                BaseDamage = damage,
+                AttackerId = EntityId.Invalid,
+                HitType = CollisionEventType.SprayHit
+            };
+
+            var ds = DanmakuSystem.Instance;
+            if (ds != null && sprayIndex >= 0 && sprayIndex < ds.SprayPool.Capacity)
+            {
+                ctx.SourcePosition = ds.SprayPool.Data[sprayIndex].Origin;
+                ctx.HasSourcePosition = true;
+            }
+
+            _owner.EventBus.Publish(new OnCollisionHit { Context = ctx });
         }
 
         // ──────────────── 公开查询 ────────────────
@@ -173,5 +214,24 @@ namespace MiniGameTemplate.Entity
         /// 强制启用碰撞（仅测试用，绕过 DanmakuSystem.Instance 依赖）。
         /// </summary>
         internal void ForceEnableCollision() => _isCollisionEnabled = true;
+
+        // ──────────────── 内部工具 ────────────────
+
+        /// <summary>
+        /// 通过 EntityId 值查找活跃 Entity（线性扫描，碰撞回调频率下可接受）。
+        /// </summary>
+        private static Entity FindEntityById(uint entityIdValue)
+        {
+            var mgr = EntityManagerAccessor.Instance;
+            if (mgr == null) return null;
+
+            var entities = mgr.ActiveEntities;
+            for (int i = 0, count = entities.Count; i < count; i++)
+            {
+                if (entities[i].Id.Value == entityIdValue)
+                    return entities[i];
+            }
+            return null;
+        }
     }
 }

@@ -156,6 +156,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DebugViewPool: {fileID: 11400000, guid: cce39101747307743a0e7aac2adafad1, type: 2}
   DamageNumberPool: {fileID: 11400000, guid: ede90f04beb15df489f0018f72958145, type: 2}
+  EnableEntityCollision: 1
+  EnableBoundaryKill: 1
+  KillBounds:
+    serializedVersion: 2
+    x: -6
+    y: -10
+    width: 12
+    height: 20
+  KillMargin: 1
 --- !u!4 &61447333
 Transform:
   m_ObjectHideFlags: 0
@@ -327,7 +336,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1320450163}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: 0, y: 7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

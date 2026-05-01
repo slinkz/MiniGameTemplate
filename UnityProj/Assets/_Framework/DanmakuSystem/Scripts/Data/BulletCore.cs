@@ -41,8 +41,15 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>阵营：0=Enemy, 1=Player, 2=Neutral</summary>
         public byte Faction;           // offset 33, size 1
 
+        /// <summary>
+        /// 发射者 Entity 的唯一 ID（EntityId.Value）。
+        /// 0 = 无发射者（场景脚本/Spawner 直接发射的弹幕）。
+        /// 碰撞时通过 EntityManager 反查发射者 Entity，读取 CritRate 等战斗属性。
+        /// </summary>
+        public uint OwnerEntityId;     // offset 34, size 4
+
         /// <summary>Pierce 碰撞冷却：位掩码，每 bit 对应 TargetRegistry 的一个槽位 (0-63)</summary>
-        public ulong PierceHitMask;    // offset 34, size 8
+        public ulong PierceHitMask;    // offset 38, size 8
 
         // ──── 视觉动画值（DEC-005=C：Mover 写入，Renderer 读取） ────
 

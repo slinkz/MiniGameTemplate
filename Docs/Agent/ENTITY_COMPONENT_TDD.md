@@ -1262,6 +1262,123 @@ EntityViewBridge **只负责位置/朝向同步**。以下表现由游戏层订�
 - 受伤流程中的"来源信息"改为 `EntityId`（而非模糊的"来源"）
 - 通过 EntityEventBus 发布 `OnDamaged` / `OnDeath`，不直接操作 StateComponent
 
+**P2.4 扩展**：IDamageModifier 伤害修饰链 + 无敌帧(IFrameCount) + HitStop 顿帧(HitStopFrames)
+
+#### 4.2.1 TakeDamage 完整管线
+
+```
+入口: TakeDamage(ref DamageContext context)
+│
+├─ 1. 前置检查: !IsActive / IsDead / IsInvincible → 直接 return
+│
+├─ 2. 暴击计算: if (IsCritical) FinalDamage = BaseDamage × CritMultiplier
+│               else FinalDamage = BaseDamage
+│
+├─ 3. IDamageModifier 链（按 Priority 升序遍历）
+│     ├─ modifier.ProcessDamage(ref context, target)
+│     │   ├─ return true  → 继续下一个 modifier
+│     │   └─ return false → 中断链，伤害被完全吸收，不扣血
+│     └─ 所有 modifier 处理完毕 → 读取 context.FinalDamage
+│
+├─ 4. 扣血: CurrentHp -= FinalDamage（最低为 0）
+│
+├─ 5. 触发无敌帧: if (IFrameCount > 0) → IFrameRemaining = IFrameCount
+│
+├─ 6. 触发 HitStop: if (HitStopFrames > 0) → Entity.PauseFor(HitStopFrames)
+│
+├─ 7. 发布事件: OnDamaged { Damage, RemainingHp, Source }
+│
+└─ 8. 死亡判定: if (CurrentHp <= 0) → OnDeath + StateComponent.ForceAddState(Dead)
+```
+
+**关键顺序**：暴击先算 → Modifier 后算。Modifier 修改的是"暴击后的 FinalDamage"，而非 BaseDamage。这意味着减伤是对最终到手伤害做折减。
+
+#### 4.2.2 IDamageModifier 接口
+
+```csharp
+public interface IDamageModifier
+{
+    /// 优先级（升序执行，数字越小越先执行）
+    /// 推荐范围：0-100=护盾/免伤，100-200=护甲/减伤，200-300=暴击修正，300+=反弹/吸血
+    int Priority { get; }
+
+    /// 处理伤害上下文。返回 true=继续链，false=中断（伤害被完全吸收）
+    bool ProcessDamage(ref DamageContext context, Entity target);
+}
+```
+
+**设计约束**：
+- 固定数组 `IDamageModifier[4]`，零 GC（不用 List）
+- 插入时按 Priority 升序排序
+- `ProcessDamage` 通过 ref 传递 DamageContext struct——零堆分配
+- 修正器可以是有状态的（如护盾记录剩余值），但生命周期由调用方管理
+
+**API**：
+
+| 方法 | 说明 |
+|------|------|
+| `bool AddModifier(IDamageModifier)` | 按 Priority 插入排序注册。返回 false = 已满（上限 4） |
+| `void RemoveModifier(IDamageModifier)` | 引用相等移除 + shift-left 保持有序 |
+| `void ClearModifiers()` | 清空所有修正器（Entity 回收时由 Reset 调用） |
+
+#### 4.2.3 内置实现：DamageReductionModifier
+
+百分比减伤修正器——IDamageModifier 的首个正式实现，用于护甲/减伤 Buff 场景。
+
+```csharp
+public class DamageReductionModifier : IDamageModifier
+{
+    public int Priority => 150; // 减伤层（在护盾 0-100 之后）
+    public float Reduction { get; set; } // 0~1，Clamp01
+
+    public DamageReductionModifier(float reduction)
+    {
+        Reduction = Mathf.Clamp01(reduction);
+    }
+
+    public bool ProcessDamage(ref DamageContext context, Entity target)
+    {
+        context.FinalDamage = (int)(context.FinalDamage * (1f - Reduction));
+        return true; // 继续链
+    }
+}
+```
+
+**用法示例**：
+
+```csharp
+// 注册 50% 减伤
+var mod = new DamageReductionModifier(0.5f);
+healthComponent.AddModifier(mod);
+
+// 此后所有 TakeDamage → FinalDamage 自动减半
+// BaseDamage=100 → FinalDamage=50
+// BaseDamage=100 + Crit×2=200 → FinalDamage=100
+
+// 移除减伤（Buff 结束时）
+healthComponent.RemoveModifier(mod);
+```
+
+**验证结果**（2026-05-01 Play Mode 实测）：
+
+| 测试场景 | BaseDamage | FinalDamage | 预期 | 结果 |
+|----------|-----------|-------------|------|------|
+| 无 Modifier | 100 | 100 | 100 | ✓ PASS |
+| 50% 减伤 | 100 | 50 | 50 | ✓ PASS |
+| 暴击×2 + 50% 减伤 | 100 | 100 | 200×0.5=100 | ✓ PASS |
+
+#### 4.2.4 自定义 Modifier 实现指南
+
+游戏层可实现自己的 IDamageModifier：
+
+| 场景 | Priority 建议 | ProcessDamage 逻辑 | 返回值 |
+|------|--------------|-------------------|--------|
+| **护盾** | 50 | 扣除 ShieldHp，溢出伤害写回 FinalDamage | false（全挡时）/ true（溢出时） |
+| **减伤 Buff** | 150 | `FinalDamage *= (1 - ratio)` | true |
+| **免伤（无敌）** | 10 | `FinalDamage = 0` | false |
+| **伤害反弹** | 350 | 对 AttackerId 发起反弹伤害 | true |
+| **吸血** | 400 | 对攻击者恢复 HP（需通过 EntityManager 查找） | true |
+
 ### 4.3 AnimationComponent
 
 **BC 引用**：BC-02.2（Tickable）

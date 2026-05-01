@@ -13,6 +13,7 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>
         /// 发射一组弹丸（单次，不含 Burst 连射）。
         /// PatternScheduler 的 Burst 连射通过多次调用本方法实现。
+        /// ownerEntityId = 发射者 Entity ID（0=无 Owner）。
         /// </summary>
         internal static void Fire(
             BulletPatternSO pattern,
@@ -21,7 +22,8 @@ namespace MiniGameTemplate.Danmaku
             BulletWorld world,
             DanmakuTypeRegistry registry,
             DifficultyProfileSO difficulty = null,
-            TrailPool trailPool = null)
+            TrailPool trailPool = null,
+            uint ownerEntityId = 0)
         {
             var type = pattern.BulletType;
             if (type == null) return;
@@ -66,6 +68,7 @@ namespace MiniGameTemplate.Danmaku
                 core.HitPoints = type.InitialHitPoints;
                 core.Flags = BulletCore.FLAG_ACTIVE;
                 core.Faction = (byte)type.Faction;
+                core.OwnerEntityId = ownerEntityId;
                 core.PierceHitMask = 0;
 
                 // 条件标记

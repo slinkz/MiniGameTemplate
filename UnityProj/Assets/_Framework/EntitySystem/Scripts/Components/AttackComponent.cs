@@ -77,7 +77,7 @@ namespace MiniGameTemplate.Entity
 
             Vector2 firePos = _owner.Position + _fireOffset;
             float fireAngle = GetFireAngle(command.AimDirection);
-            ds.FireBullets(_bulletPattern, firePos, fireAngle);
+            ds.FireBullets(_bulletPattern, firePos, fireAngle, _owner.Id.Value);
         }
 
         // ──────────────── 内部工具 ────────────────
