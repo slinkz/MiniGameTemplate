@@ -13,13 +13,28 @@ namespace MiniGameTemplate.Entity
         ContactHit = 3, // P2.2: Entity vs Entity 接触碰撞
     }
 
-    // ──────────────── 伤害上下文（v2.4 GD-R4-001）────────────────
+    // ──────────────── 伤害类型（P2.4 新增）────────────────
+
+    /// <summary>
+    /// 伤害属性类型。用于抗性计算（P2.4 GD-R4-001）。
+    /// Phase 2：HealthComponent 的 IDamageModifier 链根据此类型应用不同减伤公式。
+    /// </summary>
+    public enum DamageType : byte
+    {
+        Physical = 0,   // 物理伤害
+        Magical = 1,    // 魔法伤害
+        Pure = 2,       // 纯粹伤害（无视抗性）
+    }
+
+    // ──────────────── 伤害上下文（v2.4 GD-R4-001 / P2.4 扩展）────────────────
 
     /// <summary>
     /// 伤害上下文 struct，替代裸 int damage。
-    /// 携带攻击者信息 + 命中类型，供伤害管线扩展。
-    /// Phase 1：HealthComponent 直接读 BaseDamage 扣血。
-    /// Phase 2：游戏层可订阅 OnCollisionHit 在 TakeDamage 前拦截处理（护甲/暴击等）。
+    /// 携带攻击者信息 + 命中类型 + 伤害属性，供伤害管线扩展。
+    /// P2.4 扩展：新增 DamageType / CritMultiplier / IsCritical / FinalDamage。
+    /// 
+    /// 伤害流程：
+    ///   BaseDamage → IDamageModifier 链处理 → 写入 FinalDamage → HealthComponent 读 FinalDamage 扣血
     /// </summary>
     public struct DamageContext
     {
@@ -29,10 +44,24 @@ namespace MiniGameTemplate.Entity
         /// <summary>发射者 EntityId（无发射者时 = Invalid）</summary>
         public EntityId AttackerId;
 
-        /// <summary>命中来源类型（Bullet / Laser / Spray）</summary>
+        /// <summary>命中来源类型（Bullet / Laser / Spray / Contact）</summary>
         public CollisionEventType HitType;
 
-        // Phase 2 扩展预留：DamageType (Physical/Magical)、CritMultiplier 等
+        /// <summary>伤害属性类型（P2.4 新增）</summary>
+        public DamageType Type;
+
+        /// <summary>暴击倍率（1.0 = 无暴击，>1.0 = 暴击）（P2.4 新增）</summary>
+        public float CritMultiplier;
+
+        /// <summary>是否暴击（P2.4 新增）</summary>
+        public bool IsCritical;
+
+        /// <summary>
+        /// 经 IDamageModifier 链修正后的最终伤害。
+        /// HealthComponent 实际扣血使用此值（而非 BaseDamage）。
+        /// 未经修正时默认 = 0，HealthComponent 内部 fallback 到 BaseDamage。
+        /// </summary>
+        public int FinalDamage;
     }
 
     // ──────────────── Entity 内部事件 struct 定义 ────────────────

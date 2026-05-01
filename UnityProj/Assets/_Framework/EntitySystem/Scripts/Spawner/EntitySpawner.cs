@@ -238,6 +238,23 @@ namespace MiniGameTemplate.Entity
                         state.IsWaitingForCallback = true;
                     }
                     break;
+
+                case WaveTriggerMode.OnEnterArea:
+                    // P2.5：检查关联的 TriggerZone 是否被触发
+                    if (wave.TriggerZone != null)
+                    {
+                        if (wave.TriggerZone.CheckTrigger(entityManager))
+                        {
+                            AdvanceToNextWave(ref state);
+                        }
+                    }
+                    else
+                    {
+                        // TriggerZone 未配置，降级为 Timer 立即推进（fallback）
+                        Debug.LogWarning($"[EntitySpawner] Wave {state.CurrentWaveIndex} 使用 OnEnterArea 但 TriggerZone 未配置，立即推进");
+                        AdvanceToNextWave(ref state);
+                    }
+                    break;
             }
         }
 

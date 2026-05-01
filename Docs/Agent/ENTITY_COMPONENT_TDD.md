@@ -1629,8 +1629,8 @@ public class EntityConfigSO : ScriptableObject
 | P2.1 | 正式 ViewPrefab 渲染（IEntityView + EntitySpriteAnimator + dual-path ViewBridge） | ✅ 2026-04-30 |
 | P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） | ✅ 2026-04-30 |
 | P2.3 | ~~Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载）~~ ✅ 2026-05-01 | ✅ tables.xml EntityConfig bean + entityconfig.xlsx(3条模板数据) + gen_config 生成 C#/.bytes + EntityConfigRegistry(ConfigId↔SO O(1)桥接) + EntityManager.Spawn(int configId) 重载 + Bootstrap 自动注册 |
-| P2.4 | 受击扩展参数（击退/无敌帧/击退曲线） | 🔲 |
-| P2.5 | WaveTriggerMode.OnEnterArea + TriggerZone 组件 | 🔲 |
+| P2.4 | ~~受击扩展参数（击退/无敌帧/击退曲线）~~ ✅ 2026-05-01 | ✅ DamageContext 扩展（DamageType/CritMultiplier/IsCritical/FinalDamage）+ IDamageModifier 伤害拦截链 + HealthComponent 无敌帧(IFrameCount)+HitStop 顿帧(HitStopFrames) + MovementComponent 击退曲线(KnockbackCurve) + EntityConfigSO 新增 IFrameCount/HitStopFrames/KnockbackCurve + HitReactionHandler 暴击伤害数字放大 |
+| P2.5 | ~~WaveTriggerMode.OnEnterArea + TriggerZone 组件~~ ✅ 2026-05-01 | ✅ WaveTriggerMode.OnEnterArea=3 + EntityTriggerZone 场景组件（圆形区域检测，Gizmo 可视化，OneShot/可重置）+ SpawnWaveEntry.TriggerZone 字段 + EntitySpawner OnEnterArea 触发逻辑 |
 | P2.6 | 集成验收 | 🔲 |
 
 ### Phase 3：高级功能（预估 3 天）

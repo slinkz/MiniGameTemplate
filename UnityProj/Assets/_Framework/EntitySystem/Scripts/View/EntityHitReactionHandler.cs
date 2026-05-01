@@ -87,28 +87,33 @@ namespace MiniGameTemplate.Entity
         {
             if (entity == null || !entity.IsAlive) return;
 
-            // 1. 受击闪白
+            // 提取 context 副本（struct 值类型），后续用 ref 传入 TakeDamage
+            var context = evt.Context;
+
+            // 1. 通过 HealthComponent 扣血（P2.4：ref 传递，FinalDamage 在内部计算后回写）
+            var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
+            health?.TakeDamage(ref context);
+
+            // 2. 受击闪白
             if (config.HitFlashDuration > 0f)
             {
                 RequestFlash(entity.Id, config.HitFlashDuration);
             }
 
-            // 2. 击退
+            // 3. 击退（P2.4：支持 KnockbackCurve）
             if (config.KnockbackDistance > 0f && config.KnockbackDuration > 0f)
             {
                 var movement = entity.GetComponent(ComponentType.Movement) as MovementComponent;
                 if (movement != null)
                 {
-                    // 击退方向：从攻击者朝向被击者（Phase 1 简化：默认向右）
-                    // 正式实现需从 DamageContext.AttackerId 查找攻击者位置
-                    Vector2 knockDir = Vector2.right; // Phase 1 fallback
-                    if (evt.Context.AttackerId.Value != 0)
+                    // 击退方向：从攻击者朝向被击者
+                    Vector2 knockDir = Vector2.right; // fallback
+                    if (context.AttackerId.Value != 0)
                     {
-                        // 尝试从 EntityManager 获取攻击者位置
                         var mgr = EntityManagerAccessor.Instance;
                         if (mgr != null)
                         {
-                            var attacker = FindEntityById(mgr, evt.Context.AttackerId.Value);
+                            var attacker = FindEntityById(mgr, context.AttackerId.Value);
                             if (attacker != null)
                             {
                                 Vector2 dir = entity.Position - attacker.Position;
@@ -117,30 +122,26 @@ namespace MiniGameTemplate.Entity
                             }
                         }
                     }
-                    movement.ApplyKnockback(knockDir, config.KnockbackDistance, config.KnockbackDuration);
+                    movement.ApplyKnockback(knockDir, config.KnockbackDistance, config.KnockbackDuration, config.KnockbackCurve);
                 }
             }
 
-            // 3. 受击特效
+            // 4. 受击特效
             if (config.HitEffect != null && _poolManager != null)
             {
                 var fx = _poolManager.Get(config.HitEffect);
                 if (fx != null)
                 {
                     fx.transform.position = new Vector3(entity.Position.x, entity.Position.y, 0f);
-                    // 自动回收由 ParticleAutoReturn 处理（或 Timer）
                 }
             }
 
-            // 4. 伤害数字
+            // 5. 伤害数字（P2.4：显示 FinalDamage 而非 BaseDamage）
             if (config.ShowDamageNumber && _damageNumberPool != null && _poolManager != null)
             {
-                SpawnDamageNumber(entity.Position, evt.Context.BaseDamage);
+                int displayDmg = context.FinalDamage > 0 ? context.FinalDamage : context.BaseDamage;
+                SpawnDamageNumber(entity.Position, displayDmg, context.IsCritical);
             }
-
-            // 5. 通过 HealthComponent 扣血
-            var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
-            health?.TakeDamage(evt.Context);
         }
 
         private void OnDeath(Entity entity, EntityConfigSO config, OnDeath evt)
@@ -233,7 +234,7 @@ namespace MiniGameTemplate.Entity
 
         // ──────────── 伤害数字 ────────────
 
-        private void SpawnDamageNumber(Vector2 position, int damage)
+        private void SpawnDamageNumber(Vector2 position, int damage, bool isCritical = false)
         {
             if (_damageNumberCount >= MAX_DAMAGE_NUMBERS) return;
 
@@ -242,14 +243,19 @@ namespace MiniGameTemplate.Entity
 
             go.transform.position = new Vector3(position.x, position.y + 0.5f, 0f);
 
+            // 暴击时放大 1.5x
+            float baseScale = isCritical ? 1.5f : 1f;
+            go.transform.localScale = new Vector3(baseScale, baseScale, 1f);
+
             var tm = go.GetComponentInChildren<TextMesh>();
-            if (tm != null) tm.text = damage.ToString();
+            if (tm != null) tm.text = isCritical ? $"{damage}!" : damage.ToString();
 
             _damageNumbers[_damageNumberCount++] = new DamageNumberState
             {
                 Go = go,
                 Timer = 0f,
                 StartY = position.y + 0.5f,
+                BaseScale = baseScale,
             };
         }
 
@@ -270,8 +276,9 @@ namespace MiniGameTemplate.Entity
                     var pos = state.Go.transform.position;
                     state.Go.transform.position = new Vector3(pos.x, y, pos.z);
 
-                    // 淡出（通过缩放模拟，Phase 2 用 CanvasGroup.alpha）
-                    float scale = Mathf.Lerp(1f, 0.3f, t);
+                    // 淡出缩放（基于 BaseScale 衰减）
+                    float bs = state.BaseScale > 0f ? state.BaseScale : 1f;
+                    float scale = Mathf.Lerp(bs, 0.3f * bs, t);
                     state.Go.transform.localScale = new Vector3(scale, scale, 1f);
                 }
 
@@ -353,6 +360,7 @@ namespace MiniGameTemplate.Entity
             public GameObject Go;
             public float Timer;
             public float StartY;
+            public float BaseScale; // 暴击放大（P2.4）
         }
 
         private struct DeathDelayState

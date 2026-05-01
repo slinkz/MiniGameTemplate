@@ -223,12 +223,13 @@ namespace MiniGameTemplate.Entity
             var healthComp = victim.GetComponent(ComponentType.Health) as HealthComponent;
             if (healthComp != null && !healthComp.IsDead)
             {
-                healthComp.TakeDamage(new DamageContext
+                var dmgCtx = new DamageContext
                 {
                     BaseDamage = attacker.ConfigSO.ContactDamage,
                     AttackerId = attacker.Id,
                     HitType = CollisionEventType.ContactHit
-                });
+                };
+                healthComp.TakeDamage(ref dmgCtx);
             }
 
             // 设置冷却

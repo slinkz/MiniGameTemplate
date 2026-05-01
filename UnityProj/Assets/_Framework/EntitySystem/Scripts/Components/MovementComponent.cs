@@ -43,10 +43,13 @@ namespace MiniGameTemplate.Entity
         private readonly float[] _speedModifiers = new float[MAX_MODIFIERS];
         private int _modifierCount;
 
-        // ── 击退状态（v2.4 GD-R4-004）──
+        // ── 击退状态（v2.4 GD-R4-004 + P2.4 曲线支持）──
         private Vector2 _knockbackDir;
-        private float _knockbackSpeed;
-        private float _knockbackRemaining;
+        private float _knockbackSpeed;       // 线性模式下的恒定速度
+        private float _knockbackRemaining;   // 剩余击退时间
+        private float _knockbackDuration;    // 总击退时间（用于曲线采样）
+        private float _knockbackDistance;    // 总击退距离（曲线模式使用）
+        private UnityEngine.AnimationCurve _knockbackCurve; // 击退速度曲线（null=线性）
 
         /// <summary>是否正在被击退</summary>
         public bool IsKnockedBack => _knockbackRemaining > 0f;
@@ -68,6 +71,9 @@ namespace MiniGameTemplate.Entity
             _knockbackDir = Vector2.zero;
             _knockbackSpeed = 0f;
             _knockbackRemaining = 0f;
+            _knockbackDuration = 0f;
+            _knockbackDistance = 0f;
+            _knockbackCurve = null;
         }
 
         public void Reset()
@@ -78,6 +84,9 @@ namespace MiniGameTemplate.Entity
             _knockbackDir = Vector2.zero;
             _knockbackSpeed = 0f;
             _knockbackRemaining = 0f;
+            _knockbackDuration = 0f;
+            _knockbackDistance = 0f;
+            _knockbackCurve = null;
             _owner = null;
         }
 
@@ -188,13 +197,17 @@ namespace MiniGameTemplate.Entity
         /// <summary>
         /// 施加击退效果。被调用后在 duration 时间内沿 direction 位移 distance 距离。
         /// 击退期间正常移速叠加（击退是额外位移，不替代原始运动）。
+        /// 支持曲线模式：curve != null 时，瞬时速度 = (distance/duration) * curve.Evaluate(t)，t=0~1。
         /// </summary>
-        public void ApplyKnockback(Vector2 direction, float distance, float duration)
+        public void ApplyKnockback(Vector2 direction, float distance, float duration, AnimationCurve curve = null)
         {
             if (duration <= 0f) return;
             _knockbackDir = direction.sqrMagnitude > 0.001f ? direction.normalized : Vector2.zero;
             _knockbackSpeed = distance / duration;
             _knockbackRemaining = duration;
+            _knockbackDuration = duration;
+            _knockbackDistance = distance;
+            _knockbackCurve = curve;
         }
 
         // ── Tick ──
@@ -213,11 +226,24 @@ namespace MiniGameTemplate.Entity
                 displacement += _moveDirection * (speed * dt);
             }
 
-            // 2. 击退位移（叠加在正常移动之上）
+            // 2. 击退位移（叠加在正常移动之上，支持曲线衰减）
             if (_knockbackRemaining > 0f)
             {
                 float knockDt = Mathf.Min(dt, _knockbackRemaining);
-                displacement += _knockbackDir * (_knockbackSpeed * knockDt);
+                float speed;
+                if (_knockbackCurve != null && _knockbackCurve.length > 0 && _knockbackDuration > 0f)
+                {
+                    // 曲线模式：t = 已经过时间比例（0→1）
+                    float elapsed = _knockbackDuration - _knockbackRemaining;
+                    float t = elapsed / _knockbackDuration;
+                    speed = _knockbackSpeed * _knockbackCurve.Evaluate(t);
+                }
+                else
+                {
+                    // 线性模式
+                    speed = _knockbackSpeed;
+                }
+                displacement += _knockbackDir * (speed * knockDt);
                 _knockbackRemaining -= dt;
                 if (_knockbackRemaining < 0f) _knockbackRemaining = 0f;
             }

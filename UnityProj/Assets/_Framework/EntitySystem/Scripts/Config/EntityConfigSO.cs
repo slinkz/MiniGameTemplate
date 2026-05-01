@@ -47,6 +47,18 @@ namespace MiniGameTemplate.Entity
         [Tooltip("击退持续时间（秒）")]
         public float KnockbackDuration = 0.2f;
 
+        [Header("受击参数（P2.4 新增）")]
+        [Tooltip("无敌帧数（受伤后 N 帧内不可再受伤，0=不启用）")]
+        [Min(0)]
+        public int IFrameCount = 0;
+
+        [Tooltip("HitStop 顿帧数（受伤后冻结 N 帧，营造打击感，0=不启用）")]
+        [Min(0)]
+        public int HitStopFrames = 0;
+
+        [Tooltip("击退速度曲线（时间 0~1 → 速度衰减，可选。为空时使用线性衰减）")]
+        public AnimationCurve KnockbackCurve;
+
         [Header("Entity vs Entity 碰撞（P2.2）")]
         [Tooltip("是否参与 Entity vs Entity 碰撞检测")]
         public bool EnableEntityCollision = true;
