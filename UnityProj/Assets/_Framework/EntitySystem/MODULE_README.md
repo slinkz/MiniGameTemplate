@@ -46,6 +46,8 @@ AIBehaviorSO 是条件-动作表，按优先级从高到低配置：
 
 在场景中放置 `EntitySpawnPoint` 组件 → 将 WaveConfig 指向你的波次 SO。
 
+> **TriggerZone 触发启动（P2.5 新增）**：给 EntitySpawnPoint 的 TriggerZone 字段拖入一个 `EntityTriggerZone` GO（挂 BoxCollider2D/CircleCollider2D + EntityTriggerZone 脚本）。有 TriggerZone = 等玩家进入区域后才开始刷怪；无 TriggerZone = 按 AutoStartOnEnable 自动开始。详见 TDD §10.2。
+
 ### 5. Play → 验证
 
 按 Play，Entity 会按波次生成。场景中有 `EntityDemoInputBridge` 时可用 WASD + Space 操控玩家。
@@ -81,7 +83,8 @@ Scripts/
 │   └── EntityHitReactionHandler.cs — 受击表现管线（闪白/击退/伤害数字/死亡延迟）
 ├── Spawner/
 │   ├── EntitySpawnPoint.cs       — 场景刷怪点组件
-│   └── EntitySpawner.cs          — 刷怪驱动器
+│   ├── EntitySpawner.cs          — 刷怪驱动器
+│   └── EntityTriggerZone.cs      — 触发区域检测器（SpawnPoint 级启动开关）
 ├── Config/
 │   ├── EntityConfigSO.cs         — 角色配置 SO
 │   ├── AIBehaviorSO.cs           — AI 行为配置 SO

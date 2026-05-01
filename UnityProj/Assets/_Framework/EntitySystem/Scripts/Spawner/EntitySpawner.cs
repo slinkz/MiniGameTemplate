@@ -8,6 +8,7 @@ namespace MiniGameTemplate.Entity
     /// 由 EntitySystemBootstrap 持有并在 Update 中驱动。
     /// 
     /// Phase 1 实现范围：Timer + AllCleared + OnCallback 三种模式 + Loop 循环。
+    /// P2.5：TriggerZone 启动控制由 Bootstrap 层处理（SpawnPoint 级开关），Spawner 不感知。
     /// Phase 1 阵型只实现 Random（AreaRadius 内随机散布）。
     /// </summary>
     public class EntitySpawner
@@ -236,23 +237,6 @@ namespace MiniGameTemplate.Entity
                     if (!state.IsWaitingForCallback)
                     {
                         state.IsWaitingForCallback = true;
-                    }
-                    break;
-
-                case WaveTriggerMode.OnEnterArea:
-                    // P2.5：检查关联的 TriggerZone 是否被触发
-                    if (wave.TriggerZone != null)
-                    {
-                        if (wave.TriggerZone.CheckTrigger(entityManager))
-                        {
-                            AdvanceToNextWave(ref state);
-                        }
-                    }
-                    else
-                    {
-                        // TriggerZone 未配置，降级为 Timer 立即推进（fallback）
-                        Debug.LogWarning($"[EntitySpawner] Wave {state.CurrentWaveIndex} 使用 OnEnterArea 但 TriggerZone 未配置，立即推进");
-                        AdvanceToNextWave(ref state);
                     }
                     break;
             }

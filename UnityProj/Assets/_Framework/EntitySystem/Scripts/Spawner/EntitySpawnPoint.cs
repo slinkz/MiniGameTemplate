@@ -13,8 +13,12 @@ namespace MiniGameTemplate.Entity
         [Tooltip("引用波次配置 SO")]
         public EntitySpawnWaveSO WaveConfig;
 
-        [Tooltip("场景加载后自动开始刷怪")]
+        [Tooltip("场景加载后自动开始刷怪（无 TriggerZone 时）")]
         public bool AutoStartOnEnable = true;
+
+        [Header("触发区域（P2.5 新增）")]
+        [Tooltip("关联触发区域。为空=按 AutoStartOnEnable 自动开始；不为空=等玩家进入区域后才开始刷怪")]
+        public EntityTriggerZone TriggerZone;
 
         [Header("生成区域")]
         [Tooltip("随机散布半径")]

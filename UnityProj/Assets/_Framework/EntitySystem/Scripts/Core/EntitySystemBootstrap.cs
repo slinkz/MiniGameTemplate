@@ -45,6 +45,10 @@ namespace MiniGameTemplate.Entity
         private EntityHitReactionHandler _hitHandler;
         private EntityCollisionSolver _collisionSolver;
 
+        // P2.5: 等待 TriggerZone 触发后才启动的 SpawnPoint
+        private EntitySpawnPoint[] _pendingTriggerPoints;
+        private int _pendingTriggerCount;
+
         /// <summary>受击表现管理器（供外部查询闪白状态等）</summary>
         public EntityHitReactionHandler HitReactionHandler => _hitHandler;
 
@@ -80,6 +84,9 @@ namespace MiniGameTemplate.Entity
             // P2.3: 自动注册场景中 SpawnPoint 引用的 EntityConfigSO 到 ConfigRegistry
             // （确保 Spawn(int configId, ...) 能查到 SO）
             var points = FindObjectsOfType<EntitySpawnPoint>();
+            _pendingTriggerPoints = new EntitySpawnPoint[points.Length];
+            _pendingTriggerCount = 0;
+
             foreach (var point in points)
             {
                 // 注册波次中引用的所有 EntityConfigSO
@@ -96,8 +103,15 @@ namespace MiniGameTemplate.Entity
                     }
                 }
 
-                if (point.AutoStartOnEnable && point.WaveConfig != null)
+                // P2.5: 有 TriggerZone 的 SpawnPoint 不立即启动，等待触发
+                if (point.TriggerZone != null)
+                {
+                    _pendingTriggerPoints[_pendingTriggerCount++] = point;
+                }
+                else if (point.AutoStartOnEnable && point.WaveConfig != null)
+                {
                     _spawner.StartWave(point);
+                }
             }
         }
 
@@ -114,11 +128,51 @@ namespace MiniGameTemplate.Entity
             _entityManager.Tick(dt);
             if (EnableBoundaryKill)
                 KillOutOfBoundsEntities();
+
+            // P2.5: 检查待触发 SpawnPoint（TriggerZone 触发后启动刷怪）
+            CheckPendingTriggerPoints();
+
             _spawner.Tick(dt, _entityManager);
             if (EnableEntityCollision)
                 _collisionSolver.Solve(_entityManager, dt);
             _viewBridge.SyncAll(_entityManager);
             _hitHandler.Tick(dt, _entityManager);
+        }
+
+        // ──────────── P2.5: TriggerZone 启动控制 ────────────
+
+        /// <summary>
+        /// 检查挂了 TriggerZone 的 SpawnPoint，触发后启动刷怪并从待触发列表移除。
+        /// swap-remove O(1)。
+        /// </summary>
+        private void CheckPendingTriggerPoints()
+        {
+            for (int i = _pendingTriggerCount - 1; i >= 0; i--)
+            {
+                var point = _pendingTriggerPoints[i];
+                if (point == null || point.TriggerZone == null)
+                {
+                    // SpawnPoint 被销毁或 TriggerZone 丢失，移除
+                    RemovePendingTrigger(i);
+                    continue;
+                }
+
+                if (point.TriggerZone.CheckTrigger(_entityManager))
+                {
+                    // 触发！启动刷怪
+                    _spawner.StartWave(point);
+                    RemovePendingTrigger(i);
+                }
+            }
+        }
+
+        private void RemovePendingTrigger(int index)
+        {
+            int last = _pendingTriggerCount - 1;
+            if (index != last)
+                _pendingTriggerPoints[index] = _pendingTriggerPoints[last];
+            _pendingTriggerPoints[last] = null;
+            _pendingTriggerCount--;
         }
 
         // ──────────── 边界击杀 ────────────

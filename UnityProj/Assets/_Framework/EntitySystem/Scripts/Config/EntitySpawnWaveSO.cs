@@ -34,8 +34,7 @@ namespace MiniGameTemplate.Entity
         [Tooltip("Timer 模式：上一波结束后的延迟秒数")]
         public float TriggerDelay;
 
-        [Tooltip("OnEnterArea 模式：关联的 TriggerZone（P2.5 新增）。场景中拖入 EntityTriggerZone 组件引用。")]
-        public EntityTriggerZone TriggerZone;
+
     }
 
     [System.Serializable]
@@ -66,8 +65,6 @@ namespace MiniGameTemplate.Entity
         AllCleared = 1,
         /// <summary>由外部代码回调触发</summary>
         OnCallback = 2,
-        /// <summary>P2.5：玩家进入指定 TriggerZone 区域后触发</summary>
-        OnEnterArea = 3,
     }
 
     /// <summary>生成阵型（v2.4 新增，GD-R4-005）</summary>

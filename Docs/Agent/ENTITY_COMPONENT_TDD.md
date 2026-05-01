@@ -1,12 +1,18 @@
 # Entity-Component 通用角色框架 · TDD v2.6
 
 > **版本**：v2.6  
-> **日期**：2026-04-27  
-> **状态**：**Phase 1 全部完成 ✅**（P1.0~P1.11 全部 2026-04-30）  
+> **日期**：2026-05-01  
+> **状态**：**Phase 1 全部完成 ✅**（P1.0~P1.11 全部 2026-04-30）；Phase 2 进行中（P2.4 ✅ P2.5 进行中）  
 > **前置文档**：MiniGameTemplate-EntityComponent-Design.md（v1.0 草案）  
 > **决策记录**：ADR-033  
 > **PK 评审记录**：ENTITY_COMPONENT_PK.md（R1 技术 PK）、ENTITY_COMPONENT_PK_R2.md（R2 策划工作流 PK）、ENTITY_COMPONENT_PK_R3.md（R3 软件架构师 PK）、ENTITY_COMPONENT_PK_R4.md（R4 游戏设计师 PK）、ENTITY_COMPONENT_PK_R5.md（R5 编辑器工具 PK）、ENTITY_COMPONENT_PK_R6.md（R6 策划落地性 PK）  
 > **适用范围**：MiniGameTemplate 通用小游戏模板，面向微信小游戏赛道
+>
+> **P2.5 变更摘要**：
+> - EntitySpawnPoint 新增 TriggerZone 字段（SpawnPoint 级开关：有=等触发，无=自动开始）
+> - EntitySystemBootstrap 新增待触发列表 + CheckPendingTriggerPoints（每帧检查 TriggerZone 状态）
+> - EntityTriggerZone 触发区域组件（Collider2D.OverlapPoint 轮询检测，零 GC）
+> - §10.2 新增 TriggerZone 触发模式完整操作步骤
 >
 > **v2.6 变更摘要**（PK R6 策划工作流落地性评审 WF-001~011）：
 > - WF-001：新增 EntitySystemBootstrap 胶水层 MonoBehaviour（策划工作流闭环的"最后一公里"）
@@ -221,7 +227,8 @@ Assets/_Framework/EntitySystem/
 │   │   └── EntityViewBridge.cs    — Entity→View GO 桥接器
 │   ├── Spawner/
 │   │   ├── EntitySpawnPoint.cs    — 场景刷怪点组件
-│   │   └── EntitySpawner.cs       — 刷怪驱动器
+│   │   ├── EntitySpawner.cs       — 刷怪驱动器
+│   │   └── EntityTriggerZone.cs   — P2.5: 触发区域检测器（SpawnPoint 级启动开关）
 │   └── Config/
 │       ├── EntityConfigSO.cs        — Phase 1 角色配置 SO
 │       ├── AIBehaviorSO.cs          — v2.4: AI 行为条件-动作表 SO
@@ -1037,7 +1044,6 @@ public enum WaveTriggerMode
     Timer = 0,          // 上一波结束后延迟 N 秒
     AllCleared = 1,     // 上一波全灭后触发
     OnCallback = 2,     // v2.4 新增（GD-R4-005）：波次完成后触发事件，等待游戏层调用 Spawner.ContinueNextWave() 才推进
-    // OnEnterArea = 3, // Phase 2+ 实现（需要触发区域组件）
 }
 ```
 
@@ -1107,18 +1113,82 @@ public class EntitySpawner
 }
 ```
 
+**触发区域组件（P2.5 新增）**：
+
+```csharp
+/// <summary>
+/// 触发区域检测器（P2.5）——放置在场景中，作为 EntitySpawnPoint 的启动开关。
+/// 
+/// 使用方式：
+/// 1. 在 GO 上挂 BoxCollider2D 或 CircleCollider2D（自动设为 IsTrigger=true）
+/// 2. 挂本脚本，配置 TargetCamp / OneShot
+/// 3. 在 EntitySpawnPoint 的 TriggerZone 字段中引用此 GO
+///    → SpawnPoint.TriggerZone != null：等玩家进入区域后才开始刷怪
+///    → SpawnPoint.TriggerZone == null：按 AutoStartOnEnable 自动开始
+/// 
+/// 设计决策：
+/// - TriggerZone 是 SpawnPoint 级开关，不是波次级（SO 不能引用场景对象）
+/// - 区域形状由 Collider2D 定义（策划在 Inspector 中拖拽编辑大小）
+/// - 检测仍为主动轮询 EntityManager（Entity 纯逻辑无 GO Collider，不走 Physics2D）
+/// - Collider2D.OverlapPoint(entity.Position) 判断是否在区域内——支持任意形状
+/// - 零 GC：无事件、无回调、纯状态查询
+/// </summary>
+[RequireComponent(typeof(Collider2D))]
+public class EntityTriggerZone : MonoBehaviour
+{
+    public EnumCamp TargetCamp = EnumCamp.Player;   // 检测的目标阵营
+    public bool OneShot = true;                      // 进入后永久激活
+
+    public bool IsTriggered { get; private set; }
+    public void ResetTrigger() => IsTriggered = false;
+
+    /// <summary>
+    /// 由 Bootstrap.CheckPendingTriggerPoints() 每帧调用。
+    /// Collider2D.OverlapPoint 判断 Entity.Position 是否在区域内。
+    /// </summary>
+    public bool CheckTrigger(EntityManager entityManager) { /* ... */ }
+}
+```
+
+**EntitySystemBootstrap — TriggerZone 启动控制（P2.5）**：
+
+```csharp
+// Awake 中：
+if (point.TriggerZone != null)
+    _pendingTriggerPoints[_pendingTriggerCount++] = point;   // 等触发
+else if (point.AutoStartOnEnable && point.WaveConfig != null)
+    _spawner.StartWave(point);                                // 立即启动
+
+// Update 中（Spawner.Tick 之前）：
+CheckPendingTriggerPoints();
+
+/// <summary>swap-remove O(1)，触发后 StartWave + 移除</summary>
+private void CheckPendingTriggerPoints()
+{
+    for (int i = _pendingTriggerCount - 1; i >= 0; i--)
+    {
+        if (point.TriggerZone.CheckTrigger(_entityManager))
+        {
+            _spawner.StartWave(point);
+            RemovePendingTrigger(i);
+        }
+    }
+}
+```
+
 **Phase 1 调用时序（SA-006，v2.3 明确）**：
 ```
 游戏层 MonoBehaviour.Update():
     EntityManager.Tick(dt)       ← Phase A: Tick 所有活跃 Entity
                                   ← Phase B: 统一处理延迟销毁（_pendingDespawn）
+    CheckPendingTriggerPoints()  ← P2.5: 检查 TriggerZone 触发状态
     EntitySpawner.Tick(dt, mgr)  ← Phase B 之后调用，确保 AllCleared 判定时
                                     已销毁的 Entity 不再被计为活跃
 ```
 - **AllCleared 判定**：调用 `EntityManager.CountAliveByConfig(config)` 查询存活数，排除 `IsPendingDespawn` 的 Entity
 - **时序保证**：Spawner 在 EntityManager.Tick() 之后运行，Phase B 延迟销毁已执行完毕，避免 1 帧延迟误触发下一波
 
-**Phase 1 实现范围**：Timer + AllCleared + OnCallback 三种模式 + Loop 循环。OnEnterArea 需要额外 TriggerZone 组件，Phase 2 再做。生成阵型 Phase 1 只实现 Random（AreaRadius 内随机散布），Line/Circle Phase 2+。难度缩放（HpMultiplier/CountMultiplier）Phase 2。
+**Phase 1 实现范围**：Timer + AllCleared + OnCallback 三种模式 + Loop 循环。TriggerZone 启动控制在 P2.5 实现。生成阵型 Phase 1 只实现 Random（AreaRadius 内随机散布），Line/Circle Phase 2+。难度缩放（HpMultiplier/CountMultiplier）Phase 2。
 
 ### 3.15 EntityViewBridge 设计（GD-103）
 
@@ -1747,7 +1817,7 @@ public class EntityConfigSO : ScriptableObject
 | P2.2 | Entity vs Entity 碰撞（EntityCollisionSolver，圆 vs 圆） | ✅ 2026-04-30 |
 | P2.3 | ~~Luban 配置迁移（TbEntityConfig + Spawn(int configId,...) 重载）~~ ✅ 2026-05-01 | ✅ tables.xml EntityConfig bean + entityconfig.xlsx(3条模板数据) + gen_config 生成 C#/.bytes + EntityConfigRegistry(ConfigId↔SO O(1)桥接) + EntityManager.Spawn(int configId) 重载 + Bootstrap 自动注册 |
 | P2.4 | ~~受击扩展参数（击退/无敌帧/击退曲线）~~ ✅ 2026-05-01 | ✅ DamageContext 扩展（DamageType/CritMultiplier/IsCritical/FinalDamage）+ IDamageModifier 伤害拦截链 + HealthComponent 无敌帧(IFrameCount)+HitStop 顿帧(HitStopFrames) + MovementComponent 击退曲线(KnockbackCurve) + EntityConfigSO 新增 IFrameCount/HitStopFrames/KnockbackCurve + HitReactionHandler 暴击伤害数字放大 |
-| P2.5 | ~~WaveTriggerMode.OnEnterArea + TriggerZone 组件~~ ✅ 2026-05-01 | ✅ WaveTriggerMode.OnEnterArea=3 + EntityTriggerZone 场景组件（圆形区域检测，Gizmo 可视化，OneShot/可重置）+ SpawnWaveEntry.TriggerZone 字段 + EntitySpawner OnEnterArea 触发逻辑 |
+| P2.5 | ~~TriggerZone 触发区域启动控制~~ ✅ 2026-05-01 | ✅ EntitySpawnPoint.TriggerZone 字段（SpawnPoint 级开关：有=等触发，无=自动开始）+ EntityTriggerZone 场景组件（Collider2D.OverlapPoint 轮询检测，零 GC，Gizmo 可视化）+ Bootstrap.CheckPendingTriggerPoints 每帧检查 |
 | P2.6 | 集成验收 | 🔲 |
 
 ### Phase 3：高级功能（预估 3 天）
@@ -2175,6 +2245,7 @@ public class EntityDebugWindow : EditorWindow
 ### 10.2 编排关卡波次
 
 > **v2.6 更新（WF-001）**：步骤 3 明确 Bootstrap 前置。
+> **P2.5 更新**：新增 TriggerZone 触发启动模式。
 
 ```
 0. [前置] 确认场景中已有 EntitySystemBootstrap（见 §10.0）
@@ -2186,6 +2257,35 @@ public class EntityDebugWindow : EditorWindow
    （EntitySystemBootstrap 会在 Awake 时自动发现并启动 AutoStartOnEnable=true 的 SpawnPoint）
 4. 调整 AreaRadius（Scene View 中可见黄色圆圈 + 名称标签）
 5. Play Mode → 观察波次按配置生成
+```
+
+**使用 TriggerZone 触发启动（P2.5 新增）**：
+
+当整个刷怪点需要**等玩家进入特定区域后才开始刷怪**时，给 SpawnPoint 关联一个 TriggerZone：
+
+```
+1. 创建触发区域 GO：
+   a. 场景中新建空 GO（命名建议：TriggerZone_SpawnPoint1）
+   b. 添加 BoxCollider2D 或 CircleCollider2D → 在 Inspector 中调整大小/位置
+      （Collider2D 会被自动设为 IsTrigger=true）
+   c. 添加 EntityTriggerZone 脚本
+      - TargetCamp = Player（检测玩家进入）
+      - OneShot = true（进入一次即永久激活）
+
+2. 配置 SpawnPoint：
+   - 在 EntitySpawnPoint 的 TriggerZone 字段中拖入步骤 1 创建的 TriggerZone GO
+   - WaveConfig 照常配置波次 SO
+   - AutoStartOnEnable 此时不生效（有 TriggerZone 时以 TriggerZone 为准）
+
+3. Play → 验证：
+   - 场景加载后该 SpawnPoint 不会立即刷怪
+   - 玩家 Entity 移入 TriggerZone 区域 → IsTriggered = true → SpawnPoint 启动刷怪
+   - 启动后波次内部的 Timer/AllCleared/OnCallback 逻辑照常推进
+   - Scene View 中 TriggerZone 标签从绿色变为红色 "[TRIGGERED]"
+
+💡 设计理念：TriggerZone 是 SpawnPoint 级的"启动开关"，不是波次级的。
+   SpawnPoint.TriggerZone == null → 自动开始
+   SpawnPoint.TriggerZone != null → 等触发后才开始
 ```
 
 ### 10.3 调试与迭代
@@ -2220,7 +2320,7 @@ public class EntityDebugWindow : EditorWindow
 |---|------|------|
 | 1 | R1 EC-002 | 碰撞动态注册策略：Entity > 64 时启用 CollisionRegistrationPass |
 | 2 | R2 BL-01 / GD-101 | EntityConfigSO 扩充受击参数（击退曲线 KnockbackCurve / 无敌帧 IFrameCount） |
-| 3 | R2 BL-02 / GD-102 | WaveTriggerMode.OnEnterArea + TriggerZone 组件 |
+| 3 | R2 BL-02 / GD-102 | ~~TriggerZone 触发区域启动控制~~ ✅ P2.5 |
 | 4 | R2 BL-03 / GD-102 | 刷怪阵型排列模式（Line/Circle，Random 已在 Phase 1） |
 | 5 | R2 BL-04 / GD-007 | AI 行为表 conditionType/actionType 迁移 Luban 时改用 enum 类型 |
 | 6 | R2 BL-05 / GD-104 | Luban 迁移：添加 `Spawn(int configId,...)` 重载 |
