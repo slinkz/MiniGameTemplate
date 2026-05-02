@@ -2,6 +2,114 @@
 
 MiniGameTemplate 的所有重要变更都会记录在本文件中。
 
+## [未发布] - 2026-05-02
+
+### 新增（Entity-Component 框架 Phase 3A：技能 & Buff 系统）
+
+- **SkillComponent + SkillConfigSO + ISkillEffect 技能框架**
+  - Entity 可配置多技能槽，每技能包含冷却、效果链（ISkillEffect 数组）
+  - 内置效果：`FireBulletsEffect`（发射子弹）、`AreaDamageEffect`（范围伤害）、`ApplyBuffEffect`（施加 Buff）
+  - `SkillConfigSO`：每个技能一个 SO 资产（冷却/效果/目标条件/层数叠加规则）
+- **BuffComponent + BuffConfigSO + SpeedModifier by-ID**
+  - Buff 系统支持持续时间、层数叠加、by-ID 速度修饰（加减速）
+  - `BuffConfigSO`：时长/叠加规则/效果列表/SpeedModifier 倍率
+  - MovementComponent 新增 by-ID 接口（AddSpeedModifier/RemoveSpeedModifier）
+- **CampUtility + AutoAimComponent**
+  - `CampUtility`：`FindEntitiesInRadius` / `FindNearestEntity` 阵营感知查询
+  - `AutoAimComponent`：TickOrder 120，自动锁定最近敌方目标
+- **DamageDealer 静态工具类**
+  - 重入保护（防止伤害链递归）+ PendingDespawn 安全检查
+  - try/finally 确保 flag 正确复位
+- **玩家移动边界系统**
+  - EntitySystemBootstrap 系统级 `ClampPlayerPositions` + `OnPlayerHitBounds` 回调
+  - 编辑器 Gizmo 可视化边界
+
+### 新增（Entity-Component 框架 Phase 2：渲染 & 碰撞 & 配置）
+
+- **P2.1 ViewPrefab 渲染升级**
+  - `IEntityView` 接口 + `SpriteAnimator` 组件，支持 SpriteRenderer 帧动画
+  - EntityConfigSO 新增 ViewPrefab/SpriteSheet/FrameRate 字段
+- **P2.2 EntityCollisionSolver**
+  - Entity vs Entity 圆形碰撞检测 + 分离推挤 + 接触伤害
+- **P2.3 Luban 配置迁移**
+  - `TbEntityConfig`（19 字段）：通过 configId 从 Luban xlsx 加载 Entity 配置
+  - `EntityConfigRegistry`：静态 ConfigId→SO O(1) 查找桥
+  - `EntityManager.Spawn(int configId, pos, rot)` 重载
+- **P2.4 DamageContext 扩展**
+  - `IDamageModifier` 伤害修饰链（固定数组[4]，优先级排序）
+  - `DamageReductionModifier`：百分比减伤（Priority=150）
+  - 无敌帧 + HitStop 支持
+  - `BulletCore.OwnerEntityId`：全链路透传（FireBullets→Scheduler→Spawner→Core）
+  - 暴击系统：EntityConfigSO AttackPower/CritRate/CritDamageMultiplier
+- **P2.5 EntityTriggerZone + WaveSpawner**
+  - 区域触发器（进入触发生成/事件）
+  - 波次生成器集成
+- **边界击杀系统**
+  - KillBounds + KillMargin 系统级扫描，越界 Entity 直接 Despawn
+  - EntityPool 默认容量 16→128
+
+### 新增（Entity-Component 框架 Phase 1：核心架构 12 步骤）
+
+- **P1.0 EnumCamp 阵营枚举统一**（BulletFaction → EnumCamp 全局迁移）
+- **P1.1 Entity 容器 + EntityEventBus**（预分配 Delegate[16,4] + TypeId<T> 零 GC）
+- **P1.2 EntityEventBus 零 GC 验证测试**
+- **P1.3 EntityPool + EntityManager + EntityConfigSO**（预分配数组 + 空闲槽位栈）
+- **P1.4 StateComponent + HealthComponent**
+- **P1.5 CollisionComponent + ICollisionTarget**（TargetRegistry 64 槽位 + PierceHitMask ulong）
+- **P1.6 MovementComponent + AnimationComponent**
+- **P1.7 ControlComponent + AIComponent + AttackComponent + Decision 层**
+- **P1.8 EntityConfigSO 配置驱动校验 + 6 Editor 工具 + SOCreationWizard 扩展**
+- **P1.9 EntityViewBridge + Debug View 集成**
+- **P1.10 EntitySpawner + EntitySpawnPoint + EntitySystemBootstrap**（Timer/AllCleared/Loop）
+- **P1.11 Integration Demo**（HitReactionHandler + DemoInputBridge + Template SOs + MODULE_README）
+
+### 新增（RuntimeAtlas 系统 R0~R5）
+
+- **R0 RuntimeAtlasSystem 核心**：运行时动态图集管理框架
+- **R1 AtlasBlit 着色器 + GPU 拷贝**：通过 Blit 将源贴图复制到运行时图集
+- **R2 BatchRenderer 集成**：BucketKey 基于 AtlasTexture 分桶，相同图集合并 DrawCall
+- **R3 自动迁移管线**：DanmakuSystem 初始化时自动将已注册 TypeSO 迁移到运行时图集
+- **R4 Trail/Laser 支持**：拖尾和激光渲染器的 Atlas 集成
+- **R5 调试 & 监控**：RuntimeAtlasDebugHUD（利用率/桶数/溢出计数）
+
+### 变更
+
+- **ADR-029 v2**：移除 Additive Blend 层（YAGNI），BucketKey 统一为 Normal
+- **ADR-030**：TypeRegistry 内化（DanmakuSystem 内部管理注册表生命周期）
+- **ADR-033**：Entity-Component 架构决策（纯 C# 容器 + 10 组件 + 零 GC）
+- **TargetRegistry**：16→64 槽位 + PierceHitMask ushort→ulong
+- **EntityPool 容量**：默认 PoolMax 16→128
+
+### 修复
+
+- **DrawCall 统计被后续 Renderer 覆盖为 0**：改为三阶段协议 BeginFrame/AccumulateBatch/EndFrame
+- **RuntimeAtlasBlit shader 被 WebGL stripping**：添加 AlwaysIncludedShaders
+- **RuntimeAtlasBlit UV 翻转**：添加 `UNITY_UV_STARTS_AT_TOP` 条件编译
+- **FairyGUI 微信小游戏输入**：Stage.cs 添加 `_useLegacyInput` fallback
+- **FairyGUI HandleRollOver 在 Begin 前触发**：导致 GButton 点击无反应
+- **拖尾系统三个核心问题**：生命周期/渲染/数据竞争
+- **setup 脚本兼容性**：从 bat 改为 PowerShell 实现（跨机器稳定）
+- **Singleton\<T\> RuntimeInitializeOnLoadMethod 警告**：泛型方法不支持该特性
+
+### 文档
+
+- **文档体系重建**（D1~D6 全量清理）：
+  - D1：归档过程文件 + 拆分超长文档
+  - D2：中间产物清理
+  - D3：过时内容审计（修正 10 处偏差）
+  - D4：INDEX.md 三路由表索引架构
+  - D5：编辑器工具使用手册（INDEX + 4 子文件）
+  - D6：SO 配置流程指南（INDEX + 5 子文件）
+- **ARCHITECTURE.md 拆出 MCP_INTEGRATION.md**（498→327+96 行）
+- **RuntimeAtlas TDD v2.0 + 验收报告**
+- **Entity-Component TDD v2.6**（6 轮 PK 评审全量回写）
+- **当前活文档总数：43**
+
+### 真机验收
+
+- **弹幕系统 + RuntimeAtlas 真机验证通过**（2026-04-29）
+- **Entity-Component Phase 3A PlayMode 验收**：13/17 PASS
+
 ## [未发布] - 2026-04-15
 
 ### 新增（弹幕系统 Phase 4 子任务：Atlas 打包工具 4.1/4.2）
