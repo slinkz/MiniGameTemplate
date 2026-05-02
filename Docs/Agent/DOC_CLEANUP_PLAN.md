@@ -1,3 +1,10 @@
+---
+system: general
+scope: doc-cleanup-plan
+last_verified: 2026-05-02
+related_code: Docs/Agent/**
+---
+
 # 文档整理计划 — 落地执行方案
 
 > **目标**：清理 Docs/Agent/ 目录，让 Agent 读取高效、内容可信、维护成本低；补齐操作手册使 Agent 能自主使用编辑器工具和配置 SO。

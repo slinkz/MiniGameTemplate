@@ -1,3 +1,10 @@
+---
+system: general
+scope: project-setup-guide
+last_verified: 2026-05-02
+related_code: Assets/_Game/**, Assets/_Framework/**
+---
+
 # 新游戏创建指南
 
 基于 MiniGameTemplate 新建一个小游戏项目的完整流程。

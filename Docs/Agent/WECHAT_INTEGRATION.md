@@ -1,3 +1,10 @@
+---
+system: wechat
+scope: sdk-integration
+last_verified: 2026-05-02
+related_code: Assets/Plugins/WeChatSDK/**, Assets/_Framework/WeChat/**
+---
+
 # 微信小游戏 SDK 接入指南
 
 ## 概述

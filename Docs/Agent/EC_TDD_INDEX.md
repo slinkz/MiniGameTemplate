@@ -12,10 +12,10 @@
 | # | 文件 | 内容摘要 | 行数 |
 |---|------|---------|------|
 | 1 | [EC_TDD_01_OVERVIEW.md](EC_TDD_01_OVERVIEW.md) | 设计目标 · 品类适配 · 行为契约(BC-01~08) · 命名空间与目录结构 | ~200 |
-| 2 | [EC_TDD_02_CORE_ARCH.md](EC_TDD_02_CORE_ARCH.md) | 核心接口 · Tick优先级 · EntityEventBus · CollisionComponent桥接 | ~335 |
+| 2 | [EC_TDD_02_CORE_ARCH.md](EC_TDD_02_CORE_ARCH.md) | 核心接口 · Tick优先级 · EntityEventBus · CollisionComponent桥接 | ~339 |
 | 3 | [EC_TDD_03_ENTITY_POOL.md](EC_TDD_03_ENTITY_POOL.md) | EntityPool · EntityManager · 系统集成矩阵 | ~277 |
 | 4 | [EC_TDD_04_SYSTEMS.md](EC_TDD_04_SYSTEMS.md) | TargetRegistry · 阵营 · 碰撞时序 · 内存预算 · 刷怪系统 · ViewBridge | ~461 |
-| 5 | [EC_TDD_05_COMPONENTS.md](EC_TDD_05_COMPONENTS.md) | 组件详细设计：State/Health/Anim/Move/Collision/AutoAim/AI/Skill/Attack | ~345 |
+| 5 | [EC_TDD_05_COMPONENTS.md](EC_TDD_05_COMPONENTS.md) | 组件详细设计：State/Health/Anim/Move/Collision/AutoAim/AI/Skill/Attack/Buff | ~365 |
 | 6 | [EC_TDD_06_CONFIG.md](EC_TDD_06_CONFIG.md) | EntityConfigSO · Luban预留 · 实施计划 · 质量属性 · 风险缓解 | ~218 |
 | 7 | [EC_TDD_07_EDITOR.md](EC_TDD_07_EDITOR.md) | 编辑器工具：Gizmo/ConfigEditor/Validator/DebugWindow/Wizard | ~326 |
 | 8 | [EC_TDD_08_APPENDIX.md](EC_TDD_08_APPENDIX.md) | 策划工作流 · 未决项清单(Phase2/3/Backlog) | ~201 |

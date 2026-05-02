@@ -1,3 +1,10 @@
+---
+system: architecture
+scope: global-overview
+last_verified: 2026-05-02
+related_code: Assets/_Framework/**, Assets/_Game/**
+---
+
 # 架构设计文档
 
 ## 架构总览

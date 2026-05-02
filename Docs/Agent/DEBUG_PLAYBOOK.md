@@ -1,3 +1,10 @@
+---
+system: general
+scope: debug-troubleshooting
+last_verified: 2026-05-02
+related_code: Assets/_Framework/Rendering/*.cs, Assets/_Framework/RuntimeAtlas/*.cs, Assets/_Framework/Danmaku/*.cs
+---
+
 # Debug Playbook（Agent 调试经验手册）
 
 > 目的：把高价值、可复用的排查经验沉淀下来，给广智和其他 Agent 后续处理 Unity / 渲染 / 弹幕 / RuntimeAtlas 问题时直接复用。

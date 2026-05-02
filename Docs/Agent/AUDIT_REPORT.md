@@ -1,3 +1,10 @@
+---
+system: general
+scope: audit-report-d3
+last_verified: 2026-05-02
+related_code: Docs/Agent/**
+---
+
 # D3 过时内容审计报告
 
 > **审计日期**：2026-05-02  

@@ -27,6 +27,6 @@
 
 ---
 
-## 验收报告
+## 验收状态
 
-独立文件：[RUNTIME_ATLAS_ACCEPTANCE_REPORT.md](RUNTIME_ATLAS_ACCEPTANCE_REPORT.md)
+真机验收已通过（2026-04-29）。验收报告已归档删除，结论见 MEMORY.md。

@@ -1,3 +1,10 @@
+---
+system: so-config
+scope: so-type-catalog
+last_verified: 2026-05-02
+related_code: Assets/_Framework/**/*SO.cs, Assets/_Framework/EntitySystem/Scripts/Config/*SO.cs
+---
+
 # ScriptableObject 类型清单
 
 > 最后更新：2026-05-02 | 所有模板内置的 ScriptableObject 类型索引

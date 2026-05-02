@@ -1,3 +1,10 @@
+---
+system: editor-tools
+scope: tools-inspectors
+last_verified: 2026-05-02
+related_code: Assets/_Framework/Editor/**/*.cs, Assets/_Framework/EntitySystem/Editor/*.cs
+---
+
 # Editor 工具目录
 
 > **维护规则**：新增、删除或重命名编辑器菜单项时，**同步更新本文件**。本文件是 AI Agent 获知可用编辑器工具的唯一来源。
