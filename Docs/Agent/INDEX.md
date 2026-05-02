@@ -22,6 +22,7 @@
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
+| 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
 | 理解 Tick 执行顺序 | EC_TDD_02_CORE_ARCH §3.3 | TickOrders 常量表 |
 | 理解 Entity 生命周期 | EC_TDD_03_ENTITY_POOL | Spawn/Despawn/Pool 流程 |
@@ -46,6 +47,7 @@
 | `Editor/**/*.cs` | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 编辑器工具 |
 | `*ConfigSO.cs` / `*SO.cs` | SO_WORKFLOWS_INDEX → 01~05 | SO 配置流程 |
 | `Plugins/WeChatSDK/**` | WECHAT_INTEGRATION | 微信集成 |
+| `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
 
 ---
 
@@ -82,7 +84,7 @@
 | — | ARCHITECTURE | — | 全局架构总览 |
 | SO_WORKFLOWS | SO_WORKFLOWS_INDEX | 5 | SO 配置流程指南 |
 | EDITOR_TOOLS_MANUAL | EDITOR_TOOLS_MANUAL_INDEX | 4 | 编辑器工具使用手册 |
+| — | MCP_INTEGRATION | — | Unity MCP 集成（Agent 操作 Unity） |
 | — | DEBUG_PLAYBOOK | — | 调试手册 |
 | — | NEWGAME_GUIDE | — | 新项目指南 |
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |
-| — | AUDIT_REPORT | — | D3 审计报告（临时） |
