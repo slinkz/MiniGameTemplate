@@ -160,6 +160,7 @@ void OnDisable() { _onGameOver.UnregisterListener(this); }
 | L3 | FSM, WeChatBridge |
 | L4 | GameLifecycle（启动入口） |
 | L5 | DebugTools |
+| L-Entity | EntitySystem（纯 C# Entity-Component 框架，依赖 L0 + L1） |
 | L-VFX | VFXSystem（SpriteSheetVFXSystem / VFXBatchRenderer）— 依赖 L1-R |
 | L-Danmaku | DanmakuSystem（依赖 L0 + L1 + L1-R + L-VFX via IDanmakuVFXRuntime） |
 | Game | _Game/, _Example/（可引用全部框架模块） |

@@ -9,10 +9,10 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 **核心特性：**
 
 - 🧩 **ScriptableObject 驱动架构** — 数据、事件、配置全部通过 SO 资产管理，组件间零硬编码引用
-- 📦 **13 个即用模块** — 事件系统、数据管理、UI(FairyGUI)、音频、对象池、状态机、计时器、资源管理(YooAsset)、微信 SDK 桥接、弹幕系统等
+- 📦 **18 个即用模块** — 事件/数据/UI(FairyGUI)/音频/对象池/状态机/计时器/资源(YooAsset)/微信桥接/弹幕/Entity-Component/VFX/RuntimeAtlas 等
 - 🎯 **微信小游戏优化** — 内存管理、WebGL 约束、构建配置全部预设好
 - 🛠 **编辑器工具链** — 架构验证、资源审计、SO 创建向导、一键构建
-- 📝 **示例游戏** — 包含完整的"点击计数器"示例，展示所有框架用法
+- 📝 **三个示例** — ClickGame（点击计数器）、DanmakuDemo（弹幕演示）、VFXDemo（特效演示）
 
 ## 技术栈
 
@@ -22,8 +22,10 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 | 渲染管线 | Built-in Render Pipeline |
 | UI 框架 | FairyGUI |
 | 资源管理 | YooAsset 2.3.18（本地源码，`ThirdParty/YooAsset/`） |
+| 配置表 | Luban v4.6.0（cs-bin 格式） |
+| 弹幕系统 | 自研 DanmakuSystem（BatchRenderer + RuntimeAtlas） |
+| Entity 框架 | 自研 Entity-Component（纯 C# 对象，零 GC） |
 | Spine（可选） | spine-runtimes 4.2（源码子模块，按需启用） |
-| 配置表 | Luban |
 | 目标平台 | 微信小游戏 (WebGL) |
 
 ## 文档导航
@@ -41,7 +43,7 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 | 文档 | 说明 | 预计阅读 |
 |------|------|----------|
 | [架构设计解读](ARCHITECTURE_OVERVIEW.md) | 为什么选 SO 驱动？三层架构如何协作？模块依赖规则 | 15 分钟 |
-| [框架模块使用手册](FRAMEWORK_MODULES.md) | 13 个模块的详细 API、用法示例和注意事项 | 按需查阅 |
+| [框架模块使用手册](FRAMEWORK_MODULES.md) | 18 个模块的 API、用法示例和注意事项（已拆为 3 子文件） | 按需查阅 |
 
 ### ❓ 参考
 
@@ -63,7 +65,7 @@ MiniGameTemplate/               ← Git 仓库根
 ├── Docs/Guide/                ← 你正在读的人类开发者文档
 ├── UIProject/                 ← FairyGUI 编辑器工程
 ├── UnityProj/                 ← Unity 工程（用 Unity 2022 LTS 打开）
-│   ├── Assets/_Framework/     ← 框架层（13 个模块）
+│   ├── Assets/_Framework/     ← 框架层（18 个模块）
 │   ├── Assets/_Example/       ← 示例游戏
 │   ├── Assets/_Game/          ← 你的游戏代码放这里
 │   ├── DataTables/            ← Luban 配置表源数据
