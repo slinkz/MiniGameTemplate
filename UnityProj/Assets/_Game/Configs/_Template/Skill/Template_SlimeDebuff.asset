@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4054456887634494681113d9c4aa7d25, type: 3}
+  m_Name: Template_SlimeDebuff
+  m_EditorClassIdentifier: 
+  DisplayName: Slime Debuff
+  TriggerMode: 1
+  CooldownTime: 5
+  CastTime: 0.5
+  RecoveryTime: 0.3
+  Effects:
+  - rid: 4957692488544681985
+  references:
+    version: 2
+    RefIds:
+    - rid: 4957692488544681985
+      type: {class: ApplyBuffEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
+      data:
+        BuffConfig: {fileID: 11400000, guid: 27e48f43a1ed03d4094a22f7d5c434fd, type: 2}
+        ApplyToSelf: 0
+        SearchRadius: 4
