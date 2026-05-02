@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-02 | 文件总数：35
+> 最后更新：2026-05-02 | 文件总数：39
 
 ---
 
@@ -21,7 +21,7 @@
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
-| 使用编辑器工具 | EDITOR_TOOLS | 菜单工具 + Inspector 清单 |
+| 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 查 SO 配置目录 | SO_CATALOG | 全部 SO 类型 + 核心字段 |
 | 理解 Tick 执行顺序 | EC_TDD_02_CORE_ARCH §3.3 | TickOrders 常量表 |
 | 理解 Entity 生命周期 | EC_TDD_03_ENTITY_POOL | Spawn/Despawn/Pool 流程 |
@@ -38,12 +38,12 @@
 | `EntitySystem/Scripts/Core/*.cs` | EC_TDD_02_CORE_ARCH | Entity/Pool/EventBus |
 | `EntitySystem/Scripts/Systems/*.cs` | EC_TDD_04_SYSTEMS | EntityManager/Spawner |
 | `EntitySystem/Scripts/Config/*SO.cs` | EC_TDD_06_CONFIG + SO_CATALOG §Entity | SO 配置 |
-| `EntitySystem/Editor/*.cs` | EDITOR_TOOLS §Entity Inspector | 自定义编辑器 |
+| `EntitySystem/Editor/*.cs` | EDITOR_TOOLS_MANUAL_04_INSPECTORS §SkillConfigSOEditor | 自定义编辑器 |
 | `EntitySystemBootstrap.cs` | EC_TDD_04_SYSTEMS §Bootstrap | 胶水层入口 |
 | `Danmaku/**/*.cs` | ATLAS_TDD_INDEX + SO_CATALOG §Danmaku | 弹幕+渲染 |
 | `RuntimeAtlas/**/*.cs` | ATLAS_TDD_INDEX | 动态图集 |
 | `OBB/**/*.cs` | OBB_TDD_INDEX | OBB 碰撞 |
-| `Editor/**/*.cs` | EDITOR_TOOLS | 编辑器工具 |
+| `Editor/**/*.cs` | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 编辑器工具 |
 | `*ConfigSO.cs` / `*SO.cs` | SO_CATALOG | SO 类型目录 |
 | `Plugins/WeChatSDK/**` | WECHAT_INTEGRATION | 微信集成 |
 
@@ -81,7 +81,7 @@
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
 | — | SO_CATALOG | — | SO 资产类型目录 |
-| — | EDITOR_TOOLS | — | 编辑器工具清单 |
+| EDITOR_TOOLS_MANUAL | EDITOR_TOOLS_MANUAL_INDEX | 4 | 编辑器工具使用手册 |
 | — | DEBUG_PLAYBOOK | — | 调试手册 |
 | — | NEWGAME_GUIDE | — | 新项目指南 |
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |
