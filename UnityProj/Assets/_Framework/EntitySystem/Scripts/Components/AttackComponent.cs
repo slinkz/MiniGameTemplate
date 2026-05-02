@@ -10,7 +10,7 @@ namespace MiniGameTemplate.Entity
     /// 使用 ComponentType.Attack 槽位（独立于 Phase 3 SkillComponent）。
     /// 攻击决策来自 IDecisionMaker（Control/AI），当 WantsAttack=true 且 CD 就绪时发射。
     /// 
-    /// Tick 时序：TickOrder=150（Attack 阶段，Decision 之后 AutoAim 之前）。
+    /// Tick 时序：TickOrder=150（Attack 阶段，AutoAim=120 之后执行，已有锁定目标）。
     /// 
     /// 近战攻击说明（GD-R4-009）：
     /// Phase 1 所有攻击统一走弹幕系统。近战=射程极短的瞬发弹幕。
@@ -23,7 +23,7 @@ namespace MiniGameTemplate.Entity
         public void SetActive(bool active) => IsActive = active;
 
         // ──────────────── ITickable ────────────────
-        public int TickOrder => 150; // TickOrders.Attack
+        public int TickOrder => TickOrders.Attack; // 150
 
         // ──────────────── 配置 ────────────────
         private Entity _owner;
@@ -60,7 +60,14 @@ namespace MiniGameTemplate.Entity
 
             // 累积计时器
             _timer += dt;
-            if (_timer < _attackInterval) return;
+
+            // P3.4: Buff 攻速修正（pull 模式）
+            float effectiveInterval = _attackInterval;
+            var buff = _owner.GetComponent(ComponentType.Buff) as BuffComponent;
+            if (buff != null)
+                effectiveInterval *= buff.AttackIntervalModifier;
+
+            if (_timer < effectiveInterval) return;
 
             // 检查决策是否要攻击
             var decisionMaker = GetDecisionMaker();
@@ -70,7 +77,7 @@ namespace MiniGameTemplate.Entity
             if (!command.WantsAttack) return;
 
             // CD 就绪 + 决策要求攻击 → 发射
-            _timer -= _attackInterval;
+            _timer -= effectiveInterval;
 
             var ds = DanmakuSystem.Instance;
             if (ds == null) return;
@@ -96,12 +103,22 @@ namespace MiniGameTemplate.Entity
 
         private float GetFireAngle(Vector2 aimDir)
         {
-            if (aimDir.sqrMagnitude < 0.01f)
+            // 优先级 1：AutoAim 锁定方向（P3.1）
+            var autoAim = _owner.GetComponent(ComponentType.AutoAim);
+            if (autoAim is ITargetProvider tp && tp.HasTarget)
             {
-                // 无瞄准方向时使用 Entity 朝向
-                return _owner.Rotation;
+                var dir = ((AutoAimComponent)autoAim).AimDirection;
+                return Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
             }
-            return Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg;
+
+            // 优先级 2：DecisionCommand 瞄准方向
+            if (aimDir.sqrMagnitude > 0.01f)
+            {
+                return Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg;
+            }
+
+            // 优先级 3：Entity 朝向
+            return _owner.Rotation;
         }
 
         // ──────────────── 测试支持 ────────────────

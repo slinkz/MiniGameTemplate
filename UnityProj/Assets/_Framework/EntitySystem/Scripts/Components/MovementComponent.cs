@@ -41,6 +41,7 @@ namespace MiniGameTemplate.Entity
         // ── 速度修正器（固定数组，最多 4 个，避免 GC）──
         private const int MAX_MODIFIERS = 4;
         private readonly float[] _speedModifiers = new float[MAX_MODIFIERS];
+        private readonly int[] _modifierIds = new int[MAX_MODIFIERS]; // P3.4: by-ID 支持
         private int _modifierCount;
 
         // ── 击退状态（v2.4 GD-R4-004 + P2.4 曲线支持）──
@@ -149,10 +150,12 @@ namespace MiniGameTemplate.Entity
         /// <summary>
         /// 添加速度倍率修正器（如减速/加速 Buff）。
         /// 返回槽位索引（-1 = 已满）。
+        /// 匿名修正器（id=-1），不与 by-ID 接口冲突。
         /// </summary>
         public int AddSpeedModifier(float multiplier)
         {
             if (_modifierCount >= MAX_MODIFIERS) return -1;
+            _modifierIds[_modifierCount] = -1; // 匿名
             _speedModifiers[_modifierCount] = multiplier;
             return _modifierCount++;
         }
@@ -168,6 +171,7 @@ namespace MiniGameTemplate.Entity
             if (slot < _modifierCount)
             {
                 _speedModifiers[slot] = _speedModifiers[_modifierCount];
+                _modifierIds[slot] = _modifierIds[_modifierCount];
             }
         }
 
@@ -177,6 +181,40 @@ namespace MiniGameTemplate.Entity
         public void ClearSpeedModifiers()
         {
             _modifierCount = 0;
+        }
+
+        /// <summary>
+        /// 按 ID 添加或更新速度修正器。同 ID 覆盖，不同 ID 新增。(P3.4 v0.3 UA-009)
+        /// </summary>
+        public bool AddOrUpdateSpeedModifier(int id, float multiplier)
+        {
+            for (int i = 0; i < _modifierCount; i++)
+            {
+                if (_modifierIds[i] == id)
+                {
+                    _speedModifiers[i] = multiplier;
+                    return true;
+                }
+            }
+            if (_modifierCount >= MAX_MODIFIERS) return false;
+            _modifierIds[_modifierCount] = id;
+            _speedModifiers[_modifierCount] = multiplier;
+            _modifierCount++;
+            return true;
+        }
+
+        /// <summary>按 ID 移除速度修正器。(P3.4 v0.3 UA-009)</summary>
+        public bool RemoveSpeedModifierById(int id)
+        {
+            for (int i = 0; i < _modifierCount; i++)
+            {
+                if (_modifierIds[i] == id)
+                {
+                    RemoveSpeedModifier(i);
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

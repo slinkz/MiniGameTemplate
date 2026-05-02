@@ -16,7 +16,8 @@ namespace MiniGameTemplate.Entity
         Control = 7,
         AI = 8,
         Attack = 9,
-        // 预留 10~15
+        Buff = 10,     // Phase 3A (P3.4)
+        // 预留 11~15
         MAX = 16
     }
 }

@@ -182,14 +182,61 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
-        /// Phase 3 预留：按半径搜索指定阵营的 Entity（零 GC，使用预分配结果缓冲区）。
+        /// 按半径搜索指定阵营的 Entity（零 GC，使用调用方预分配 buffer）。
+        /// 线性扫描 O(N)，20 Entity 下 &lt; 0.01ms。
         /// </summary>
         public int FindEntitiesInRadius(
             Vector2 center, float radius, Danmaku.EnumCamp camp,
             Entity[] resultBuffer, int maxResults)
         {
-            // Phase 3 实现：线性扫描 _activeEntities，如需优化改为空间分区
-            throw new System.NotImplementedException("Phase 3");
+            int count = 0;
+            float radiusSq = radius * radius;
+
+            for (int i = 0; i < _activeEntities.Count && count < maxResults; i++)
+            {
+                var e = _activeEntities[i];
+                if (e.IsPendingDespawn) continue;
+                if (e.Camp != camp) continue;
+
+                float distSq = (e.Position - center).sqrMagnitude;
+                if (distSq <= radiusSq)
+                {
+                    resultBuffer[count++] = e;
+                }
+            }
+            return count;
+        }
+
+        // ──────────── 静态共享搜索 buffer ────────────
+
+        private static readonly Entity[] _sharedSearchBuffer = new Entity[64];
+
+        /// <summary>
+        /// 查找指定阵营的最近 Entity（零 GC，内部复用静态 buffer）。
+        /// 返回 null = 范围内无匹配。
+        /// 
+        /// 注意（v0.4 ATK-004 修正）：
+        /// 返回的 Entity 引用可安全持有（如赋值给成员变量做瞄准目标）。
+        /// 但内部静态 _sharedSearchBuffer 的内容会被后续调用覆盖——
+        /// 不要缓存 buffer 本身的引用。
+        /// </summary>
+        public Entity FindNearestEntity(Vector2 center, float radius, Danmaku.EnumCamp camp)
+        {
+            int count = FindEntitiesInRadius(center, radius, camp, _sharedSearchBuffer, _sharedSearchBuffer.Length);
+            if (count == 0) return null;
+
+            Entity nearest = null;
+            float nearestDistSq = float.MaxValue;
+            for (int i = 0; i < count; i++)
+            {
+                float dSq = (_sharedSearchBuffer[i].Position - center).sqrMagnitude;
+                if (dSq < nearestDistSq)
+                {
+                    nearestDistSq = dSq;
+                    nearest = _sharedSearchBuffer[i];
+                }
+            }
+            return nearest;
         }
 
         // ──────────── 内部方法 ────────────

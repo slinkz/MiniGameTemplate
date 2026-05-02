@@ -85,6 +85,14 @@ namespace MiniGameTemplate.Entity
         [Min(1f)]
         public float CritDamageMultiplier = 2f;
 
+        [Header("自动瞄准（P3.1）")]
+        [Tooltip("搜索半径（0=不启用 AutoAim）")]
+        public float AutoAimRadius = 0f;
+
+        [Tooltip("搜索间隔（秒）[占位符]——需 gameplay 测试调整")]
+        [Min(0.05f)]
+        public float AutoAimSearchInterval = 0.2f;
+
         [Header("攻击（v2.4 新增）")]
         [Tooltip("攻击间隔（秒），0 = 不攻击")]
         public float AttackInterval = 1f;
@@ -94,6 +102,10 @@ namespace MiniGameTemplate.Entity
 
         [Tooltip("发射点偏移（相对 Entity 位置）")]
         public Vector2 AttackFireOffset;
+
+        [Header("技能（P3.3）")]
+        [Tooltip("技能配置（null=不启用 Skill 组件）")]
+        public SkillConfigSO SkillConfig;
 
         [Header("AI 行为（v2.4 新增）")]
         [Tooltip("AI 行为配置资产（条件-动作表）")]

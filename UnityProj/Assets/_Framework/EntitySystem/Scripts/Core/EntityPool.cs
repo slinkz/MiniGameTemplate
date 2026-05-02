@@ -106,7 +106,7 @@ namespace MiniGameTemplate.Entity
 
         /// <summary>
         /// 工厂方法：根据 ComponentType 创建对应组件实例。
-        /// Phase 1 支持：State, Health, Movement, Collision, Control, AI, Attack, Animation。
+        /// Phase 1~3A 支持：State, Health, Movement, Collision, Control, AI, Attack, Animation, AutoAim, Skill, Buff。
         /// </summary>
         private static IEntityComponent CreateComponent(ComponentType type)
         {
@@ -120,6 +120,9 @@ namespace MiniGameTemplate.Entity
                 case ComponentType.AI:        return new AIComponent();
                 case ComponentType.Attack:    return new AttackComponent();
                 case ComponentType.Animation: return new AnimationComponent();
+                case ComponentType.AutoAim:   return new AutoAimComponent();
+                case ComponentType.Skill:     return new SkillComponent();
+                case ComponentType.Buff:      return new BuffComponent();
                 default:
                     Debug.LogWarning($"[EntityPool] 未知组件类型：{type}，跳过创建。");
                     return null;

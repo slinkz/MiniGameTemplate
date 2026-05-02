@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using MiniGameTemplate.Pool;
 
@@ -28,6 +29,23 @@ namespace MiniGameTemplate.Entity
         [Header("Entity 碰撞（P2.2）")]
         [Tooltip("是否启用 Entity vs Entity 碰撞检测")]
         public bool EnableEntityCollision = true;
+
+        [Header("玩家移动边界（P3.0）")]
+        [Tooltip("启用玩家移动边界约束")]
+        public bool EnablePlayerMoveBounds = true;
+
+        [Tooltip("活动区域中心（世界坐标）")]
+        public Vector2 PlayerBoundsCenter = Vector2.zero;
+
+        [Tooltip("活动区域尺寸（宽, 高）")]
+        public Vector2 PlayerBoundsSize = new Vector2(9f, 14f);
+
+        /// <summary>
+        /// 玩家 Entity 触碰移动边界时触发。可能每帧触发（贴边滑动时）。
+        /// ⚠️ 消费者应自行做节流/冷却——不要在此回调中每帧做重开销操作。
+        /// 参数：Entity, 原始位置, Clamp 后位置 (v0.4 GD-001/GD-009)
+        /// </summary>
+        public static event Action<Entity, Vector2, Vector2> OnPlayerHitBounds;
 
         [Header("边界击杀")]
         [Tooltip("是否启用边界击杀（Entity 移出边界后自动死亡回收）")]
@@ -126,6 +144,8 @@ namespace MiniGameTemplate.Entity
             // 4. EntityViewBridge.SyncAll → 视觉同步（碰撞修正后的位置）
             // 5. HitReactionHandler.Tick → 受击表现管线（闪白/伤害数字/死亡延迟）
             _entityManager.Tick(dt);
+            if (EnablePlayerMoveBounds)
+                ClampPlayerPositions();
             if (EnableBoundaryKill)
                 KillOutOfBoundsEntities();
 
@@ -175,6 +195,47 @@ namespace MiniGameTemplate.Entity
             _pendingTriggerCount--;
         }
 
+        // ──────────── P3.0: 玩家移动边界 ────────────
+
+        /// <summary>
+        /// 将所有玩家阵营 Entity 的位置 Clamp 到 PlayerMoveBounds 内。
+        /// 在 EntityManager.Tick 之后、KillOutOfBoundsEntities 之前调用。
+        /// </summary>
+        private void ClampPlayerPositions()
+        {
+            var mgr = _entityManager;
+            if (mgr == null) return;
+
+            var entities = mgr.ActiveEntities;
+            var bounds = GetPlayerBoundsRect();
+
+            for (int i = 0; i < entities.Count; i++)
+            {
+                var entity = entities[i];
+                if (entity.Camp != Danmaku.EnumCamp.Player) continue;
+                if (entity.IsPendingDespawn) continue;
+
+                var pos = entity.Position;
+                var clampedPos = new Vector2(
+                    Mathf.Clamp(pos.x, bounds.xMin, bounds.xMax),
+                    Mathf.Clamp(pos.y, bounds.yMin, bounds.yMax));
+
+                if (clampedPos != pos)
+                {
+                    entity.Position = clampedPos;
+                    OnPlayerHitBounds?.Invoke(entity, pos, clampedPos);
+                }
+            }
+        }
+
+        private Rect GetPlayerBoundsRect()
+        {
+            return new Rect(
+                PlayerBoundsCenter.x - PlayerBoundsSize.x * 0.5f,
+                PlayerBoundsCenter.y - PlayerBoundsSize.y * 0.5f,
+                PlayerBoundsSize.x, PlayerBoundsSize.y);
+        }
+
         // ──────────── 边界击杀 ────────────
 
         /// <summary>
@@ -203,6 +264,21 @@ namespace MiniGameTemplate.Entity
                 }
             }
         }
+
+        // ──────────── P3.0: 玩家边界 Gizmo ────────────
+
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            if (!EnablePlayerMoveBounds) return;
+            var center = new Vector3(PlayerBoundsCenter.x, PlayerBoundsCenter.y, 0);
+            var size = new Vector3(PlayerBoundsSize.x, PlayerBoundsSize.y, 0.01f);
+            Gizmos.color = new Color(0.2f, 0.5f, 1f, 0.15f);
+            Gizmos.DrawCube(center, size);
+            Gizmos.color = new Color(0.2f, 0.5f, 1f, 0.6f);
+            Gizmos.DrawWireCube(center, size);
+        }
+#endif
 
         private void OnDestroy()
         {
