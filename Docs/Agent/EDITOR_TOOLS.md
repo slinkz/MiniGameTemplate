@@ -352,6 +352,17 @@ Tools/MiniGame/                            ← 构建发布专用菜单
 
 ---
 
+## Entity 自定义 Inspector（Phase 1~3A 新增）
+
+| Inspector | 文件 | 功能 |
+|-----------|------|------|
+| `EntityConfigSOEditor` | `Editor/Entity/EntityConfigSOEditor.cs` | EntityConfigSO 分组显示（阵营/血量/攻击/碰撞/View/技能/AI），验证必填字段 |
+| `SkillConfigSOEditor` | `EntitySystem/Editor/SkillConfigSOEditor.cs` | SkillConfigSO Inspector：效果链列表编辑 + CD/前摇/后摇可视化 |
+| `AIBehaviorSOEditor` | `Editor/Entity/AIBehaviorSOEditor.cs` | AIBehaviorSO 条件-动作列表编辑器（拖拽排序 + 新增/移除） |
+| `EntitySpawnWaveSOEditor` | `Editor/Entity/EntitySpawnWaveSOEditor.cs` | 波次配置 Inspector（Entity 列表 + 时间线预览） |
+
+---
+
 ## 已删除工具（归档记录）
 
 | 工具 | 文件 | 删除原因 | 删除时间 |
@@ -383,4 +394,8 @@ Tools/MiniGame/                            ← 构建发布专用菜单
 | 运行时查看 SO 值 | Debug / SO Runtime Viewer |
 | 启动本地文件服务器 | Dev Server（一键启动 http-server） |
 | 查找资源被谁引用 | Find References Of Selected Asset |
+| 配置敌人/玩家实体 | EntityConfigSO Inspector（分组编辑） |
+| 配置技能效果链 | SkillConfigSO Inspector |
+| 配置 AI 行为 | AIBehaviorSO Inspector |
+| 配置刷怪波次 | EntitySpawnWaveSOEditor |
 | 打开文档目录 | Open Docs Folder |

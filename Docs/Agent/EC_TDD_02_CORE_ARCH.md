@@ -39,7 +39,8 @@ namespace MiniGameTemplate.Entity
         Control = 7,
         AI = 8,
         Attack = 9,  // v2.4: Phase 1 最小攻击组件
-        // 预留 10~15
+        Buff = 10,   // v2.6: Phase 3A (P3.4) Buff 组件
+        // 预留 11~15
         MAX = 16
     }
 
@@ -116,11 +117,14 @@ public class Entity
 ```csharp
 public static class TickOrders
 {
-    public const int Decision   = 100;  // ControlComponent / AIComponent
-    public const int Attack     = 150;  // AttackComponent（v2.4）
-    public const int AutoAim    = 200;  // AutoAimComponent
-    public const int Movement   = 300;  // MovementComponent
-    public const int Animation  = 400;  // AnimationComponent
+    public const int Buff      = 50;   // BuffComponent（属性修正最先生效）
+    public const int Decision  = 100;  // ControlComponent / AIComponent
+    public const int AutoAim   = 120;  // AutoAimComponent（Attack 之前锁定目标）
+    public const int Attack    = 150;  // AttackComponent
+    public const int Skill     = 160;  // SkillComponent（Attack 之后）
+    public const int Health    = 250;  // HealthComponent（无敌帧/HitStop 计时）
+    public const int Movement  = 300;  // MovementComponent
+    public const int Animation = 400;  // AnimationComponent
 }
 ```
 

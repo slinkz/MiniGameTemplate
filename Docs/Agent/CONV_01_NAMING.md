@@ -201,6 +201,8 @@ namespace MainMenu
 - 游戏代码 → `UnityProj/Assets/_Game/`
 - 示例代码 → `UnityProj/Assets/_Example/`
 - SO 资产 → 所属模块的 `Presets/` 或 `UnityProj/Assets/_Game/ScriptableObjects/`
+- Entity SO 资产 → `UnityProj/Assets/_Game/Configs/`（按实体分子目录）
+- **模板资产** → `UnityProj/Assets/_Game/Configs/_Template/`（`Template_` 前缀，WF-009）
 - Editor 脚本 → `UnityProj/Assets/_Framework/Editor/`
 - FairyGUI 工程 → `UIProject/`
 - FairyGUI 导出 → `UnityProj/Assets/_Game/FairyGUI_Export/`

@@ -1,6 +1,6 @@
 # ScriptableObject 类型清单
 
-> 最后更新：2026-04-20 | 所有模板内置的 ScriptableObject 类型索引
+> 最后更新：2026-05-02 | 所有模板内置的 ScriptableObject 类型索引
 
 所有 SO 均通过 `[CreateAssetMenu]` 在 Inspector 中创建。本清单同时服务于人类开发者和 Agent——Agent 可按"菜单路径"快速定位类型。
 
@@ -228,3 +228,43 @@
 - `NormalMaterial` — 基础混合材质
 - `AtlasTexture` — 共用图集（fallback）
 - `RuntimeAtlasConfig` — RuntimeAtlas 配置引用（空=旧渲染路径）
+
+## Entity（实体战斗系统，Phase 1~3A）
+
+| 类 | 菜单路径 | 命名空间 | 用途 |
+|----|---------|----------|------|
+| `EntityConfigSO` | Entity/EntityConfig | `MiniGameTemplate.Entity` | 实体完整配置（阵营、血量、移速、攻击参数、碰撞半径、ViewPrefab） |
+| `SkillConfigSO` | Entity/SkillConfig | `MiniGameTemplate.Entity` | 技能配置（触发模式、前摇/后摇/CD、ISkillEffect[] 效果链） |
+| `BuffConfigSO` | Entity/BuffConfig | `MiniGameTemplate.Entity` | Buff 配置（BuffId、Duration、移速/攻速/受伤倍率修正） |
+| `AIBehaviorSO` | Entity/AIBehavior | `MiniGameTemplate.Entity` | AI 行为树（Condition→Action 列表，IAIAction 有状态） |
+| `EntitySpawnWaveSO` | Entity/SpawnWaveConfig | `MiniGameTemplate.Entity` | 波次刷怪配置（EntityConfig 引用、数量、间隔、位置） |
+| `SpriteAnimDataSO` | Entity/SpriteAnimData | `MiniGameTemplate.Entity` | 精灵序列帧动画数据（帧列表、帧率） |
+
+### EntityConfigSO 核心字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `Camp` | `CampType` | 阵营（Player/Enemy/Neutral） |
+| `MaxHealth` | `int` | 最大血量 |
+| `MoveSpeed` | `float` | 基础移速 |
+| `CollisionRadius` | `float` | 碰撞半径 |
+| `AttackInterval` | `float` | 攻击间隔（秒） |
+| `AttackBulletPattern` | `BulletPatternSO` | 攻击弹幕模式 |
+| `AttackFireOffset` | `Vector2` | 发射偏移 |
+| `AttackPower` | `int` | 攻击力 |
+| `CritRate` | `float` | 暴击率 [0,1] |
+| `CritDamageMultiplier` | `float` | 暴击倍率（默认 1.5） |
+| `SkillConfig` | `SkillConfigSO` | 技能配置（可选） |
+| `AIBehavior` | `AIBehaviorSO` | AI 行为配置（可选） |
+| `ViewPrefab` | `GameObject` | 渲染预制体（可选） |
+
+### BuffConfigSO 字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `BuffId` | `int` | 唯一标识（同 ID 刷新而非叠加） |
+| `DisplayName` | `string` | 显示名 |
+| `Duration` | `float` | 持续时间（秒，0=永久） |
+| `MoveSpeedModifier` | `float` | 移速倍率修正（1.0=无效果） |
+| `AttackIntervalModifier` | `float` | 攻速倍率修正（<1=加速） |
+| `DamageTakenModifier` | `float` | 受伤倍率修正（0=无敌） |

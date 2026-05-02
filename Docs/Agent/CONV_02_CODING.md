@@ -175,6 +175,20 @@ private void Update()
 - 归还: `PoolManager.Instance.Return(definition, gameObject)`
 - 场景切换时自动 ReturnAll，不需手动清理
 
+### [AGENT] ScriptableObject 引用约束
+
+**铁律：SO 不能引用场景对象**。ScriptableObject 是项目级资产，序列化后场景引用变 null。
+
+```csharp
+// ❌ 错误：SO 字段引用 Transform（场景对象）
+[SerializeField] private Transform _targetPoint;  // 运行时 = null！
+
+// ✅ 正确：场景引用只放 MonoBehaviour，SO 只引用其他 SO/Prefab
+[SerializeField] private EntityConfigSO _entityConfig;  // 项目资产 → 项目资产 ✅
+```
+
+**场景引用传递方式**：通过 `Init(Entity owner)` 参数或 `EntitySystemBootstrap` 注入，不通过 SO 序列化。
+
 ---
 
 ## [AGENT] 框架系统使用规范

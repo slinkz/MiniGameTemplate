@@ -29,6 +29,40 @@ MiniGameTemplate 采用 **ScriptableObject 驱动的组件化架构**：
 └─────────────────────────────────────────────────────┘
 ```
 
+### Entity-Component 战斗层（Phase 1~3A）
+
+上述 SO 驱动架构管理游戏基础设施（UI/音频/场景/对象池）。**战斗逻辑**由独立的 Entity-Component 框架驱动：
+
+```
+┌────────────────────────────────────────────────────────┐
+│  EntitySystemBootstrap（胶水层，挂场景根 GO）             │
+│  ├── EntityManager（Entity 生命周期 + Tick 调度）        │
+│  ├── EntityPool（预分配数组 + 空闲栈，零 GC）            │
+│  └── SpawnerSystem（WaveConfigSO 驱动刷怪）             │
+├────────────────────────────────────────────────────────┤
+│  Entity（纯 C# 逻辑容器，不绑 GameObject）              │
+│  ├── ComponentType 枚举（11 种：State~Buff，O(1) 访问）  │
+│  ├── ITickable 组件按 TickOrder 排序执行                 │
+│  │   50:Buff → 100:Decision → 120:AutoAim → 150:Attack │
+│  │   → 160:Skill → 250:Health → 300:Movement → 400:Anim│
+│  └── EntityEventBus（预分配 Delegate[16,4]，零 GC）     │
+├────────────────────────────────────────────────────────┤
+│  战斗能力层（Phase 3A）                                  │
+│  ├── SkillComponent（CD 状态机 + ISkillEffect 效果链）   │
+│  ├── BuffComponent（8 槽位 + 乘法叠加 + Clamp）         │
+│  ├── AutoAimComponent（空间查询 + 目标锁定）             │
+│  ├── DamageDealer（静态工具类 + 重入保护）               │
+│  └── CampUtility（阵营判定）                             │
+├────────────────────────────────────────────────────────┤
+│  渲染层                                                  │
+│  ├── DanmakuSystem（弹幕渲染 + 碰撞检测）               │
+│  ├── RuntimeAtlasSystem（动态纹理合批，DC≤2）            │
+│  └── EntityViewBridge（Entity↔GameObject 同步）          │
+└────────────────────────────────────────────────────────┘
+```
+
+> **详细设计**：→ [EC_TDD_INDEX](EC_TDD_INDEX.md) | **架构决策**：→ [ADR_INDEX](ADR_INDEX.md)
+
 ## 项目目录分层
 
 ```

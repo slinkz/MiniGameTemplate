@@ -286,60 +286,80 @@ public interface IAIAction
 
 **策划视角**：策划只配 AIBehaviorSO（在 Inspector 中拖拽条件-动作），程序负责 IAIAction 实现。
 
-### 4.8 SkillComponent
+### 4.8 SkillComponent（Phase 3A P3.3）
 
-**v2.0 变更**：技能槽改用固定长度数组（最多 4 个槽位），避免 List GC。
+> CD 管理的主动/被动技能（前摇 → 效果触发 → 后摇 → CD）。与 AttackComponent **共存不替代**。
 
-### 4.9 AttackComponent（v2.4 新增，GD-R4-003/009）
+**BC 引用**：BC-02.2（Tickable） | **TickOrder**：160（Attack 之后）
 
-> Phase 1 最小攻击组件——定时发射弹幕。Phase 3 SkillComponent 上线后，此组件可作为"默认普攻"保留或被替代。
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `CurrentState` | `SkillState` | Idle → Casting → Recovery → Cooldown → Idle |
+| `CooldownRemaining` | `float` | CD 剩余（秒） |
+| `_config` | `SkillConfigSO` | 来自 `owner.ConfigSO.SkillConfig` |
+| `_cachedDecisionMaker` | `IDecisionMaker` | Init 时缓存（Control > AI），不支持运行时切换 |
 
-**BC 引用**：BC-02.2（Tickable）
+**状态转换矩阵**：
+- `Idle` → `Casting`（CastTime>0）或直接执行效果 → `Recovery`（瞬发）
+- `Casting` → 前摇结束 → `ExecuteEffects` → `Recovery`
+- `Recovery` → `Cooldown`（RecoveryTime>0）或安全网 Cooldown（CD=0+Recovery=0 → 0.001s）
+- `Cooldown` → `Idle`
+- **死亡/PendingDespawn → 立即中断回 Idle**（ATK-014）
 
+**触发模式**（`SkillTriggerMode`）：
+- `Auto`：每帧 CD 就绪即触发
+- `Manual`：需 `IDecisionMaker.GetDecision().WantsAttack == true`
+
+**效果执行**：遍历 `_config.Effects[]`（`ISkillEffect`），传入 `SkillContext{Caster, CastPosition, AimDirection, DeltaTime, SkillConfig}`。
+
+### 4.9 AttackComponent（v2.4 → v2.6 更新）
+
+> Phase 1 最小攻击组件——定时发射弹幕。与 SkillComponent **共存**（各占独立槽位）。
+
+**BC 引用**：BC-02.2（Tickable） | **TickOrder**：150（AutoAim=120 之后）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `Type` | `ComponentType.Attack` | **独立槽位**（不再复用 Skill） |
+| `_bulletPattern` | `BulletPatternSO` | 来自 `owner.ConfigSO.AttackBulletPattern` |
+| `_attackInterval` | `float` | 基础攻击间隔 |
+
+**Buff 攻速修正（P3.4 pull 模式）**：
 ```csharp
-/// <summary>
-/// Phase 1 最小攻击组件——定时发射弹幕。
-/// 复用 ComponentType.Skill 槽位（Phase 3 SkillComponent 可替代）。
-/// </summary>
-public class AttackComponent : IEntityComponent, ITickable
-{
-    public ComponentType Type => ComponentType.Skill;  // 复用 Skill 槽位
-    public int TickOrder => TickOrders.Decision + 50;  // Decision 之后、AutoAim 之前
-
-    private Entity _owner;
-    private float _attackInterval;
-    private float _timer;
-    private BulletTypeSO _bulletType;   // v2.6 修正（WF-003）：VFXTypeSO → BulletTypeSO
-    private Vector2 _fireOffset;
-
-    public void Init(Entity owner)
-    {
-        _owner = owner;
-        _attackInterval = owner.ConfigSO.AttackInterval;
-        _bulletType = owner.ConfigSO.AttackBulletType;
-        _fireOffset = owner.ConfigSO.AttackFireOffset;
-        _timer = 0f;
-    }
-
-    public void Tick(float dt)
-    {
-        if (_bulletType == null) return; // 未配置攻击弹幕 → 不攻击
-        _timer += dt;
-        if (_timer >= _attackInterval)
-        {
-            _timer -= _attackInterval;
-            var pos = _owner.Position + _fireOffset;
-            // 方向：优先用 AutoAim 锁定目标方向，否则用当前朝向
-            var dir = GetAimDirection();
-            DanmakuSystem.Instance.Fire(_bulletType, pos, dir, _owner.Id.Value);
-        }
-    }
-
-    public void Reset() { _timer = 0f; }
-}
+float effectiveInterval = _attackInterval;
+var buff = _owner.GetComponent(ComponentType.Buff) as BuffComponent;
+if (buff != null)
+    effectiveInterval *= buff.AttackIntervalModifier;
 ```
 
-**近战攻击说明（GD-R4-009）**：Phase 1 所有攻击统一走弹幕系统。**近战 = 射程极短的瞬发弹幕**（TypeSO 参数：射程≈0.5、速度=0、存活时间≈0.1s）。好处是整个伤害管线统一，策划只需配弹幕参数。Phase 2 可选路径 B：AttackComponent 直接调用目标 HealthComponent.TakeDamage()（需要 EntityManager.FindEntitiesInRadius()）。
+**发射决策链**：DecisionMaker.WantsAttack → CD就绪 → `DanmakuSystem.FireBullets(pattern, pos, angle, ownerId)`
+
+**瞄准优先级**：AutoAim 锁定方向 > DecisionCommand.AimDirection > Entity.Rotation
+
+**近战攻击（GD-R4-009）**：统一走弹幕系统（射程≈0.5、速度=0、存活≈0.1s）。
+
+### 4.10 BuffComponent（Phase 3A P3.4）
+
+> 管理 Entity 身上的 Buff 列表和聚合属性修正。
+
+**TickOrder**：50（最先执行，属性修正在 Decision/Attack 之前生效）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `Type` | `ComponentType.Buff = 10` | |
+| `MAX_BUFFS` | `const 8` | 固定槽位数组，零 GC |
+| `MoveSpeedModifier` | `float`（只读） | 乘法叠加 → Clamp[0.4, 2.5] |
+| `AttackIntervalModifier` | `float`（只读） | 乘法叠加 → Clamp[0.3, 3.0] |
+| `DamageTakenModifier` | `float`（只读） | 乘法叠加，不 Clamp（允许无敌/脆弱） |
+
+**API**：
+- `ApplyBuff(BuffConfigSO)` → 同 ID 完整刷新（SA-013），槽满返回 false
+- `RemoveBuff(int buffId)` → 按 ID 移除
+- `ActiveBuffCount` → 当前活跃数
+
+**属性同步**：Buff → Movement push by-ID（`SpeedModifierIds.Buff`），Attack pull `AttackIntervalModifier`
+
+**Tick 逻辑**：倒计时 → 过期移除 → `RecalcModifiers()` → `SyncMoveSpeedToMovement()`
 
 ---
 
