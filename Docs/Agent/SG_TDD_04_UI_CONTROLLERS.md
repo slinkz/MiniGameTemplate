@@ -530,7 +530,13 @@ namespace Game.ShooterGame.UI
 // 战斗→选关（胜利后）
 private IEnumerator HandleVictoryConfirm()
 {
-    _progressManager.MarkLevelCleared(_currentLevelIndex.Value + 1);  // 1-based
+    // WX-009: 检查存储返回值
+    bool saved = _progressManager.MarkLevelCleared(_currentLevelIndex.Value + 1);  // 1-based
+    if (!saved)
+    {
+        // 存储失败：Toast 提示 + 内存中进度保留（本次会话有效）
+        ShowToast("进度保存失败，请检查存储空间");
+    }
     yield return StartCoroutine(TransitionOut(0.4f));
     SceneManager.LoadScene("Boot");
     // Boot 场景的 LevelSelectController.Show(newlyUnlockedLevel) 处理解锁动效

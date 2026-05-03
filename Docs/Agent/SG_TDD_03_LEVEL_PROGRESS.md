@@ -1,6 +1,7 @@
 # SG_TDD_03: 关卡与存储系统
 
-> 父文档：[SG_TDD_INDEX.md](SG_TDD_INDEX.md)
+> 父文档：[SG_TDD_INDEX.md](SG_TDD_INDEX.md)  
+> **版本**：v1.1 | 微信真机 PK 修正（WX-001~008）
 
 ---
 
@@ -64,6 +65,35 @@ namespace Game.ShooterGame
 > Battle 场景通过 `GameStartupFlow.Progress` 访问，无需 DontDestroyOnLoad。
 > **生命周期**：Boot 场景加载时创建 → 整个游戏会话期间不销毁（静态引用持有）。
 
+#### 2.0.1 微信小游戏热启动处理（WX-005）
+
+> **问题**：微信小游戏用户切后台再回来时，Unity WebGL 实例可能保留旧内存状态（热启动），导致静态字段中的 `_data` 与实际 storage 不一致。
+> **方案**：`SG_Boot.InitProgress()` 在每次 Boot 场景加载时调用 `Progress.Reload()`，强制从 storage 重新加载。
+> ```csharp
+> public static void InitProgress()
+> {
+>     if (Progress == null)
+>         Progress = new SG_ProgressManager(SaveSystemFactory.Create());
+>     else
+>         Progress.Reload();  // WX-005: 热启动时重载
+> }
+> ```
+
+#### 2.0.2 V1 已知限制与 V2 升级路径（WX-002）
+
+> **V1 已知限制**：
+> - 进度存储纯本地（`wx.setStorageSync`），**用户换设备或清除小游戏数据后进度丢失**
+> - 无用户登录体系，无跨设备同步
+>
+> **V2 升级路径**（用户量 >1000 DAU 时优先实施）：
+> 1. `wx.login()` 静默登录获取 `code` → 服务端换取 `openid`
+> 2. 服务端最简 CRUD：`GET /progress/{openid}` + `PUT /progress/{openid}`
+> 3. 本地 storage 作为读缓存 + 离线写缓冲
+> 4. `SG_ProgressManager` 新增 `SyncToCloud()` 接口（通关时调用）
+> 5. 冲突策略：服务端进度 ∪ 本地进度（取并集，不丢失任何通关记录）
+>
+> **V2 不阻塞 V1 编码**：`ISaveSystem` 接口不变，仅 `WxSaveSystem` 内部升级为"写本地+异步上云"。
+
 ### 2.1 存储数据格式
 
 ```json
@@ -91,6 +121,7 @@ namespace Game.ShooterGame
         private const int CURRENT_VERSION = 1;
         
         private readonly ISaveSystem _saveSystem;
+        private readonly int _totalLevels;  // WX-010: 外部注入，避免硬编码
         private ProgressData _data;
         
         [System.Serializable]
@@ -100,9 +131,11 @@ namespace Game.ShooterGame
             public List<int> clearedLevels = new List<int>();
         }
         
-        public SG_ProgressManager(ISaveSystem saveSystem)
+        /// <param name="totalLevels">总关卡数（从 _levelConfigs.Length 获取）</param>
+        public SG_ProgressManager(ISaveSystem saveSystem, int totalLevels = 5)
         {
             _saveSystem = saveSystem;
+            _totalLevels = totalLevels;
             Load();
         }
         
@@ -135,14 +168,15 @@ namespace Game.ShooterGame
         
         // ── 写入 ──
         
-        /// <summary>标记关卡通关并持久化</summary>
-        public void MarkLevelCleared(int levelIndex)
+        /// <summary>标记关卡通关并持久化。返回 false 表示存储失败。</summary>
+        public bool MarkLevelCleared(int levelIndex)
         {
             if (!_data.clearedLevels.Contains(levelIndex))
             {
                 _data.clearedLevels.Add(levelIndex);
-                Save();
+                return Save();
             }
+            return true;
         }
         
         // ── 内部方法 ──
@@ -162,6 +196,8 @@ namespace Game.ShooterGame
                 // 版本迁移预留
                 if (_data.version < CURRENT_VERSION)
                     MigrateData(_data);
+                // WX-004: 加载后校验数据合法性
+                ValidateData();
             }
             catch
             {
@@ -170,17 +206,47 @@ namespace Game.ShooterGame
             }
         }
         
-        private void Save()
+        /// <summary>WX-001: 存储失败安全处理</summary>
+        private bool Save()
         {
-            string json = JsonUtility.ToJson(_data);
-            _saveSystem.SaveString(SAVE_KEY, json);
-            _saveSystem.FlushIfDirty();
+            try
+            {
+                string json = JsonUtility.ToJson(_data);
+                _saveSystem.SaveString(SAVE_KEY, json);
+                _saveSystem.FlushIfDirty();
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SG_ProgressManager] 存储失败: {e.Message}");
+                return false;
+            }
+        }
+        
+        /// <summary>WX-004: 过滤非法数据（防篡改/损坏）</summary>
+        private void ValidateData()
+        {
+            _data.clearedLevels.RemoveAll(lv => lv < 1 || lv > _totalLevels);
+            if (_data.version < 1) _data.version = CURRENT_VERSION;
         }
         
         private void MigrateData(ProgressData data)
         {
             // V1→V2 迁移逻辑预留
+            // WX-007 迁移规范：
+            // - 字段只追加不删除
+            // - 迁移失败 → 保留旧数据但 version 不升级（下次重试）
+            // - version < 1 视为损坏 → ValidateData() 强制修正为 CURRENT_VERSION
             data.version = CURRENT_VERSION;
+        }
+        
+        /// <summary>
+        /// WX-005: 热启动时强制重新从 storage 加载（应对微信后台恢复场景）。
+        /// ⚠️ 仅在非战斗状态下调用（Boot 场景）。战斗中调用会覆盖内存中的临时状态。
+        /// </summary>
+        public void Reload()
+        {
+            Load();
         }
         
         /// <summary>清除所有进度（调试用）</summary>
@@ -197,10 +263,34 @@ namespace Game.ShooterGame
 
 | 事件 | 操作 |
 |------|------|
-| 通关时 | `MarkLevelCleared(levelIndex)` → 自动持久化 |
+| 通关时 | `MarkLevelCleared(levelIndex)` → 自动持久化（同步写入） |
 | 失败时 | 不写入 |
 | 退出关卡（暂停→返回） | 不写入 |
-| 应用暂停/退出 | `ISaveSystem.FlushIfDirty()` |
+| 应用暂停/退出 | `ISaveSystem.FlushIfDirty()`（⚠️ 见下方微信注意事项） |
+
+#### 2.3.1 微信小游戏存储注意事项（WX-003/WX-006/WX-008）
+
+> **WX-003 同步 vs 异步**：
+> - V1 `WxSaveSystem` 使用 `wx.setStorageSync`（同步版本）
+> - V1 数据量极小（<100 字节），同步写入耗时 <1ms，可接受
+> - V2 如果 `ProgressData` 扩展到 >1KB，考虑切换为 `wx.setStorage`（异步）+ 回调确认
+>
+> **WX-006 场景切换时序安全**：
+> - `Save()` 内部 `FlushIfDirty()` = 立即持久化（`wx.setStorageSync` 同步保证）
+> - `HandleVictoryConfirm` 中 `MarkLevelCleared` → `Save()` → 立即可靠写入 → 随后 `LoadScene` 安全
+> - **铁律**：`Save()` 是同步操作，返回后数据已落盘，不存在"还没写完就切场景"的风险
+>
+> **WX-008 OnApplicationPause/Quit 不可靠**：
+> - ⚠️ 微信小游戏环境中 `OnApplicationPause(true)` 在 iOS 上不保证触发
+> - ⚠️ `OnApplicationQuit()` 在微信小游戏中几乎永远不触发
+> - **结论**：V1 所有关键数据在操作时立即持久化（`Save()` 在 `MarkLevelCleared` 中调用），不依赖暂停/退出时 flush
+> - 存储时机表中的"应用暂停/退出"仅为**额外安全网**，非唯一保证
+>
+> **WX-001 存储失败处理**：
+> - `Save()` 返回 `bool`，失败时 `MarkLevelCleared` 返回 `false`
+> - 调用方（BattleController）在 `HandleVictoryConfirm` 中检查返回值：
+>   - 成功：正常流程
+>   - 失败：Toast "进度保存失败，请检查存储空间" + 仍然返回选关界面（内存中进度保留，本次会话有效）
 
 ---
 
@@ -331,4 +421,8 @@ private int CountAliveEnemies()
 | SG-BC-02 | 存储仅在通关时写入 | 代码路径分析 |
 | SG-BC-03 | 关卡索引始终 Clamp 到合法范围 | Awake 中 Clamp |
 | SG-BC-04 | 重试不重载场景 | RetryBattle 不调用 LoadScene |
-| SG-BC-05 | ProgressData.version 始终 ≥ 1 | 构造函数保证 |
+| SG-BC-05 | ProgressData.version 始终 ≥ 1 | 构造函数 + ValidateData() |
+| SG-BC-06 | Save() 失败不导致崩溃 | try-catch + 返回 bool（WX-001） |
+| SG-BC-07 | 加载后非法数据被过滤 | ValidateData() 清理越界值（WX-004） |
+| SG-BC-08 | 热启动后进度与 storage 一致 | Boot 时 Reload()（WX-005） |
+| SG-BC-09 | V1 不依赖 OnApplicationPause/Quit 做关键持久化 | 代码路径分析（WX-008） |

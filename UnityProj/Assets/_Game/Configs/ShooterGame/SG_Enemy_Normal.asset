@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Enemy_Normal
   Camp: 0
-  Components: 030401
+  Components: 03040108
   PoolMax: 128
   MaxHp: 30
   MoveSpeed: 2
@@ -44,11 +44,11 @@ MonoBehaviour:
   AttackBulletPattern: {fileID: 0}
   AttackFireOffset: {x: 0, y: 0}
   SkillConfig: {fileID: 0}
-  AIBehavior: {fileID: 0}
+  AIBehavior: {fileID: 11400000, guid: 7a9c477a00daf5c49919f6e6a1065feb, type: 2}
   ViewPrefab: {fileID: 0}
   ViewPoolDef: {fileID: 0}
   SpriteAnimData: {fileID: 0}
-  DebugColor: {r: 1, g: 1, b: 1, a: 1}
+  DebugColor: {r: 1, g: 0.3, b: 0.2, a: 1}
   HitFlashDuration: 0.1
   HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   ShowDamageNumber: 1

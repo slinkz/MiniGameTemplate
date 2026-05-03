@@ -1,7 +1,7 @@
 # 🎮 ShooterGame 开发计划总览
 
 > **项目**：纵版飞行弹幕射击 · 微信小游戏  
-> **文档版本**：基于 TDD v1.3 / GDD v3.2 / UI Design v2.0  
+> **文档版本**：基于 TDD v1.4 / GDD v3.2 / UI Design v2.0  
 > **日期**：2026-05-03  
 > **状态**：🟢 SG-P0 核心骨架编码完成（2026-05-03）
 
@@ -32,11 +32,11 @@
 |------|------|------|------|
 | **游戏设计** | SG_GAME_DESIGN.md | v3.2 | ✅ PK 通过 |
 | **UI 设计** | SG_UI_DESIGN.md | v2.0 | ✅ PK 通过 |
-| **核心 TDD** | SG_TDD_INDEX + 5 子文件 | v1.3 | ✅ PK 通过 |
+| **核心 TDD** | SG_TDD_INDEX + 5 子文件 | v1.4 | ✅ PK 通过（含微信真机 PK） |
 | **工具 TDD** | SG_TOOLS_TDD_INDEX + 2 子文件 | v1.3 | ✅ PK 通过 |
-| **PK 记录** | 6 个 PK 文件 | — | ✅ 全部收敛 |
+| **PK 记录** | 7 个 PK 文件 | — | ✅ 全部收敛 |
 
-### PK 评审总账（10 轮 / 107 个问题 / 100% 收敛）
+### PK 评审总账（11 轮 / 118 个问题 / 100% 收敛）
 
 | 轮次 | 视角 | 核心 TDD | 工具 TDD | 问题数 |
 |------|------|---------|---------|--------|
@@ -44,7 +44,8 @@
 | TDD 第一轮 | 架构师 / 工具开发者 | 10 | 10 | 20 |
 | TDD 第二轮 | 工具开发者 / 架构师 | 10 | 10 | 20 |
 | TDD 第三轮 | **PM** / 架构师 & 工具开发者 | 10 | 10 | 20 |
-| **总计** | | | | **107** |
+| **微信真机 PK** | **微信小程序开发者 vs Unity 架构师** | 11 | — | 11 |
+| **总计** | | | | **118** |
 
 ---
 
@@ -222,6 +223,10 @@ Game.ShooterGame.Editor   → 编辑器工具（仅 Editor 平台）
 | FairyGUI V1 全量预加载 | 5 包 < 500KB，占首包 < 2%，零按需加载延迟 | UI §8.7 |
 | 飘字池化 8 并发 | FIFO 环形缓冲 + visible=false 回收，零 GC | UI §8.8 |
 | 重试不重载场景 | EntitySpawner.Reset() + SO 写回初始值 | UI §8.6 |
+| Save() try-catch + bool | 真机存储失败不崩溃，调用方 Toast 通知用户 | WX-001 |
+| 热启动 Reload() | Boot 时判断已有实例则从 storage 重载，应对微信后台恢复 | WX-005 |
+| V1 纯本地 + V2 路径 | V1 不上服务端（MVP），V2 wx.login→openid→CRUD→并集策略 | WX-002 |
+| totalLevels 构造函数注入 | 避免 ValidateData 中硬编码关卡数，V2 加关不踩坑 | WX-010 |
 
 ---
 
@@ -247,4 +252,4 @@ Game.ShooterGame.Editor   → 编辑器工具（仅 Editor 平台）
 | UI 设计 | `Docs/Agent/SG_UI_DESIGN.md` |
 | 核心 TDD | `Docs/Agent/SG_TDD_INDEX.md` + 5 子文件 |
 | 工具 TDD | `Docs/Agent/SG_TOOLS_TDD_INDEX.md` + 2 子文件 |
-| PK 记录 | `Docs/Agent/SG_*_PK*.md`（6 个文件） |
+| PK 记录 | `Docs/Agent/SG_*_PK*.md`（7 个文件） |

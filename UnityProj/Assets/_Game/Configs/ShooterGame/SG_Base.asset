@@ -48,7 +48,7 @@ MonoBehaviour:
   ViewPrefab: {fileID: 0}
   ViewPoolDef: {fileID: 0}
   SpriteAnimData: {fileID: 0}
-  DebugColor: {r: 1, g: 1, b: 1, a: 1}
+  DebugColor: {r: 0.2, g: 1, b: 0.4, a: 1}
   HitFlashDuration: 0.1
   HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   ShowDamageNumber: 1

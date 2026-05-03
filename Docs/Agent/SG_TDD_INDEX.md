@@ -1,6 +1,6 @@
 # ShooterGame · 技术设计文档（TDD）
 
-> **版本**：v1.3 | **日期**：2026-05-03 | **状态**：✅ PK 评审完成  
+> **版本**：v1.4 | **日期**：2026-05-03 | **状态**：✅ PK 评审完成（含微信真机 PK）  
 > **来源**：`SG_GAME_DESIGN.md` v3.2 + `SG_UI_DESIGN.md` v2.0  
 > **命名空间**：`Game.ShooterGame`  
 > **目录**：`Assets/_Game/Scripts/ShooterGame/`  
@@ -152,3 +152,4 @@
 | v1.1 | 2026-05-03 | PK Round 1 修正：Spawn 签名、RestartAll、碰撞震动方案、击杀计数签名、波次追踪、BaseLineDetector 时序、索引语义、ProgressManager 生命周期、Y 轴翻转确认 |
 | v1.2 | 2026-05-03 | PK Round 2 修正（工具开发者视角）：重复属性修复、UI Controller 引用声明、BaseLineDetector SRP、重试 StopShake、MaxUnlockedLevel 参数化、飘字 Tween 竞态、UI 初始化时序、转场 Coroutine |
 | v1.3 | 2026-05-03 | PK Round 3 修正（PM 视角）：实施优先级拆分子任务+Done When 验收标准、GameStartupFlow 骨架、Action/IEnumerator 修正、SetInputEnabled 实现、Timer 波 V1 铁律、工时 buffer 校准 |
+| v1.4 | 2026-05-03 | 微信真机 PK 修正（WX-001~011）：Save() try-catch+bool、V2 登录升级路径、热启动 Reload、ValidateData 防篡改、totalLevels 参数化、HandleVictoryConfirm 同步更新 |

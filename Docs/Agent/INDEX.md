@@ -112,4 +112,5 @@
 | SG_TOOLS_TDD_PK_ARCH | — | — | SG_TOOLS_TDD PK 第二轮（架构师视角 / 10 问题 / 已收敛） |
 | SG_TDD_PK_PM | — | — | SG_TDD PK 第三轮（PM 视角 / 10 问题 / 已收敛） |
 | SG_TOOLS_TDD_PK_PM | — | — | SG_TOOLS_TDD PK 第三轮（PM 视角 / 10 问题 / 已收敛） |
+| SG_TDD_PK_WECHAT | — | — | SG_TDD PK 微信真机视角（微信小程序开发者 vs Unity 架构师 / 11 问题 / 已收敛） |
 | SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
