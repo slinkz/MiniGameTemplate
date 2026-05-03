@@ -93,6 +93,11 @@ namespace Game.ShooterGame
 
         private void Start()
         {
+            // 确保后台也能推进帧（Editor 调试 + 微信小游戏后台兼容）
+            Application.runInBackground = true;
+
+            // 防御性初始化：若从 Boot 场景启动则已初始化，直接跳场景测试时兜底
+            SG_Boot.InitProgress();
             _progressManager = SG_Boot.Progress;
             InitBattle();
             EnterState(BattleState.Intro);
@@ -217,6 +222,7 @@ namespace Game.ShooterGame
 
         private void EnterState(BattleState newState)
         {
+            Debug.Log($"[SG_Battle] State → {newState} (time={Time.time:F2}s, frame={Time.frameCount})");
             CurrentState = newState;
             _stateTimer = 0f;
 
