@@ -1,10 +1,11 @@
 # 飞行弹幕射击 · UI/交互设计文档
 
-> **版本**：v1.0  
-> **日期**：2026-05-02  
+> **版本**：v2.0（PK 评审回写版）  
+> **日期**：2026-05-03  
 > **设计分辨率**：750 × 1334 pt（iPhone 6/7/8 基准，竖屏）  
 > **适配策略**：宽度固定、高度自适应（安全区 + 刘海屏兼容）  
-> **UI 框架**：FairyGUI
+> **UI 框架**：FairyGUI  
+> **PK 评审**：✅ 通过（10/10 + 10/10 收敛）— 详见 `SG_UI_DESIGN_PK.md` + `SG_UI_DESIGN_PK_EDITOR.md`
 
 ---
 
@@ -363,9 +364,11 @@
 |------|----------|------|
 | 受到伤害 | 全屏红色闪烁层 alpha 0→0.3→0 | 0.2s |
 | 击杀敌机 | 击杀位置飘出 "+10" 分数（向上漂浮淡出） | 0.8s |
+
+> **飘字行为补充**：飘字不做 clamp（允许超出屏幕，淡出中玩家无感知）；生成时一次计算坐标（WorldToScreen → UI 坐标），不每帧跟随 Camera 震屏——飘字是 HUD 层元素，非世界空间物体。
 | 波次切换 | "Wave X" 大字从中心放大淡出 | 0.6s |
 | 血量 < 30% | 屏幕四周红色暗角常驻 + 血条脉冲 | 持续 |
-| 无敌帧 | 飞机半透明闪烁（alpha 在 0.3-1.0 间切换，60ms 间隔） | 0.5s |
+| ~~无敌帧~~ | ~~已废弃（GDD v3.0：飞机不挂 HealthComponent，无"被撞保护期"概念）~~ | — |
 
 ### 3.5 虚拟摇杆交互规范
 
@@ -381,14 +384,18 @@
                             摇杆淡出（0.15s）
 ```
 
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| 死区半径 | 8pt | 偏移 < 8pt 时不响应移动（防误触） |
-| 最大半径 | 60pt | 超过此距离摇杆头钳制在边缘，方向继续有效 |
-| 出现动效 | 缩放 0→1，0.1s | 按下瞬间快速出现 |
-| 消失动效 | 淡出 0.15s | 松开后短暂保留再消失 |
-| 视觉层级 | z=50 | 在 HUD 之下，不遮挡信息 |
-| 响应优先 | 最高 | 暂停按钮区域除外，全屏都是摇杆响应区 |
+> **配置方式**：以下参数全部存储在 `JoystickConfigSO`（SO 驱动），Play Mode 中 Inspector 修改即时生效，无需重编译。
+
+| 参数 | 值 | 说明 | 配置来源 |
+|------|-----|------|----------|
+| 死区半径 | 8pt | 偏移 < 8pt 时不响应移动（防误触） | JoystickConfigSO.DeadZone |
+| 最大半径 | 60pt | 超过此距离摇杆头钳制在边缘，方向继续有效 | JoystickConfigSO.MaxRadius |
+| 出现动效 | 缩放 0→1，0.1s | 按下瞬间快速出现 | JoystickConfigSO.AppearDuration |
+| 消失动效 | 淡出 0.15s | 松开后短暂保留再消失 | JoystickConfigSO.DisappearDuration |
+| 底座透明度 | alpha=0.3 | 半透明白色底座 | JoystickConfigSO.Alpha_Base |
+| 摇杆头透明度 | alpha=0.6 | 半透明白色摇杆头 | JoystickConfigSO.Alpha_Stick |
+| 视觉层级 | z=50 | 在 HUD 之下，不遮挡信息 | — |
+| 响应优先 | 最高 | 暂停按钮区域除外，全屏都是摇杆响应区 | — |
 
 ---
 
@@ -435,16 +442,24 @@
 
 ### 5.2 关键组件
 
-| 组件 | 类型 | 说明 |
-|------|------|------|
-| Btn_Primary | Button | 主按钮模板（含按下态、禁用态） |
-| Btn_Secondary | Button | 次按钮模板 |
-| Btn_Icon | Button | 图标按钮（暂停等） |
-| ProgressBar_HP | ProgressBar | 血条（支持颜色渐变、预损动画） |
-| LevelNode | Component | 关卡节点（3 态切换：通关/可进入/锁定） |
-| Joystick | Component | 虚拟摇杆（底座+摇杆头+逻辑控制器） |
-| FloatingText | Component | 飘字（击杀分数、伤害数字） |
-| WaveNotice | Component | 波次提示文字（放大淡出动效） |
+| 组件 | 类型 | 代码生成 | 生成类名 | 说明 |
+|------|------|----------|----------|------|
+| Btn_Primary | Button | ✅ | Btn_Primary | 主按钮模板（含按下态、禁用态） |
+| Btn_Secondary | Button | ✅ | Btn_Secondary | 次按钮模板 |
+| Btn_Icon | Button | ✅ | Btn_Icon | 图标按钮（暂停等） |
+| ProgressBar_HP | ProgressBar | ✅ | ProgressBar_HP | 血条（支持颜色渐变、预损动画） |
+| LevelNode | Component | ✅ | LevelNode | 关卡节点（3 态切换：通关/可进入/锁定） |
+| Joystick | Component | ✅ | Joystick | 虚拟摇杆（底座+摇杆头+逻辑控制器） |
+| FloatingText | Component | ✅ | FloatingText | 飘字（击杀分数、伤害数字） |
+| WaveNotice | Component | ✅ | WaveNotice | 波次提示文字（放大淡出动效） |
+
+### 5.3 FairyGUI 代码生成约定
+
+- **强制要求**：§5.2 列出的所有组件必须在 FairyGUI 编辑器中设置"导出类型=自定义类"，启用代码生成。**禁止手写字符串 `GetChild("xxx")` 引用**——全部通过生成的强类型绑定访问子元素。
+- **输出目录**：`Assets/_Game/Scripts/UI/Generated/`（独立目录，不与手写代码混合）
+- **文件命名**：`{PackageName}Binder.cs`（如 `BattleBinder.cs`、`PopupBinder.cs`）
+- **Git 管理**：生成代码**纳入 Git**（不加 .gitignore）。确保 clone 后直接编译通过，不依赖本地 FairyGUI 编辑器环境。
+- **增量生成**：FairyGUI 代码生成按包独立——修改 `Battle` 包只重新生成 `BattleBinder.cs`，不影响其他包。Git diff 仅包含变更包。
 
 ---
 
@@ -465,16 +480,214 @@
 
 ## 七、设计走查清单（给美术/开发对照）
 
-- [ ] 所有按钮有 按下态 / 普通态 / 禁用态 三态资源
-- [ ] 血条支持三段颜色（绿→黄→红）
-- [ ] 虚拟摇杆底座和摇杆头有独立资源（半透明圆形）
-- [ ] 关卡节点有三态（通关★ / 可进入▶ / 锁定🔒）对应资源
-- [ ] 弹窗背景面板有统一样式（圆角矩形 + 轻微阴影/外发光）
-- [ ] 所有文字使用统一字体（建议系统字体 + 一套标题用艺术字）
-- [ ] 飘字有描边/阴影确保在任何背景上可读
-- [ ] 波次提示文字有放大缩小关键帧
+| # | 走查项 | 可自动化？ | V1 校验方式 |
+|---|--------|-----------|------------|
+| 1 | 所有按钮有 按下态 / 普通态 / 禁用态 三态资源 | ✅ package.xml 解析 | P1 MenuItem 校验 |
+| 2 | 血条支持三段颜色（绿→黄→红） | ❌ 需视觉判断 | 人工走查 |
+| 3 | 虚拟摇杆底座和摇杆头有独立资源（半透明圆形） | ✅ 检查组件存在性 | P1 MenuItem 校验 |
+| 4 | 关卡节点有三态（通关★ / 可进入▶ / 锁定🔒）对应资源 | ✅ Controller page 数量 | P1 MenuItem 校验 |
+| 5 | 弹窗背景面板有统一样式（圆角矩形 + 轻微阴影/外发光） | ❌ 视觉一致性 | 人工走查 |
+| 6 | 所有文字使用统一字体（建议系统字体 + 一套标题用艺术字） | ✅ 检查 font 属性 | P2 MenuItem 校验 |
+| 7 | 飘字有描边/阴影确保在任何背景上可读 | ❌ 视觉判断 | 人工走查 |
+| 8 | 波次提示文字有放大缩小关键帧 | ✅ Transition 存在性 | P2 MenuItem 校验 |
+
+> **自动化校验工具**：`[MenuItem("Tools/SG/校验 FairyGUI 包")]`——读取 FairyGUI 发布时生成的 `package.xml`，检查上表标注 ✅ 的项目。V1 做前 3 项高价值检查（P1），V2 扩展全部 5 项。
 
 ---
 
-> **文档状态**：UI/交互设计完整，可直接对接美术出图和程序实现。  
-> **关联文档**：`ShooterGame-Design.md`（游戏设计文档 v2.1）
+## 八、框架集成约定
+
+> 本章汇总架构师 PK 评审收敛结论。定义 UI 与 Entity+SO 框架的集成契约，TDD 据此展开详细实现。
+
+### 8.1 界面类型映射
+
+| 界面 | C# 类型 | 生命周期 | 说明 |
+|------|---------|----------|------|
+| LoadingScreen | UIScreen | 全屏，互斥，显示→自动消失 | 品牌页 |
+| LevelSelectScreen | UIScreen | 全屏，常驻不销毁 | 主界面 |
+| BattleHUD | UILayer | 叠加层，场景级生存期 | 战斗信息层 |
+| PausePanel | UIPanel | 模态弹窗，栈式管理 | 暂停 |
+| VictoryPanel | UIPanel | 模态弹窗，栈式管理 | 胜利 |
+| DefeatPanel | UIPanel | 模态弹窗，栈式管理 | 失败 |
+
+- `UIScreen`：互斥显示（显示 A 时 B 隐藏）
+- `UILayer`：叠加在 Screen 上，跟随场景生存期
+- `UIPanel`：模态弹窗，后开先关（栈式）
+- "冻结" = `TimeScale=0`，FairyGUI 动效默认用 `Time.deltaTime`，暂停时自然冻结（预期行为）
+
+### 8.2 数据绑定方案
+
+**模式**：每个界面对应一个 `XXXController : MonoBehaviour`——
+
+- `OnEnable()` 订阅 SO 事件（如 `SG_BaseHP.OnValueChanged += UpdateHP`）
+- `OnDisable()` 取消订阅
+- 持有对 FairyGUI `GComponent` 的引用
+
+不引入 MVVM 框架——独立开发者用最简单的订阅模式足够。
+
+**血条预损动画**：`BattleHUDController` 内部维护 `_displayHP`（白色段，延迟追赶）和 `_targetHP`（绿色段，立即跟踪 SO 值），每帧 Lerp 驱动。暂停时 `TimeScale=0` → Lerp 不推进 → 白色段冻住（预期行为）。无需额外 SO。
+
+### 8.3 UI 相关 SO 变量
+
+| SO 变量 | 类型 | 来源（写入方） | 消费者（读取方） |
+|---------|------|----------------|-----------------|
+| SG_BaseHP | FloatVariable | HealthComponent → 写入 ratio(0~1) | BattleHUDController |
+| SG_CurrentWaveIndex | IntVariable | EntitySpawner.OnWaveChanged | BattleHUDController |
+| SG_TotalWaveCount | IntVariable | Bootstrap 初始化时写入 | BattleHUDController |
+| SG_KillCount | IntVariable | CollisionComponent.OnEntityKilled | VictoryPanel / DefeatPanel |
+| SG_TotalEnemyCount | IntVariable | Bootstrap 初始化时计算写入 | DefeatPanel ("18/25") |
+| SG_InputDirection | Vector2Variable | Joystick 组件每帧写入 | MovementComponent 每 Tick 读取 |
+
+> 这 6 个 SO 已追加到 GDD v3.2 SO master list（14→21 个）。
+
+### 8.4 虚拟摇杆方案
+
+- ❌ ~~全屏 MonoBehaviour + Input.GetTouch()~~（微信 WebGL 不可靠）
+- ✅ **FairyGUI 全屏 `GGraph`**（`touchable=true`，铺满 GRoot，`z` 低于 HUD 元素）作为摇杆响应区
+- 暂停按钮 `z` 高于 GGraph → 事件分发时暂停按钮优先拦截 → 自然解决冲突
+- 摇杆逻辑写在 `JoystickComponent`（FairyGUI Component 扩展脚本），通过 `onTouchBegin/Move/End` 处理
+- 每帧将方向向量写入 `SG_InputDirection` Vector2Variable SO
+- 首帧判定：手指起始于暂停按钮热区 → 暂停响应；起始于其他区域 → 摇杆激活，即使后续拖入暂停区域也不触发暂停
+
+### 8.5 转场动效归属表
+
+| 转场 | FairyGUI 负责 | Unity 代码负责 |
+|------|---------------|----------------|
+| 加载→选关 | LoadingScreen 淡出 | — |
+| 选关→战斗 | LevelNode 缩放动画 | 白闪 overlay + 场景加载 + 淡入 |
+| 战斗→选关（胜利）| VictoryPanel 淡出 | 场景卸载 + 选关场景淡入 |
+| 战斗→选关（失败返回）| DefeatPanel 滑出 | 场景卸载 + 选关场景淡入 |
+| **重试** | DefeatPanel 滑出 | **不重载场景** — EntitySpawner.Reset() + Bootstrap.ResetBattle() |
+
+异步编排用协程/async-await，不需新建"TransitionSequencer"。
+
+### 8.6 重试机制（不重载场景）
+
+**重试 ≠ SceneManager.LoadScene(same)**。重试流程：
+
+```
+DefeatPanel.SlideOut()           // FairyGUI Transition
+await BlackScreen.FadeIn(0.2f)   // Unity overlay
+EntitySpawner.Reset()            // Entity 层重置
+SO 写回初始值:                    // SG_BaseHP=1.0, WaveIndex=0, KillCount=0
+  → UI 自动响应 OnValueChanged
+BattleHUDController.ForceRefresh() // 强制同步一次（兜底）
+await BlackScreen.FadeOut(0.2f)  // 淡出黑屏
+BattleController.StartBattle()   // 开始新一轮
+```
+
+- 屏幕暗角/红闪由 HP 值变更驱动——HP > 30% 时自动关闭
+- 飘字池批量回收：`BattleHUDController.RecycleAllFloatingTexts()`
+- 重置在黑屏期间完成，视觉对玩家透明
+- **编排归属**：`BattleController`（单一指挥点）
+
+### 8.7 FairyGUI 包加载策略
+
+- **V1：全量预加载 + 不卸载**
+- 5 个包预估总大小 < 500KB（全矢量+小贴图）。微信首包 30MB，FairyGUI 占比 < 2%
+- 在 LoadingScreen 阶段全量加载 5 个包 → 界面池就绪 → 零按需加载延迟
+- 包依赖（如 Popup 引用 Common 按钮）由 FairyGUI Runtime 自动处理
+- V2 包体膨胀后再评估按需加载/卸载
+
+### 8.8 飘字池化
+
+- 预创建 `FloatingText[8]`（最大并发 8 个）
+- 超出上限时回收最旧的（FIFO 环形缓冲）
+- FairyGUI 对象池 = `visible=false` + 重置状态，不 `Dispose()`——零 GC
+- **坐标转换归属**：`BattleHUDController`（同时持有 Camera 和 GRoot 引用）：
+  ```
+  Vector2 screenPos = Camera.main.WorldToScreenPoint(killWorldPos);
+  Vector2 uiPos = GRoot.inst.GlobalToLocal(screenPos);
+  floatingText.SetPosition(uiPos);
+  ```
+
+---
+
+## 九、V1 动效裁剪表
+
+> 优先级分级：P0（V1 必须）/ P1（有则更好）/ V2（明确延后）
+
+| 动效 | 优先级 | 预估成本 | 说明 |
+|------|--------|----------|------|
+| 按钮缩放反馈 | P0 必须 | 极低 | 2 行 GTween |
+| 血条预损动画 | P0 必须 | 低 | BattleHUDController 1 个 Lerp |
+| 飘字上浮淡出 | P0 必须 | 低 | 池化 8 并发 |
+| 波次文字闪现 | P0 必须 | 极低 | 单个 GTween |
+| 基地受伤红闪 | P0 必须 | 低 | 全屏 GGraph alpha 动画 |
+| 呼吸灯（关卡节点）| P1 有则更好 | 极低 | 选关界面单节点循环 Tween |
+| 屏幕暗角（<30% HP）| P1 有则更好 | 低 | 4 个半透明 GImage |
+| 关卡解锁动效 | P1 有则更好 | 低 | 选关界面一次性播放 |
+| Victory 光效 | P1 有则更好 | 中 | FairyGUI 序列帧动效（非 ParticleSystem） |
+| 锁定节点摇晃 | V2 | — | 可先用 Toast 文字代替 |
+
+**性能基准**：V1 同时最多 11 个活跃 Tween（8 飘字+1 预损+1 脉冲+1 波次文字）。FairyGUI GTween 100 并发 < 0.5ms——完全无压力。
+
+---
+
+## 十、设计 Token 参考表
+
+> 改颜色/尺寸时：先改此表 → 再改 FairyGUI + 代码。此表是 self-check 清单，V1 不做自动化校验。
+
+### 颜色
+
+| Token | Hex | RGB | 用途 |
+|-------|-----|-----|------|
+| Brand_Primary | #4FC3F7 | 79,195,247 | 主按钮底色 |
+| BG_Dark | #1A1A2E | 26,26,46 | Loading/战斗背景 |
+| Btn_Secondary | #3A3A4A | 58,58,74 | 次按钮底色 |
+| Danger | #EF5350 | 239,83,80 | 危险操作/红闪/退出按钮 |
+| HP_Green | — | TBD | 血量 >50% |
+| HP_Yellow | — | TBD | 血量 30~50% |
+| HP_Red | — | TBD | 血量 <30% |
+| Text_White | #FFFFFF | 255,255,255 | 主文字 |
+| Text_LightGray | — | TBD | 次要文字（加载提示等） |
+
+### 字号
+
+| Token | 大小 | 用途 |
+|-------|------|------|
+| Title_Large | 36pt | 游戏名 / VICTORY |
+| Title_Medium | 24pt | 加载文字 / DEFEAT |
+| Body | 20pt | 波次指示 / 统计数据 |
+| Caption | 18pt | 血量数字 / 飘字 |
+| Button_Primary | 24pt | 主按钮文字 |
+| Button_Secondary | 20pt | 次按钮文字 |
+
+### 间距与尺寸
+
+| Token | 值 | 用途 |
+|-------|-----|------|
+| Btn_Primary_W | 280pt | 主按钮宽 |
+| Btn_Primary_H | 56pt | 主按钮高 |
+| Btn_Corner | 28pt | 主按钮圆角 |
+| HitArea_Min | 44pt | 最小触摸热区 |
+| HP_Bar_H | 12pt | 血条高度 |
+| Joystick_DeadZone | 8pt | 摇杆死区 |
+| Joystick_MaxRadius | 60pt | 摇杆最大偏移 |
+
+---
+
+## 十一、编辑器工具需求（优先级表）
+
+> 来源：编辑器工具 PK 评审收敛结论（`SG_UI_DESIGN_PK_EDITOR.md`）
+
+| 优先级 | 工具 | 预估成本 | 收益 |
+|--------|------|----------|------|
+| **P0** | `#if UNITY_EDITOR` Debug 字段（_displayHP、_targetHP、_activeFloatingTextCount）+ `ProfilerMarker` | 30 min | 运行时可观测，零运行时开销 |
+| **P0** | 5 个 Debug MenuItem（重试/直接胜利/直接失败/跳波/设HP）+ validate | 20 min | 单次测试 3min→3s |
+| **P0** | `JoystickConfigSO`（摇杆全参数 SO 化） | 15 min | Inspector 热改无需编译 |
+| **P1** | 战斗状态监视 EditorWindow（`Tools/SG/战斗状态面板`） | 1 h | 集中看所有 SG_* SO 实时值 |
+| **P1** | FairyGUI 包校验 MenuItem（按钮三态/摇杆组件/关卡节点 Controller） | 1 h | 替代人工走查 §七 #1/3/4 |
+| **P1** | `Debug.DrawLine` 飘字坐标辅助线（世界→UI 映射可视化） | 15 min | 坐标问题快速定位 |
+| **P1** | Game View 摇杆 Gizmo 叠加（死区圆+最大半径圆+方向线段） | 30 min | 可视化调参 |
+| **P2** | `TransitionConfigSO`（EaseType 枚举 + duration + CustomEditor 曲线预览） | 30 min | 转场参数 SO 化 |
+| **P2** | SafeArea 自动化 EditMode Test | 1 h | 适配回归测试 |
+| **P2** | FairyGUI 字体/Transition 校验扩展（走查清单 #6/#8） | 1 h | 走查清单全自动化 |
+
+**P0 合计 ~1h** | **P1 合计 ~3h** | **P2 合计 ~2.5h**
+
+---
+
+> **文档状态**：v2.0 — 两轮 PK 评审结论回写完成（架构师 10/10 + 编辑器工具 10/10 收敛）  
+> **关联文档**：`SG_GAME_DESIGN.md`（游戏设计文档 v3.2）/ `SG_UI_DESIGN_PK.md` / `SG_UI_DESIGN_PK_EDITOR.md`  
+> **下一步**：输出 ShooterGame TDD 技术设计文档 → 实施。

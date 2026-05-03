@@ -1,9 +1,10 @@
 # 飞行弹幕射击 · 游戏设计文档
 
-> **版本**：v2.1  
-> **日期**：2026-05-02  
+> **版本**：v3.2（SO 清单补全版）  
+> **日期**：2026-05-03  
 > **品类**：纵版飞行射击（弹幕）  
-> **平台**：微信小游戏
+> **平台**：微信小游戏  
+> **PK 评审**：✅ 通过（17/17 + 10/10 收敛）— 详见 `SG_GAME_DESIGN_PK.md` + `SG_GAME_DESIGN_PK_TOOLS.md`
 
 ---
 
@@ -20,6 +21,21 @@
 ---
 
 ## 二、玩家体验流程
+
+### 2.0 战斗状态机
+
+```
+Intro(1.5s) → Playing → Victory / Defeat
+```
+
+| 状态 | 行为 |
+|------|------|
+| **Intro** | 飞机进场动画，不 Tick Spawner、不检测碰撞、不响应输入 |
+| **Playing** | 正常战斗 |
+| **Victory** | 0.5s 静默 → 胜利界面 |
+| **Defeat** | 基地爆炸 → 失败界面 |
+
+实现方式：`BattleState` 枚举 + EntitySystemBootstrap 层控制。
 
 ### 2.1 首次进入
 
@@ -69,6 +85,11 @@
 - 手指不遮挡主角机——摇杆中心在手指按下处，飞机在画面中独立响应
 - 移动范围：全屏幕（包括基地区域上方）
 - **瞬时响应**，松手即停，休闲游戏优先手感直接
+- **摇杆模式**：方向型（Direction-only），速度恒定 = `EntityConfigSO.MoveSpeed`
+- **死区半径**：10px 物理像素
+- **加减速**：零（无惯性），松手瞬间速度归零
+- **移动约束**：飞机位置 clamp 在相机可视矩形内
+- **输入 API**：Unity Touch API（平台适配由框架层处理）
 
 **战斗节奏**：
 - 敌机一波一波地出，每波之间有短暂间歇（让玩家喘口气 + 产生"下一波来了"的心理准备）
@@ -81,13 +102,37 @@
 - 子弹命中敌机 → 敌机闪白 + 轻微击退 + 碎屑粒子
 - 敌机被击毁 → 爆炸特效 + 屏幕轻微震动 + 击杀积分飘字
 - 敌机撞到飞机/基地 → 屏幕红色闪烁 + 血条扣减动画 + 警告音效
-- 基地血量低于 30% → 血条变红 + 脉冲闪烁 + 紧张 BGM 叠加层
+- 基地血量低于 30% → 血条变红 + 脉冲闪烁 + 切换紧张版 BGM（V1 不做多轨叠加）
+- 屏幕震动参数：创建 `ScreenShakeConfigSO`，参数在 Inspector 中编码期调试
+
+**V1 打击反馈实现优先级表**：
+
+| 优先级 | 效果 | 系统归属 | 配置入口 |
+|--------|------|----------|----------|
+| P0 必须 | 敌机闪白 | EntityHitReactionHandler | EntityConfigSO.HitFlashDuration/Color |
+| P0 必须 | 击退 | MovementComponent | EntityConfigSO.KnockbackForce |
+| P0 必须 | 爆炸特效 | Entity View → DeathEffect Prefab | EntityConfigSO.DeathEffect |
+| P0 必须 | 屏幕震动 | Camera Shake（新增） | ScreenShakeConfigSO（2 字段组） |
+| P1 应有 | 碎屑粒子 | Entity View → HitEffect | EntityConfigSO.HitEffect |
+| P1 应有 | 击杀飘字 | ShowDamageNumber 系统 | EntityConfigSO.ShowDamageNumber=true |
+| V2 | 积分飘字 | FairyGUI 动态 | 专用 ScorePopup 组件 |
+| V2 | 基地受伤红闪 | Camera Overlay | 独立 RedFlash 组件 |
+| V2 | 血条动画 | FairyGUI Tween | UI 层实现 |
+
+**ScreenShake 触发规则**：
+
+| 事件 | 触发 | 强度 | 理由 |
+|------|------|------|------|
+| 玩家子弹击杀敌机 | ❌ | — | 频率太高，持续震动 = 没震动 |
+| 飞机撞击杀敌机 | ✅ | 中 (0.15s, 0.3) | 撞击是高风险操作，需反馈强化 |
+| 敌机突破底线（基地扣血） | ✅ | 强 (0.3s, 0.6) | 惩罚信号，必须明确 |
 
 ### 2.3 战斗结束
 
 **通关**：
 ```
-最后一架敌机被消灭
+EntitySpawner.IsAllWavesCleared == true
+（内部语义：所有波次生成完毕 + 所有 SpawnGroup 对应 EntityConfig 在场存活数为 0）
   │
   ▼
 短暂 0.5 秒静默（让玩家意识到"打完了"）
@@ -141,23 +186,54 @@
 
 | 元素 | 阵营 | 说明 |
 |------|------|------|
-| 我方飞机 | 己方 | 玩家操控，不可被摧毁 |
-| 基地 | 己方 | 固定在底部，有血量 |
+| 我方飞机 | 己方 | 玩家操控，**不可被摧毁**（不挂 HealthComponent） |
+| 基地 | 己方 | 固定在底部，有血量（Entity + HealthComponent） |
 | 我方子弹 | 己方 | 自动发射，向上飞行 |
 | 敌方飞机 | 敌方 | 自动向下移动，有血量 |
 
 **碰撞结果表**：
 
-| 碰撞对 | 发生什么 |
-|--------|----------|
-| 我方子弹 → 敌机 | 敌机受伤，子弹消失 |
-| 敌机 → 基地 | 基地扣血，敌机爆炸消失 |
-| 敌机 → 我方飞机 | 基地扣血（伤害与撞基地相同），敌机爆炸消失，飞机进入 **0.5 秒无敌帧**（闪烁 + 半透明） |
+| 碰撞对 | 对飞机 | 对敌机 | 对基地 | 实现路径 |
+|--------|--------|--------|--------|----------|
+| 我方子弹 → 敌机 | — | 受伤，子弹消失 | — | DanmakuSystem TargetRegistry |
+| 敌机 → 飞机 | 屏幕震动反馈 | 被一击致死（飞机 ContactDamage=9999）→ DeathDelay 播爆炸 | **无影响** | EntityCollisionSolver（圆 vs 圆） |
+| 敌机 → 基地 | — | Despawn（DeathDelay 播爆炸） | 扣 ContactDamage 点 HP | 底线检测（Position.y ≤ BaseLineY） |
 
-> **核心设计决策**：
-> - 我方飞机与基地**共享血量**。飞机不会死，但飞机被撞等于基地被撞——这给玩家一个**双重保护动机**：既要走位躲避，又要拦截漏网之鱼。
-> - 敌机撞飞机和撞基地伤害**一致**（V1 简化，不做区分）。
-> - 飞机被撞后有 **0.5 秒无敌帧**——闪烁反馈 + 短暂免疫碰撞伤害，防止一串敌机连续撞导致瞬间空血。
+**碰撞实现约束**：
+- 飞机碰撞体：**圆形**（CollisionRadius=0.3），参与 EntityCollisionSolver
+- 基地碰撞体：**不参与 EntityCollisionSolver**（底线检测替代 AABB 碰撞）
+- 敌机碰撞后走 DeathDelay 流程（`EntityConfigSO.DeathDelay`），特效播完再回收
+- "撞后爆炸消失"实现：飞机 ContactDamage=9999 → 敌机 HP 归零 → OnDeath → DeathDelay → 回收
+
+**无敌帧实现**：
+- 飞机不挂 HealthComponent → `TryApplyDamage` 中 `GetComponent(Health)` 为 null → 自然免疫
+- ~~飞机被撞进入 0.5s 无敌帧~~（已移除：飞机无 HP，不需要无敌帧）
+- 敌机碰撞冷却：`ContactDamageInterval` 控制（飞机设 0.01s，近乎无冷却）
+
+> **核心设计决策（v3.0 修正）**：
+> - 飞机**不可被摧毁**且**不挂 HealthComponent**——被撞时自然免疫所有伤害
+> - 基地 HP 唯一扣减来源 = **敌机突破底线**（底线检测方案）
+> - ~~撞飞机扣基地血~~（v3.0 删除）——让因果链更清晰：走位好 → 敌机被拦截在上方 → 基地安全
+> - 敌机撞飞机的玩家惩罚 = 屏幕震动反馈 + 被推开的短暂位移（DPS 输出中断）
+
+**ScreenShakeConfigSO 定义**（TDD 阶段创建）：
+
+```
+ScreenShakeConfigSO : ScriptableObject
+├── CollisionShake（飞机撞击敌机时触发）
+│   ├── Duration: 0.15f
+│   ├── Intensity: 0.3f
+│   └── DecayCurve: AnimationCurve
+├── BaseHitShake（敌机突破底线时触发）
+│   ├── Duration: 0.3f
+│   ├── Intensity: 0.6f
+│   └── DecayCurve: AnimationCurve
+```
+
+- **实现方式**：Camera Transform 位置偏移（Perlin Noise 采样），零 GC
+- **不使用** Post-Processing Volume（微信小游戏不友好）
+- V1 用 2 字段组（6 个字段），不做通用预设数组
+- V1 不需要 CustomEditor（字段量小，默认 Inspector + AnimationCurve 编辑已足够）
 
 ### 3.2 技能系统（V1 简化版）
 
@@ -165,6 +241,14 @@
 - 每个技能按固定间隔**自动发射**，无需玩家操作
 - V1 默认只有一个技能：**单发直射**（向正前方发一颗子弹）
 - 所有子弹走**弹幕系统**处理（高频生成/销毁、轨迹计算、碰撞检测）
+
+**V1 子弹参数**：
+- 走 `AttackComponent` + `BulletPatternSO`
+- Speed = 12 单位/秒
+- Size = 0.16 世界单位（对应 16px@100PPU）
+- Lifetime = 2s（超出屏幕前已足够到达顶部）
+- 发射偏移 = (0, 0.4)（飞机头部位置）
+- 碰撞后回收（击中敌机 → 弹幕系统 Die 响应）
 
 **后续可扩展**：
 - 散射（一次 3/5 发扇形）
@@ -177,8 +261,115 @@
 V1 所有敌机行为极简：
 - **直线下落**：匀速从出生点向屏幕底部移动
 - 不开火、不变速、不转向
+- **击退是额外位移**，不影响匀速下落方向的运动（框架 `MovementComponent.ApplyKnockback` 叠加实现）
 
 > 这已经够用了——节奏感来自"什么时候出、出多少、出多快"的编排，不是来自 AI 复杂度。
+
+---
+
+### 3.4 V1 基准数值表
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| 基地 MaxHp | 100 | 统一基准 |
+| 子弹 Damage | 10 | 单发伤害 |
+| 子弹发射间隔 | 0.3s | AttackInterval |
+| 子弹速度 | 12 单位/秒 | 偏快，确保打击密度感 |
+| 普通敌机 MaxHp | 20 | 2 发击杀 → 即时满足感 |
+| 普通敌机 MoveSpeed | 2 单位/秒 | 慢速，给玩家反应时间 |
+| 快速敌机 MoveSpeed | 4 单位/秒 | 第 3 关起出现 |
+| 敌机 ContactDamage | 15 | 约 6~7 次突破底线 Game Over |
+| 飞机 MoveSpeed | 8 单位/秒 | 操控灵敏但不失控 |
+| 飞机 ContactDamage | 9999 | 一撞即杀敌机 |
+| 飞机 ContactDamageInterval | 0.01s | 近乎无冷却 |
+| 基地第 3 关初始 HP | 90 | MaxHp×90% |
+| 基地第 4/5 关初始 HP | 80 | MaxHp×80% |
+
+**数值逻辑**：普通敌机 2 发击杀 → 玩家有效率感；基地容错约 6~7 次突破，对新手友好。
+
+**V1 SO 资产清单**（21 个）：
+
+| 资产名 | SO 类型 | 存放路径 |
+|--------|---------|----------|
+| SG_Player | EntityConfigSO | `Assets/_Game/Configs/ShooterGame/` |
+| SG_Base | EntityConfigSO | `Assets/_Game/Configs/ShooterGame/` |
+| SG_Enemy_Normal | EntityConfigSO | `Assets/_Game/Configs/ShooterGame/` |
+| SG_Enemy_Fast | EntityConfigSO | `Assets/_Game/Configs/ShooterGame/` |
+| SG_Level_01 ~ 05 | SG_LevelConfigSO | `Assets/_Game/Configs/ShooterGame/Levels/` |
+| SG_Wave_01 ~ 05 | EntitySpawnWaveSO | `Assets/_Game/Configs/ShooterGame/Waves/` |
+| SG_PlayerBullet_Straight | BulletPatternSO | `Assets/_Game/Configs/ShooterGame/` |
+| SG_ScreenShake_Default | ScreenShakeConfigSO | `Assets/_Game/Configs/ShooterGame/` |
+| SG_CurrentLevelIndex | IntVariable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| SG_BaseHP | FloatVariable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| SG_CurrentWaveIndex | IntVariable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| SG_TotalWaveCount | IntVariable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| SG_KillCount | IntVariable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| SG_TotalEnemyCount | IntVariable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| SG_InputDirection | Vector2Variable | `Assets/_Game/Configs/ShooterGame/Variables/` |
+
+> **SG_BaseHP**：存储归一化比例（0~1），`HealthComponent` 在 HP 变化时写入 `currentHP / maxHP`。UI 直接读取显示百分比，无需知道 maxHP。
+
+> **命名规范**：`SG_` 前缀为 ShooterGame 游戏级资产（区别于框架模板前缀 `Template_`）。
+
+### 3.5 空间约束
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| 设计分辨率 | 1080×1920（9:16） | 竖版 |
+| **推荐 CameraSize** | **8**（正交半高） | 可视区域 = 9×16 世界单位 |
+| 推荐 PPU | 100 | 1 世界单位 = 100px |
+| 飞机活动区域 | 屏幕可视区全范围 | |
+| 敌机出生线 | 屏幕顶部外 1 个身位 | |
+| 基地区域 | 屏幕底部（BaseLineY） | |
+| 敌机出生 X 范围 | 屏幕宽度的中间 60%~80% | |
+
+**体验锚点（设计侧承诺）**：
+
+| 行为 | 期望时间 | 对应速度 |
+|------|---------|----------|
+| 普通敌机顶→底 | ~8s | 2 单位/秒 |
+| 快速敌机顶→底 | ~4s | 4 单位/秒 |
+| 子弹底→顶 | ~1.3s | 12 单位/秒 |
+| 飞机左→右 | ~1.1s | 8 单位/秒 |
+
+> 如果技术侧调整 CameraSize，应**等比缩放所有速度值**，保持穿越时间不变。穿越时间是设计锚点，绝对速度是派生值。
+
+### 3.6 Entity 建模
+
+#### 基地 Entity
+
+| 属性 | 值 | 说明 |
+|------|-----|------|
+| 实体类型 | Entity（走 EntityManager.Spawn） | 非纯 UI 逻辑 |
+| Camp | Ally | 己方阵营 |
+| Components[] | `[ Health ]` | 仅血量，无移动/碰撞/攻击 |
+| MaxHp | 100 | V1 基准 |
+| EnableEntityCollision | false | 不参与 EntityCollisionSolver |
+| CollisionRadius | 0 | 无圆形碰撞体 |
+
+**敌机 vs 基地碰撞方案**：底线检测——Game 层每帧检查敌机 `Position.y <= BaseLineY`，命中则：
+1. 对基地 HealthComponent 造成 `敌机.ContactDamage` 伤害
+2. 敌机 Despawn（走 DeathDelay 播放爆炸特效后回收）
+
+**基地渲染与调试**：
+- **不需要 ViewPrefab**——基地是逻辑概念（底线 Y），视觉由 FairyGUI HP 血条 Overlay 表达。设置 ViewPrefab 反而浪费 DrawCall。
+- **BaseLineY Gizmo**：BattleController/Bootstrap MonoBehaviour 的 `OnDrawGizmos()` 画一条红色横线标记底线位置，辅助调参。
+- **基地 HP 调试**：走 EntityDebugWindow——基地也是 Entity，自动出现在 Active Entity 列表中，HP 实时可见。
+
+#### 飞机 Entity
+
+| 属性 | 值 | 说明 |
+|------|-----|------|
+| 实体类型 | Entity（走 EntityManager.Spawn） | |
+| Camp | Ally | 己方阵营 |
+| Components[] | `[ Movement, Collision ]` | **不挂 Health**——不可被摧毁 |
+| EnableEntityCollision | true | 参与圆 vs 圆碰撞 |
+| CollisionRadius | 0.3 | |
+| ContactDamage | 9999 | 一撞即杀敌机 |
+| ContactDamageInterval | 0.01 | 近乎无冷却 |
+| MoveSpeed | 8 | 玩家操控速度 |
+
+**"不可被摧毁"实现**：不挂 HealthComponent → TryApplyDamage 中 GetComponent(Health) 为 null → 自然免疫所有伤害。方案 A，零额外代码。
 
 ---
 
@@ -202,6 +393,8 @@ V1 所有敌机行为极简：
 | 第 5 关 | 终局 | 最高密度，节奏最快，最后一波高潮 | 80% |
 
 > 数值仅为指导，具体靠策划在编辑器中调试打磨。
+
+**V1 性能约束**：同屏敌机不超过 **40 架**（TargetRegistry 64 槽，留余量给玩家子弹碰撞目标）。第 5 关峰值设计上限 30~35 架。
 
 ### 4.3 单关内部结构
 
@@ -228,6 +421,37 @@ V1 所有敌机行为极简：
 - 间歇时间可以随关卡推进而缩短（加紧张感）
 - 最后一波前可以有一个稍长的间歇（"暴风雨前的宁静"）
 
+### 4.4 场景架构
+
+- **单战斗 Scene** + **多 LevelConfig SO**（5 关 = 5 个 `SG_LevelConfigSO`）
+- 选关界面 = FairyGUI UI overlay（不切 Scene）
+- 关卡数据传递：选关 → 设置 `CurrentLevelIndex` **IntVariable** SO → 战斗场景 Bootstrap 读取对应 LevelConfig
+- 进入战斗 = 加载 Battle Scene；退出 = 回到 MainMenu Scene（Boot.unity 走 SceneLoader）
+- 越界防护：Bootstrap 加载时 `Mathf.Clamp(index, 0, _levelConfigs.Length - 1)` + `Debug.LogWarning`
+
+**SG_LevelConfigSO**（游戏级关卡元数据，不污染框架 SO）：
+
+```csharp
+[CreateAssetMenu(menuName = "ShooterGame/LevelConfig")]
+public class SG_LevelConfigSO : ScriptableObject
+{
+    public EntitySpawnWaveSO WaveConfig;  // 本关波次数据
+    public float BaseHpRatio = 1.0f;      // 基地初始 HP 比例
+    public int UnlockRequirement = 0;     // 前一关需要几星解锁（V1 = 0，通关即解锁）
+}
+```
+
+- Bootstrap 读取 `SG_LevelConfigSO[]`，按 `CurrentLevelIndex` 索引
+- 基地 HP 参数化：`healthComp.SetMaxHp(configMaxHp * levelConfig.BaseHpRatio)`
+
+### 4.5 通关判定
+
+```
+通关条件 = EntitySpawner.IsAllWavesCleared == true
+```
+
+内部语义：所有波次生成完毕 + 所有 SpawnGroup 对应 EntityConfig 的在场存活数为 0。等价于"最后一架敌机被消灭"。
+
 ---
 
 ## 五、策划关卡编排工作流（重点）
@@ -246,6 +470,18 @@ V1 所有敌机行为极简：
 策划需要的是：**所见即所得、快速迭代、节奏可视化**。
 
 ### 5.3 方案：时间线编辑器（Unity Editor 内）
+
+> ⚠️ **V1 实现方案**：V1 使用框架已有的 `EntitySpawnWaveSO` + Inspector 编辑，不开发独立时间线编辑器。以下为 **V2 愿景**。
+
+**V1 EntitySpawnWaveSOEditor 改善需求**（TDD 阶段实施）：
+
+| # | 改善项 | 行为规格 |
+|---|--------|----------|
+| 1 | **一键复制最后一波** | 深拷贝 `Waves[last]` 追加到末尾；新波次 `spawnDelay` = 源 delay + estimatedDuration + 3s；复制后自动折叠旧波次、展开新波次 |
+| 2 | **总敌机/总时长统计面板** | 在摘要面板中显示：总波次数、总敌机数、预估总时长（秒） |
+
+- 按钮文案：`"+ 复制最后一波"`（中文，独立开发者无国际化需求）
+- 按钮位置：Waves 列表底部
 
 设计一个类似"音序器"的**关卡时间线编辑器**：
 
@@ -343,10 +579,12 @@ Level:
 
 ### 5.7 与 Luban 配置的关系
 
-- 时间线编辑器操作的是一个 ScriptableObject 或自定义序列化格式
-- **导出流程**：编辑器 → 序列化为 JSON → Luban 导入 → 生成运行时配置代码
-- 或者直接：编辑器 → 序列化为 ScriptableObject → 运行时直接读取（绕开 Luban，减少中间环节）
-- 哪种方案更好取决于实际需求，但对策划来说是**透明的**——他们只管在编辑器里拖拖拽拽
+**V1 决策：纯 SO 路径**。
+
+- V1 关卡数据管线 = 5 个 `EntitySpawnWaveSO` 资产 + 5 个 `SG_LevelConfigSO` 资产，直接在 Inspector 编辑
+- **理由**：独立开发者不需要 Excel 流程；SO 在 Play Mode 下可准 Hot Reload；5 关数据量小
+- `EntityConfigValidator` 已有 SpawnWaveSO 校验（Waves 非空、Group.EntityConfig 引用非空），直接复用
+- **Luban 路径保留为 V2 扩展选项**：当关卡数 >10 或数值表规模需要团队协作时迁移
 
 ---
 
@@ -390,6 +628,7 @@ Level:
   · 单张 atlas 不超过 2048×2048（微信小游戏内存限制）
   · 导出格式：PNG（透明底）
   · 命名规范：{类型}_{名字}_{序号}.png（如 enemy_normal_01.png）
+  · ⚠️ **不使用 `_N` 后缀**——避免与框架 TextureImportEnforcer 法线贴图检测规则冲突
 ```
 
 ---
@@ -479,8 +718,11 @@ Level:
 
 ### 9.3 存储方案
 
-- 开发期：本地存储（微信 wx.setStorageSync）
-- 上线期：微信云开发（跨设备同步）
+- 统一走框架 `ISaveSystem`（PlayerPrefs → 微信自动映射 wx.setStorageSync）
+- Key = `"sg_progress"`
+- Value = JSON: `{"clearedLevels":[1,2],"version":1}`
+- 版本字段 `version` 预留后续数据迁移
+- 上线期可选升级：微信云开发（跨设备同步）
 
 ---
 
@@ -488,14 +730,62 @@ Level:
 
 | # | 问题 | 决策 |
 |---|------|------|
-| 1 | 操控方式 | **虚拟摇杆**——手指按下屏幕任意位置即为摇杆中心，拖动控制飞机方向 |
+| 1 | 操控方式 | **虚拟摇杆**——方向型（Direction-only），速度恒定，10px 死区，零加减速 |
 | 2 | 手指遮挡问题 | 摇杆中心在按下处，飞机在画面中独立移动，**手指不遮挡主角机** |
-| 3 | 被撞后无敌帧 | **有**——0.5 秒无敌 + 闪烁半透明，防止连续撞击瞬间空血 |
-| 4 | 撞飞机 vs 撞基地伤害 | **一样**（V1 统一简化） |
-| 5 | 重玩奖励 | **V1 无奖励**，纯重玩；后续版本再加留存设计 |
-| 6 | 美术风格 | **扁平矢量**（现代感、多分辨率适配好） |
+| 3 | 飞机被撞惩罚 | 敌机被一击致死（ContactDamage=9999）+ 屏幕震动。~~基地扣血~~（v3.0 删除） |
+| 4 | 基地扣血来源 | **唯一来源**：敌机突破底线（Position.y ≤ BaseLineY） |
+| 5 | 飞机不可被摧毁 | **方案 A**：不挂 HealthComponent，自然免疫 |
+| 6 | 基地建模 | Entity + [Health]，底线检测替代 AABB 碰撞 |
+| 7 | 坐标系 | CameraSize=8，可视区域 9×16，PPU=100。穿越时间是锚点，速度是派生值 |
+| 8 | 通关判定 | `EntitySpawner.IsAllWavesCleared == true` |
+| 9 | 场景架构 | 单战斗 Scene + 多 WaveConfig SO + FairyGUI overlay 选关 |
+| 10 | 重玩奖励 | **V1 无奖励**，纯重玩；后续版本再加留存设计 |
+| 11 | 美术风格 | **扁平矢量**（现代感、多分辨率适配好） |
+| 12 | V1 编辑器 | 用现有 EntitySpawnWaveSO + Inspector，时间线编辑器降 V2 |
+| 13 | 存储 | ISaveSystem + key="sg_progress" + JSON + version 字段 |
+| 14 | V1 数据管线 | **纯 SO 路径**（EntitySpawnWaveSO + SG_LevelConfigSO），Luban 留 V2 |
+| 15 | 关卡索引 | **IntVariable**（非 FloatVariable），运行时 Clamp 防越界 |
 
 ---
 
-> **文档状态**：设计决策全部确认，可直接进入开发。  
-> **下一步**：关卡编辑器原型开发 + 美术出图。
+## 十一、V1 编辑器工具与配置清单
+
+> 来源：编辑器工具可执行性 PK 评审收敛结论（`SG_GAME_DESIGN_PK_TOOLS.md`）
+
+### 11.1 Editor 改善清单
+
+| # | 改善项 | 目标 SO | 预估工时 |
+|---|--------|---------|----------|
+| 1 | 一键复制最后一波（深拷贝 + delay 自动递增） | EntitySpawnWaveSO | 1h |
+| 2 | 总敌机/总时长统计面板 | EntitySpawnWaveSO | 0.5h |
+
+### 11.2 新增 SO 类型
+
+| SO 类 | 职责 | 字段 |
+|--------|------|------|
+| `SG_LevelConfigSO` | 关卡元数据（游戏级，不污染框架） | WaveConfig, BaseHpRatio, UnlockRequirement |
+| `ScreenShakeConfigSO` | 屏幕震动配置 | CollisionShake(Duration/Intensity/Curve) + BaseHitShake(Duration/Intensity/Curve) |
+
+### 11.3 Gizmo 需求
+
+| Gizmo | 负责方 | 用途 |
+|-------|--------|------|
+| BaseLineY 红色横线 | BattleController.OnDrawGizmos | 底线位置可视化，辅助调参 |
+
+### 11.4 构建与校验
+
+- 复用现有 `EntityConfigValidator.ValidateAll()`（覆盖 SO 完整性）
+- 复用现有 `BuildPipeline.cs` 场景检查
+- V1 不新增构建前 Error 阻断
+
+### 11.5 V2 工具待办（不在 V1 范围）
+
+- BulletPatternSO CustomEditor（条件显示 + 弹幕预览）
+- 时间线编辑器 EditorWindow
+- 构建前 Error 级阻断（关卡数 >10 时）
+
+---
+
+> **文档状态**：v3.2 — SO 清单补全（14→21 个，含 UI 相关 SO）  
+> **PK 评审**：✅ 通过（17/17 + 10/10 收敛）— 详见 `SG_GAME_DESIGN_PK.md` + `SG_GAME_DESIGN_PK_TOOLS.md`  
+> **下一步**：输出 ShooterGame TDD 技术设计文档 → 实施。

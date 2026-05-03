@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-03 | 文件总数：45
+> 最后更新：2026-05-03 | 文件总数：59
 
 ---
 
@@ -24,6 +24,8 @@
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
 | 开发 ShooterGame | SG_GAME_DESIGN + SG_UI_DESIGN | 飞行弹幕射击游戏设计 + UI/交互设计 |
+| 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
+| ShooterGame 编辑器工具 | SG_TOOLS_TDD_INDEX → 01~02 | 工具 TDD：波次编辑器 + Debug + Gizmo |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
 | 理解 Tick 执行顺序 | EC_TDD_02_CORE_ARCH §3.3 | TickOrders 常量表 |
 | 理解 Entity 生命周期 | EC_TDD_03_ENTITY_POOL | Spawn/Despawn/Pool 流程 |
@@ -91,3 +93,12 @@
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |
 | SG | SG_GAME_DESIGN | — | ShooterGame 游戏设计文档 v2.1 |
 | SG | SG_UI_DESIGN | — | ShooterGame UI/交互设计文档 v1.0 |
+| SG_TDD | SG_TDD_INDEX | 5 | ShooterGame 核心技术设计文档 |
+| SG_TOOLS_TDD | SG_TOOLS_TDD_INDEX | 2 | ShooterGame 编辑器工具 TDD |
+| SG_TDD_PK | — | — | SG_TDD PK 评审记录（10 问题 / 已收敛） |
+| SG_TOOLS_TDD_PK | — | — | SG_TOOLS_TDD PK 评审记录（10 问题 / 已收敛） |
+| SG_TDD_PK_TOOLS | — | — | SG_TDD PK 第二轮（工具开发者视角 / 10 问题 / 已收敛） |
+| SG_TOOLS_TDD_PK_ARCH | — | — | SG_TOOLS_TDD PK 第二轮（架构师视角 / 10 问题 / 已收敛） |
+| SG_TDD_PK_PM | — | — | SG_TDD PK 第三轮（PM 视角 / 10 问题 / 已收敛） |
+| SG_TOOLS_TDD_PK_PM | — | — | SG_TOOLS_TDD PK 第三轮（PM 视角 / 10 问题 / 已收敛） |
+| SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
