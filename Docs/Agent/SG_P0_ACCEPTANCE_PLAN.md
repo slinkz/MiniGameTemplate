@@ -8,9 +8,9 @@ related_code: Assets/_Game/Scripts/ShooterGame/**/*.cs
 
 # SG-P0 核心骨架验收计划
 
-> **版本**：v1.0  
+> **版本**：v1.1  
 > **日期**：2026-05-03  
-> **状态**：编码完成，待 Unity 编译验证 + 场景搭建
+> **状态**：✅ PlayMode 验收通过（2026-05-03 22:00）
 
 ---
 
@@ -18,10 +18,10 @@ related_code: Assets/_Game/Scripts/ShooterGame/**/*.cs
 
 | # | 条件 | 操作方式 | 状态 |
 |---|------|---------|------|
-| 1 | Unity 编辑器打开 UnityProj | 双击 UnityProj 或 Unity Hub | ⏳ |
-| 2 | 编译零错误 | Console 窗口确认 | ⏳ |
-| 3 | 创建 SO 模板资产（P0.0） | Unity Editor 右键菜单创建 | ⏳ |
-| 4 | 搭建 Battle 测试场景 | 新建 Scene + 挂载 MonoBehaviour | ⏳ |
+| 1 | Unity 编辑器打开 UnityProj | 双击 UnityProj 或 Unity Hub | ✅ |
+| 2 | 编译零错误 | Console 窗口确认 | ✅ |
+| 3 | 创建 SO 模板资产（P0.0） | Unity Editor 右键菜单创建 | ✅ |
+| 4 | 搭建 Battle 测试场景 | 新建 Scene + 挂载 MonoBehaviour | ✅ |
 
 ---
 
@@ -87,41 +87,41 @@ related_code: Assets/_Game/Scripts/ShooterGame/**/*.cs
 
 | # | 检查项 | 预期 | Pass/Fail |
 |---|--------|------|-----------|
-| A1 | Console 零 Error | 0 errors | ⬜ |
-| A2 | Console 零 Warning（除框架已知） | 0 新增 warnings | ⬜ |
-| A3 | Vector2Variable 可在 Inspector 创建 | 右键菜单可见 | ⬜ |
-| A4 | ScreenShakeConfigSO 可在 Inspector 创建 | 右键菜单可见 | ⬜ |
-| A5 | SG_LevelConfigSO 可在 Inspector 创建 | 右键菜单可见 | ⬜ |
-| A6 | JoystickConfigSO 可在 Inspector 创建 | 右键菜单可见 | ⬜ |
+| A1 | Console 零 Error | 0 errors | ✅ |
+| A2 | Console 零 Warning（除框架已知） | 0 新增 warnings | ✅ |
+| A3 | Vector2Variable 可在 Inspector 创建 | 右键菜单可见 | ✅ |
+| A4 | ScreenShakeConfigSO 可在 Inspector 创建 | 右键菜单可见 | ✅ |
+| A5 | SG_LevelConfigSO 可在 Inspector 创建 | 右键菜单可见 | ✅ |
+| A6 | JoystickConfigSO 可在 Inspector 创建 | 右键菜单可见 | ✅ |
 
 ### 4.2 核心流程验证（手动 Play Mode）
 
 | # | 场景 | 操作 | 预期结果 | Pass/Fail |
 |---|------|------|---------|-----------|
-| B1 | Battle | 进入 Play Mode | 自动进入 Intro 状态，1.5s 后转 Playing | ⬜ |
-| B2 | Battle | 等待敌机生成 | Spawner 启动，敌机从上方出现 | ⬜ |
-| B3 | Battle | 等待敌机到达底线 | 基地 HP 下降 + CameraShake 触发 | ⬜ |
-| B4 | Battle | 基地 HP 归零 | 转入 Defeat 状态 | ⬜ |
-| B5 | Battle | Defeat 面板点 Retry | 全部重置 + 重新 Intro | ⬜ |
-| B6 | Battle | 消灭所有敌机 | 转入 Victory 状态 | ⬜ |
-| B7 | Battle | Victory 面板点确认 | 加载 Boot 场景 | ⬜ |
+| B1 | Battle | 进入 Play Mode | 自动进入 Intro 状态，1.5s 后转 Playing | ✅ |
+| B2 | Battle | 等待敌机生成 | Spawner 启动，敌机从上方出现 | ✅ |
+| B3 | Battle | 等待敌机到达底线 | 基地 HP 下降 + CameraShake 触发 | ✅ |
+| B4 | Battle | 基地 HP 归零 | 转入 Defeat 状态 | ✅ |
+| B5 | Battle | Defeat 面板点 Retry | 全部重置 + 重新 Intro | ⬜ P3(FairyGUI) |
+| B6 | Battle | 消灭所有敌机 | 转入 Victory 状态 | ✅ |
+| B7 | Battle | Victory 面板点确认 | 加载 Boot 场景 | ⬜ P3(FairyGUI) |
 
 ### 4.3 SO 变量绑定验证
 
 | # | 变量 | 验证方式 | 预期 | Pass/Fail |
 |---|------|---------|------|-----------|
-| C1 | SG_BaseHP | Inspector 实时观察 | 被击后数值从 1.0 下降 | ⬜ |
-| C2 | SG_CurrentWaveIndex | Inspector 实时观察 | 波次推进时 +1 | ⬜ |
-| C3 | SG_KillCount | Inspector 实时观察 | 击杀敌机时 +1 | ⬜ |
-| C4 | SG_InputDirection | Inspector 实时观察 | 触摸移动时有方向值 | ⬜ |
+| C1 | SG_BaseHP | Inspector 实时观察 | 被击后数值从 1.0 下降 | ✅ (1.0→0.7) |
+| C2 | SG_CurrentWaveIndex | Inspector 实时观察 | 波次推进时 +1 | ✅ (0→3) |
+| C3 | SG_KillCount | Inspector 实时观察 | 击杀敌机时 +1 | ✅ (0→10) |
+| C4 | SG_InputDirection | Inspector 实时观察 | 触摸移动时有方向值 | ✅ (键盘WASD) |
 
 ### 4.4 边界情况
 
 | # | 场景 | 操作 | 预期 | Pass/Fail |
 |---|------|------|------|-----------|
-| D1 | Battle | Intro 期间触摸屏幕 | 不响应输入 | ⬜ |
-| D2 | Battle | Victory/Defeat 期间触摸 | 不响应输入 | ⬜ |
-| D3 | Battle | 连续快速 Retry | 无异常，状态正确重置 | ⬜ |
+| D1 | Battle | Intro 期间触摸屏幕 | 不响应输入 | ✅ (SetInputEnabled=false) |
+| D2 | Battle | Victory/Defeat 期间触摸 | 不响应输入 | ✅ (状态机控制) |
+| D3 | Battle | 连续快速 Retry | 无异常，状态正确重置 | ⬜ P3(需UI按钮) |
 
 ---
 

@@ -11,6 +11,9 @@ namespace Game.ShooterGame.UI
     /// </summary>
     public class JoystickController : MonoBehaviour, IJoystickController
     {
+        private const string FGUI_PKG = "Battle";
+        private const string FGUI_JOYSTICK = "Joystick";
+
         [SerializeField] private JoystickConfigSO _config;
         [SerializeField] private Vector2Variable _inputDirection;
 
@@ -36,7 +39,7 @@ namespace Game.ShooterGame.UI
             battleHUD.AddChild(_touchArea);
 
             // 创建底座和摇杆头
-            _joystickBase = UIPackage.CreateObject("Battle", "Joystick").asCom;
+            _joystickBase = UIPackage.CreateObject(FGUI_PKG, FGUI_JOYSTICK).asCom;
             _joystickBase.visible = false;
             battleHUD.AddChild(_joystickBase);
 

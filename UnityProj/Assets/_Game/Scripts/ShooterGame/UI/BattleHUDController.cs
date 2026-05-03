@@ -10,6 +10,10 @@ namespace Game.ShooterGame.UI
     /// </summary>
     public class BattleHUDController : MonoBehaviour, IBattleHUDController
     {
+        private const string FGUI_PKG = "Battle";
+        private const string FGUI_BATTLE_HUD = "BattleHUD";
+        private const string FGUI_FLOATING_TEXT = "FloatingText";
+
         [Header("SO 数据源")]
         [SerializeField] private FloatVariable _baseHP;
         [SerializeField] private IntVariable _currentWaveIndex;
@@ -49,7 +53,7 @@ namespace Game.ShooterGame.UI
 
         public void Show()
         {
-            _view = UIPackage.CreateObject("Battle", "BattleHUD").asCom;
+            _view = UIPackage.CreateObject(FGUI_PKG, FGUI_BATTLE_HUD).asCom;
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
             _hpBar = _view.GetChild("hp_bar").asProgress;
@@ -173,7 +177,7 @@ namespace Game.ShooterGame.UI
             var ft = _floatingTexts[_floatingTextHead];
             if (ft == null)
             {
-                ft = UIPackage.CreateObject("Battle", "FloatingText").asCom;
+                ft = UIPackage.CreateObject(FGUI_PKG, FGUI_FLOATING_TEXT).asCom;
                 GRoot.inst.AddChild(ft);
                 _floatingTexts[_floatingTextHead] = ft;
             }

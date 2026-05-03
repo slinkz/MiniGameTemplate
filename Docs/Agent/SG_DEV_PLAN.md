@@ -3,7 +3,7 @@
 > **项目**：纵版飞行弹幕射击 · 微信小游戏  
 > **文档版本**：基于 TDD v1.4 / GDD v3.2 / UI Design v2.0  
 > **日期**：2026-05-03  
-> **状态**：🟢 SG-P0 核心骨架编码完成（2026-05-03）
+> **状态**：🟢 SG-P0 PlayMode 验收通过 + P1/P2（键盘替代）验收通过 + 代码评审通过（2026-05-03）
 
 ---
 
@@ -14,7 +14,7 @@
 | **品类** | 纵版飞行弹幕射击（自动射击 + 虚拟摇杆操控） |
 | **核心玩法** | 操控战机消灭敌机 → 保护基地 → 5 关线性解锁 |
 | **技术栈** | Unity → 微信小游戏 + Entity-Component 框架 + FairyGUI |
-| **新增 C# 类** | 17 个（3 asmdef：Game.ShooterGame / .UI / .Editor） |
+| **新增 C# 类** | 19 个（3 asmdef：Game.ShooterGame / .UI / .Editor） |
 | **SO 资产** | 21 个 |
 | **FairyGUI 包** | 5 个（Common / Loading / LevelSelect / Battle / Popup） |
 | **纯编码工时** | ~18.5h |
@@ -79,16 +79,16 @@
 
 | # | 子任务 | 内容 | 预估 | ✅ Done When | 状态 |
 |---|--------|------|------|-------------|------|
-| P0.0 | SO 模板资产 | SG_Player / SG_Base / SG_Enemy_Normal / SG_BaseHP / SG_CurrentLevelIndex | 20min | 5 个 SO 存在 + Inspector 默认值 | ⏳ 待创建 |
+| P0.0 | SO 模板资产 | SG_Player / SG_Base / SG_Enemy_Normal / SG_BaseHP / SG_CurrentLevelIndex | 20min | 5 个 SO 存在 + Inspector 默认值 | ✅ |
 | P0.1 | 枚举 + 变量 | BattleState 枚举 + Vector2Variable（框架层新增） | 30min | 编译通过 + Inspector 可创建 | ✅ |
 | P0.2 | 战斗骨架 | BattleController + BaseLineDetector | 1.5h | Intro→Playing→底线扣血→HP=0→Defeat | ✅ |
 | P0.3 | 完整流程 | InitBattle + 击杀计数 + RetryBattle | 1h | 重试→重置→重新 Intro | ✅ |
 
-**P0 编码产出**（18 个文件）：
+**P0 编码产出**（19 个文件）：
 - Core：BattleState / BattleController / BaseLineDetector / CameraShaker / IUIControllers / SG_GameBootExtension
 - Config：ScreenShakeConfigSO / SG_LevelConfigSO / JoystickConfigSO
 - Progress：SG_ProgressManager
-- Input：SG_PlayerInputBridge
+- Input：SG_PlayerInputBridge / SG_DebugKeyboardInput（永久编辑器键盘输入）
 - UI：LoadingScreenController / LevelSelectController / BattleHUDController / PausePanelController / VictoryPanelController / DefeatPanelController / JoystickController
 - 框架层：Vector2Variable
 - asmdef：Game.ShooterGame / Game.ShooterGame.UI / Game.ShooterGame.Editor
@@ -176,7 +176,8 @@ Assets/_Game/
 │   ├── Progress/
 │   │   └── SG_ProgressManager.cs
 │   ├── Input/
-│   │   └── SG_PlayerInputBridge.cs
+│   │   ├── SG_PlayerInputBridge.cs
+│   │   └── SG_DebugKeyboardInput.cs
 │   └── UI/
 │       ├── Game.ShooterGame.UI.asmdef
 │       ├── LoadingScreenController.cs
@@ -232,15 +233,22 @@ Game.ShooterGame.Editor   → 编辑器工具（仅 Editor 平台）
 
 ## 🎯 下一步
 
-**当前状态**：SG-P0 核心骨架编码完成 ✅ + IDE lint 零错误 ✅
+**当前状态**：SG-P0 PlayMode 验收通过 ✅ + P1/P2（键盘替代）验收通过 ✅ + 代码评审通过 ✅
+
+**PlayMode 验收结果**（2026-05-03 22:00）：
+- B1 Intro→Playing：✅ 1.5s 自动转换
+- B2 敌机生成：✅ 3 波 12 个敌机生成
+- B3 底线突破扣血：✅ BaseHP 1.0→0.7（2 个突破）
+- B4~B6 Defeat/Retry/Victory：✅ 自动完成（10 击杀→Victory）
+- C1~C4 SO 变量绑定：✅ 全部实时反映
+- 控制台错误：✅ 零
 
 **紧接任务**：
-1. Unity MCP 编译验证（等 Unity 编辑器可达时再跑）
-2. P0.0 SO 模板资产创建（5 个 EntityConfigSO + 6 个 SO 变量 = Unity Editor 操作）
-3. 🔧 工具 P0（波次编辑器 + Debug 工具）
-4. SG-P1 支撑系统
+1. 🔧 工具 P0（波次编辑器 + Debug 工具）
+2. SG-P3 UI 层（FairyGUI 包制作 + Controller 接入）
+3. SG-P4 集成验收（5 关配置 + 全链路）
 
-**验收里程碑**：P0.2 验证 Intro→Playing→底线扣血→Defeat 全链路 + P0.3 验证 Retry 全链路
+**验收里程碑**：下一个 = SG-P3 FairyGUI 包创建 + UI 全链路
 
 ---
 

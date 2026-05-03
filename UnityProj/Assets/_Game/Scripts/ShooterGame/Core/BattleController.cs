@@ -15,6 +15,8 @@ namespace Game.ShooterGame
     /// </summary>
     public class BattleController : MonoBehaviour
     {
+        private const string SCENE_BOOT = "Boot";
+
         [Header("关卡配置")]
         [SerializeField] private SG_LevelConfigSO[] _levelConfigs;
         [SerializeField] private IntVariable _currentLevelIndex;
@@ -393,13 +395,13 @@ namespace Game.ShooterGame
         {
             _progressManager?.MarkLevelCleared(_currentLevelIndex.Value + 1); // 0-based → 1-based
             yield return null; // 一帧等待
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene(SCENE_BOOT);
         }
 
         private IEnumerator HandleDefeatQuit()
         {
             yield return null;
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene(SCENE_BOOT);
         }
 
         /// <summary>
@@ -460,7 +462,7 @@ namespace Game.ShooterGame
         {
             Time.timeScale = 1f;
             yield return null;
-            SceneManager.LoadScene("Boot");
+            SceneManager.LoadScene(SCENE_BOOT);
         }
 
         // ── Pause 按钮由 HUD 触发 ──
