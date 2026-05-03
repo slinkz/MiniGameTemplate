@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-03 | 文件总数：59
+> 最后更新：2026-05-03 | 文件总数：60
 
 ---
 
@@ -51,6 +51,12 @@
 | `*ConfigSO.cs` / `*SO.cs` | SO_WORKFLOWS_INDEX → 01~05 | SO 配置流程 |
 | `Plugins/WeChatSDK/**` | WECHAT_INTEGRATION | 微信集成 |
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
+| `_Game/Scripts/ShooterGame/Core/*.cs` | SG_TDD_01~02 + SG_DEV_PLAN | SG 战斗核心 |
+| `_Game/Scripts/ShooterGame/Config/*.cs` | SG_TDD_02~03 + SG_DEV_PLAN | SG 配置 SO |
+| `_Game/Scripts/ShooterGame/Progress/*.cs` | SG_TDD_03 + SG_DEV_PLAN | SG 进度管理 |
+| `_Game/Scripts/ShooterGame/Input/*.cs` | SG_TDD_05 + SG_DEV_PLAN | SG 输入桥接 |
+| `_Game/Scripts/ShooterGame/UI/*.cs` | SG_TDD_04 + SG_DEV_PLAN | SG UI Controllers |
+| `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
 
 ---
 
@@ -72,6 +78,11 @@
 | SpeedModifierIds | EC_TDD_05 §4.10 | Buff by-ID 移速修正标识 |
 | ISkillEffect | EC_TDD_05 §4.8 | 技能效果接口（FireBullets/AreaDamage/ApplyBuff） |
 | ADR | ADR_INDEX | 架构决策记录（已接受/已废弃） |
+| BattleState | SG_TDD_02 §1.1 | 战斗状态枚举（None/Intro/Playing/Victory/Defeat） |
+| BaseLineDetector | SG_TDD_02 §2.2 | 底线检测器（纯 C#，扫描敌机越线扣基地 HP） |
+| SG_Boot | SG_TDD_01 §9 | ShooterGame 静态启动扩展（Progress 访问点） |
+| SG_ProgressManager | SG_TDD_03 §2.2 | ShooterGame 进度管理（ISaveSystem 封装） |
+| IUIControllers | SG_TDD_04 §1 | Core↔UI 解耦接口（5 个接口） |
 
 ---
 

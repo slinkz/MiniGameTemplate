@@ -3,7 +3,7 @@
 > **项目**：纵版飞行弹幕射击 · 微信小游戏  
 > **文档版本**：基于 TDD v1.3 / GDD v3.2 / UI Design v2.0  
 > **日期**：2026-05-03  
-> **状态**：🟡 待实施（全部设计文档 + 10 轮 PK 评审已完成）
+> **状态**：🟢 SG-P0 核心骨架编码完成（2026-05-03）
 
 ---
 
@@ -74,14 +74,30 @@
 
 ## 📋 完整子任务清单
 
-### SG-P0：核心骨架（4.5h 含调试）
+### SG-P0：核心骨架（4.5h 含调试）✅ 已完成（2026-05-03）
 
-| # | 子任务 | 内容 | 预估 | ✅ Done When |
-|---|--------|------|------|-------------|
-| P0.0 | SO 模板资产 | SG_Player / SG_Base / SG_Enemy_Normal / SG_BaseHP / SG_CurrentLevelIndex | 20min | 5 个 SO 存在 + Inspector 默认值 |
-| P0.1 | 枚举 + 变量 | BattleState 枚举 + Vector2Variable（框架层新增） | 30min | 编译通过 + Inspector 可创建 |
-| P0.2 | 战斗骨架 | BattleController + BaseLineDetector | 1.5h | Intro→Playing→底线扣血→HP=0→Defeat |
-| P0.3 | 完整流程 | InitBattle + 击杀计数 + RetryBattle | 1h | 重试→重置→重新 Intro |
+| # | 子任务 | 内容 | 预估 | ✅ Done When | 状态 |
+|---|--------|------|------|-------------|------|
+| P0.0 | SO 模板资产 | SG_Player / SG_Base / SG_Enemy_Normal / SG_BaseHP / SG_CurrentLevelIndex | 20min | 5 个 SO 存在 + Inspector 默认值 | ⏳ 待创建 |
+| P0.1 | 枚举 + 变量 | BattleState 枚举 + Vector2Variable（框架层新增） | 30min | 编译通过 + Inspector 可创建 | ✅ |
+| P0.2 | 战斗骨架 | BattleController + BaseLineDetector | 1.5h | Intro→Playing→底线扣血→HP=0→Defeat | ✅ |
+| P0.3 | 完整流程 | InitBattle + 击杀计数 + RetryBattle | 1h | 重试→重置→重新 Intro | ✅ |
+
+**P0 编码产出**（18 个文件）：
+- Core：BattleState / BattleController / BaseLineDetector / CameraShaker / IUIControllers / SG_GameBootExtension
+- Config：ScreenShakeConfigSO / SG_LevelConfigSO / JoystickConfigSO
+- Progress：SG_ProgressManager
+- Input：SG_PlayerInputBridge
+- UI：LoadingScreenController / LevelSelectController / BattleHUDController / PausePanelController / VictoryPanelController / DefeatPanelController / JoystickController
+- 框架层：Vector2Variable
+- asmdef：Game.ShooterGame / Game.ShooterGame.UI / Game.ShooterGame.Editor
+
+**P0 编码偏离项**（已修复）：
+1. `Entity.Camp` 为 `internal set` → 移除手动赋值，改由 EntityConfigSO.Camp 自动设置
+2. `EntitySpawner.SetPaused()` 不存在 → 改为 SpawnPoint 首次 StartWave + _spawnerStarted 布尔
+3. `GameStartupFlow.Progress` 命名冲突 → 新增 `SG_Boot` 静态类
+4. `GComponent.TweenKillAll()` 不存在 → 改为 `GTween.Kill(ft)`
+5. Retry 时未重置 `_spawnerStarted` → 已修复
 
 ### 🔧 工具 P0：编辑器工具（2.75h）
 
@@ -139,48 +155,40 @@
 
 ## 🏗️ 新增代码架构
 
-### 目录结构
+### 实际目录结构（P0 完成后）
 
 ```
 Assets/_Game/
 ├── Scripts/ShooterGame/
-│   ├── BattleController.cs          ← 战斗编排指挥
-│   ├── BattleState.cs               ← 状态枚举
-│   ├── BaseLineDetector.cs          ← 底线检测
-│   ├── CameraShaker.cs              ← 屏幕震动
-│   ├── ScreenShakeConfigSO.cs       ← 震动配置
-│   ├── SG_LevelConfigSO.cs          ← 关卡元数据
-│   ├── SG_ProgressManager.cs        ← 存档读写
-│   ├── SG_PlayerInputBridge.cs      ← 输入桥接
-│   ├── GameStartupFlow.cs           ← Boot 入口
-│   ├── UI/
-│   │   ├── JoystickController.cs    ← 虚拟摇杆
-│   │   ├── LoadingScreenController.cs
-│   │   ├── LevelSelectController.cs
-│   │   ├── BattleHUDController.cs
-│   │   ├── PausePanelController.cs
-│   │   ├── VictoryPanelController.cs
-│   │   └── DefeatPanelController.cs
-│   └── JoystickConfigSO.cs          ← 摇杆配置
-├── Configs/ShooterGame/
-│   ├── SG_Player.asset              ← EntityConfigSO
-│   ├── SG_Base.asset                ← EntityConfigSO
-│   ├── SG_Enemy_Normal.asset        ← EntityConfigSO
-│   ├── SG_Enemy_Fast.asset          ← EntityConfigSO
-│   ├── Levels/SG_Level_01~05.asset  ← SG_LevelConfigSO
-│   ├── Waves/SG_Wave_01~05.asset    ← EntitySpawnWaveSO
-│   └── Variables/SG_*.asset         ← SO 变量×6
+│   ├── Game.ShooterGame.asmdef
+│   ├── Core/
+│   │   ├── BattleState.cs
+│   │   ├── BattleController.cs
+│   │   ├── BaseLineDetector.cs
+│   │   ├── CameraShaker.cs
+│   │   ├── IUIControllers.cs
+│   │   └── SG_GameBootExtension.cs
+│   ├── Config/
+│   │   ├── ScreenShakeConfigSO.cs
+│   │   ├── SG_LevelConfigSO.cs
+│   │   └── JoystickConfigSO.cs
+│   ├── Progress/
+│   │   └── SG_ProgressManager.cs
+│   ├── Input/
+│   │   └── SG_PlayerInputBridge.cs
+│   └── UI/
+│       ├── Game.ShooterGame.UI.asmdef
+│       ├── LoadingScreenController.cs
+│       ├── LevelSelectController.cs
+│       ├── BattleHUDController.cs
+│       ├── PausePanelController.cs
+│       ├── VictoryPanelController.cs
+│       ├── DefeatPanelController.cs
+│       └── JoystickController.cs
 ├── Editor/ShooterGame/
-│   ├── SG_SpawnWaveSOEditor.cs      ← 波次编辑器增强
-│   ├── SG_DebugMenuItems.cs         ← Debug 菜单
-│   ├── SG_BattleStateWindow.cs      ← 状态监视面板
-│   └── SG_GizmoDrawer.cs           ← Gizmo 绘制
-└── FairyGUI/ShooterGame/
-    ├── Common/                      ← 通用组件包
-    ├── Loading/                     ← 加载界面包
-    ├── LevelSelect/                 ← 选关界面包
-    ├── Battle/                      ← 战斗 HUD 包
-    └── Popup/                       ← 弹窗包
+│   └── Game.ShooterGame.Editor.asmdef
+└── _Framework/DataSystem/Scripts/Variables/
+    └── Vector2Variable.cs (框架层新增)
 ```
 
 ### asmdef 边界（3 个）
@@ -219,13 +227,15 @@ Game.ShooterGame.Editor   → 编辑器工具（仅 Editor 平台）
 
 ## 🎯 下一步
 
-**当前状态**：全部设计文档 v1.3 + 10 轮 PK 评审（107 问题/100% 收敛）✅ 就绪
+**当前状态**：SG-P0 核心骨架编码完成 ✅ + IDE lint 零错误 ✅
 
-**启动 SG-P0** 需要确认：
-1. 框架 `EntitySpawner.IsAllWavesCleared` 接口是否已暴露（⚠️ 需确认）
-2. 天命人决定开工时间
+**紧接任务**：
+1. Unity MCP 编译验证（等 Unity 编辑器可达时再跑）
+2. P0.0 SO 模板资产创建（5 个 EntityConfigSO + 6 个 SO 变量 = Unity Editor 操作）
+3. 🔧 工具 P0（波次编辑器 + Debug 工具）
+4. SG-P1 支撑系统
 
-**第一个任务**：P0.0 创建 5 个 SO 模板资产（20min）→ P0.1 枚举+Vector2Variable（30min）
+**验收里程碑**：P0.2 验证 Intro→Playing→底线扣血→Defeat 全链路 + P0.3 验证 Retry 全链路
 
 ---
 

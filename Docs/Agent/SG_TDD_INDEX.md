@@ -140,7 +140,7 @@
 | FloatVariable / IntVariable | ✅ 已有 | SO 变量通信 |
 | ISaveSystem | ✅ 已有 | 进度存储 |
 | Vector2Variable | ❌ 需新增 | 摇杆方向输出 |
-| EntitySpawner.IsAllWavesCleared | ⚠️ 需确认 | 通关判定 |
+| EntitySpawner.IsAllWavesCleared | ✅ 已确认 | 通关判定 |
 
 ---
 

@@ -1,0 +1,20 @@
+{
+    "name": "Game.ShooterGame.Editor",
+    "rootNamespace": "Game.ShooterGame.Editor",
+    "references": [
+        "MiniGameFramework.Runtime",
+        "Game.ShooterGame",
+        "MiniGameFramework.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
