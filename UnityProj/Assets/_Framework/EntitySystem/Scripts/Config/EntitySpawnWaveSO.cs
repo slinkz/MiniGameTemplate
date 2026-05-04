@@ -54,6 +54,35 @@ namespace MiniGameTemplate.Entity
 
         [Tooltip("阵型（v2.4 新增）")]
         public SpawnFormation Formation;
+
+        [Tooltip("阵型参数")]
+        public FormationConfig FormationParams;
+    }
+
+    /// <summary>
+    /// 阵型可配参数。不同阵型使用不同字段：
+    /// - Random：Radius（散布半径，0=使用 SpawnPoint.AreaRadius）、Jitter
+    /// - Line：Spacing（间距）、Angle（排列角度，0=水平）、Jitter
+    /// - Circle：Radius（圆半径，0=使用 SpawnPoint.AreaRadius）、Angle（起始角度偏移）、Jitter
+    /// - Grid：Spacing（格间距）、Columns（列数，0=自动取 √Count）、Jitter
+    /// </summary>
+    [System.Serializable]
+    public struct FormationConfig
+    {
+        [Tooltip("Line/Grid：相邻单位间距（世界单位）。0 = 使用 SpawnPoint.AreaRadius 自动计算")]
+        public float Spacing;
+
+        [Tooltip("Line：排列角度（度）。0=水平、90=垂直。Circle：起始角度偏移")]
+        public float Angle;
+
+        [Tooltip("Circle/Random：半径（世界单位）。0 = 使用 SpawnPoint.AreaRadius")]
+        public float Radius;
+
+        [Tooltip("Grid：列数。0 = 自动取 ceil(√Count)")]
+        public int Columns;
+
+        [Tooltip("各阵型通用：每个单位附加随机偏移量（噪声）")]
+        public float Jitter;
     }
 
     /// <summary>波次触发模式</summary>

@@ -242,6 +242,11 @@ namespace MiniGameTemplate.Entity
         /// 扫描所有活跃 Entity，超出 KillBounds + KillMargin 的直接秒杀。
         /// 放在 EntityManager.Tick 之后（延迟销毁已执行），Spawner.Tick 之前。
         /// 不走 TakeDamage（避免触发击退等无意义表现），直接 Despawn。
+        /// 
+        /// 按阵营区分检测方向：
+        /// - Enemy：只检测左/右/下三面（上方是出生方向，不击杀）
+        /// - Player：已由 ClampPlayerPositions 约束，此处全四面兜底
+        /// - Neutral/其他：全四面检测
         /// </summary>
         private void KillOutOfBoundsEntities()
         {
@@ -257,7 +262,20 @@ namespace MiniGameTemplate.Entity
                 if (entity.IsPendingDespawn) continue;
 
                 var pos = entity.Position;
-                if (pos.x < xMin || pos.x > xMax || pos.y < yMin || pos.y > yMax)
+                bool outOfBounds;
+
+                if (entity.Camp == Danmaku.EnumCamp.Enemy)
+                {
+                    // 敌兵从上方进场，只有左/右/下越界才击杀
+                    outOfBounds = pos.x < xMin || pos.x > xMax || pos.y < yMin;
+                }
+                else
+                {
+                    // 玩家/中立：全四面检测（玩家有 Clamp 兜底，这里是安全网）
+                    outOfBounds = pos.x < xMin || pos.x > xMax || pos.y < yMin || pos.y > yMax;
+                }
+
+                if (outOfBounds)
                 {
                     // 直接 Despawn（不走伤害流程，避免无意义的死亡特效/击退/伤害数字）
                     _entityManager.Despawn(entity);

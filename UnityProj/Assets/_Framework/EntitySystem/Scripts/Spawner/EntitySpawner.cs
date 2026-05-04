@@ -163,28 +163,40 @@ namespace MiniGameTemplate.Entity
                 ref var gs = ref state.GroupStates[g];
                 if (gs.IsGroupDone) continue;
 
-                gs.SpawnTimer += dt;
                 float interval = gs.Group.SpawnInterval;
-                if (interval <= 0f) interval = 0f; // 0 间隔 = 本帧全部生成
 
-                while (gs.SpawnedCount < gs.Group.Count && gs.SpawnTimer >= interval)
+                if (interval <= 0f)
                 {
-                    gs.SpawnTimer -= Mathf.Max(interval, 0.001f); // 防止 0 间隔死循环
-
-                    // 计算生成位置（Phase 1 只实现 Random）
-                    Vector2 pos = GetSpawnPosition(state.Point, gs.Group.Formation, gs.SpawnedCount, gs.Group.Count);
-
-                    // 生成 Entity（竖屏默认朝下=270°）
-                    var entity = entityManager.Spawn(gs.Group.EntityConfig, pos, 270f);
-                    if (entity != null)
+                    // SpawnInterval=0：一帧内全量生成（不依赖 Timer）
+                    while (gs.SpawnedCount < gs.Group.Count)
                     {
-                        entity.Camp = gs.Group.Camp;
+                        var formCfg = gs.Group.FormationParams;
+                        Vector2 pos = GetSpawnPosition(state.Point, gs.Group.Formation, ref formCfg, gs.SpawnedCount, gs.Group.Count);
+                        var entity = entityManager.Spawn(gs.Group.EntityConfig, pos, 270f);
+                        if (entity != null)
+                        {
+                            entity.Camp = gs.Group.Camp;
+                        }
+                        gs.SpawnedCount++;
                     }
-                    gs.SpawnedCount++;
+                }
+                else
+                {
+                    // SpawnInterval>0：逐个生成，每帧按计时器推进
+                    gs.SpawnTimer += dt;
+                    while (gs.SpawnedCount < gs.Group.Count && gs.SpawnTimer >= interval)
+                    {
+                        gs.SpawnTimer -= interval;
 
-                    // 如果间隔为 0，一帧内全部生成
-                    if (interval <= 0f) continue;
-                    break; // 间隔 > 0 时每帧只生成一个
+                        var formCfg = gs.Group.FormationParams;
+                        Vector2 pos = GetSpawnPosition(state.Point, gs.Group.Formation, ref formCfg, gs.SpawnedCount, gs.Group.Count);
+                        var entity = entityManager.Spawn(gs.Group.EntityConfig, pos, 270f);
+                        if (entity != null)
+                        {
+                            entity.Camp = gs.Group.Camp;
+                        }
+                        gs.SpawnedCount++;
+                    }
                 }
 
                 if (gs.SpawnedCount >= gs.Group.Count)
@@ -204,10 +216,32 @@ namespace MiniGameTemplate.Entity
             // 如果当前波还没生成完，不推进
             if (!IsCurrentWaveSpawnDone(ref state)) return;
 
-            // 根据触发模式判断是否推进到下一波
-            var wave = state.Config.Waves[state.CurrentWaveIndex];
+            // ── 语义：下一波的 TriggerMode 决定"何时开始下一波" ──
+            // 即 TriggerMode 描述的是"我这一波在什么条件满足后才出场"
+            // 对于最后一波 / Loop 尾：用当前波自己的 TriggerMode 判定是否结束
 
-            switch (wave.TriggerMode)
+            int nextIndex = state.CurrentWaveIndex + 1;
+            bool isLastWave = nextIndex >= state.Config.Waves.Length;
+
+            // 确定生效的 TriggerMode：
+            // - 如果还有下一波 → 看下一波的 TriggerMode（下一波何时出场）
+            // - 如果是最后一波 → 看当前波自己的 TriggerMode（用于 Loop 判定 / 通关判定）
+            WaveTriggerMode effectiveMode;
+            float effectiveDelay;
+            if (!isLastWave)
+            {
+                var nextWave = state.Config.Waves[nextIndex];
+                effectiveMode = nextWave.TriggerMode;
+                effectiveDelay = nextWave.TriggerDelay;
+            }
+            else
+            {
+                var currentWave = state.Config.Waves[state.CurrentWaveIndex];
+                effectiveMode = currentWave.TriggerMode;
+                effectiveDelay = currentWave.TriggerDelay;
+            }
+
+            switch (effectiveMode)
             {
                 case WaveTriggerMode.Timer:
                     if (!state.IsWaitingForTrigger)
@@ -217,7 +251,7 @@ namespace MiniGameTemplate.Entity
                         state.WaveTimer = 0f;
                     }
                     state.WaveTimer += dt;
-                    if (state.WaveTimer >= wave.TriggerDelay)
+                    if (state.WaveTimer >= effectiveDelay)
                     {
                         state.IsWaitingForTrigger = false;
                         AdvanceToNextWave(ref state);
@@ -310,31 +344,106 @@ namespace MiniGameTemplate.Entity
             return true;
         }
 
-        private Vector2 GetSpawnPosition(EntitySpawnPoint point, SpawnFormation formation, int index, int total)
+        private Vector2 GetSpawnPosition(EntitySpawnPoint point, SpawnFormation formation,
+            ref FormationConfig cfg, int index, int total)
         {
             Vector2 center = (Vector2)point.transform.position;
-            float radius = point.AreaRadius;
+            float areaRadius = point.AreaRadius;
+            Vector2 pos;
 
             switch (formation)
             {
-                case SpawnFormation.Random:
-                default:
-                    // Phase 1：AreaRadius 内随机散布
-                    Vector2 offset = Random.insideUnitCircle * radius;
-                    return center + offset;
-
                 case SpawnFormation.Line:
-                    // Phase 2 实现：暂时 fallback 到 Random
-                    return center + Random.insideUnitCircle * radius;
+                    pos = CalcLine(center, areaRadius, ref cfg, index, total);
+                    break;
 
                 case SpawnFormation.Circle:
-                    // Phase 2 实现：暂时 fallback 到 Random
-                    return center + Random.insideUnitCircle * radius;
+                    pos = CalcCircle(center, areaRadius, ref cfg, index, total);
+                    break;
 
                 case SpawnFormation.Grid:
-                    // Phase 2 实现：暂时 fallback 到 Random
-                    return center + Random.insideUnitCircle * radius;
+                    pos = CalcGrid(center, areaRadius, ref cfg, index, total);
+                    break;
+
+                case SpawnFormation.Random:
+                default:
+                {
+                    // cfg.Radius > 0 时用自定义半径；否则用 SpawnPoint.AreaRadius
+                    float rRadius = cfg.Radius > 0f ? cfg.Radius : areaRadius;
+                    // 底边对齐：整体上移 rRadius，使最低点 = center.y
+                    pos = center + new Vector2(0f, rRadius) + Random.insideUnitCircle * rRadius;
+                    break;
+                }
             }
+
+            // 通用噪声
+            if (cfg.Jitter > 0f)
+                pos += Random.insideUnitCircle * cfg.Jitter;
+
+            return pos;
+        }
+
+        /// <summary>
+        /// Line 阵型：沿指定角度方向等间距排列。
+        /// Spacing > 0 用固定间距；Spacing = 0 时自动 = 2*AreaRadius/(total-1)。
+        /// Angle = 0 水平，90 垂直。
+        /// </summary>
+        private static Vector2 CalcLine(Vector2 center, float areaRadius,
+            ref FormationConfig cfg, int index, int total)
+        {
+            float spacing = cfg.Spacing > 0f ? cfg.Spacing : (total > 1 ? areaRadius * 2f / (total - 1) : 0f);
+            float totalSpan = spacing * (total - 1);
+            float t = total > 1 ? (float)index / (total - 1) : 0.5f;
+            float offset = -totalSpan * 0.5f + t * totalSpan;
+
+            float rad = cfg.Angle * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            return center + dir * offset;
+        }
+
+        /// <summary>
+        /// Circle 阵型：沿圆周等角度分布。
+        /// Radius > 0 用固定半径；Radius = 0 时用 AreaRadius。
+        /// AngleOffset 控制起始角度。
+        /// 底边对齐 center（整体上移 radius），确保所有怪从屏幕外进场。
+        /// </summary>
+        private static Vector2 CalcCircle(Vector2 center, float areaRadius,
+            ref FormationConfig cfg, int index, int total)
+        {
+            float radius = cfg.Radius > 0f ? cfg.Radius : areaRadius;
+            float angleStep = total > 0 ? 360f / total : 0f;
+            float angle = cfg.Angle + angleStep * index; // cfg.Angle 作为起始角度偏移
+            float rad = angle * Mathf.Deg2Rad;
+            // 底边对齐：整体上移 radius，使阵型最低点 = center.y
+            Vector2 offset = new Vector2(0f, radius);
+            return center + offset + new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * radius;
+        }
+
+        /// <summary>
+        /// Grid 阵型：行列网格排列，底边对齐 center（整体上移）。
+        /// Columns = 0 时自动取 ceil(√total)。
+        /// Spacing > 0 用固定间距；Spacing = 0 时自动 = 2*AreaRadius/(cols-1)。
+        /// 行序从下到上：row=0 是最底行（= center.y），向上递增。
+        /// </summary>
+        private static Vector2 CalcGrid(Vector2 center, float areaRadius,
+            ref FormationConfig cfg, int index, int total)
+        {
+            int cols = cfg.Columns > 0 ? cfg.Columns : Mathf.CeilToInt(Mathf.Sqrt(total));
+            if (cols < 1) cols = 1;
+            int rows = Mathf.CeilToInt((float)total / cols);
+
+            int col = index % cols;
+            int row = index / cols;
+
+            float spacing = cfg.Spacing > 0f ? cfg.Spacing : (cols > 1 ? areaRadius * 2f / (cols - 1) : 0f);
+            float gridW = spacing * (cols - 1);
+            float gridH = spacing * (rows - 1);
+
+            float x = cols > 1 ? -gridW * 0.5f + col * spacing : 0f;
+            // 底边对齐：row=0 在 center.y，向上递增
+            float y = row * spacing;
+
+            return center + new Vector2(x, y);
         }
 
         private void RemoveState(int index)

@@ -82,7 +82,7 @@ namespace Game.ShooterGame.Editor
 
             // 绘制面板
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("\u{1f4ca} 波次统计", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("📊 波次统计", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField($"共 {totalWaves} 波", GUILayout.Width(80));
@@ -174,6 +174,7 @@ namespace Game.ShooterGame.Editor
                     Count = source[i].Count,
                     SpawnInterval = source[i].SpawnInterval,
                     Formation = source[i].Formation,
+                    FormationParams = source[i].FormationParams, // struct 值拷贝
                 };
             }
             return copy;

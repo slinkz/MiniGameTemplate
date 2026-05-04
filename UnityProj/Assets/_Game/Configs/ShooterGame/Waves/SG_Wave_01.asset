@@ -16,25 +16,43 @@ MonoBehaviour:
   - Groups:
     - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
       Camp: 0
-      Count: 3
-      SpawnInterval: 0.5
+      Count: 5
+      SpawnInterval: 0
       Formation: 1
+      FormationParams:
+        Spacing: 1.5
+        Angle: 0
+        Radius: 0
+        Columns: 0
+        Jitter: 0
     TriggerMode: 0
     TriggerDelay: 1
   - Groups:
     - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
       Camp: 0
-      Count: 5
-      SpawnInterval: 0.4
-      Formation: 0
+      Count: 6
+      SpawnInterval: 0
+      Formation: 2
+      FormationParams:
+        Spacing: 0
+        Angle: 0
+        Radius: 3
+        Columns: 0
+        Jitter: 0
     TriggerMode: 1
     TriggerDelay: 0
   - Groups:
     - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
       Camp: 0
-      Count: 4
-      SpawnInterval: 0.3
-      Formation: 0
+      Count: 16
+      SpawnInterval: 0
+      Formation: 3
+      FormationParams:
+        Spacing: 1.5
+        Angle: 0
+        Radius: 0
+        Columns: 4
+        Jitter: 0
     TriggerMode: 1
     TriggerDelay: 0
   Loop: 0

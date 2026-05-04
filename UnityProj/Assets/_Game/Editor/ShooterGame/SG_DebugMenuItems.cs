@@ -70,7 +70,7 @@ namespace Game.ShooterGame.Editor
                     var ctx = new DamageContext
                     {
                         BaseDamage = 99999,
-                        HitType = CollisionEventType.ContactHit,
+                        HitType = MiniGameTemplate.Entity.CollisionEventType.ContactHit,
                     };
                     DamageDealer.DealDamageToEntity(entity, ctx);
                     killed++;
