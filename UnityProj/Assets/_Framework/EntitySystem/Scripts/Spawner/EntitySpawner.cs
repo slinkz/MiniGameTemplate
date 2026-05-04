@@ -37,6 +37,20 @@ namespace MiniGameTemplate.Entity
         /// <summary>当前活跃刷怪点数量</summary>
         public int ActivePointCount => _activeCount;
 
+        /// <summary>
+        /// 获取第一个活跃刷怪点的当前波次索引（0-based）。
+        /// 用于 BattleController 同步 HUD 波次显示。
+        /// 如果没有活跃刷怪点，返回 -1。
+        /// </summary>
+        public int CurrentWaveIndexOfFirst
+        {
+            get
+            {
+                if (_activeCount == 0) return -1;
+                return _states[0].CurrentWaveIndex;
+            }
+        }
+
         // ──────────── 公共 API ────────────
 
         /// <summary>

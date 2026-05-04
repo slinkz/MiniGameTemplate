@@ -79,20 +79,53 @@ namespace Game.ShooterGame.Editor
             Debug.Log($"[SG Debug] 已秒杀 {killed} 架敌机，等待下一波推进");
         }
 
-        /// <summary>设置基地 HP 为 50%</summary>
+        /// <summary>
+        /// 设置基地 HP 为 50%。
+        /// 必须同时修改 HealthComponent（真实 HP）和 FloatVariable SO（HUD 显示比率），
+        /// 否则只改 SO 不改实际 HP → HUD 虽然更新了但下次 Tick 又会被覆盖回去。
+        /// </summary>
         [MenuItem(MENU_SET_HP)]
         private static void SetBaseHP50()
         {
-            var baseHP = SG_EditorUtility.FindSOByName<FloatVariable>("SG_BaseHP");
-            if (baseHP != null)
+            // 1. 找到基地 Entity（Camp=Player 且持有 HealthComponent 且 ConfigSO.name 含 "Base"）
+            var mgr = EntityManagerAccessor.Instance;
+            if (mgr == null) { Debug.LogWarning("[SG Debug] EntityManager 未初始化"); return; }
+
+            HealthComponent baseHealth = null;
+            var entities = mgr.ActiveEntities;
+            for (int i = 0; i < entities.Count; i++)
             {
-                baseHP.SetValue(0.5f);
-                Debug.Log("[SG Debug] 基地 HP 已设为 50%");
+                var entity = entities[i];
+                if (entity.Camp == EnumCamp.Player && !entity.IsPendingDespawn)
+                {
+                    var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
+                    if (health != null && entity.ConfigSO != null
+                        && entity.ConfigSO.name.Contains("Base"))
+                    {
+                        baseHealth = health;
+                        break;
+                    }
+                }
             }
-            else
+
+            if (baseHealth == null)
             {
-                Debug.LogWarning("[SG Debug] 未找到 SG_BaseHP SO");
+                Debug.LogWarning("[SG Debug] 未找到基地 Entity");
+                return;
             }
+
+            // 2. 修改 HealthComponent 的真实 HP
+            int targetHp = Mathf.RoundToInt(baseHealth.MaxHp * 0.5f);
+            baseHealth.SetHp(targetHp);
+
+            // 3. 同步 FloatVariable SO（驱动 HUD 更新）
+            var baseHPVar = SG_EditorUtility.FindSOByName<FloatVariable>("SG_BaseHP");
+            if (baseHPVar != null)
+            {
+                baseHPVar.SetValue(baseHealth.HpRatio);
+            }
+
+            Debug.Log($"[SG Debug] 基地 HP 已设为 50% → {baseHealth.CurrentHp}/{baseHealth.MaxHp}");
         }
 
         // ── Validate（仅 Play Mode 可用）──

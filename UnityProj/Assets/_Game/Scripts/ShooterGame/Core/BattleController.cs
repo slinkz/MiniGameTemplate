@@ -157,11 +157,11 @@ namespace Game.ShooterGame
             // 1. 读取关卡配置
             _currentLevel = _levelConfigs[Mathf.Clamp(_currentLevelIndex.Value, 0, _levelConfigs.Length - 1)];
 
-            // 2. 设置波次计数 SO
+            // 2. 设置波次计数 SO（1-based 展示）
             int totalWaves = _currentLevel.WaveConfig.Waves.Length;
             _totalWaveCount.SetValue(totalWaves);
-            _currentWaveIndex.SetValue(0);
-            _displayWaveIndex = 0;
+            _currentWaveIndex.SetValue(1); // 第一波开始 → 显示 "Wave 1"
+            _displayWaveIndex = 1;
 
             // 3. 计算总敌机数
             int totalEnemy = 0;
@@ -345,15 +345,19 @@ namespace Game.ShooterGame
 
         /// <summary>
         /// 波次推进检测（TDD_03 §5.1）
-        /// V1 五关全部使用 AllCleared 推进模式（PM-008）。
+        /// 直接从 EntitySpawner 读取权威波次索引（0-based），转为 1-based 显示。
+        /// 不再用 aliveEnemies==0 推测——避免多帧空窗期导致跳波。
         /// </summary>
         private void UpdateWaveIndex()
         {
-            int aliveEnemies = CountAliveEnemies();
-            if (aliveEnemies == 0 && !EntityManagerAccessor.Spawner.IsAllWavesCleared
-                && _displayWaveIndex < _totalWaveCount.Value)
+            int spawnerWaveIndex = EntityManagerAccessor.Spawner.CurrentWaveIndexOfFirst;
+            if (spawnerWaveIndex < 0) return; // 无活跃刷怪点
+
+            // 1-based 展示：Spawner 第 0 波 → 显示 "Wave 1"
+            int displayValue = spawnerWaveIndex + 1;
+            if (displayValue != _displayWaveIndex)
             {
-                _displayWaveIndex++;
+                _displayWaveIndex = displayValue;
                 _currentWaveIndex.SetValue(_displayWaveIndex);
             }
         }
@@ -462,9 +466,9 @@ namespace Game.ShooterGame
 
             // 5. 重置 SO 变量
             _baseHP.SetValue(1.0f);
-            _currentWaveIndex.SetValue(0);
+            _currentWaveIndex.SetValue(1);
             _killCount.SetValue(0);
-            _displayWaveIndex = 0;
+            _displayWaveIndex = 1;
 
             // 6. 重新 Spawn 基地 + 玩家
             SpawnBase();
