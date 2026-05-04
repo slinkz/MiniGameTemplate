@@ -1,3 +1,11 @@
+---
+system: shootergame
+scope: ui-controllers
+last_verified: 2026-05-04
+depends_on: [SG_TDD_INDEX, SG_UI_DESIGN]
+related_code: Assets/_Game/Scripts/ShooterGame/UI/*.cs, Assets/_Game/Scripts/ShooterGame/Core/BattleController.cs
+---
+
 # SG_TDD_04: UI Controllers
 
 > 父文档：[SG_TDD_INDEX.md](SG_TDD_INDEX.md)
@@ -156,6 +164,21 @@ namespace Game.ShooterGame.UI
 ### 4.1 职责
 
 血条 + 波次指示 + 暂停按钮 + 飘字 + 受伤红闪。这是最复杂的 UI Controller。
+
+**暂停按钮绑定**（P3 实现）：暂停按钮 `btn_pause_bg` 的 click 事件由 `BattleController.InitBattle()` 直接从 HUD view 获取并绑定到 `OnPauseButtonClicked()`，`OnDestroy()` 中解绑。不通过 BattleHUDController 转发——减少一层间接。
+
+### 4.2 FairyGUI 白模包对照表（P3 新增）
+
+| 包目录 | publish name | 主组件 | 关键子元素 |
+|--------|-------------|--------|-----------|
+| `SG_Loading/` | Loading | LoadingScreen | bar(ProgressBar) |
+| `SG_LevelSelect/` | LevelSelect | LevelSelectScreen | node_1~5(LevelNode) |
+| `SG_Battle/` | Battle | BattleHUD | hp_bar, text_wave, btn_pause_bg |
+| `SG_Battle/components/` | — | FloatingText | text(TextField) |
+| `SG_Battle/components/` | — | Joystick | stick(GGraph) |
+| `SG_Popup/` | Popup | PausePanel | btn_resume, btn_quit |
+| `SG_Popup/` | Popup | VictoryPanel | btn_confirm, text_kills, text_hp |
+| `SG_Popup/` | Popup | DefeatPanel | btn_retry, btn_quit, text_progress, text_encourage |
 
 ### 4.2 关键接口
 

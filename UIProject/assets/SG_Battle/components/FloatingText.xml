@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="80,30">
+  <displayList>
+    <text id="gen_05" name="text" xy="0,0" size="80,30"
+          fontSize="18" color="#ffffc107" bold="true"
+          align="center" vAlign="middle" autoSize="both"
+          strokeColor="#ff000000" stroke="2" text="+10"/>
+  </displayList>
+</component>

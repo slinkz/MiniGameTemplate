@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="sg01ld02">
+  <resources>
+    <component id="gen_01" name="LoadingScreen.xml" path="/" exported="true"/>
+  </resources>
+  <publish name="Loading" genCode="true">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

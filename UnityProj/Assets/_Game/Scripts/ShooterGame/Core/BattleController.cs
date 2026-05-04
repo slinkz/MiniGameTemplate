@@ -148,6 +148,11 @@ namespace Game.ShooterGame
             var mgr = EntityManagerAccessor.Instance;
             if (mgr != null)
                 mgr.OnDespawned -= OnEntityDespawned;
+
+            // 清理暂停按钮事件绑定
+            var hudView = _hudController?.GetView();
+            var btnPause = hudView?.GetChild("btn_pause_bg");
+            btnPause?.onClick.Remove(OnPauseButtonClicked);
         }
 
         // ── 初始化 ──
@@ -189,7 +194,17 @@ namespace Game.ShooterGame
 
             // 9. 初始化 UI Controllers（ET-007）
             _hudController?.Show();
-            _joystickController?.Init(_hudController?.GetView());
+            var hudView = _hudController?.GetView();
+            _joystickController?.Init(hudView);
+
+            // 暂停按钮：从 HUD view 中获取并绑定（TDD_04 §4 + UI Design §2.3）
+            if (hudView != null)
+            {
+                var btnPause = hudView.GetChild("btn_pause_bg");
+                if (btnPause != null)
+                    btnPause.onClick.Add(OnPauseButtonClicked);
+            }
+
             _defeatPanel?.BindEvents(
                 () => StartCoroutine(HandleRetry()),
                 () => StartCoroutine(HandleDefeatQuit()));

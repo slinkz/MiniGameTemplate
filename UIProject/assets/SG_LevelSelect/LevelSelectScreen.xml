@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <graph id="gen_10" name="bg" xy="0,0" size="750,1334"
+           type="rect" fillColor="#ff1a1a2e"/>
+    <text id="gen_11" name="text_title" xy="40,60" size="670,40"
+          fontSize="28" color="#ffffff" bold="true"
+          align="center" autoSize="none" text="选择关卡"/>
+    <graph id="gen_12" name="path_line" xy="370,200" size="4,900"
+           type="rect" fillColor="#ff444444"/>
+    <component id="gen_13" name="node_1" src="gen_02"
+               fileName="components/LevelNode.xml" xy="332,980" size="80,80"/>
+    <graph id="gen_14" name="conn_1_2" xy="370,870" size="4,110"
+           type="rect" fillColor="#ff4fc3f7"/>
+    <component id="gen_15" name="node_2" src="gen_02"
+               fileName="components/LevelNode.xml" xy="332,790" size="80,80"/>
+    <graph id="gen_16" name="conn_2_3" xy="370,680" size="4,110"
+           type="rect" fillColor="#ff555555"/>
+    <component id="gen_17" name="node_3" src="gen_02"
+               fileName="components/LevelNode.xml" xy="332,600" size="80,80"/>
+    <graph id="gen_18" name="conn_3_4" xy="370,490" size="4,110"
+           type="rect" fillColor="#ff555555"/>
+    <component id="gen_19" name="node_4" src="gen_02"
+               fileName="components/LevelNode.xml" xy="332,410" size="80,80"/>
+    <graph id="gen_20" name="conn_4_5" xy="370,300" size="4,110"
+           type="rect" fillColor="#ff555555"/>
+    <component id="gen_21" name="node_5" src="gen_02"
+               fileName="components/LevelNode.xml" xy="332,220" size="80,80"/>
+  </displayList>
+</component>

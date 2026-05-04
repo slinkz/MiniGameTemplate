@@ -20,7 +20,7 @@ namespace Game.ShooterGame.UI
         // FairyGUI 元素
         private GGraph _touchArea;
         private GComponent _joystickBase;
-        private GComponent _joystickStick;
+        private GObject _joystickStick;
 
         // 状态
         private bool _isActive;
@@ -43,7 +43,7 @@ namespace Game.ShooterGame.UI
             _joystickBase.visible = false;
             battleHUD.AddChild(_joystickBase);
 
-            _joystickStick = _joystickBase.GetChild("stick").asCom;
+            _joystickStick = _joystickBase.GetChild("stick");
 
             // 绑定事件
             _touchArea.onTouchBegin.Add(OnTouchBegin);

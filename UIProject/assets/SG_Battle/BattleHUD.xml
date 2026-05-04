@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <graph id="gen_08" name="bg" xy="0,0" size="750,1334"
+           type="rect" fillColor="#00000000"/>
+    <graph id="gen_09" name="btn_pause_bg" xy="16,50" size="44,44"
+           type="eclipse" fillColor="#66ffffff"/>
+    <text id="gen_10" name="btn_pause_text" xy="16,50" size="44,44"
+          fontSize="24" color="#ffffff" align="center" vAlign="middle"
+          autoSize="none" text="⏸"/>
+    <text id="gen_11" name="text_wave" xy="550,55" size="180,30"
+          fontSize="20" color="#ffffff" align="right" autoSize="none"
+          text="Wave 1/5"/>
+    <graph id="gen_12" name="hp_bar_bg" xy="16,1260" size="718,12"
+           type="rect" fillColor="#ff444444" corner="6"/>
+    <progressBar id="gen_13" name="hp_bar" xy="16,1260" size="718,12"
+                 titleType="percent">
+      <graph id="gen_14" name="bar" xy="0,0" size="718,12"
+             type="rect" fillColor="#ff4caf50" corner="6">
+        <relation target="" sidePair="height-height"/>
+      </graph>
+    </progressBar>
+    <text id="gen_15" name="text_hp_pct" xy="620,1238" size="100,20"
+          fontSize="18" color="#ffffff" align="right" autoSize="none"
+          text="100%"/>
+    <graph id="gen_16" name="red_flash" xy="0,0" size="750,1334"
+           type="rect" fillColor="#00ef5350" touchable="false"/>
+  </displayList>
+</component>

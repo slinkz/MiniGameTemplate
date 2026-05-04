@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="sg04pp05">
+  <resources>
+    <component id="gen_01" name="PausePanel.xml" path="/" exported="true"/>
+    <component id="gen_02" name="VictoryPanel.xml" path="/" exported="true"/>
+    <component id="gen_03" name="DefeatPanel.xml" path="/" exported="true"/>
+    <component id="gen_04" name="SG_PopupButton.xml" path="/components/"/>
+    <component id="gen_05" name="SG_SecondaryButton.xml" path="/components/"/>
+  </resources>
+  <publish name="Popup" genCode="true">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

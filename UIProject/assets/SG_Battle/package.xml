@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="sg03bt04">
+  <resources>
+    <component id="gen_01" name="BattleHUD.xml" path="/" exported="true"/>
+    <component id="gen_02" name="FloatingText.xml" path="/components/"/>
+    <component id="gen_03" name="Joystick.xml" path="/components/"/>
+    <component id="gen_04" name="SG_PrimaryButton.xml" path="/components/"/>
+  </resources>
+  <publish name="Battle" genCode="true">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

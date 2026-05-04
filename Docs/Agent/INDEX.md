@@ -27,6 +27,7 @@
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
 | ShooterGame 编辑器工具 | SG_TOOLS_TDD_INDEX → 01~02 | 工具 TDD：波次编辑器 + Debug + Gizmo |
 | 验收工具 P0 | SG_TOOLS_P0_ACCEPTANCE | 11 项验收步骤 + 行动指导 |
+| 验收 P3 FairyGUI | SG_P3_ACCEPTANCE_PLAN | 白模包导入 + 发布 + PlayMode 验证 |
 | ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
 | 理解 Tick 执行顺序 | EC_TDD_02_CORE_ARCH §3.3 | TickOrders 常量表 |
@@ -59,6 +60,7 @@
 | `_Game/Scripts/ShooterGame/Input/*.cs` | SG_TDD_05 + SG_DEV_PLAN | SG 输入桥接 |
 | `_Game/Scripts/ShooterGame/UI/*.cs` | SG_TDD_04 + SG_DEV_PLAN | SG UI Controllers |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
+| `UIProject/assets/SG_*/**` | SG_TDD_04 §4.2 + SG_UI_DESIGN | SG FairyGUI 白模包（4包16 XML） |
 
 ---
 
@@ -118,4 +120,5 @@
 | SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
 | SG_NEXT_PHASE_GUIDE | — | — | ShooterGame 下一阶段行动指导（P0验收后→工具P0→P3→P4） |
 | SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收计划（✅ PlayMode 验收通过） |
-| SG_TOOLS_P0_ACCEPTANCE | — | — | 🔧 工具 P0 验收手册（⬜ 待天命人验收） |
+| SG_TOOLS_P0_ACCEPTANCE | — | — | 🔧 工具 P0 验收手册（✅ 验收通过） |
+| SG_P3_ACCEPTANCE_PLAN | — | — | SG-P3 FairyGUI 白模包验收计划（⬜ 待天命人验收） |

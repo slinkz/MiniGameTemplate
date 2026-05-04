@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <graph id="gen_14" name="mask" xy="0,0" size="750,1334"
+           type="rect" fillColor="#99000000" touchable="true"/>
+    <graph id="gen_15" name="panel_bg" xy="125,440" size="500,450"
+           type="rect" fillColor="#ff2d2d44" corner="16"/>
+    <text id="gen_16" name="text_title" xy="175,480" size="400,40"
+          fontSize="28" color="#ffffff" bold="true"
+          align="center" autoSize="none" text="⏸ 游戏暂停"/>
+    <component id="gen_17" name="btn_resume" src="gen_04"
+               fileName="components/SG_PopupButton.xml" xy="235,600" size="280,56">
+      <Button title="▶ 继续游戏"/>
+    </component>
+    <component id="gen_18" name="btn_quit" src="gen_05"
+               fileName="components/SG_SecondaryButton.xml" xy="275,700" size="200,44">
+      <Button title="✕ 退出关卡"/>
+    </component>
+  </displayList>
+</component>

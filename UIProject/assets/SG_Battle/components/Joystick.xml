@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="120,120">
+  <displayList>
+    <graph id="gen_06" name="base_circle" xy="0,0" size="120,120"
+           type="eclipse" fillColor="#4dffffff"/>
+    <graph id="gen_07" name="stick" xy="35,35" size="50,50"
+           type="eclipse" fillColor="#99ffffff"/>
+  </displayList>
+</component>

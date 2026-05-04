@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <graph id="gen_19" name="mask" xy="0,0" size="750,1334"
+           type="rect" fillColor="#99000000" touchable="true"/>
+    <graph id="gen_20" name="panel_bg" xy="100,330" size="550,600"
+           type="rect" fillColor="#ff2d2d44" corner="16"/>
+    <text id="gen_21" name="text_victory" xy="150,380" size="450,50"
+          fontSize="36" color="#ffffc107" bold="true"
+          align="center" autoSize="none" text="✦ VICTORY ✦"/>
+    <graph id="gen_22" name="divider1" xy="150,450" size="450,1"
+           type="rect" fillColor="#ff555555"/>
+    <text id="gen_23" name="text_kills" xy="150,480" size="450,30"
+          fontSize="22" color="#ffffff" align="center" autoSize="none"
+          text="击杀数：25"/>
+    <text id="gen_24" name="text_hp" xy="150,530" size="450,30"
+          fontSize="22" color="#ffffff" align="center" autoSize="none"
+          text="剩余血量：72%"/>
+    <text id="gen_25" name="text_stars" xy="150,590" size="450,40"
+          fontSize="32" color="#ffffc107" align="center" autoSize="none"
+          text="★ ★ ★"/>
+    <graph id="gen_26" name="divider2" xy="150,650" size="450,1"
+           type="rect" fillColor="#ff555555"/>
+    <component id="gen_27" name="btn_confirm" src="gen_04"
+               fileName="components/SG_PopupButton.xml" xy="235,700" size="280,56">
+      <Button title="确  定"/>
+    </component>
+  </displayList>
+</component>

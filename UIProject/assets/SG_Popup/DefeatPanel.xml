@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <graph id="gen_28" name="mask" xy="0,0" size="750,1334"
+           type="rect" fillColor="#99000000" touchable="true"/>
+    <graph id="gen_29" name="panel_bg" xy="100,380" size="550,550"
+           type="rect" fillColor="#ff2d2d44" corner="16"/>
+    <text id="gen_30" name="text_defeat" xy="150,420" size="450,40"
+          fontSize="28" color="#ffef5350" bold="true"
+          align="center" autoSize="none" text="DEFEAT"/>
+    <graph id="gen_31" name="divider" xy="150,480" size="450,1"
+           type="rect" fillColor="#ff555555"/>
+    <text id="gen_32" name="text_progress" xy="150,510" size="450,30"
+          fontSize="22" color="#ffffff" align="center" autoSize="none"
+          text="消灭了 18/25 架"/>
+    <text id="gen_33" name="text_encourage" xy="150,570" size="450,30"
+          fontSize="22" color="#ffffc107" align="center" autoSize="none"
+          text="再来一次！"/>
+    <component id="gen_34" name="btn_retry" src="gen_04"
+               fileName="components/SG_PopupButton.xml" xy="235,640" size="280,56">
+      <Button title="↻ 再试一次"/>
+    </component>
+    <component id="gen_35" name="btn_quit" src="gen_05"
+               fileName="components/SG_SecondaryButton.xml" xy="275,720" size="200,44">
+      <Button title="返回选关"/>
+    </component>
+  </displayList>
+</component>
