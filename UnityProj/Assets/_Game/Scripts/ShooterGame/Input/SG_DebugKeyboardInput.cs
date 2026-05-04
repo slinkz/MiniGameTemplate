@@ -12,6 +12,8 @@ namespace Game.ShooterGame
     {
         [SerializeField] private Vector2Variable _inputDirection;
 
+        private bool _hadInputLastFrame;
+
         private void Update()
         {
             if (_inputDirection == null) return;
@@ -19,9 +21,20 @@ namespace Game.ShooterGame
             float h = Input.GetAxisRaw("Horizontal");
             float v = Input.GetAxisRaw("Vertical");
 
-            // 没有键盘输入时不覆盖摇杆值——两者可共存
-            if (Mathf.Approximately(h, 0f) && Mathf.Approximately(v, 0f))
+            bool hasInput = !Mathf.Approximately(h, 0f) || !Mathf.Approximately(v, 0f);
+
+            if (!hasInput)
+            {
+                // 键盘松开那一帧清零，之后不再覆盖（让摇杆可接管）
+                if (_hadInputLastFrame)
+                {
+                    _inputDirection.SetValue(Vector2.zero);
+                    _hadInputLastFrame = false;
+                }
                 return;
+            }
+
+            _hadInputLastFrame = true;
 
             var dir = new Vector2(h, v);
 

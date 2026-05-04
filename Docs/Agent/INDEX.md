@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-03 | 文件总数：61
+> 最后更新：2026-05-04 | 文件总数：62
 
 ---
 
@@ -26,6 +26,7 @@
 | 开发 ShooterGame | SG_GAME_DESIGN + SG_UI_DESIGN | 飞行弹幕射击游戏设计 + UI/交互设计 |
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
 | ShooterGame 编辑器工具 | SG_TOOLS_TDD_INDEX → 01~02 | 工具 TDD：波次编辑器 + Debug + Gizmo |
+| 验收工具 P0 | SG_TOOLS_P0_ACCEPTANCE | 11 项验收步骤 + 行动指导 |
 | ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
 | 理解 Tick 执行顺序 | EC_TDD_02_CORE_ARCH §3.3 | TickOrders 常量表 |
@@ -117,3 +118,4 @@
 | SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
 | SG_NEXT_PHASE_GUIDE | — | — | ShooterGame 下一阶段行动指导（P0验收后→工具P0→P3→P4） |
 | SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收计划（✅ PlayMode 验收通过） |
+| SG_TOOLS_P0_ACCEPTANCE | — | — | 🔧 工具 P0 验收手册（⬜ 待天命人验收） |

@@ -5,6 +5,9 @@ using MiniGameTemplate.Data;
 using MiniGameTemplate.Danmaku;
 using MiniGameTemplate.Entity;
 using EntityClass = MiniGameTemplate.Entity.Entity;
+#if UNITY_EDITOR
+using Unity.Profiling;
+#endif
 
 namespace Game.ShooterGame
 {
@@ -16,6 +19,20 @@ namespace Game.ShooterGame
     public class BattleController : MonoBehaviour
     {
         private const string SCENE_BOOT = "Boot";
+
+#if UNITY_EDITOR
+        // ── ProfilerMarker ──
+        private static readonly ProfilerMarker s_TickPlayingMarker =
+            new ProfilerMarker("SG.BattleController.TickPlaying");
+        private static readonly ProfilerMarker s_BaseLineDetectMarker =
+            new ProfilerMarker("SG.BaseLineDetector.Tick");
+
+        // ── Debug 字段（Inspector 可视化）──
+        [Header("== DEBUG (编辑器专用) ==")]
+        [SerializeField] private string _debug_CurrentState;
+        [SerializeField] private float _debug_StateTimer;
+        [SerializeField] private int _debug_AliveEnemyCount;
+#endif
 
         [Header("关卡配置")]
         [SerializeField] private SG_LevelConfigSO[] _levelConfigs;
@@ -70,6 +87,7 @@ namespace Game.ShooterGame
 #if UNITY_EDITOR
         public void DebugForceVictory() => EnterState(BattleState.Victory);
         public void DebugForceDefeat() => EnterState(BattleState.Defeat);
+        public void DebugRetryBattle() => StartCoroutine(HandleRetry());
 #endif
 
         // ── 生命周期 ──
@@ -264,44 +282,64 @@ namespace Game.ShooterGame
 
         private void TickPlaying(float dt)
         {
-            // 1. 底线检测
-            bool baseDead = _baseLineDetector.Tick(EntityManagerAccessor.Instance);
-
-            // 1b. 底线突破反馈（ET-003: 由 BattleController 触发，不污染 Detector）
-            if (_baseLineDetector.HasBreachThisFrame)
+#if UNITY_EDITOR
+            using (s_TickPlayingMarker.Auto())
+#endif
             {
-                _cameraShaker.Shake(
-                    _shakeConfig.BaseHitDuration,
-                    _shakeConfig.BaseHitIntensity,
-                    _shakeConfig.BaseHitDecayCurve);
-            }
-
-            if (baseDead)
-            {
-                EnterState(BattleState.Defeat);
-                return;
-            }
-
-            // 2. 波次推进检测
-            UpdateWaveIndex();
-
-            // 3. 通关判定
-            if (EntityManagerAccessor.Spawner.IsAllWavesCleared)
-            {
-                bool hasAliveEnemy = false;
-                var entities = EntityManagerAccessor.Instance.ActiveEntities;
-                for (int i = 0; i < entities.Count; i++)
+                // 1. 底线检测
+#if UNITY_EDITOR
+                bool baseDead;
+                using (s_BaseLineDetectMarker.Auto())
                 {
-                    if (entities[i].Camp == EnumCamp.Enemy && !entities[i].IsPendingDespawn)
+                    baseDead = _baseLineDetector.Tick(EntityManagerAccessor.Instance);
+                }
+#else
+                bool baseDead = _baseLineDetector.Tick(EntityManagerAccessor.Instance);
+#endif
+
+                // 1b. 底线突破反馈（ET-003: 由 BattleController 触发，不污染 Detector）
+                if (_baseLineDetector.HasBreachThisFrame)
+                {
+                    _cameraShaker.Shake(
+                        _shakeConfig.BaseHitDuration,
+                        _shakeConfig.BaseHitIntensity,
+                        _shakeConfig.BaseHitDecayCurve);
+                }
+
+                if (baseDead)
+                {
+                    EnterState(BattleState.Defeat);
+                    return;
+                }
+
+                // 2. 波次推进检测
+                UpdateWaveIndex();
+
+                // 3. 通关判定
+                if (EntityManagerAccessor.Spawner.IsAllWavesCleared)
+                {
+                    bool hasAliveEnemy = false;
+                    var entities = EntityManagerAccessor.Instance.ActiveEntities;
+                    for (int i = 0; i < entities.Count; i++)
                     {
-                        hasAliveEnemy = true;
-                        break;
+                        if (entities[i].Camp == EnumCamp.Enemy && !entities[i].IsPendingDespawn)
+                        {
+                            hasAliveEnemy = true;
+                            break;
+                        }
+                    }
+                    if (!hasAliveEnemy)
+                    {
+                        EnterState(BattleState.Victory);
                     }
                 }
-                if (!hasAliveEnemy)
-                {
-                    EnterState(BattleState.Victory);
-                }
+
+#if UNITY_EDITOR
+                // Debug 字段更新
+                _debug_CurrentState = CurrentState.ToString();
+                _debug_StateTimer = _stateTimer;
+                _debug_AliveEnemyCount = CountAliveEnemies();
+#endif
             }
         }
 
@@ -476,12 +514,32 @@ namespace Game.ShooterGame
         // ── Gizmo：BaseLineY 可视化 ──
 
 #if UNITY_EDITOR
+        private EntitySystemBootstrap _cachedBootstrap;
+
         private void OnDrawGizmos()
         {
+            // AT-008: 缓存 bootstrap 引用，null 时重新查找
+            if (_cachedBootstrap == null)
+                _cachedBootstrap = FindObjectOfType<EntitySystemBootstrap>();
+
+            float xMin = -6f, xMax = 6f;
+            if (_cachedBootstrap != null)
+            {
+                xMin = _cachedBootstrap.KillBounds.xMin;
+                xMax = _cachedBootstrap.KillBounds.xMax;
+            }
+
+            // 底线红色横线
             Gizmos.color = Color.red;
-            Gizmos.DrawLine(
-                new Vector3(-20f, _baseLineY, 0f),
-                new Vector3(20f, _baseLineY, 0f));
+            Vector3 left = new Vector3(xMin, _baseLineY, 0f);
+            Vector3 right = new Vector3(xMax, _baseLineY, 0f);
+            Gizmos.DrawLine(left, right);
+
+            // 标签
+            UnityEditor.Handles.Label(
+                new Vector3(xMin, _baseLineY + 0.3f, 0f),
+                $"BaseLine Y={_baseLineY:F1}",
+                new GUIStyle { normal = { textColor = Color.red }, fontSize = 10 });
         }
 #endif
     }

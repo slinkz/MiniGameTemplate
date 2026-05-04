@@ -2,8 +2,8 @@
 
 > **项目**：纵版飞行弹幕射击 · 微信小游戏  
 > **文档版本**：基于 TDD v1.4 / GDD v3.2 / UI Design v2.0  
-> **日期**：2026-05-03  
-> **状态**：🟢 SG-P0 PlayMode 验收通过 + P1/P2（键盘替代）验收通过 + 代码评审通过（2026-05-03）
+> **日期**：2026-05-04  
+> **状态**：🟢 SG-P0~P2 人工验收通过 + 🔧 工具 P0 编码完成 + 代码评审通过（2026-05-04）
 
 ---
 
@@ -100,16 +100,29 @@
 4. `GComponent.TweenKillAll()` 不存在 → 改为 `GTween.Kill(ft)`
 5. Retry 时未重置 `_spawnerStarted` → 已修复
 
-### 🔧 工具 P0：编辑器工具（2.75h）
+### 🔧 工具 P0：编辑器工具（2.75h）✅ 已完成（2026-05-04）
 
-| # | 工具 | 预估 | 依赖 |
-|---|------|------|------|
-| T1 | 波次编辑器：一键复制最后一波 | 1h | 框架 EntitySpawnWaveSO |
-| T2 | 波次编辑器：统计面板 | 0.75h | 同上 |
-| T3 | Debug 字段 + ProfilerMarker | 30min | 核心 P0.2 |
-| T4 | 5 个 Debug MenuItem | 20min | 核心 P0.2 |
-| T5 | JoystickConfigSO（核心 TDD_05 覆盖） | 15min | — |
-| T6 | BaseLineY Gizmo（含在 BattleController） | — | 核心 P0.2 |
+| # | 工具 | 预估 | 依赖 | 状态 |
+|---|------|------|------|------|
+| T1 | 波次编辑器：一键复制最后一波 | 1h | 框架 EntitySpawnWaveSO | ✅ |
+| T2 | 波次编辑器：统计面板 | 0.75h | 同上 | ✅ |
+| T3 | Debug 字段 + ProfilerMarker | 30min | 核心 P0.2 | ✅ |
+| T4 | 5 个 Debug MenuItem | 20min | 核心 P0.2 | ✅ |
+| T5 | JoystickConfigSO（核心 TDD_05 覆盖） | 15min | — | ✅ P0 已含 |
+| T6 | BaseLineY Gizmo（含在 BattleController） | — | 核心 P0.2 | ✅ |
+
+**工具 P0 编码产出**（4 个新文件 + 1 个修改文件）：
+- `SG_SpawnWaveSOEditor.cs` — 波次编辑器：统计面板 + 一键复制最后一波
+- `SG_EditorUtility.cs` — 公共编辑器工具类（FindBC / EntityCount / SetSOValue）
+- `SG_DebugMenuItems.cs` — 5 个 Debug 快捷菜单（仅 Play Mode）
+- `SG_BattleStateWindow.cs` — 战斗状态监视面板（实时 SO + Entity 统计）
+- `BattleController.cs`（修改）— ProfilerMarker + Gizmo 升级 + Debug 字段 + DebugRetryBattle
+
+**工具 P0 偏离项**：
+1. `DamageDealer.ApplyDamage` → 实际 API `DealDamageToEntity(entity, ctx)` — 合理偏离
+2. `EnumCamp.Ally` 不存在 → 仅用 `Enemy/Player/Neutral` — 已适配
+3. `RetryBattle()` 不存在 → 新增 `DebugRetryBattle()` — 已适配
+4. 战斗状态监视面板（TDD P1 T7）一并纳入工具 P0 实现 — 提前完成
 
 ### SG-P1：支撑系统（3.5h 含调试）
 
@@ -127,12 +140,12 @@
 | P2.1 | 虚拟摇杆 | JoystickConfigSO + JoystickController | 1.5h | 触摸→摇杆显示→方向输出→松手归零 |
 | P2.2 | 输入桥接 | SG_PlayerInputBridge | 30min | 摇杆→飞机移动→Y 轴正确 |
 
-### 🔧 工具 P1：监视 + Gizmo（1.5h）
+### 🔧 工具 P1：监视 + Gizmo（0.5h — T7 已提前完成）
 
-| # | 工具 | 预估 | 依赖 |
-|---|------|------|------|
-| T7 | 战斗状态监视 EditorWindow | 1h | 核心 P0.3 + SO 资产 |
-| T8 | 摇杆 Gizmo 叠加 | 30min | 核心 P2.1 |
+| # | 工具 | 预估 | 依赖 | 状态 |
+|---|------|------|------|------|
+| T7 | 战斗状态监视 EditorWindow | 1h | 核心 P0.3 + SO 资产 | ✅ 已在工具 P0 完成 |
+| T8 | 摇杆 Gizmo 叠加 | 30min | 核心 P2.1 | ⬜ 待 FairyGUI 摇杆接入后 |
 
 ### SG-P3：UI 层（11h 含调试）
 
@@ -188,7 +201,11 @@ Assets/_Game/
 │       ├── DefeatPanelController.cs
 │       └── JoystickController.cs
 ├── Editor/ShooterGame/
-│   └── Game.ShooterGame.Editor.asmdef
+│   ├── Game.ShooterGame.Editor.asmdef
+│   ├── SG_SpawnWaveSOEditor.cs
+│   ├── SG_EditorUtility.cs
+│   ├── SG_DebugMenuItems.cs
+│   └── SG_BattleStateWindow.cs
 └── _Framework/DataSystem/Scripts/Variables/
     └── Vector2Variable.cs (框架层新增)
 ```
@@ -233,18 +250,18 @@ Game.ShooterGame.Editor   → 编辑器工具（仅 Editor 平台）
 
 ## 🎯 下一步
 
-**当前状态**：SG-P0 PlayMode 验收通过 ✅ + P1/P2（键盘替代）验收通过 ✅ + 代码评审通过 ✅
+**当前状态**：SG-P0~P2 人工验收通过 ✅ + 🔧 工具 P0 编码 + 代码评审通过 ✅（2026-05-04）
 
-**PlayMode 验收结果**（2026-05-03 22:00）：
-- B1 Intro→Playing：✅ 1.5s 自动转换
-- B2 敌机生成：✅ 3 波 12 个敌机生成
-- B3 底线突破扣血：✅ BaseHP 1.0→0.7（2 个突破）
-- B4~B6 Defeat/Retry/Victory：✅ 自动完成（10 击杀→Victory）
-- C1~C4 SO 变量绑定：✅ 全部实时反映
-- 控制台错误：✅ 零
+**工具 P0 验收结果**（2026-05-04 12:45）：
+- SG_SpawnWaveSOEditor：统计面板 + 一键复制 — ✅ 编译通过
+- SG_DebugMenuItems：5 个 Debug 菜单（ForceRetry/Victory/Defeat/SkipWave/SetHP）— ✅ 编译通过
+- BattleController 增强：ProfilerMarker + Gizmo 升级 + Debug 字段 — ✅ 编译通过
+- SG_BattleStateWindow：战斗状态监视面板 — ✅ 编译通过
+- TDD 合规评审：3 项合理偏离（已记录）— ✅ PASS
+- 代码评审：CL-1~CL-8 全 PASS — ✅
 
 **紧接任务**：
-1. 🔧 工具 P0（波次编辑器 + Debug 工具）
+1. ⬜ **天命人验收工具 P0**（验收手册已落地）
 2. SG-P3 UI 层（FairyGUI 包制作 + Controller 接入）
 3. SG-P4 集成验收（5 关配置 + 全链路）
 
