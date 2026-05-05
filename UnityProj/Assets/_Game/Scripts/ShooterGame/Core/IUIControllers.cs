@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using FairyGUI;
 
 namespace Game.ShooterGame
@@ -9,6 +10,7 @@ namespace Game.ShooterGame
     public interface IBattleHUDController
     {
         void Show();
+        Task ShowAsync();
         void ForceRefresh();
         GComponent GetView();
     }

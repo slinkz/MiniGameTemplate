@@ -11,7 +11,7 @@ namespace Game.ShooterGame.UI
     /// </summary>
     public class JoystickController : MonoBehaviour, IJoystickController
     {
-        private const string FGUI_PKG = "Battle";
+        private const string FGUI_PKG = "SG_Battle";
         private const string FGUI_JOYSTICK = "Joystick";
 
         [SerializeField] private JoystickConfigSO _config;

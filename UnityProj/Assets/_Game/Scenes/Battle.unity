@@ -122,6 +122,151 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &259125598
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 259125600}
+  - component: {fileID: 259125599}
+  m_Layer: 0
+  m_Name: BattleSceneBootstrapper
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &259125599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 259125598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 773189139e9b5a84482120a216f526cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _gameConfig: {fileID: 11400000, guid: 85247d8cb2806804aaef258976467ec0, type: 2}
+  _assetConfig: {fileID: 11400000, guid: 621a653f016bc4247bfed42faf0483c1, type: 2}
+--- !u!4 &259125600
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 259125598}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.6528212, y: 1.2495921, z: 0.02312577}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &489195640
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 489195641}
+  - component: {fileID: 489195642}
+  m_Layer: 0
+  m_Name: DefeatPanelController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &489195641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 489195640}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2063514505}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &489195642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 489195640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 606c76fac0aa4e848857f4fdd7a4c454, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _killCount: {fileID: 11400000, guid: 72ef00e272f0faf4a8eefc963fec20ca, type: 2}
+  _totalEnemyCount: {fileID: 11400000, guid: 1f86f5d5920cca94a9a7ac1adcaee5b1, type: 2}
+--- !u!1 &579917704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 579917705}
+  - component: {fileID: 579917706}
+  m_Layer: 0
+  m_Name: BattleHUDController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &579917705
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579917704}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2063514505}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &579917706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579917704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 371244c95e5efa84a809f52f721075ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _baseHP: {fileID: 11400000, guid: 6bff7144902bdfe4fb3ea95cd5e13424, type: 2}
+  _currentWaveIndex: {fileID: 11400000, guid: 4bbcea22fe5f293409818d62bcc294f5, type: 2}
+  _totalWaveCount: {fileID: 11400000, guid: 6358ca9909ca01547b96dfac915e668e, type: 2}
+  _hpGreen: {r: 0.3, g: 0.85, b: 0.3, a: 1}
+  _hpYellow: {r: 0.9, g: 0.85, b: 0.2, a: 1}
+  _hpRed: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  Debug_DisplayHP: 0
+  Debug_TargetHP: 0
+  Debug_ActiveFloatingTextCount: 0
 --- !u!1 &788688979
 GameObject:
   m_ObjectHideFlags: 0
@@ -241,7 +386,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 23
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -345,6 +490,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0d2556a1dc512a4bbc278c6579e3ee7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _debug_CurrentState: 
+  _debug_StateTimer: 0
+  _debug_AliveEnemyCount: 0
   _levelConfigs:
   - {fileID: 11400000, guid: 99dc46d80ead5604984ddb4f48275e2e, type: 2}
   _currentLevelIndex: {fileID: 11400000, guid: ad7726193313ac8489bfea0feac56830, type: 2}
@@ -361,11 +509,11 @@ MonoBehaviour:
   _baseEntityConfig: {fileID: 11400000, guid: ddf8505016d2b6d45be1fee200b4aae1, type: 2}
   _playerEntityConfig: {fileID: 11400000, guid: 20b8573ba6d35424b95d125e1b23d630, type: 2}
   _spawnPoint: {fileID: 1335424289}
-  _hudControllerRef: {fileID: 0}
-  _pausePanelRef: {fileID: 0}
-  _victoryPanelRef: {fileID: 0}
-  _defeatPanelRef: {fileID: 0}
-  _joystickControllerRef: {fileID: 0}
+  _hudControllerRef: {fileID: 579917706}
+  _pausePanelRef: {fileID: 1955540016}
+  _victoryPanelRef: {fileID: 2134181145}
+  _defeatPanelRef: {fileID: 489195642}
+  _joystickControllerRef: {fileID: 2074278862}
   _playerInputBridge: {fileID: 1740805478}
 --- !u!4 &1736835541
 Transform:
@@ -441,3 +589,175 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputDirection: {fileID: 11400000, guid: 79a82c9247a02ec46802b11b864d1ec6, type: 2}
+--- !u!1 &1955540014
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1955540015}
+  - component: {fileID: 1955540016}
+  m_Layer: 0
+  m_Name: PausePanelController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1955540015
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1955540014}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2063514505}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1955540016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1955540014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a861b2f0304c85d4dbeed3caa92b562d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &2063514504
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2063514505}
+  m_Layer: 0
+  m_Name: UIControllers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2063514505
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063514504}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 579917705}
+  - {fileID: 2074278861}
+  - {fileID: 1955540015}
+  - {fileID: 2134181144}
+  - {fileID: 489195641}
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2074278860
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2074278861}
+  - component: {fileID: 2074278862}
+  m_Layer: 0
+  m_Name: JoystickController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2074278861
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074278860}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2063514505}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2074278862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074278860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d403c0d851b9d34c90b030f5577a17d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _config: {fileID: 11400000, guid: dca2120580236ed469d925770b53053c, type: 2}
+  _inputDirection: {fileID: 11400000, guid: 79a82c9247a02ec46802b11b864d1ec6, type: 2}
+--- !u!1 &2134181143
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2134181144}
+  - component: {fileID: 2134181145}
+  m_Layer: 0
+  m_Name: VictoryPanelController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2134181144
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134181143}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2063514505}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2134181145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134181143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f15745ad3923114291a4c689486cbbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _killCount: {fileID: 11400000, guid: 72ef00e272f0faf4a8eefc963fec20ca, type: 2}
+  _baseHP: {fileID: 11400000, guid: 6bff7144902bdfe4fb3ea95cd5e13424, type: 2}

@@ -1,35 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<component size="80,80">
+<component size="80,80" extention="Button">
   <controller name="state" pages="0,cleared,1,available,2,locked" selected="0"/>
   <displayList>
-    <graph id="gen_03" name="bg_cleared" xy="0,0" size="80,80"
-           type="eclipse" fillColor="#ff4fc3f7">
+    <graph id="gen_03" name="bg_cleared" xy="0,0" size="80,80" type="eclipse" fillColor="#ff4fc3f7">
       <gearDisplay controller="state" pages="0"/>
     </graph>
-    <graph id="gen_04" name="bg_available" xy="0,0" size="80,80"
-           type="eclipse" fillColor="#ff66bb6a">
+    <graph id="gen_04" name="bg_available" xy="0,0" size="80,80" type="eclipse" fillColor="#ff66bb6a">
       <gearDisplay controller="state" pages="1"/>
     </graph>
-    <graph id="gen_05" name="bg_locked" xy="0,0" size="80,80"
-           type="eclipse" fillColor="#ff555555">
+    <graph id="gen_05" name="bg_locked" xy="0,0" size="80,80" type="eclipse" fillColor="#ff555555">
       <gearDisplay controller="state" pages="2"/>
     </graph>
-    <text id="gen_06" name="text_level" xy="0,0" size="80,80"
-          fontSize="28" color="#ffffff" bold="true"
-          align="center" vAlign="middle" autoSize="none" text="1">
+    <text id="gen_06" name="title" xy="0,0" size="80,80" fontSize="28" color="#ffffff" align="center" vAlign="middle" autoSize="none" bold="true" text="1">
       <relation target="" sidePair="width-width,height-height"/>
     </text>
-    <text id="gen_07" name="text_star" xy="20,58" size="40,20"
-          fontSize="16" color="#ffffc107" align="center" autoSize="none" text="★">
+    <text id="gen_07" name="text_star" xy="20,58" size="40,20" fontSize="16" color="#ffc107" align="center" autoSize="none" text="★">
       <gearDisplay controller="state" pages="0"/>
     </text>
-    <text id="gen_08" name="text_lock" xy="55,5" size="20,20"
-          fontSize="14" color="#ffffff" align="center" autoSize="none" text="🔒">
+    <text id="gen_08" name="text_lock" xy="55,5" size="20,20" fontSize="14" color="#ffffff" align="center" autoSize="none" text="🔒">
       <gearDisplay controller="state" pages="2"/>
     </text>
-    <text id="gen_09" name="text_play" xy="55,5" size="20,20"
-          fontSize="14" color="#ffffff" align="center" autoSize="none" text="▶">
+    <text id="gen_09" name="text_play" xy="55,5" size="20,20" fontSize="14" color="#ffffff" align="center" autoSize="none" text="▶">
       <gearDisplay controller="state" pages="1"/>
     </text>
   </displayList>
+  <Button/>
 </component>

@@ -4,6 +4,7 @@ using MiniGameTemplate.Platform;
 using MiniGameTemplate.Timing;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace MainMenu
@@ -20,10 +21,10 @@ namespace MainMenu
 
     /// <summary>
     /// Main menu / lobby panel — the player's hub after loading completes.
-    /// Displays player info, start button, and utility shortcuts.
-    ///
-    /// If StartGameEvent is not configured in Boot scene, this panel runs a built-in
-    /// ClickCounter fallback mode so the template remains playable out of the box.
+    /// Serves as the central navigation hub for all game modules:
+    ///   - "弹幕射击" → opens SG_LevelSelect
+    ///   - Demo entries → load demo scenes
+    ///   - Future: 养成、商店等模块入口
     /// </summary>
     public partial class MainMenuPanel : IUIPanel
     {
@@ -37,6 +38,7 @@ namespace MainMenu
         public void OnOpen(object data)
         {
             // Bind button events (only in OnOpen — never re-bind)
+            if (btnShooterGame != null) btnShooterGame.onClick.Add(OnShooterGameClicked);
             if (btnClickGame != null) btnClickGame.onClick.Add(OnClickGameClicked);
             if (btnDanmakuDemo != null) btnDanmakuDemo.onClick.Add(OnDanmukuDemoClicked);
             if (btnVFXDemo != null) btnVFXDemo.onClick.Add(OnVFXDemoClicked);
@@ -49,11 +51,20 @@ namespace MainMenu
 
         public void OnClose()
         {
+            if (btnShooterGame != null) btnShooterGame.onClick.Remove(OnShooterGameClicked);
+            if (btnClickGame != null) btnClickGame.onClick.Remove(OnClickGameClicked);
+            if (btnDanmakuDemo != null) btnDanmakuDemo.onClick.Remove(OnDanmukuDemoClicked);
+            if (btnVFXDemo != null) btnVFXDemo.onClick.Remove(OnVFXDemoClicked);
+            if (btnSettings != null) btnSettings.onClick.Remove(OnSettingsClicked);
+            if (btnRanking != null) btnRanking.onClick.Remove(OnRankingClicked);
+            if (btnShare != null) btnShare.onClick.Remove(OnShareClicked);
+
             if (_enableBannerAd)
                 _weChatBridge?.HideBannerAd();
 
             _weChatBridge = null;
         }
+
 
         public void OnRefresh(object data)
         {
@@ -78,11 +89,27 @@ namespace MainMenu
             EnterMenuState();
         }
 
+        private async void OnShooterGameClicked()
+        {
+            try
+            {
+                // 初始化 ShooterGame 进度管理器（幂等调用）
+                Game.ShooterGame.SG_Boot.InitProgress();
+
+                // 关闭主菜单 → 打开选关界面
+                UIManager.Instance.ClosePanel<MainMenuPanel>();
+                await UIManager.Instance.OpenPanelAsync<SG_LevelSelect.LevelSelectScreen>();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
         private void OnClickGameClicked()
         {
             UIManager.Instance.ClosePanel<MainMenuPanel>();
             SceneManager.LoadScene("ClickGame");
-
         }
 
         private void OnDanmukuDemoClicked()

@@ -33,7 +33,7 @@ namespace Game.ShooterGame.UI
         {
             if (_view == null)
             {
-                _view = UIPackage.CreateObject("Popup", "DefeatPanel").asCom;
+                _view = UIPackage.CreateObject("SG_Popup", "DefeatPanel").asCom;
                 GRoot.inst.AddChild(_view);
                 _view.MakeFullScreen();
                 _view.GetChild("btn_retry").asButton.onClick.Add(OnRetryClicked);

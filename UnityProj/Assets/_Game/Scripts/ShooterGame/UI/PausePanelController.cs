@@ -23,7 +23,7 @@ namespace Game.ShooterGame.UI
         {
             if (_view == null)
             {
-                _view = UIPackage.CreateObject("Popup", "PausePanel").asCom;
+                _view = UIPackage.CreateObject("SG_Popup", "PausePanel").asCom;
                 GRoot.inst.AddChild(_view);
                 _view.MakeFullScreen();
                 _view.GetChild("btn_resume").asButton.onClick.Add(OnResumeClicked);

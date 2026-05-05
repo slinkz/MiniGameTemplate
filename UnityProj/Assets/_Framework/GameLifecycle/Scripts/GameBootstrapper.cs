@@ -41,6 +41,17 @@ namespace MiniGameTemplate.Core
         /// </summary>
         public static ISaveSystem SaveSystem { get; private set; }
 
+        /// <summary>
+        /// Ensure SaveSystem exists.
+        /// Used by direct scene bootstrappers (e.g. Battle scene) that need the minimum
+        /// runtime infrastructure without going through the full Boot scene flow.
+        /// </summary>
+        public static void EnsureSaveSystemInitialized()
+        {
+            if (SaveSystem == null)
+                SaveSystem = new PlayerPrefsSaveSystem();
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {

@@ -3,7 +3,7 @@
     "rootNamespace": "Game.ShooterGame.Editor",
     "references": [
         "MiniGameFramework.Runtime",
-        "Game.ShooterGame",
+        "Game.Runtime",
         "MiniGameFramework.Editor"
     ],
     "includePlatforms": [

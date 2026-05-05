@@ -55,6 +55,10 @@ namespace Game
             // Register all FairyGUI Binders before opening any panels
             UIManager.RegisterBinder("Common", Common.CommonBinder.BindAll);
             UIManager.RegisterBinder("MainMenu", MainMenu.MainMenuBinder.BindAll);
+            UIManager.RegisterBinder("SG_LevelSelect", SG_LevelSelect.SG_LevelSelectBinder.BindAll);
+            UIManager.RegisterBinder("SG_Battle", SG_Battle.SG_BattleBinder.BindAll);
+            UIManager.RegisterBinder("SG_Popup", SG_Popup.SG_PopupBinder.BindAll);
+            UIManager.RegisterBinder("SG_Loading", SG_Loading.SG_LoadingBinder.BindAll);
 
             WeChatBridgeFactory.SetAdUnitIds(_rewardedAdUnitId, _bannerAdUnitId, _interstitialAdUnitId);
             _weChatBridge = WeChatBridgeFactory.Create();
@@ -137,6 +141,9 @@ namespace Game
             {
                 Debug.LogError($"[StartupFlow] Failed to open MainMenuPanel: {ex.Message}");
             }
+
+            // Initialize ShooterGame progress manager (idempotent)
+            Game.ShooterGame.SG_Boot.InitProgress();
         }
 
         private async Task<bool> CheckPrivacyAsync()

@@ -111,16 +111,26 @@ namespace Game.ShooterGame
                 _joystickController = _joystickControllerRef as IJoystickController;
         }
 
-        private void Start()
+        private async void Start()
         {
-            // 确保后台也能推进帧（Editor 调试 + 微信小游戏后台兼容）
-            Application.runInBackground = true;
+            try
+            {
+                // 确保后台也能推进帧（Editor 调试 + 微信小游戏后台兼容）
+                Application.runInBackground = true;
 
-            // 防御性初始化：若从 Boot 场景启动则已初始化，直接跳场景测试时兜底
-            SG_Boot.InitProgress();
-            _progressManager = SG_Boot.Progress;
-            InitBattle();
-            EnterState(BattleState.Intro);
+                // 若直跑 Battle 场景，先等待最小运行时初始化完成。
+                await BattleSceneBootstrapper.EnsureInitializedAsync();
+
+                // 防御性初始化：若从 Boot 场景启动则已初始化，直接跳场景测试时兜底
+                SG_Boot.InitProgress();
+                _progressManager = SG_Boot.Progress;
+                await InitBattleAsync();
+                EnterState(BattleState.Intro);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
         }
 
         private void Update()
@@ -157,22 +167,37 @@ namespace Game.ShooterGame
 
         // ── 初始化 ──
 
-        private void InitBattle()
+        private async System.Threading.Tasks.Task InitBattleAsync()
         {
             // 1. 读取关卡配置
             _currentLevel = _levelConfigs[Mathf.Clamp(_currentLevelIndex.Value, 0, _levelConfigs.Length - 1)];
 
             // 2. 设置波次计数 SO（1-based 展示）
-            int totalWaves = _currentLevel.WaveConfig.Waves.Length;
+            // 统一以运行时实际启动的 SpawnPoint.WaveConfig 为权威来源，
+            // 避免与 LevelConfig.WaveConfig 不一致时出现 HUD 显示 1/5、2/4 这类分子分母不同源问题。
+            var runtimeWaveConfig = _spawnPoint != null ? _spawnPoint.WaveConfig : _currentLevel.WaveConfig;
+            int totalWaves = runtimeWaveConfig != null && runtimeWaveConfig.Waves != null
+                ? runtimeWaveConfig.Waves.Length
+                : 0;
             _totalWaveCount.SetValue(totalWaves);
-            _currentWaveIndex.SetValue(1); // 第一波开始 → 显示 "Wave 1"
-            _displayWaveIndex = 1;
+            _currentWaveIndex.SetValue(totalWaves > 0 ? 1 : 0);
+            _displayWaveIndex = totalWaves > 0 ? 1 : 0;
+
 
             // 3. 计算总敌机数
             int totalEnemy = 0;
-            foreach (var wave in _currentLevel.WaveConfig.Waves)
-                foreach (var group in wave.Groups)
-                    totalEnemy += group.Count;
+            if (runtimeWaveConfig != null && runtimeWaveConfig.Waves != null)
+            {
+                foreach (var wave in runtimeWaveConfig.Waves)
+                {
+                    if (wave.Groups == null) continue;
+                    foreach (var group in wave.Groups)
+                    {
+                        if (group.Count > 0)
+                            totalEnemy += group.Count;
+                    }
+                }
+            }
             _totalEnemyCount.SetValue(totalEnemy);
 
             // 4. 重置击杀计数
@@ -193,7 +218,13 @@ namespace Game.ShooterGame
             _baseHP.SetValue(1.0f);
 
             // 9. 初始化 UI Controllers（ET-007）
-            _hudController?.Show();
+            // 异步加载 SG_Battle + SG_Popup FairyGUI 包 → 再创建 HUD
+            if (_hudController != null)
+            {
+                await _hudController.ShowAsync();
+                _hudController.ForceRefresh();
+            }
+            await MiniGameTemplate.UI.UIPackageLoader.AddPackageAsync("SG_Popup", SG_Popup.SG_PopupBinder.BindAll);
             var hudView = _hudController?.GetView();
             _joystickController?.Init(hudView);
 
@@ -368,7 +399,6 @@ namespace Game.ShooterGame
             int spawnerWaveIndex = EntityManagerAccessor.Spawner.CurrentWaveIndexOfFirst;
             if (spawnerWaveIndex < 0) return; // 无活跃刷怪点
 
-            // 1-based 展示：Spawner 第 0 波 → 显示 "Wave 1"
             int displayValue = spawnerWaveIndex + 1;
             if (displayValue != _displayWaveIndex)
             {
@@ -376,6 +406,7 @@ namespace Game.ShooterGame
                 _currentWaveIndex.SetValue(_displayWaveIndex);
             }
         }
+
 
         private int CountAliveEnemies()
         {

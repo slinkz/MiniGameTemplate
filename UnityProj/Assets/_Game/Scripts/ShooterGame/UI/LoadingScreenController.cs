@@ -16,7 +16,7 @@ namespace Game.ShooterGame.UI
 
         public void Show()
         {
-            _view = UIPackage.CreateObject("Loading", "LoadingScreen").asCom;
+            _view = UIPackage.CreateObject("SG_Loading", "LoadingScreen").asCom;
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
             _progressBar = _view.GetChild("bar").asProgress;

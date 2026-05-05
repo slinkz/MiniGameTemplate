@@ -30,7 +30,7 @@ namespace Game.ShooterGame.UI
         {
             if (_view == null)
             {
-                _view = UIPackage.CreateObject("LevelSelect", "LevelSelectScreen").asCom;
+                _view = UIPackage.CreateObject("SG_LevelSelect", "LevelSelectScreen").asCom;
                 GRoot.inst.AddChild(_view);
                 _view.MakeFullScreen();
                 SetupNodes();

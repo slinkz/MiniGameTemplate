@@ -12,6 +12,8 @@ namespace MainMenu
         public GTextField txtNickname;
         public GTextField txtGameTitle;
         public GTextField txtVersion;
+        public GTextField txtGameSection;
+        public MenuIconButton btnShooterGame;
         public GTextField txtDemoSection;
         public MenuIconButton btnClickGame;
         public MenuIconButton btnDanmakuDemo;
@@ -35,6 +37,8 @@ namespace MainMenu
             txtNickname = (GTextField)GetChild("txtNickname");
             txtGameTitle = (GTextField)GetChild("txtGameTitle");
             txtVersion = (GTextField)GetChild("txtVersion");
+            txtGameSection = (GTextField)GetChild("txtGameSection");
+            btnShooterGame = (MenuIconButton)GetChild("btnShooterGame");
             txtDemoSection = (GTextField)GetChild("txtDemoSection");
             btnClickGame = (MenuIconButton)GetChild("btnClickGame");
             btnDanmakuDemo = (MenuIconButton)GetChild("btnDanmakuDemo");

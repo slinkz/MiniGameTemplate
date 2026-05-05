@@ -2,9 +2,9 @@
 <packageDescription id="sg02ls03">
   <resources>
     <component id="gen_01" name="LevelSelectScreen.xml" path="/" exported="true"/>
-    <component id="gen_02" name="LevelNode.xml" path="/components/"/>
+    <component id="gen_02" name="LevelNode.xml" path="/components/" exported="true"/>
   </resources>
-  <publish name="LevelSelect" genCode="true">
+  <publish name="SG_LevelSelect" genCode="true">
     <atlas name="Default" index="0"/>
   </publish>
 </packageDescription>

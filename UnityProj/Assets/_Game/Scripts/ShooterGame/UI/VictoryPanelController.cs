@@ -25,7 +25,7 @@ namespace Game.ShooterGame.UI
         {
             if (_view == null)
             {
-                _view = UIPackage.CreateObject("Popup", "VictoryPanel").asCom;
+                _view = UIPackage.CreateObject("SG_Popup", "VictoryPanel").asCom;
                 GRoot.inst.AddChild(_view);
                 _view.MakeFullScreen();
                 _view.GetChild("btn_confirm").asButton.onClick.Add(OnConfirmClicked);

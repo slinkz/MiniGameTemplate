@@ -8,15 +8,10 @@
     <text id="gen_04" name="text_title" xy="195,570" size="360,40"
           fontSize="36" color="#ffffff" bold="true"
           align="center" autoSize="none" text="ShooterGame"/>
-    <graph id="gen_05" name="bar_bg" xy="135,1050" size="480,8"
-           type="rect" fillColor="#ff444444" corner="4"/>
-    <progressBar id="gen_06" name="bar" xy="135,1050" size="480,8"
-                 titleType="percent">
-      <graph id="gen_07" name="bar" xy="0,0" size="480,8"
-             type="rect" fillColor="#ff4fc3f7" corner="4">
-        <relation target="" sidePair="height-height"/>
-      </graph>
-    </progressBar>
+    <component id="gen_06" name="bar" src="gen_02"
+               fileName="components/LoadingBar.xml" xy="135,1050" size="480,8">
+      <ProgressBar value="0" max="100"/>
+    </component>
     <text id="gen_08" name="text_loading" xy="195,1080" size="360,30"
           fontSize="24" color="#ff999999"
           align="center" autoSize="none" text="加载中..."/>

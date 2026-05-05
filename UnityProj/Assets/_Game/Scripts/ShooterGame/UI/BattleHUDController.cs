@@ -1,6 +1,8 @@
+using System.Threading.Tasks;
 using UnityEngine;
 using FairyGUI;
 using MiniGameTemplate.Data;
+using MiniGameTemplate.UI;
 
 namespace Game.ShooterGame.UI
 {
@@ -10,7 +12,7 @@ namespace Game.ShooterGame.UI
     /// </summary>
     public class BattleHUDController : MonoBehaviour, IBattleHUDController
     {
-        private const string FGUI_PKG = "Battle";
+        private const string FGUI_PKG = "SG_Battle";
         private const string FGUI_BATTLE_HUD = "BattleHUD";
         private const string FGUI_FLOATING_TEXT = "FloatingText";
 
@@ -53,11 +55,25 @@ namespace Game.ShooterGame.UI
 
         public void Show()
         {
+            // 同步版本——仅在包已预加载时使用
             _view = UIPackage.CreateObject(FGUI_PKG, FGUI_BATTLE_HUD).asCom;
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
             _hpBar = _view.GetChild("hp_bar").asProgress;
             _waveText = _view.GetChild("text_wave").asTextField;
+
+
+        }
+
+        /// <summary>
+        /// 异步版本——自动加载 FairyGUI 包后再创建 HUD。
+        /// Battle 场景应优先使用此方法。
+        /// 直接传入 Binder，确保包加载与扩展绑定配对，支持直接运行 Battle 场景。
+        /// </summary>
+        public async Task ShowAsync()
+        {
+            await UIPackageLoader.AddPackageAsync(FGUI_PKG, SG_Battle.SG_BattleBinder.BindAll);
+            Show();
         }
 
         public GComponent GetView() => _view;
@@ -78,12 +94,14 @@ namespace Game.ShooterGame.UI
         {
             _baseHP.OnValueChanged += OnBaseHPChanged;
             _currentWaveIndex.OnValueChanged += OnWaveChanged;
+            _totalWaveCount.OnValueChanged += OnTotalWaveCountChanged;
         }
 
         private void OnDisable()
         {
             _baseHP.OnValueChanged -= OnBaseHPChanged;
             _currentWaveIndex.OnValueChanged -= OnWaveChanged;
+            _totalWaveCount.OnValueChanged -= OnTotalWaveCountChanged;
         }
 
         private void Update()
@@ -153,6 +171,11 @@ namespace Game.ShooterGame.UI
         // ── 波次 ──
 
         private void OnWaveChanged(int newWave)
+        {
+            UpdateWaveText();
+        }
+
+        private void OnTotalWaveCountChanged(int newTotalWaveCount)
         {
             UpdateWaveText();
         }

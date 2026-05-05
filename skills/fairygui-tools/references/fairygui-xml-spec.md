@@ -468,15 +468,37 @@ Gear 元素作为 displayList 元件的子元素，实现控制器联动。
 ### 7.4 ProgressBar
 
 ```xml
-<!-- 组件定义 -->
+<!-- 组件定义（独立组件文件中，声明 extention="ProgressBar"） -->
 <ProgressBar [titleType="percent|value|valueAndMax|max"]
              [reverse="true"]/>
 
-<!-- 组件实例 -->
+<!-- 组件实例（父组件 displayList 中的 <component> 内） -->
 <ProgressBar [value="数值"] [max="数值"]/>
 ```
 
 约定命名：`bar`（进度条图片/装载器），`title`（文本显示进度值），`ani`（动画）
+
+> ⚠️ **关键陷阱**：ProgressBar **不是** displayList 的合法子元素标签！
+> displayList 中不存在 `<progressBar>` 标签。ProgressBar 必须是一个声明了 `extention="ProgressBar"` 的**独立组件文件**，在父组件中通过 `<component src="ID">` 引用。
+> 
+> ```xml
+> <!-- ❌ 错误：直接在 displayList 中写 <progressBar> → 编辑器 NullReferenceException -->
+> <progressBar id="gen_06" name="bar" xy="0,0" size="480,8">
+>   <graph name="bar" .../>
+> </progressBar>
+>
+> <!-- ✅ 正确：创建独立组件（extention="ProgressBar"），然后引用 -->
+> <component id="gen_06" name="bar" src="组件ID" fileName="components/Bar.xml" xy="0,0" size="480,8">
+>   <ProgressBar value="50" max="100"/>
+> </component>
+> ```
+>
+> **官方示例模式**（来自 FairyGUI 官方 Basics 包）：
+> - ProgressBar 组件内至少包含一个 `name="bar"` 的元素（image 或 graph）
+> - 可选 `name="title"` 的 text 用于显示百分比/数值
+> - 可选 `name="ani"` 的 loader 用于播放动画特效
+> - `<ProgressBar/>` 扩展元素放在 `</displayList>` 之后
+> - `fillMethod="radial360"` 可实现圆形进度条
 
 ### 7.5 Slider
 

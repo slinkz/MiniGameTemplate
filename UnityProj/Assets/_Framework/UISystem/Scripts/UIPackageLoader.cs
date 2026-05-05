@@ -25,6 +25,13 @@ namespace MiniGameTemplate.UI
         // Guard against concurrent AddPackageAsync calls for the same package
         private static readonly HashSet<string> _loading = new HashSet<string>();
 
+        // ── 设计约定 ──
+        // FairyGUI 编辑器中包名（Package Name）= 导出文件名前缀。
+        // 例：包名 "SG_Battle" → 导出 "SG_Battle_fui.bytes" + "SG_Battle_atlas0.png"。
+        // UIPackageLoader 直接用 packageName 拼文件路径，零映射零配置。
+        // 如果出现 "package not found"，请检查 FairyGUI 编辑器的发布设置（File Name）
+        // 是否与包名一致——不要在代码里加映射 hack。
+
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
@@ -44,10 +51,20 @@ namespace MiniGameTemplate.UI
         /// Load a FairyGUI package asynchronously via YooAsset.
         /// This is the ONLY loading path — no Resources.Load fallback.
         /// AssetService must be initialized before calling this method.
+        ///
+        /// binderAction is REQUIRED — every package load must pair with its Binder.
+        /// This eliminates the need for a centralized RegisterBinder() call site.
         /// </summary>
+        /// <param name="packageName">FairyGUI package name (must match publish file name)</param>
+        /// <param name="binderAction">The XXXBinder.BindAll method for this package.
+        /// Will be registered and activated (idempotent) before package loading.</param>
         /// <exception cref="InvalidOperationException">Thrown when AssetService is not initialized.</exception>
-        public static async Task AddPackageAsync(string packageName)
+        public static async Task AddPackageAsync(string packageName, Action binderAction)
         {
+            // Register + activate binder immediately (idempotent)
+            UIManager.RegisterBinder(packageName, binderAction);
+            UIManager.ActivateBinder(packageName);
+
             if (_refCounts.ContainsKey(packageName))
             {
                 _refCounts[packageName]++;
@@ -125,6 +142,7 @@ namespace MiniGameTemplate.UI
 
         private static async Task LoadViaYooAssetAsync(string packageName)
         {
+            // 约定：packageName 直接作为文件名前缀（包名 = 导出文件名前缀）
             string descPath = $"{YooAssetBasePath}{packageName}_fui.bytes";
             var handle = AssetService.Instance.LoadAssetAsync<TextAsset>(descPath);
             await handle.Task;
@@ -133,7 +151,9 @@ namespace MiniGameTemplate.UI
             {
                 throw new InvalidOperationException(
                     $"[UIPackageLoader] Failed to load FairyGUI package descriptor: {descPath}. " +
-                    $"Status: {handle.Status}. Ensure the package is exported and included in YooAsset collection.");
+                    $"Status: {handle.Status}. Package='{packageName}'. " +
+                    "Ensure FairyGUI publish file name matches the package name " +
+                    "(e.g. package 'SG_Battle' → export 'SG_Battle_fui.bytes').");
             }
 
             var textAsset = handle.AssetObject as TextAsset;

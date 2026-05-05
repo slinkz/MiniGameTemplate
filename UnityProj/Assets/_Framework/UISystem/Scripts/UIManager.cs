@@ -65,6 +65,8 @@ namespace MiniGameTemplate.UI
             }
         }
 
+
+
         /// <summary>
         /// Open a panel of type T asynchronously via YooAsset + FairyGUI Extension.
         /// Creates it if not already open, refreshes if already open.
@@ -110,7 +112,14 @@ namespace MiniGameTemplate.UI
             ActivateBinder(info.PackageName);
 
             // Load FairyGUI package via YooAsset
-            await UIPackageLoader.AddPackageAsync(info.PackageName);
+            // Get binder from registry — guaranteed to exist if RegisterBinder was called
+            if (!_binderRegistry.TryGetValue(info.PackageName, out var binderAction))
+            {
+                throw new InvalidOperationException(
+                    $"[UIManager] No binder registered for package '{info.PackageName}'. " +
+                    "Every package must have its binder registered before OpenPanelAsync is called.");
+            }
+            await UIPackageLoader.AddPackageAsync(info.PackageName, binderAction);
 
             // Create via FairyGUI Extension mechanism
             T panel;
@@ -255,7 +264,12 @@ namespace MiniGameTemplate.UI
             return info;
         }
 
-        private static void ActivateBinder(string packageName)
+        /// <summary>
+        /// Activate a previously registered binder (call BindAll). Idempotent.
+        /// Called automatically by UIPackageLoader.AddPackageAsync when binderAction is provided,
+        /// or internally by UIManager when opening a panel.
+        /// </summary>
+        public static void ActivateBinder(string packageName)
         {
             if (_activatedBinders.Contains(packageName))
                 return;
@@ -270,7 +284,7 @@ namespace MiniGameTemplate.UI
             {
                 Debug.LogWarning(
                     $"[UIManager] No binder registered for package '{packageName}'. " +
-                    "Call UIManager.RegisterBinder() at startup. Panel creation may fail.");
+                    "Call UIManager.RegisterBinder() at startup or pass binderAction to AddPackageAsync(). Panel creation may fail.");
             }
         }
 

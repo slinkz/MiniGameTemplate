@@ -191,6 +191,7 @@ description: "FairyGUI 全链路 UI 开发：解析 FairyGUI 工程、根据 UI 
 - ❌ list 的 `defaultItem` 使用文件路径（如 `components/Foo.xml`），必须用 `ui://包ID资源ID` 格式
 - ❌ `<transition>` 出现在 `<displayList>` 之前
 - ❌ 遗漏被引用子组件的 XML 文件
+- ❌ **在 displayList 中直接使用 `<progressBar>`/`<button>`/`<slider>` 等扩展标签**（displayList 合法子元素只有：`image`/`graph`/`text`/`loader`/`component`/`list`/`group`/`richtext`/`tree`。所有扩展类型必须作为独立组件文件，通过 `<component src="ID">` 引用）
 
 #### 规则 5：扩展机制命名约定
 
@@ -203,6 +204,48 @@ FairyGUI 的扩展（Button/Label/ProgressBar 等）通过**名称约定**工作
 | ProgressBar | 图片/graph `bar`，文本 `title` |
 | Slider | graph `bar`，按钮 `grip`，文本 `title` |
 | ScrollBar | 按钮 `grip`，graph `bar`，按钮 `arrow1`/`arrow2` |
+
+#### 规则 6：扩展组件必须是独立文件（ProgressBar / Slider / Button）
+
+**核心原则**：ProgressBar、Slider、Button、ComboBox 等扩展类型**不是内联标签**，而是**独立的组件 XML 文件**。在父组件中通过 `<component src="ID">` 引用。
+
+**ProgressBar 白模正确写法（三步走）：**
+
+**第一步** — 创建独立组件文件 `components/HPBar.xml`：
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<component size="718,12" extention="ProgressBar">
+  <displayList>
+    <graph id="gen_30" name="bg" xy="0,0" size="718,12"
+           type="rect" fillColor="#ff444444" corner="6">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="gen_31" name="bar" xy="0,0" size="718,12"
+           type="rect" fillColor="#ff4caf50" corner="6"/>
+  </displayList>
+  <ProgressBar titleType="percent"/>
+</component>
+```
+
+**第二步** — 在 `package.xml` 中声明：
+```xml
+<component id="gen_05" name="HPBar.xml" path="/components/"/>
+```
+
+**第三步** — 在父组件 displayList 中用 `<component src>` 引用：
+```xml
+<component id="gen_13" name="hp_bar" src="gen_05"
+           fileName="components/HPBar.xml" xy="16,1260" size="718,12">
+  <ProgressBar value="100" max="100"/>
+</component>
+```
+
+**关键要点**：
+- `extention="ProgressBar"` 声明在独立组件的 `<component>` 根标签上
+- `<ProgressBar/>` 扩展定义元素放在 `</displayList>` **之后**（组件定义中）
+- `<ProgressBar value="..." max="..."/>` 实例化参数放在引用处（displayList 中的 component 内）
+- `name="bar"` 是 ProgressBar 识别填充元素的**强制命名约定**，不可改名
+- 独立组件内部自带背景 graph，无需在父组件额外放一层背景
 
 ### 生成示例
 
