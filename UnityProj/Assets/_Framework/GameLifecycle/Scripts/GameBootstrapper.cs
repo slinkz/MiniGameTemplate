@@ -101,8 +101,10 @@ namespace MiniGameTemplate.Core
                     }
                 }
 
-                // Load the initial scene
-                LoadInitialScene();
+                // Load the initial scene — skip if StartupFlow handles navigation via AppFlowNavigator
+                // (TDD §4.1: 条件跳过 LoadInitialScene)
+                if (_startupFlowBehaviour == null)
+                    LoadInitialScene();
             }
             catch (OperationCanceledException cancelEx)
             {

@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace MiniGameTemplate.Example
 {
+    [System.Obsolete("Use AppFlowNavigator.Pop() instead. This class will be removed in a future version.")]
     public static class ExampleSceneNavigator
     {
         private const string BootSceneName = "Boot";

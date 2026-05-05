@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.3708602, g: 0.3783797, b: 0.35726562, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -186,3 +185,9 @@ MonoBehaviour:
   _startGameEvent: {fileID: 0}
   _minLoadingDuration: 1.5
   _progressSpeed: 0.4
+  _rootFlowNode: {fileID: 11400000, guid: 70823a309b077d74688ce63d96325d24, type: 2}
+  _flowNodeRegistry: {fileID: 11400000, guid: fc38c8b27e17c9b4aa988105fc4e8bc3, type: 2}
+  _rewardedAdUnitId: 
+  _bannerAdUnitId: 
+  _interstitialAdUnitId: 
+  _enableBannerAdInMainMenu: 1

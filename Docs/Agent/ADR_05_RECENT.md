@@ -272,3 +272,45 @@ TbEntityConfig / TbStateConfig / TbAIBehavior / TbAnimMapping，通过 ConfigMan
 2. 执行前仅保留文档一致性维护，不再新增架构分叉讨论
 3. 后续新增约束统一先回写 ADR，再同步计划与审计文档
 
+---
+
+## ADR-034: AppFlow — 基于栈的 UI/场景导航系统
+
+- **日期**：2026-05-05
+- **状态**：✅ 已接受（PK 评审通过）
+- **影响范围**：`Assets/_Framework/Navigation/`（新模块）+ GameStartupFlow + BattleController
+
+### 背景
+
+ShooterGame 完成 P3 FairyGUI 白模包接入后，暴露核心交互问题：暂停返回/胜利确认无法回到选关界面。根因是缺少编排层——场景切换靠硬编码 `SceneManager.LoadScene("Boot")`，UI 管理两套并行，不存在"返回上一级"语义。
+
+### 决策
+
+| 编号 | 决策 | 理由 |
+|------|------|------|
+| NAV-001 | 采用栈式导航（LIFO），放弃 FSM 转换表和 Router 模式 | 栈天然支持 Pop=返回语义，新增页面零修改导航器代码 |
+| NAV-002 | FlowNodeSO 纯数据（ScriptableObject），声明所需场景+面板 | 符合项目 SO 驱动架构；Inspector 可配置 |
+| NAV-003 | AppFlowNavigator 继承 Singleton<T>（MonoBehaviour, DontDestroyOnLoad） | 与 UIManager/SceneLoader 统一生命周期管理 |
+| NAV-004 | Battle 场景改为 Additive 加载，Boot 场景常驻 | Pop 回来时 Boot 场景仍在，Singleton + FairyGUI 完整保留 |
+| NAV-005 | 面板类型用 string（AssemblyQualifiedName）而非泛型引用 | SO 不支持序列化泛型 Type；运行时反射一次 + 缓存 |
+| NAV-006 | `_isTransitioning` 互斥锁防止并发 Push/Pop | WebGL 单线程但 async/await 可重入，需防护 |
+
+### 放弃了什么
+
+- 复杂非线性跳转（如从 Battle 直接到商店再回 Battle）需要 `Replace` 语义，不如 Router 灵活
+- 反射调用 OpenPanelAsync 需 `link.xml` 保护，增加 IL2CPP 配置成本
+- 不能在 Inspector 中以类型安全方式引用面板类（用字符串）
+
+### 换来了什么
+
+- 任意层级 `Pop()` = 返回上一级，一行代码
+- 新增页面只加 SO 资产，零修改导航器
+- 与现有 UIManager / SceneLoader / GameBootstrapper 无缝整合，零重构
+- 热启动恢复能力预留（栈可序列化）
+
+### 关联
+
+- **TDD 文档**：[APPFLOW_TDD.md](APPFLOW_TDD.md)
+- **整合依赖**：UIManager (L2) + SceneLoader (L2) + GameBootstrapper (L4)
+- **不冲突**：StateMachine FSM（保留原用途，战斗状态管理等场景继续使用）
+

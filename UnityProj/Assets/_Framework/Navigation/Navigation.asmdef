@@ -1,11 +1,9 @@
 {
-    "name": "Game.Runtime",
-    "rootNamespace": "Game",
+    "name": "MiniGameTemplate.Navigation",
+    "rootNamespace": "MiniGameTemplate.Navigation",
     "references": [
         "MiniGameFramework.Runtime",
-        "MiniGameTemplate.Navigation",
-        "FairyGUI",
-        "YooAsset"
+        "FairyGUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

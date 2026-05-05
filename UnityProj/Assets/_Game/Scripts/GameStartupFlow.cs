@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Core;
+using MiniGameTemplate.Navigation;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;
@@ -31,6 +32,13 @@ namespace Game
         [Tooltip("Simulated progress speed per second (0..1 range).")]
         [SerializeField] private float _progressSpeed = 0.4f;
 
+        [Header("Navigation")]
+        [Tooltip("启动完成后首次 Push 的 FlowNode（通常是 MainMenu）")]
+        [SerializeField] private FlowNodeSO _rootFlowNode;
+
+        [Tooltip("FlowNode Registry（栈序列化恢复需要）")]
+        [SerializeField] private FlowNodeRegistry _flowNodeRegistry;
+
         [Header("WeChat Ads (Optional)")]
         [Tooltip("Rewarded video ad unit id. Leave empty to fallback to stub behavior.")]
         [SerializeField] private string _rewardedAdUnitId = "";
@@ -51,6 +59,11 @@ namespace Game
         public async Task RunAsync(GameConfig gameConfig)
         {
             GameLog.Log($"[StartupFlow] Starting UI flow for {gameConfig.GameName} v{gameConfig.Version}...");
+
+            // Touch AppFlowNavigator — ensure Singleton exists before any panel self-registration
+            _ = AppFlowNavigator.Instance;
+            AppFlowNavigator.Instance.EnableStackPersistence = (_flowNodeRegistry != null);
+            GameLog.Log("[StartupFlow] AppFlowNavigator initialized.");
 
             // Register all FairyGUI Binders before opening any panels
             UIManager.RegisterBinder("Common", Common.CommonBinder.BindAll);
@@ -125,25 +138,104 @@ namespace Game
             // Fade out loading panel
             await loadingPanel.FadeOutAndCloseAsync(0.3f);
 
-            // Open main menu
-            try
-            {
-                var menuData = new MainMenu.MainMenuPanelData
-                {
-                    StartGameEvent = _startGameEvent,
-                    WeChatBridge = _weChatBridge,
-                    EnableBannerAd = _enableBannerAdInMainMenu
-                };
-                await UIManager.Instance.OpenPanelAsync<MainMenu.MainMenuPanel>(menuData);
-                GameLog.Log("[StartupFlow] Main menu opened. Startup flow complete.");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[StartupFlow] Failed to open MainMenuPanel: {ex.Message}");
-            }
-
             // Initialize ShooterGame progress manager (idempotent)
             Game.ShooterGame.SG_Boot.InitProgress();
+
+            // --- Phase 4: Try restore navigation stack (热启动恢复) ---
+            // If stored stack exists and is valid, restore it; otherwise push root node.
+            bool restored = await TryRestoreNavigationStackAsync();
+            if (!restored)
+            {
+                // Normal startup: Push root flow node (MainMenu)
+                if (_rootFlowNode != null)
+                {
+                    var menuData = new MainMenu.MainMenuPanelData
+                    {
+                        StartGameEvent = _startGameEvent,
+                        WeChatBridge = _weChatBridge,
+                        EnableBannerAd = _enableBannerAdInMainMenu
+                    };
+                    await AppFlowNavigator.Instance.PushAsync(_rootFlowNode, menuData);
+                    GameLog.Log("[StartupFlow] Root node pushed via AppFlowNavigator. Startup flow complete.");
+                }
+                else
+                {
+                    // Fallback: 兼容旧模式（无 FlowNode 配置时直接打开面板）
+                    var menuData = new MainMenu.MainMenuPanelData
+                    {
+                        StartGameEvent = _startGameEvent,
+                        WeChatBridge = _weChatBridge,
+                        EnableBannerAd = _enableBannerAdInMainMenu
+                    };
+                    await UIManager.Instance.OpenPanelAsync<MainMenu.MainMenuPanel>(menuData);
+                    GameLog.Log("[StartupFlow] Main menu opened (legacy). Startup flow complete.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Phase 4: 尝试从存储恢复导航栈（微信热启动恢复）。
+        /// 成功返回 true，失败返回 false（走正常启动）。
+        /// </summary>
+        private async Task<bool> TryRestoreNavigationStackAsync()
+        {
+            if (_flowNodeRegistry == null) return false;
+
+            string json = null;
+            try
+            {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                // 微信小游戏: wx.getStorageSync
+                json = WeChatWASM.WX.StorageGetStringSync("appflow_stack", "");
+#else
+                // Editor/Standalone: PlayerPrefs
+                json = UnityEngine.PlayerPrefs.GetString("appflow_stack", "");
+#endif
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[StartupFlow] Failed to read stored stack: {ex.Message}");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(json)) return false;
+
+            var entries = FlowStackSerializer.DeserializeStack(json, _flowNodeRegistry);
+            if (entries == null || entries.Count == 0)
+            {
+                GameLog.Log("[StartupFlow] Stored stack invalid or empty — fallback to normal startup.");
+                ClearStoredStack();
+                return false;
+            }
+
+            GameLog.Log($"[StartupFlow] Restoring navigation stack ({entries.Count} entries)...");
+
+            // 恢复栈：将中间层静默压入，只对栈顶执行完整 EnterNode
+            var navigator = AppFlowNavigator.Instance;
+            for (int i = 0; i < entries.Count - 1; i++)
+            {
+                navigator.PushSilent(entries[i].Node, entries[i].Data);
+            }
+
+            // 栈顶节点完整进入
+            var top = entries[^1];
+            await navigator.PushAsync(top.Node, top.Data);
+
+            GameLog.Log("[StartupFlow] Navigation stack restored successfully.");
+            return true;
+        }
+
+        private void ClearStoredStack()
+        {
+            try
+            {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                WeChatWASM.WX.StorageDeleteKeySync("appflow_stack");
+#else
+                UnityEngine.PlayerPrefs.DeleteKey("appflow_stack");
+#endif
+            }
+            catch { /* ignore */ }
         }
 
         private async Task<bool> CheckPrivacyAsync()

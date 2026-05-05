@@ -1,13 +1,13 @@
 {
-    "name": "Game.Runtime",
-    "rootNamespace": "Game",
+    "name": "MiniGameTemplate.Navigation.Editor",
+    "rootNamespace": "MiniGameTemplate.EditorTools",
     "references": [
-        "MiniGameFramework.Runtime",
         "MiniGameTemplate.Navigation",
-        "FairyGUI",
-        "YooAsset"
+        "MiniGameFramework.Runtime"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

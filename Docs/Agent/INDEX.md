@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-04 | 文件总数：62
+> 最后更新：2026-05-05 | 文件总数：66
 
 ---
 
@@ -20,6 +20,7 @@
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
+| 了解导航系统 | APPFLOW_TDD | 栈式 FlowNode + AppFlowNavigator |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
@@ -100,6 +101,10 @@
 | CONV | CONV_INDEX | 4 | 编码/命名/平台/工作流约定 |
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
+| APPFLOW | APPFLOW_TDD | — | AppFlow 栈式导航系统 TDD |
+| — | APPFLOW_TDD_PK | — | AppFlow TDD PK 评审记录 |
+| — | APPFLOW_TDD_PK2 | — | AppFlow TDD PK #2 评审记录（Unity架构师） |
+| — | APPFLOW_TDD_PK3 | — | AppFlow TDD PK #3 评审记录（编辑器工具开发者） |
 | SO_WORKFLOWS | SO_WORKFLOWS_INDEX | 5 | SO 配置流程指南 |
 | EDITOR_TOOLS_MANUAL | EDITOR_TOOLS_MANUAL_INDEX | 4 | 编辑器工具使用手册 |
 | — | MCP_INTEGRATION | — | Unity MCP 集成（Agent 操作 Unity） |

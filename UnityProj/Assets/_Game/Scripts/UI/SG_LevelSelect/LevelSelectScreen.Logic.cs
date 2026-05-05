@@ -1,5 +1,8 @@
+using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using FairyGUI;
+using MiniGameTemplate.Navigation;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;
 using Game.ShooterGame;
@@ -16,9 +19,22 @@ namespace SG_LevelSelect
     /// </summary>
     public partial class LevelSelectScreen : IUIPanel
     {
+        /// <summary>面板注册表 Key。</summary>
+        public const string PanelKey = "LevelSelectScreen";
+
         public int PanelSortOrder => UIConstants.LAYER_NORMAL;
         public bool IsFullScreen => true;
         public string PanelPackageName => "SG_LevelSelect";
+
+        /// <summary>面板自注册（PK UA-003）。</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void RegisterSelf()
+        {
+            AppFlowNavigator.Instance.RegisterPanelOpener(PanelKey, async (data) =>
+            {
+                await UIManager.Instance.OpenPanelAsync<LevelSelectScreen>(data);
+            });
+        }
 
         private SG_ProgressManager _progressManager;
         private readonly LevelNode[] _levelNodes = new LevelNode[5];
@@ -105,7 +121,7 @@ namespace SG_LevelSelect
             }
         }
 
-        private void OnLevelClicked(int levelIndex)
+        private async void OnLevelClicked(int levelIndex)
         {
             // Locked level: shake feedback
             if (_progressManager != null && !_progressManager.IsLevelUnlocked(levelIndex))
@@ -123,10 +139,19 @@ namespace SG_LevelSelect
 
             GameLog.Log($"[LevelSelectScreen] Level {levelIndex} selected, transitioning to Battle.");
 
-            // Set current level index via SG_Boot or direct scene load
-            // Close this panel and load Battle scene
-            UIManager.Instance.ClosePanel<LevelSelectScreen>();
-            SceneManager.LoadScene("Battle");
+            // 通过 Navigator Push 到 Battle 节点（携带关卡数据）
+            var battleNode = SG_FlowNodes.NodeBattle;
+            if (battleNode != null)
+            {
+                var data = new BattleLevelData { LevelIndex = levelIndex - 1 }; // 1-based → 0-based
+                await AppFlowNavigator.Instance.PushAsync(battleNode, data);
+            }
+            else
+            {
+                // Fallback: 旧路径
+                UIManager.Instance.ClosePanel<LevelSelectScreen>();
+                SceneManager.LoadScene("Battle");
+            }
         }
 
         private void ShakeLevelNode(int levelIndex)

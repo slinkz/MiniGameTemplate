@@ -1,5 +1,7 @@
+using System.Threading.Tasks;
 using MiniGameTemplate.Core;
 using MiniGameTemplate.Events;
+using MiniGameTemplate.Navigation;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.Timing;
 using MiniGameTemplate.UI;
@@ -11,12 +13,16 @@ namespace MainMenu
 {
     /// <summary>
     /// Data passed to MainMenuPanel when opening.
+    /// Implements IFlowData for AppFlowNavigator integration.
     /// </summary>
-    public class MainMenuPanelData
+    [System.Serializable]
+    public class MainMenuPanelData : IFlowData
     {
-        public GameEvent StartGameEvent;
-        public IWeChatBridge WeChatBridge;
+        [System.NonSerialized] public GameEvent StartGameEvent;
+        [System.NonSerialized] public IWeChatBridge WeChatBridge;
         public bool EnableBannerAd = true;
+
+        public override string ToString() => "MainMenuPanelData";
     }
 
     /// <summary>
@@ -28,9 +34,24 @@ namespace MainMenu
     /// </summary>
     public partial class MainMenuPanel : IUIPanel
     {
+        /// <summary>面板注册表 Key（FlowNodeSO._panelTypeName 配这个值）。</summary>
+        public const string PanelKey = "MainMenuPanel";
+
         public int PanelSortOrder => UIConstants.LAYER_NORMAL;
         public bool IsFullScreen => true;
         public string PanelPackageName => "MainMenu";
+
+        /// <summary>
+        /// 面板自注册（PK UA-003：分散注册消除编译耦合）。
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void RegisterSelf()
+        {
+            AppFlowNavigator.Instance.RegisterPanelOpener(PanelKey, async (data) =>
+            {
+                await UIManager.Instance.OpenPanelAsync<MainMenuPanel>(data);
+            });
+        }
 
         private IWeChatBridge _weChatBridge;
         private bool _enableBannerAd = true;
@@ -96,9 +117,18 @@ namespace MainMenu
                 // 初始化 ShooterGame 进度管理器（幂等调用）
                 Game.ShooterGame.SG_Boot.InitProgress();
 
-                // 关闭主菜单 → 打开选关界面
-                UIManager.Instance.ClosePanel<MainMenuPanel>();
-                await UIManager.Instance.OpenPanelAsync<SG_LevelSelect.LevelSelectScreen>();
+                // 通过 Navigator Push 到选关界面
+                var levelSelectNode = Game.ShooterGame.SG_FlowNodes.NodeLevelSelect;
+                if (levelSelectNode != null)
+                {
+                    await AppFlowNavigator.Instance.PushAsync(levelSelectNode);
+                }
+                else
+                {
+                    // Fallback（旧路径）
+                    UIManager.Instance.ClosePanel<MainMenuPanel>();
+                    await UIManager.Instance.OpenPanelAsync<SG_LevelSelect.LevelSelectScreen>();
+                }
             }
             catch (System.Exception ex)
             {
