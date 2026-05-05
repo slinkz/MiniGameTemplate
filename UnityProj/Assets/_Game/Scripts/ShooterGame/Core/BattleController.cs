@@ -1,9 +1,9 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.Danmaku;
 using MiniGameTemplate.Entity;
+using MiniGameTemplate.Navigation;
 using EntityClass = MiniGameTemplate.Entity.Entity;
 #if UNITY_EDITOR
 using Unity.Profiling;
@@ -18,7 +18,6 @@ namespace Game.ShooterGame
     /// </summary>
     public class BattleController : MonoBehaviour
     {
-        private const string SCENE_BOOT = "Boot";
 
 #if UNITY_EDITOR
         // ── ProfilerMarker ──
@@ -483,13 +482,13 @@ namespace Game.ShooterGame
         {
             _progressManager?.MarkLevelCleared(_currentLevelIndex.Value + 1); // 0-based → 1-based
             yield return null; // 一帧等待
-            SceneManager.LoadScene(SCENE_BOOT);
+            AppFlowNavigator.Instance.Pop();
         }
 
         private IEnumerator HandleDefeatQuit()
         {
             yield return null;
-            SceneManager.LoadScene(SCENE_BOOT);
+            AppFlowNavigator.Instance.Pop();
         }
 
         /// <summary>
@@ -550,7 +549,7 @@ namespace Game.ShooterGame
         {
             Time.timeScale = 1f;
             yield return null;
-            SceneManager.LoadScene(SCENE_BOOT);
+            AppFlowNavigator.Instance.Pop();
         }
 
         // ── Pause 按钮由 HUD 触发 ──

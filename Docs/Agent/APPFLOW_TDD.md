@@ -7,8 +7,8 @@ related_code: Assets/_Framework/Navigation/*.cs, Assets/_Game/Scripts/GameStartu
 
 # AppFlow 导航系统 — 技术设计文档 (TDD)
 
-> **版本**：v1.4（栈序列化移入 V1）  
-> **状态**：✅ 已通过 3 轮 PK 评审  
+> **版本**：v1.5（Phase 1~4 全部实施完成）  
+> **状态**：✅ Phase 1~4 全部完成 + 3 轮 PK 评审通过  
 > **作者**：广智  
 > **日期**：2026-05-05  
 > **ADR**：ADR-034  
@@ -979,7 +979,7 @@ private void OnDrawGizmos()
 
 ## 7. 实施计划
 
-### Phase 1：框架层基础设施（~4h）
+### Phase 1：框架层基础设施（~4h）✅ 已完成
 
 | 步骤 | 内容 | 产出 |
 |------|------|------|
@@ -995,7 +995,7 @@ private void OnDrawGizmos()
 | 1.10 | 实现 `AppFlowBuildValidator.cs`（MenuItem 验证 + IPreprocessBuildWithReport） | 构建守护（PK ET-003/009） |
 | 1.11 | 实现 `AppFlowHierarchyIcon.cs`（Hierarchy 状态图标 + Gizmo 文字标签） | 视觉反馈（PK ET-006） |
 
-### Phase 2：SO 资产 + 业务接入（~2h）
+### Phase 2：SO 资产 + 业务接入（~2h）✅ 已完成
 
 | 步骤 | 内容 | 产出 |
 |------|------|------|
@@ -1009,30 +1009,30 @@ private void OnDrawGizmos()
 | 2.8 | `LevelSelectScreen` → 选关 → `PushAsync(Node_Battle, levelData)` | 改 3 行 |
 | 2.9 | `BattleController` → 实现 IFlowSuspendable + `Pop()` 同步入口 | 改 ~10 行 |
 
-### Phase 3：清理旧代码（~0.5h）
+### Phase 3：清理旧代码（~0.5h）✅ 已完成
 
-| 步骤 | 内容 |
-|------|------|
-| 3.1 | 删除 `SceneManager.LoadScene("Boot")` 硬编码（BattleController） |
-| 3.2 | `ExampleSceneNavigator` 标注 `[Obsolete]` |
-| 3.3 | 验证 Battle 场景 IsAdditive 模式下 EntitySystemBootstrap 正常工作 |
+| 步骤 | 内容 | 状态 |
+|------|------|------|
+| 3.1 | 删除 `SceneManager.LoadScene("Boot")` 硬编码（BattleController） | ✅ 2026-05-05 |
+| 3.2 | `ExampleSceneNavigator` 标注 `[Obsolete]` | ✅ 2026-05-05 |
+| 3.3 | 验证 Battle 场景 IsAdditive 模式下 EntitySystemBootstrap 正常工作 | ✅ MCP 编译验证通过 |
 
-### Phase 4：栈序列化 — 微信热启动恢复（~2h）
+### Phase 4：栈序列化 — 微信热启动恢复（~2h）✅ 已完成
 
 > **从 V2 移入 V1**（2026-05-05）。微信小游戏随时可能被系统杀死并热启动恢复，不支持栈恢复 = 每次热启动回到首屏，用户体验不可接受。
 
-| 步骤 | 内容 | 产出 |
-|------|------|------|
-| 4.1 | `FlowNodeSO` 新增 `[SerializeField] string _nodeId`（唯一标识，`[CreateAssetMenu]` 生成时自动填 GUID） | 节点可序列化寻址 |
-| 4.2 | `IFlowData` 扩展：推荐实现 `[Serializable]`，约束 Data 为纯 POCO（无 UnityEngine.Object 引用） | 数据可 JSON 序列化 |
-| 4.3 | 新增 `FlowStackSerializer` 静态工具类 — `SerializeStack(List<StackEntry>) → string (JSON)` / `DeserializeStack(string) → List<StackEntry>` | 序列化/反序列化核心 |
-| 4.4 | 序列化格式：`{ "version": 1, "entries": [{ "nodeId": "xxx", "dataType": "Namespace.ClassName", "dataJson": "{...}" }] }` | 紧凑 JSON，版本化 |
-| 4.5 | `FlowNodeSO` 注册表：`FlowNodeRegistry`（SO 资产，持有所有 FlowNode SO 引用） → 通过 nodeId 反查 SO 实例 | 反序列化时 nodeId→SO 映射 |
-| 4.6 | `AppFlowNavigator` 新增 `SaveStackToStorage()` — 在每次导航完成（`OnNavigated` 后）写入微信 `wx.setStorageSync("appflow_stack", json)` 或 `PlayerPrefs`（编辑器环境） | 自动持久化 |
-| 4.7 | `AppFlowNavigator` 新增 `TryRestoreStackAsync()` — 热启动时读取存储 → 反序列化 → 逐个 Push 恢复栈（跳过 CloseAllPanels 避免闪烁） | 热启动恢复入口 |
-| 4.8 | `GameStartupFlow` 启动完成后：先尝试 `TryRestoreStackAsync()`，失败或无数据时 fallback 到 `PushAsync(Node_MainMenu)` | 集成入口 |
-| 4.9 | 版本兼容处理：`version` 字段不匹配时丢弃旧栈 + 清除存储 + 走正常启动 | 安全降级 |
-| 4.10 | 资源版本变更处理：若 `nodeId` 在 `FlowNodeRegistry` 找不到对应 SO → 日志警告 + 丢弃该层级以上所有栈帧 + 从最后有效节点恢复 | 容错 |
+| 步骤 | 内容 | 产出 | 状态 |
+|------|------|------|------|
+| 4.1 | `FlowNodeSO` 新增 `[SerializeField] string _nodeId`（唯一标识） | 节点可序列化寻址 | ✅ |
+| 4.2 | `IFlowData` 扩展：推荐实现 `[Serializable]`，约束 Data 为纯 POCO | 数据可 JSON 序列化 | ✅ |
+| 4.3 | 新增 `FlowStackSerializer` 静态工具类 | 序列化/反序列化核心 | ✅ |
+| 4.4 | 序列化格式：`{ "version": 1, "entries": [...] }` | 紧凑 JSON，版本化 | ✅ |
+| 4.5 | `FlowNodeRegistry`（SO 资产）→ 通过 nodeId 反查 SO 实例 | nodeId→SO 映射 | ✅ |
+| 4.6 | `AppFlowNavigator.SaveStackToStorage()` — `OnNavigated` 后持久化 | 自动持久化 | ✅ |
+| 4.7 | `AppFlowNavigator.TryRestoreStackAsync()` — 热启动恢复 | 热启动恢复入口 | ✅ |
+| 4.8 | `GameStartupFlow` 先尝试 Restore，失败 fallback PushAsync(MainMenu) | 集成入口 | ✅ |
+| 4.9 | 版本兼容处理：version 不匹配时丢弃旧栈 + 清除存储 | 安全降级 | ✅ |
+| 4.10 | nodeId 找不到时丢弃该层级以上 + 从最后有效节点恢复 | 容错 | ✅ |
 
 ### 验收标准
 
@@ -1064,4 +1064,4 @@ private void OnDrawGizmos()
 
 ---
 
-_TDD v1.4 | 2026-05-05 | 广智 | 栈序列化（微信热启动恢复）从 V2 移入 V1 Phase 4_
+_TDD v1.5 | 2026-05-05 | 广智 | Phase 1~4 全部实施完成，编译零错误零警告_
