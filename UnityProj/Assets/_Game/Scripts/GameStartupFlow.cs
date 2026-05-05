@@ -55,6 +55,10 @@ namespace Game
         // Resolved at runtime
         private IWeChatBridge _weChatBridge;
 
+        // 本次启动是否经历了隐私授权流程（首次启动 or 策略更新）
+        // 如果是，则不恢复旧导航栈，走正常启动到 MainMenu
+        private bool _didPrivacyAuthorization;
+
 
         public async Task RunAsync(GameConfig gameConfig)
         {
@@ -142,8 +146,16 @@ namespace Game
             Game.ShooterGame.SG_Boot.InitProgress();
 
             // --- Phase 4: Try restore navigation stack (热启动恢复) ---
+            // 如果本次启动走了隐私授权流程（首次启动/策略更新），不应恢复旧栈。
+            // 理由：首次授权意味着游戏状态可能已过期，应从主菜单开始。
+            if (_didPrivacyAuthorization)
+            {
+                ClearStoredStack();
+                GameLog.Log("[StartupFlow] First-time privacy authorization — cleared stored stack, forcing normal startup.");
+            }
+
             // If stored stack exists and is valid, restore it; otherwise push root node.
-            bool restored = await TryRestoreNavigationStackAsync();
+            bool restored = !_didPrivacyAuthorization && await TryRestoreNavigationStackAsync();
             if (!restored)
             {
                 // Normal startup: Push root flow node (MainMenu)
@@ -255,6 +267,7 @@ namespace Game
             }
 
             GameLog.Log("[StartupFlow] Privacy authorization required. Showing dialog...");
+            _didPrivacyAuthorization = true; // 标记：本次走了授权流程，不应恢复旧栈
             bool agreed = await Common.PrivacyDialog.ShowAndWaitAsync();
             GameLog.Log($"[StartupFlow] Privacy dialog result: {(agreed ? "agreed" : "rejected")}");
             if (!agreed)
