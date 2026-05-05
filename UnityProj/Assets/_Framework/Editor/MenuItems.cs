@@ -34,6 +34,15 @@ namespace MiniGameTemplate.EditorTools
             else
                 UnityEngine.Debug.LogWarning("[MenuItems] Docs folder not found.");
         }
+
+        // === WeChat Bridge Debug ===
+
+        [MenuItem(MENU_ROOT + "WeChat/Reset Privacy Authorization", false, 400)]
+        private static void ResetPrivacyAuthorization()
+        {
+            MiniGameTemplate.Platform.WeChatBridgeStub.ResetPrivacyAuthorization();
+            UnityEngine.Debug.Log("[MenuItems] Privacy authorization state has been reset. Next Play will show the privacy panel.");
+        }
     }
 }
 #endif

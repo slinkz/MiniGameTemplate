@@ -159,6 +159,45 @@ mergeInto(LibraryManager.library, {
     if (wx.vibrateShort) {
       wx.vibrateShort();
     }
+  },
+
+  WXBridge_CheckPrivacy: function () {
+    var state = window.MiniGameTemplateWXBridge;
+    if (!state || typeof wx === "undefined" || !wx.getPrivacySetting) {
+      // No privacy API available — report no authorization needed
+      sendToUnity(state, "OnPrivacyCheckResult", "0");
+      return;
+    }
+
+    wx.getPrivacySetting({
+      success: function (res) {
+        // res.needAuthorization: boolean — true if user must authorize
+        var needAuth = res.needAuthorization ? "1" : "0";
+        sendToUnity(state, "OnPrivacyCheckResult", needAuth);
+      },
+      fail: function () {
+        // On failure, assume no authorization needed to avoid blocking startup
+        sendToUnity(state, "OnPrivacyCheckResult", "0");
+      }
+    });
+  },
+
+  WXBridge_RequirePrivacy: function () {
+    var state = window.MiniGameTemplateWXBridge;
+    if (!state || typeof wx === "undefined" || !wx.requirePrivacyAuthorize) {
+      // No privacy API available — report accepted to avoid blocking
+      sendToUnity(state, "OnPrivacyRequireResult", "1");
+      return;
+    }
+
+    wx.requirePrivacyAuthorize({
+      success: function () {
+        sendToUnity(state, "OnPrivacyRequireResult", "1");
+      },
+      fail: function () {
+        sendToUnity(state, "OnPrivacyRequireResult", "0");
+      }
+    });
   }
 });
 

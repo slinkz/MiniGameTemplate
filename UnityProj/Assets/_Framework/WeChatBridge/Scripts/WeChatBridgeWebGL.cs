@@ -31,6 +31,10 @@ namespace MiniGameTemplate.Platform
         private Action<bool> _rewardedCallback;
         private TimerHandle _rewardedTimeoutTimer = TimerHandle.Invalid;
 
+        // Privacy callbacks
+        private Action<bool> _privacyCheckCallback;
+        private Action<bool> _privacyRequireCallback;
+
 
         public WeChatBridgeWebGL()
         {
@@ -199,11 +203,27 @@ namespace MiniGameTemplate.Platform
 
         public void CheckPrivacyAuthorize(Action<bool> onResult)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (TryInitializeNativeBridge() && IsWeChatPlatform)
+            {
+                _privacyCheckCallback = onResult;
+                WXBridge_CheckPrivacy();
+                return;
+            }
+#endif
             _fallback.CheckPrivacyAuthorize(onResult);
         }
 
         public void RequirePrivacyAuthorize(Action<bool> onComplete)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (TryInitializeNativeBridge() && IsWeChatPlatform)
+            {
+                _privacyRequireCallback = onComplete;
+                WXBridge_RequirePrivacy();
+                return;
+            }
+#endif
             _fallback.RequirePrivacyAuthorize(onComplete);
         }
 
@@ -243,6 +263,20 @@ namespace MiniGameTemplate.Platform
         {
             GameLog.LogWarning($"[WeChatBridge:WebGL] Rewarded ad error: {error}");
             CompleteRewardedAdRequest(false);
+        }
+
+        internal void HandlePrivacyCheckResult(string needAuth)
+        {
+            var callback = _privacyCheckCallback;
+            _privacyCheckCallback = null;
+            callback?.Invoke(needAuth == "1");
+        }
+
+        internal void HandlePrivacyRequireResult(string accepted)
+        {
+            var callback = _privacyRequireCallback;
+            _privacyRequireCallback = null;
+            callback?.Invoke(accepted == "1");
         }
 
         private void OnRewardedAdTimeout()
@@ -341,6 +375,12 @@ namespace MiniGameTemplate.Platform
 
         [DllImport("__Internal")]
         private static extern void WXBridge_Vibrate(int isLong);
+
+        [DllImport("__Internal")]
+        private static extern void WXBridge_CheckPrivacy();
+
+        [DllImport("__Internal")]
+        private static extern void WXBridge_RequirePrivacy();
 #endif
     }
 }

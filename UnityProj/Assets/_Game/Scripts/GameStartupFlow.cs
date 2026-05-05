@@ -55,10 +55,6 @@ namespace Game
         // Resolved at runtime
         private IWeChatBridge _weChatBridge;
 
-        // 本次启动是否经历了隐私授权流程（首次启动 or 策略更新）
-        // 如果是，则不恢复旧导航栈，走正常启动到 MainMenu
-        private bool _didPrivacyAuthorization;
-
 
         public async Task RunAsync(GameConfig gameConfig)
         {
@@ -146,16 +142,9 @@ namespace Game
             Game.ShooterGame.SG_Boot.InitProgress();
 
             // --- Phase 4: Try restore navigation stack (热启动恢复) ---
-            // 如果本次启动走了隐私授权流程（首次启动/策略更新），不应恢复旧栈。
-            // 理由：首次授权意味着游戏状态可能已过期，应从主菜单开始。
-            if (_didPrivacyAuthorization)
-            {
-                ClearStoredStack();
-                GameLog.Log("[StartupFlow] First-time privacy authorization — cleared stored stack, forcing normal startup.");
-            }
-
-            // If stored stack exists and is valid, restore it; otherwise push root node.
-            bool restored = !_didPrivacyAuthorization && await TryRestoreNavigationStackAsync();
+            // Editor 环境下每次 Play 都是冷启动（full domain reload），不存在热启动语义。
+            // 栈恢复仅在真机微信 wx.onShow 热启动场景下有意义。
+            bool restored = await TryRestoreNavigationStackAsync();
             if (!restored)
             {
                 // Normal startup: Push root flow node (MainMenu)
@@ -188,19 +177,35 @@ namespace Game
         /// <summary>
         /// Phase 4: 尝试从存储恢复导航栈（微信热启动恢复）。
         /// 成功返回 true，失败返回 false（走正常启动）。
+        /// 
+        /// 设计决策：Editor 环境下每次 Play 都是 full domain reload（冷启动），
+        /// 不存在微信 wx.onShow 热启动语义，因此直接返回 false 走正常启动。
+        /// 如需在 Editor 测试热启动恢复，可通过菜单工具手动模拟。
         /// </summary>
-        private async Task<bool> TryRestoreNavigationStackAsync()
+        private
+#if UNITY_EDITOR
+            Task<bool>
+#else
+            async Task<bool>
+#endif
+            TryRestoreNavigationStackAsync()
         {
+#if UNITY_EDITOR
+            // Editor = 冷启动，不恢复栈
+            ClearStoredStack();
+            GameLog.Log("[StartupFlow] Editor cold boot — skipped stack restore.");
+            return Task.FromResult(false);
+#else
             if (_flowNodeRegistry == null) return false;
 
             string json = null;
             try
             {
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if UNITY_WEBGL
                 // 微信小游戏: wx.getStorageSync
                 json = WeChatWASM.WX.StorageGetStringSync("appflow_stack", "");
 #else
-                // Editor/Standalone: PlayerPrefs
+                // Standalone: PlayerPrefs
                 json = UnityEngine.PlayerPrefs.GetString("appflow_stack", "");
 #endif
             }
@@ -235,6 +240,7 @@ namespace Game
 
             GameLog.Log("[StartupFlow] Navigation stack restored successfully.");
             return true;
+#endif
         }
 
         private void ClearStoredStack()
@@ -267,7 +273,6 @@ namespace Game
             }
 
             GameLog.Log("[StartupFlow] Privacy authorization required. Showing dialog...");
-            _didPrivacyAuthorization = true; // 标记：本次走了授权流程，不应恢复旧栈
             bool agreed = await Common.PrivacyDialog.ShowAndWaitAsync();
             GameLog.Log($"[StartupFlow] Privacy dialog result: {(agreed ? "agreed" : "rejected")}");
             if (!agreed)

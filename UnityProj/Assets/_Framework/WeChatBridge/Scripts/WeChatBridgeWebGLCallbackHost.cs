@@ -27,5 +27,17 @@ namespace MiniGameTemplate.Platform
         {
             _bridge?.HandleRewardedAdError(error);
         }
+
+        // Invoked by WeChatBridge.jslib
+        public void OnPrivacyCheckResult(string needAuth)
+        {
+            _bridge?.HandlePrivacyCheckResult(needAuth);
+        }
+
+        // Invoked by WeChatBridge.jslib
+        public void OnPrivacyRequireResult(string accepted)
+        {
+            _bridge?.HandlePrivacyRequireResult(accepted);
+        }
     }
 }

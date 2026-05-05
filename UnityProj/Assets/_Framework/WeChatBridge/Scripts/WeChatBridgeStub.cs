@@ -121,11 +121,26 @@ namespace MiniGameTemplate.Platform
 
         // === Privacy ===
 
-        private bool _privacyAuthorized;
+        private const string PrivacyPrefsKey = "wechat_privacy_authorized_stub";
+
+        /// <summary>
+        /// Persistent privacy authorization state for Editor/Stub.
+        /// Uses PlayerPrefs so the user is only prompted once across Play sessions,
+        /// matching real WeChat platform behavior.
+        /// </summary>
+        private bool IsPrivacyAuthorized
+        {
+            get => PlayerPrefs.GetInt(PrivacyPrefsKey, 0) == 1;
+            set
+            {
+                PlayerPrefs.SetInt(PrivacyPrefsKey, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
 
         public void CheckPrivacyAuthorize(Action<bool> onResult)
         {
-            bool needAuth = !_privacyAuthorized;
+            bool needAuth = !IsPrivacyAuthorized;
             GameLog.Log($"[WeChatBridge:Stub] CheckPrivacyAuthorize — needAuth: {needAuth}");
             onResult?.Invoke(needAuth);
         }
@@ -135,7 +150,7 @@ namespace MiniGameTemplate.Platform
             GameLog.Log("[WeChatBridge:Stub] RequirePrivacyAuthorize — simulating 0.3s delay then accept.");
             DelayedInvoke(0.3f, () =>
             {
-                _privacyAuthorized = true;
+                IsPrivacyAuthorized = true;
                 onComplete?.Invoke(true);
             });
         }
@@ -143,6 +158,17 @@ namespace MiniGameTemplate.Platform
         public string GetPrivacySettingName()
         {
             return "隐私保护指引";
+        }
+
+        /// <summary>
+        /// [Editor only] Reset the stored privacy authorization state.
+        /// Call this to re-test the privacy authorization flow.
+        /// </summary>
+        public static void ResetPrivacyAuthorization()
+        {
+            PlayerPrefs.DeleteKey(PrivacyPrefsKey);
+            PlayerPrefs.Save();
+            GameLog.Log("[WeChatBridge:Stub] Privacy authorization state reset.");
         }
 
         // === System ===
