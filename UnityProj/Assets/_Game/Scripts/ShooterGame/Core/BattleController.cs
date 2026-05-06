@@ -69,10 +69,12 @@ namespace Game.ShooterGame
         private float _stateTimer;
         private SG_LevelConfigSO _currentLevel;
         private BaseLineDetector _baseLineDetector;
+        private EntitySystemBootstrap _entityBootstrap;
         private EntityClass _baseEntity;
         private EntityClass _playerEntity;
         private SG_ProgressManager _progressManager;
         private int _displayWaveIndex;
+
 
         // UI Controller 接口（通过 Init 或 GetComponent 动态绑定）
         private IBattleHUDController _hudController;
@@ -96,8 +98,10 @@ namespace Game.ShooterGame
             int index = Mathf.Clamp(_currentLevelIndex.Value, 0, _levelConfigs.Length - 1);
             _currentLevel = _levelConfigs[index];
             _baseLineDetector = new BaseLineDetector();
+            _entityBootstrap = FindObjectOfType<EntitySystemBootstrap>();
 
             // 获取 UI Controller 接口
+
             if (_hudControllerRef != null)
                 _hudController = _hudControllerRef as IBattleHUDController;
             if (_pausePanelRef != null)
@@ -310,14 +314,14 @@ namespace Game.ShooterGame
                 case BattleState.Victory:
                     SetSpawnerEnabled(false);
                     SetInputEnabled(false);
-                    Time.timeScale = 0f;
+                    SetBattleTimePaused(true);
                     StartCoroutine(ShowVictoryAfterDelay(_victoryDelay));
                     break;
 
                 case BattleState.Defeat:
                     SetSpawnerEnabled(false);
                     SetInputEnabled(false);
-                    Time.timeScale = 0f;
+                    SetBattleTimePaused(true);
                     _defeatPanel?.Show();
                     break;
             }
@@ -478,7 +482,42 @@ namespace Game.ShooterGame
             // V1 不实现暂停/恢复 Spawner（Intro 期间不会启动，Victory/Defeat 时波次已结束）
         }
 
+        private void SetBattleTimePaused(bool paused)
+        {
+            Time.timeScale = paused ? 0f : 1f;
+        }
+
+        /// <summary>
+        /// 将战斗运行时状态恢复到“新一局”初始值。
+        /// 语义上等价于重新进入 Battle 场景，但不重载场景。
+        /// </summary>
+        private void ResetBattleRuntimeState()
+        {
+            // 1. 回收所有 Entity
+            EntityManagerAccessor.Instance.DespawnAll();
+
+            // 2. 清理所有子系统运行时残留状态
+            _entityBootstrap?.HitReactionHandler?.ClearAll();
+            _entityBootstrap?.CollisionSolver?.ClearCooldowns();
+            if (DanmakuSystem.Instance != null)
+                DanmakuSystem.Instance.ClearAll();
+
+            // 3. 重置刷怪驱动
+            EntityManagerAccessor.Spawner.RestartAll();
+            _spawnerStarted = false;
+
+            // 4. 复位相机震动
+            _cameraShaker.StopShake();
+
+            // 5. 重置 SO 变量
+            _baseHP.SetValue(1.0f);
+            _currentWaveIndex.SetValue(1);
+            _killCount.SetValue(0);
+            _displayWaveIndex = 1;
+        }
+
         // ── 转场流程 ──
+
 
         private IEnumerator ShowVictoryAfterDelay(float delay)
         {
@@ -488,7 +527,7 @@ namespace Game.ShooterGame
 
         private IEnumerator HandleVictoryConfirm()
         {
-            Time.timeScale = 1f;
+            SetBattleTimePaused(false);
             _progressManager?.MarkLevelCleared(_currentLevelIndex.Value + 1); // 0-based → 1-based
             yield return null; // 一帧等待
             AppFlowNavigator.Instance.Pop();
@@ -496,7 +535,7 @@ namespace Game.ShooterGame
 
         private IEnumerator HandleDefeatQuit()
         {
-            Time.timeScale = 1f;
+            SetBattleTimePaused(false);
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }
@@ -507,49 +546,33 @@ namespace Game.ShooterGame
         private IEnumerator HandleRetry()
         {
             // 0. 恢复 timeScale（Defeat 状态下已冻结）
-            Time.timeScale = 1f;
+            SetBattleTimePaused(false);
 
             // 1. 黑屏淡入（V1 简化：直接跳过视觉过渡）
             yield return null;
 
-            // 2. 回收所有 Entity
-            EntityManagerAccessor.Instance.DespawnAll();
+            // 2. 重置战斗运行时状态
+            ResetBattleRuntimeState();
 
-            // 3. 重置 Spawner
-            EntityManagerAccessor.Spawner.RestartAll();
-            _spawnerStarted = false; // 允许下次 EnterState(Playing) 重新 StartWave
-
-            // 4. 复位相机震动（ET-004）
-            _cameraShaker.StopShake();
-
-            // 5. 重置 SO 变量
-            _baseHP.SetValue(1.0f);
-            _currentWaveIndex.SetValue(1);
-            _killCount.SetValue(0);
-            _displayWaveIndex = 1;
-
-            // 6. 重新 Spawn 基地 + 玩家
+            // 3. 重新 Spawn 基地 + 玩家
             SpawnBase();
             SpawnPlayer();
 
-            // 7. 重新初始化底线检测器
+            // 4. 重新初始化底线检测器
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
                 ? -_currentLevel.BaseLineYOverride : _baseLineY;
             _baseLineDetector.Init(effectiveBaseLineY, _baseEntity, _baseHP);
 
-            // 8. 重新初始化 PlayerInputBridge
+            // 5. 重新初始化 PlayerInputBridge
             _playerInputBridge.Init(_playerEntity);
 
-            // 9. 重新订阅 OnDespawned（DespawnAll 后旧引用失效，但委托仍在）
-            // 不需要重新订阅，因为 OnDespawned 回调不持有 Entity 引用
-
-            // 10. 兜底 UI 同步
+            // 6. 兜底 UI 同步
             _hudController?.ForceRefresh();
 
-            // 11. 黑屏淡出
+            // 7. 黑屏淡出
             yield return null;
 
-            // 12. 重新走 Intro
+            // 8. 重新走 Intro
             EnterState(BattleState.Intro);
         }
 
@@ -560,7 +583,7 @@ namespace Game.ShooterGame
 
         private IEnumerator HandlePauseQuit()
         {
-            Time.timeScale = 1f;
+            SetBattleTimePaused(false);
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }
