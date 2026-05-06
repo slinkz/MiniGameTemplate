@@ -309,11 +309,15 @@ namespace Game.ShooterGame
 
                 case BattleState.Victory:
                     SetSpawnerEnabled(false);
+                    SetInputEnabled(false);
+                    Time.timeScale = 0f;
                     StartCoroutine(ShowVictoryAfterDelay(_victoryDelay));
                     break;
 
                 case BattleState.Defeat:
                     SetSpawnerEnabled(false);
+                    SetInputEnabled(false);
+                    Time.timeScale = 0f;
                     _defeatPanel?.Show();
                     break;
             }
@@ -478,12 +482,13 @@ namespace Game.ShooterGame
 
         private IEnumerator ShowVictoryAfterDelay(float delay)
         {
-            yield return new WaitForSeconds(delay);
+            yield return new WaitForSecondsRealtime(delay);
             _victoryPanel?.Show();
         }
 
         private IEnumerator HandleVictoryConfirm()
         {
+            Time.timeScale = 1f;
             _progressManager?.MarkLevelCleared(_currentLevelIndex.Value + 1); // 0-based → 1-based
             yield return null; // 一帧等待
             AppFlowNavigator.Instance.Pop();
@@ -491,6 +496,7 @@ namespace Game.ShooterGame
 
         private IEnumerator HandleDefeatQuit()
         {
+            Time.timeScale = 1f;
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }
@@ -500,6 +506,9 @@ namespace Game.ShooterGame
         /// </summary>
         private IEnumerator HandleRetry()
         {
+            // 0. 恢复 timeScale（Defeat 状态下已冻结）
+            Time.timeScale = 1f;
+
             // 1. 黑屏淡入（V1 简化：直接跳过视觉过渡）
             yield return null;
 
