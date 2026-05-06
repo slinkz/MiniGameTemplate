@@ -1,3 +1,11 @@
+---
+system: shootergame
+scope: architecture
+last_verified: 2026-05-06
+depends_on: [SG_TDD_INDEX, APPFLOW_TDD]
+related_code: Assets/_Game/Scripts/ShooterGame/Core/*.cs, Assets/_Game/Scenes/Main.unity, Assets/_Game/Scenes/Battle.unity
+---
+
 # SG_TDD_01: 总体架构
 
 > 父文档：[SG_TDD_INDEX.md](SG_TDD_INDEX.md)
@@ -71,19 +79,30 @@ Assets/_Framework/DataSystem/Scripts/Variables/
 ## 3. 核心生命周期（场景级）
 
 ```
-Boot Scene (MainMenu)
-  └── GameStartupFlow → 加载 FairyGUI 包 → 显示 LoadingScreen → 完成后显示 LevelSelect
+Boot Scene (一次性启动)
+  └── GameBootstrapper (DontDestroyOnLoad)
+      ├── 初始化所有 Singleton（AppFlowNavigator / SceneLoader / UIManager / DanmakuSystem）
+      └── 驱动 IStartupFlow.RunAsync
+  └── GameStartupFlow (DontDestroyOnLoad，在 GameBootstrapper GO 上)
+      └── 加载 FairyGUI 包 → Push(Node_MainMenu) → 加载 Main 场景（Single，替换 Boot）
 
-Battle Scene
+Main Scene (非战斗宿主)
+  └── 正交相机 (Size=8)
+  └── FairyGUI 面板运行在 GRoot（DontDestroyOnLoad）上：MainMenu / LevelSelect
+
+Battle Scene (战斗)
   └── BattleController (MonoBehaviour)
       ├── Awake(): 读取 SG_CurrentLevelIndex → 加载对应 SG_LevelConfigSO
       ├── Start(): 创建子系统 → 进入 Intro 状态
       ├── Update(): 按 BattleState 驱动逻辑
-      └── OnDestroy(): 清理
-
+      └── OnDestroy(): 取消事件订阅 + DanmakuSystem.ClearAll()
   └── EntitySystemBootstrap (框架)
       ├── Awake(): 创建 EntityManager/Spawner/CollisionSolver/HitReactionHandler
-      └── Update(): 驱动 Entity 系统 Tick
+      ├── Update(): 驱动 Entity 系统 Tick
+      └── OnDestroy(): 注销 EntityManagerAccessor + 清理所有活跃 Entity
+  └── UI Controllers (MonoBehaviour)
+      ├── 各 Controller.Start(): CreateObject 挂 GRoot
+      └── 各 Controller.OnDestroy(): Dispose() 清理 FairyGUI 对象（防止 GRoot 残留）
 ```
 
 ---
@@ -91,27 +110,47 @@ Battle Scene
 ## 4. 场景与界面关系
 
 ```
-┌─ Boot.unity ─────────────────────────────────┐
-│  GameStartupFlow (MonoBehaviour)              │
-│  FairyGUI GRoot (UI 根)                       │
-│  ├── LoadingScreenController                  │
-│  └── LevelSelectController                   │
+┌─ DontDestroyOnLoad (常驻) ────────────────────┐
+│  GameBootstrapper (Singleton 宿主)             │
+│  ├── AppFlowNavigator                        │
+│  ├── SceneLoader                             │
+│  ├── UIManager                               │
+│  └── GameStartupFlow                         │
+│  DanmakuSystem (Singleton)                    │
+│  FairyGUI GRoot + Stage (UI 根)               │
 └───────────────────────────────────────────────┘
-        │ 选关 → SceneManager.LoadScene("Battle")
+
+┌─ Boot.unity (仅启动时短暂存在) ──────────────┐
+│  GameBootstrapper GO → 初始化后进入常驻层       │
+│  LoadingScreenController → Loading 完成后 Dispose │
+└───────────────────────────────────────────────┘
+        │ Push(Node_MainMenu) → LoadScene(SD_Main, Single) → Boot 被替换
         ▼
-┌─ Battle.unity ───────────────────────────────┐
+┌─ Main.unity (非战斗宿主) ────────────────────┐
+│  Main Camera (Orthographic, Size=8)           │
+│  UI 面板运行在 GRoot 上：                      │
+│  ├── MainMenuPanel（通过 UIManager）          │
+│  └── LevelSelectScreen（通过 UIManager）      │
+└───────────────────────────────────────────────┘
+        │ Push(Node_Battle) → LoadScene(SD_Battle, Single) → Main 被替换
+        ▼
+┌─ Battle.unity (战斗) ────────────────────────┐
 │  BattleController (MonoBehaviour)             │
+│  BattleSceneBootstrapper (MonoBehaviour)      │
 │  EntitySystemBootstrap (MonoBehaviour)        │
 │  CameraShaker (MonoBehaviour)                │
 │  SG_PlayerInputBridge (MonoBehaviour)         │
 │  Main Camera (Orthographic, Size=8)           │
-│  FairyGUI GRoot (UI 根)                       │
+│  UI Controllers (MonoBehaviour, 面板挂 GRoot)：│
 │  ├── BattleHUDController                     │
 │  ├── JoystickController                      │
 │  ├── PausePanelController                    │
 │  ├── VictoryPanelController                  │
 │  └── DefeatPanelController                   │
 └───────────────────────────────────────────────┘
+        │ Pop() → LoadScene(SD_Main, Single) → Battle 被替换 + OnDestroy 清理
+        ▼
+        回到 Main.unity
 ```
 
 ---
@@ -146,7 +185,7 @@ Battle Scene
 | 同屏 Entity 上限 | 40 | GDD §4.2 |
 | SO 变量不可存场景引用 | 强制 | 项目铁律 |
 | TimeScale=0 暂停 | FairyGUI Tween 自然冻结 | UI §8.1 |
-| 不使用 DontDestroyOnLoad | 场景卸载即清理 | 架构铁律 |
+| 业务对象不用 DontDestroyOnLoad | 场景卸载即清理（框架 Singleton 除外） | 架构铁律 |
 | MonoBehaviour ≤ 150 行 | SRP 铁律 | 架构规范 |
 
 ---
@@ -241,9 +280,19 @@ namespace Game.ShooterGame
 
 ```
 Boot.unity
-├── GameStartupFlow (MonoBehaviour)
-│   ├── _loadingScreen → LoadingScreenController (同 GO 或子 GO)
-│   └── _levelSelect → LevelSelectController (同 GO 或子 GO)
-├── FairyGUI GRoot (UI 根，自动创建)
-└── EventSystem (如需)
+├── GameBootstrapper (DontDestroyOnLoad)
+│   ├── GameStartupFlow (IStartupFlow)
+│   ├── AppFlowNavigator (Singleton)
+│   ├── SceneLoader (Singleton)
+│   └── UIManager (Singleton)
+├── FairyGUI GRoot (UI 根，自动创建，DontDestroyOnLoad)
+└── 启动完成后 → Push(Node_MainMenu) → 加载 Main.unity (Single) → Boot 被替换
+
+Main.unity
+├── Main Camera (Orthographic, Size=8)
+└── （纯场景壳，UI 面板运行在 GRoot 上由 UIManager 管理）
+
+Battle.unity
+├── BattleController / EntitySystemBootstrap / CameraShaker 等
+└── UI Controllers 在 Start() 中将面板挂到 GRoot
 ```

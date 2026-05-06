@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _requiredScene: {fileID: 11400000, guid: 84bd180734760f945a7662f44d237775, type: 2}
   _panelTypeName: 
-  _unloadSceneOnExit: 1
+  _unloadSceneOnExit: 0
   _closeAllPanelsOnEnter: 1
   _displayName: Battle
   _nodeId: node_battle

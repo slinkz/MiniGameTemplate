@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83919dbb551c63844b1319d766385511, type: 3}
   m_Name: Node_LevelSelect
   m_EditorClassIdentifier: 
-  _requiredScene: {fileID: 0}
+  _requiredScene: {fileID: 11400000, guid: a1b2c3d4e5f60718293a4b5c6d7e8f90, type: 2}
   _panelTypeName: LevelSelectScreen
   _unloadSceneOnExit: 0
   _closeAllPanelsOnEnter: 1

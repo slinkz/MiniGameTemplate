@@ -145,5 +145,14 @@ namespace Game.ShooterGame.UI
                 centerX + offset.x - _config.StickDiameter * 0.5f,
                 centerY + offset.y - _config.StickDiameter * 0.5f, 0);
         }
+
+        private void OnDestroy()
+        {
+            // 防御性清零——实际由 HUD 的 Dispose 递归清理
+            _inputDirection?.SetValue(Vector2.zero);
+            _touchArea = null;
+            _joystickBase = null;
+            _joystickStick = null;
+        }
     }
 }

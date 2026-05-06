@@ -162,6 +162,10 @@ namespace Game.ShooterGame
             var hudView = _hudController?.GetView();
             var btnPause = hudView?.GetChild("btn_pause_bg");
             btnPause?.onClick.Remove(OnPauseButtonClicked);
+
+            // 清理弹幕系统（DontDestroyOnLoad，不随场景销毁）
+            if (DanmakuSystem.Instance != null)
+                DanmakuSystem.Instance.ClearAll();
         }
 
         // ── 初始化 ──

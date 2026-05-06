@@ -1,7 +1,7 @@
 ---
 system: shootergame
 scope: ui-controllers
-last_verified: 2026-05-04
+last_verified: 2026-05-06
 depends_on: [SG_TDD_INDEX, SG_UI_DESIGN]
 related_code: Assets/_Game/Scripts/ShooterGame/UI/*.cs, Assets/_Game/Scripts/ShooterGame/Core/BattleController.cs
 ---
@@ -14,14 +14,18 @@ related_code: Assets/_Game/Scripts/ShooterGame/UI/*.cs, Assets/_Game/Scripts/Sho
 
 ## 1. 界面类型与生命周期
 
-| 界面 | C# Controller | 基类 | 场景归属 | FairyGUI 包 |
-|------|--------------|------|---------|------------|
-| LoadingScreen | LoadingScreenController | MonoBehaviour | Boot | Loading |
-| LevelSelectScreen | LevelSelectController | MonoBehaviour | Boot | LevelSelect |
-| BattleHUD | BattleHUDController | MonoBehaviour | Battle | Battle |
-| PausePanel | PausePanelController | MonoBehaviour | Battle | Popup |
-| VictoryPanel | VictoryPanelController | MonoBehaviour | Battle | Popup |
-| DefeatPanel | DefeatPanelController | MonoBehaviour | Battle | Popup |
+| 界面 | C# Controller | 基类 | 场景归属 | FairyGUI 包 | OnDestroy 清理 |
+|------|--------------|------|---------|------------|---------------|
+| LoadingScreen | LoadingScreenController | MonoBehaviour | Boot（短暂） | Loading | ✅ Dispose view |
+| LevelSelectScreen | LevelSelectController | MonoBehaviour | — (UIManager) | LevelSelect | UIManager 管理 |
+| MainMenuPanel | — (UIManager) | — | — (UIManager) | — | UIManager 管理 |
+| BattleHUD | BattleHUDController | MonoBehaviour | Battle | Battle | ✅ Dispose view + 飘字池 |
+| PausePanel | PausePanelController | MonoBehaviour | Battle | Popup | ✅ Dispose view |
+| VictoryPanel | VictoryPanelController | MonoBehaviour | Battle | Popup | ✅ Dispose view |
+| DefeatPanel | DefeatPanelController | MonoBehaviour | Battle | Popup | ✅ Dispose view |
+| Joystick | JoystickController | MonoBehaviour | Battle | Battle | ✅ 引用归零（由 HUD Dispose 带走） |
+
+> **2026-05-06 重构说明**：Battle 场景中的 UI Controller 面板直接挂 GRoot（DontDestroyOnLoad），不会随场景自动销毁。必须在 `OnDestroy` 中主动 `Dispose()` 清理，否则 Pop 回 Main 后 GRoot 上会残留战斗面板。
 
 ---
 

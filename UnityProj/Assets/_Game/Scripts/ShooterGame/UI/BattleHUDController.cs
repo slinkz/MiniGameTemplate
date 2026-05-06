@@ -104,6 +104,25 @@ namespace Game.ShooterGame.UI
             _totalWaveCount.OnValueChanged -= OnTotalWaveCountChanged;
         }
 
+        private void OnDestroy()
+        {
+            // 场景卸载时清理 FairyGUI 对象（挂在 DontDestroyOnLoad 的 GRoot 上）
+            for (int i = 0; i < MAX_FLOATING_TEXTS; i++)
+            {
+                if (_floatingTexts[i] != null)
+                {
+                    _floatingTexts[i].Dispose();
+                    _floatingTexts[i] = null;
+                }
+            }
+
+            if (_view != null)
+            {
+                _view.Dispose();
+                _view = null;
+            }
+        }
+
         private void Update()
         {
             UpdatePreDamage(Time.deltaTime);

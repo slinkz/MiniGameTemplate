@@ -1,16 +1,16 @@
 ---
 system: navigation
 scope: appflow-tdd
-last_verified: 2026-05-05T17:42
-related_code: Assets/_Framework/Navigation/*.cs, Assets/_Game/Scripts/GameStartupFlow.cs
+last_verified: 2026-05-06
+related_code: Assets/_Framework/Navigation/*.cs, Assets/_Game/Scripts/GameStartupFlow.cs, Assets/_Game/Scenes/Main.unity, Assets/_Game/ScriptableObjects/Config/SD_Main.asset
 ---
 
 # AppFlow 导航系统 — 技术设计文档 (TDD)
 
-> **版本**：v1.5（Phase 1~4 全部实施完成）  
-> **状态**：✅ Phase 1~4 全部完成 + 3 轮 PK 评审通过  
+> **版本**：v1.6（双 Single 场景切换重构）  
+> **状态**：✅ Phase 1~4 全部完成 + 3 轮 PK 评审通过 + 场景策略重构  
 > **作者**：广智  
-> **日期**：2026-05-05  
+> **日期**：2026-05-06  
 > **ADR**：ADR-034  
 > **PK 记录**：  
 > - [APPFLOW_TDD_PK.md](APPFLOW_TDD_PK.md)（#1 微信全栈：12 问题 / 1 轮 / 100% 收敛）  
@@ -854,13 +854,15 @@ private void OnDrawGizmos()
 
 | SO 资产名 | RequiredScene | PanelTypeName（注册表 key） | CloseAllPanelsOnEnter | UnloadSceneOnExit |
 |-----------|---------------|---------------|----------------------|-------------------|
-| `Node_MainMenu` | null | `MainMenuPanel` | true | — |
-| `Node_LevelSelect` | null | `LevelSelectScreen` | true | — |
-| `Node_Battle` | Scene_Battle | _(空，由 BattleController 自管)_ | true | true |
+| `Node_MainMenu` | SD_Main (Single) | `MainMenuPanel` | true | — |
+| `Node_LevelSelect` | SD_Main (Single) | `LevelSelectScreen` | true | — |
+| `Node_Battle` | SD_Battle (Single) | _(空，由 BattleController 自管)_ | true | false |
+
+> **2026-05-06 重构**：MainMenu/LevelSelect 从纯 UI 节点改为关联 SD_Main（Single 模式），Battle 改为 `UnloadSceneOnExit=false`。场景切换由 Single 模式自动替换完成——Push Battle 时 Main 被替换，Pop 回 LevelSelect 时 Battle 被替换。
 
 ### 4.3 导航流程时序
 
-#### 正常游戏流程
+#### 正常游戏流程（2026-05-06 双 Single 场景版本）
 
 ```
 [App 启动] 
@@ -869,23 +871,28 @@ private void OnDrawGizmos()
 [StartupFlow 完成] 
   Push(Node_MainMenu, menuData)
   → Stack: [MainMenu]
+  → SceneLoader.LoadScene(SD_Main, Single) → Boot 被替换
   → UIManager.OpenPanelAsync<MainMenuPanel>()
   ↓
 [点击"弹幕射击"] 
   Push(Node_LevelSelect)
   → Stack: [MainMenu, LevelSelect]
+  → SceneLoader: SD_Main 已加载，短路跳过
   → CloseAllPanels() → OpenPanelAsync<LevelSelectScreen>()
   ↓
 [选关确认] 
   Push(Node_Battle, { levelIndex = 2 })
   → Stack: [MainMenu, LevelSelect, Battle]
-  → CloseAllPanels() → SceneLoader.LoadScene(Scene_Battle) → BattleController 自行初始化 HUD
+  → CloseAllPanels() → SceneLoader.LoadScene(SD_Battle, Single) → Main 被替换
+  → BattleController 自行初始化 HUD
   ↓
 [暂停 → 返回] 
   Pop()
   → Stack: [MainMenu, LevelSelect]
-  → ExitNode: UnloadScene(Scene_Battle)
-  → EnterNode: CloseAllPanels() → OpenPanelAsync<LevelSelectScreen>()
+  → ExitNode: UnloadSceneOnExit=false → 不手动卸载
+  → EnterNode: SceneLoader.LoadScene(SD_Main, Single) → Battle 被替换
+  → Battle 场景 MonoBehaviour.OnDestroy → 清理 FairyGUI + DanmakuSystem.ClearAll
+  → OpenPanelAsync<LevelSelectScreen>()
   ↓
 [胜利 → 确认]
   Pop()  ← 同上效果
@@ -908,25 +915,27 @@ private void OnDrawGizmos()
   fallback → PushAsync(Node_MainMenu)  (正常首屏)
 ```
 
-### 4.4 场景策略
+### 4.4 场景策略（2026-05-06 重构）
 
 ```
-当前场景布局（不变）：
-  Boot (常驻/DontDestroyOnLoad 宿主)  ← 所有 Singleton + FairyGUI 面板
-  Battle (独立场景)                    ← 战斗场景，Additive 加载
+场景布局：
+  Boot.unity  → 仅启动时短暂存在，GameBootstrapper 在此初始化所有 Singleton 后切走
+  Main.unity  → 非战斗宿主场景（正交相机 Size=8），承载 MainMenu / LevelSelect 面板
+  Battle.unity → 战斗场景，承载 BattleController / EntitySystem / UI Controllers
 
-纯 UI 节点（MainMenu / LevelSelect）：
-  - 不触发 SceneLoader
-  - 只通过 UIManager.OpenPanelAsync 管理面板
-  - 面板挂在 GRoot（Boot 场景的 FairyGUI Stage）上
+常驻层（DontDestroyOnLoad）：
+  GameBootstrapper → AppFlowNavigator / SceneLoader / UIManager / DanmakuSystem / FairyGUI GRoot
 
-场景节点（Battle）：
-  - Push 时 SceneLoader.LoadScene(Scene_Battle)  [Additive]
-  - Pop 时 SceneLoader.UnloadScene(Scene_Battle)
-  - 场景内 BattleController 自行管理 HUD 面板生命周期
+场景切换流程：
+  Boot ──Single──→ Main ──Single──→ Battle ──Single──→ Main
+                                      ↑ Push              ↑ Pop
 ```
 
-**关键变更**：Battle 场景改为 `IsAdditive = true`（附加加载），Boot 场景常驻。这样 Pop 回来时 Boot 场景仍在，Singleton + FairyGUI 状态完整保留。
+**设计决策**：
+- **所有场景都是 Single 模式加载**——利用 Unity 的 LoadSceneMode.Single 自动替换前一个场景
+- `Node_Battle.UnloadSceneOnExit = false`——Pop 时不需手动卸载，因为 EnterNode(LevelSelect) 会加载 SD_Main(Single)，自动替换 Battle
+- 战斗中的 FairyGUI 对象直接挂 GRoot（DontDestroyOnLoad），各 UI Controller 必须在 `OnDestroy` 中 `Dispose()` 清理
+- DanmakuSystem 是 DontDestroyOnLoad，需在 `BattleController.OnDestroy` 中显式 `ClearAll()`
 
 ---
 
@@ -950,7 +959,7 @@ private void OnDrawGizmos()
 |------|---------|-----------|------|
 | 面板打开用注册表 + 自注册 | IL2CPP/WebGL 安全 + 零反射 + 零编译耦合 | 集中可见性（需跨文件查找注册点） | AOT 环境 + 数据驱动原则"新增内容不改代码"（PK UA-003） |
 | IFlowData 标记接口 | 强类型 + V2 扩展无 break change | 稍许仪式感（每个 Data 类加一行 : IFlowData） | 避免 object 装箱 + 调试友好 + 编译期安全（PK UA-002） |
-| Battle 改 Additive | Boot 常驻，Pop 无缝 | 不能用 LoadSceneMode.Single | Single 模式会销毁 DontDestroyOnLoad 之外的所有对象 |
+| ~~Battle 改 Additive~~ → **全 Single 模式** | Main⇄Battle 自动替换，零手动卸载 | Battle 中不保留 Boot/Main 场景 | DontDestroyOnLoad Singleton 常驻 + OnDestroy 清理 FairyGUI/弹幕（2026-05-06 重构） |
 | Pop 时跳过 CloseAll + Resume | 返回即恢复语义 + 无闪烁 | 面板残留隐患 | UIManager.OpenPanelAsync 自带"已打开则 OnRefresh"逻辑兜底 + IFlowSuspendable 管理挂起/恢复（PK UA-007） |
 | IFlowHandler 限 MonoBehaviour | SO 保持纯数据 | SO 子类化灵活性 | SO 共享实例 → 行为在 SO 上会互相覆盖（PK UA-008） |
 | 不复用 StateMachine FSM | 导航器自带栈语义 | 复用已有代码 | FSM 的状态验证 + 转换表对导航场景是过度约束 |
@@ -1064,4 +1073,4 @@ private void OnDrawGizmos()
 
 ---
 
-_TDD v1.5 | 2026-05-05 | 广智 | Phase 1~4 全部实施完成，编译零错误零警告_
+_TDD v1.6 | 2026-05-06 | 广智 | 双 Single 场景切换重构（Boot→Main⇄Battle），§4.2/4.3/4.4/5.2 更新_

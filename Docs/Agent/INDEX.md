@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-05 23:36 | 文件总数：67
+> 最后更新：2026-05-06 13:12 | 文件总数：67
 
 ---
 
@@ -63,6 +63,8 @@
 | `_Game/Scripts/ShooterGame/UI/*.cs` | SG_TDD_04 + SG_DEV_PLAN | SG UI Controllers |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
 | `_Framework/Navigation/**/*.cs` | APPFLOW_TDD | AppFlow 栈式导航系统 |
+| `_Game/Scenes/Main.unity` | APPFLOW_TDD §4.4 + SG_TDD_01 §4 | 非战斗宿主场景 |
+| `_Game/ScriptableObjects/Config/SD_Main.asset` | APPFLOW_TDD §4.2 | Main 场景定义 SO |
 | `UIProject/assets/SG_*/**` | SG_TDD_04 §4.2 + SG_UI_DESIGN | SG FairyGUI 白模包（4包16 XML） |
 
 ---
@@ -103,7 +105,7 @@
 | CONV | CONV_INDEX | 4 | 编码/命名/平台/工作流约定 |
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
-| APPFLOW | APPFLOW_TDD | — | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 全部完成） |
+| APPFLOW | APPFLOW_TDD | — | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 双 Single 场景重构） |
 | — | APPFLOW_TDD_PK | — | AppFlow TDD PK 评审记录 |
 | — | APPFLOW_TDD_PK2 | — | AppFlow TDD PK #2 评审记录（Unity架构师） |
 | — | APPFLOW_TDD_PK3 | — | AppFlow TDD PK #3 评审记录（编辑器工具开发者） |

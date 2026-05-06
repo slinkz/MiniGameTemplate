@@ -52,5 +52,15 @@ namespace Game.ShooterGame.UI
             Time.timeScale = 1f;
             _onQuit?.Invoke();
         }
+
+        private void OnDestroy()
+        {
+            // 场景卸载时清理 FairyGUI view（挂在 DontDestroyOnLoad 的 GRoot 上）
+            if (_view != null)
+            {
+                _view.Dispose();
+                _view = null;
+            }
+        }
     }
 }

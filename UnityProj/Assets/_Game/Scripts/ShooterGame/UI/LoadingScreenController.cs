@@ -37,5 +37,15 @@ namespace Game.ShooterGame.UI
                 _view = null;
             });
         }
+
+        private void OnDestroy()
+        {
+            // 防御性清理——若 Tween 还没完成就被场景卸载
+            if (_view != null)
+            {
+                _view.Dispose();
+                _view = null;
+            }
+        }
     }
 }

@@ -43,5 +43,14 @@ namespace Game.ShooterGame.UI
             _view.visible = false;
             _onConfirm?.Invoke();
         }
+
+        private void OnDestroy()
+        {
+            if (_view != null)
+            {
+                _view.Dispose();
+                _view = null;
+            }
+        }
     }
 }
