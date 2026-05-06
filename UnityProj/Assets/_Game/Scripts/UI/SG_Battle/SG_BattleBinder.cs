@@ -12,6 +12,7 @@ namespace SG_Battle
             UIObjectFactory.SetPackageItemExtension(FloatingText.URL, typeof(FloatingText));
             UIObjectFactory.SetPackageItemExtension(Joystick.URL, typeof(Joystick));
             UIObjectFactory.SetPackageItemExtension(HPBar.URL, typeof(HPBar));
+            UIObjectFactory.SetPackageItemExtension(PauseButton.URL, typeof(PauseButton));
         }
     }
 }

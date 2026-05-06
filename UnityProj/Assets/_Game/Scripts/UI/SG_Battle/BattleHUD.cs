@@ -8,8 +8,7 @@ namespace SG_Battle
     public partial class BattleHUD : GComponent
     {
         public GGraph bg;
-        public GGraph btn_pause_bg;
-        public GTextField btn_pause_text;
+        public PauseButton btn_pause;
         public GTextField text_wave;
         public HPBar hp_bar;
         public GTextField text_hp_pct;
@@ -26,8 +25,7 @@ namespace SG_Battle
             base.ConstructFromXML(xml);
 
             bg = (GGraph)GetChild("bg");
-            btn_pause_bg = (GGraph)GetChild("btn_pause_bg");
-            btn_pause_text = (GTextField)GetChild("btn_pause_text");
+            btn_pause = (PauseButton)GetChild("btn_pause");
             text_wave = (GTextField)GetChild("text_wave");
             hp_bar = (HPBar)GetChild("hp_bar");
             text_hp_pct = (GTextField)GetChild("text_hp_pct");

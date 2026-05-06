@@ -164,8 +164,9 @@ namespace Game.ShooterGame
 
             // 清理暂停按钮事件绑定
             var hudView = _hudController?.GetView();
-            var btnPause = hudView?.GetChild("btn_pause_bg");
-            btnPause?.onClick.Remove(OnPauseButtonClicked);
+            var btnPause = hudView?.GetChild("btn_pause");
+            if (btnPause != null)
+                btnPause.onClick.Remove(OnPauseButtonClicked);
 
             // 清理弹幕系统（DontDestroyOnLoad，不随场景销毁）
             if (DanmakuSystem.Instance != null)
@@ -238,7 +239,7 @@ namespace Game.ShooterGame
             // 暂停按钮：从 HUD view 中获取并绑定（TDD_04 §4 + UI Design §2.3）
             if (hudView != null)
             {
-                var btnPause = hudView.GetChild("btn_pause_bg");
+                var btnPause = hudView.GetChild("btn_pause");
                 if (btnPause != null)
                     btnPause.onClick.Add(OnPauseButtonClicked);
             }

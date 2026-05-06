@@ -37,13 +37,12 @@ namespace Game.ShooterGame.UI
             _touchArea.SetSize(GRoot.inst.width, GRoot.inst.height);
             _touchArea.DrawRect(GRoot.inst.width, GRoot.inst.height, 0, Color.clear, Color.clear);
             _touchArea.touchable = true;
-            _touchArea.sortingOrder = 50; // 低于 HUD 元素
-            battleHUD.AddChild(_touchArea);
+            battleHUD.AddChildAt(_touchArea, 1); // 位于背景之上、HUD 按钮之下
 
             // 创建底座和摇杆头
             _joystickBase = UIPackage.CreateObject(FGUI_PKG, FGUI_JOYSTICK).asCom;
             _joystickBase.visible = false;
-            battleHUD.AddChild(_joystickBase);
+            battleHUD.AddChildAt(_joystickBase, 2); // 位于触摸层之上、HUD 按钮之下
 
             _joystickStick = _joystickBase.GetChild("stick");
 
@@ -154,7 +153,8 @@ namespace Game.ShooterGame.UI
         private void OnDestroy()
         {
             // 防御性清零——实际由 HUD 的 Dispose 递归清理
-            _inputDirection?.SetValue(Vector2.zero);
+            if (_inputDirection != null)
+                _inputDirection.SetValue(Vector2.zero);
             _touchArea = null;
             _joystickBase = null;
             _joystickStick = null;
