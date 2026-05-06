@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="120,50" extention="Button">
+  <controller name="button" pages="0,up,1,down,2,over,3,selectedOver" selected="0"/>
+  <displayList>
+    <graph id="gen_40" name="bg_up" xy="0,0" size="120,50" type="rect" fillColor="#ff333355" corner="25">
+      <gearDisplay controller="button" pages="0"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="gen_41" name="bg_down" xy="0,0" size="120,50" type="rect" fillColor="#ff222244" corner="25">
+      <gearDisplay controller="button" pages="1,3"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="gen_42" name="bg_over" xy="0,0" size="120,50" type="rect" fillColor="#ff444466" corner="25">
+      <gearDisplay controller="button" pages="2"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="gen_43" name="icon_arrow" xy="12,8" size="30,34" fontSize="24" color="#ffffff" align="center" vAlign="middle" autoSize="none" text="←"/>
+    <text id="gen_44" name="title" xy="40,8" size="70,34" fontSize="18" color="#ffffff" align="center" vAlign="middle" autoSize="none" singleLine="true" text="返回">
+      <relation target="" sidePair="width-width,height-height"/>
+    </text>
+  </displayList>
+  <Button/>
+</component>

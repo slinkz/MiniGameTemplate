@@ -8,6 +8,7 @@ namespace SG_LevelSelect
     public partial class LevelSelectScreen : GComponent
     {
         public GGraph bg;
+        public BackButton btn_back;
         public GTextField text_title;
         public GGraph path_line;
         public LevelNode node_1;
@@ -31,6 +32,7 @@ namespace SG_LevelSelect
             base.ConstructFromXML(xml);
 
             bg = (GGraph)GetChild("bg");
+            btn_back = (BackButton)GetChild("btn_back");
             text_title = (GTextField)GetChild("text_title");
             path_line = (GGraph)GetChild("path_line");
             node_1 = (LevelNode)GetChild("node_1");

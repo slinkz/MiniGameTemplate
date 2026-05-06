@@ -59,6 +59,9 @@ namespace SG_LevelSelect
                 _levelNodes[i].onClick.Add(() => OnLevelClicked(capturedIndex));
             }
 
+            // Bind back button
+            if (btn_back != null) btn_back.onClick.Add(OnBackClicked);
+
             RefreshAllNodes();
         }
 
@@ -158,6 +161,12 @@ namespace SG_LevelSelect
         {
             var node = _levelNodes[levelIndex - 1];
             node.TweenMoveX(node.x + 5f, 0.05f).SetRepeat(3, true);
+        }
+
+        private async void OnBackClicked()
+        {
+            GameLog.Log("[LevelSelectScreen] Back button clicked, returning to MainMenu.");
+            await AppFlowNavigator.Instance.PopAsync();
         }
     }
 }

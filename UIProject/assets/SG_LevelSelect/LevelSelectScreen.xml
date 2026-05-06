@@ -2,6 +2,9 @@
 <component size="750,1334">
   <displayList>
     <graph id="gen_10" name="bg" xy="0,0" size="750,1334" type="rect" fillColor="#ff1a1a2e"/>
+    <component id="gen_22" name="btn_back" src="gen_03" fileName="components/BackButton.xml" xy="20,55" size="120,50">
+      <Button title="返回"/>
+    </component>
     <text id="gen_11" name="text_title" xy="40,60" size="670,40" fontSize="28" color="#ffffff" align="center" autoSize="none" bold="true" text="选择关卡"/>
     <graph id="gen_12" name="path_line" xy="370,200" size="4,900" type="rect" fillColor="#ff444444"/>
     <component id="gen_13" name="node_1" src="gen_02" fileName="components/LevelNode.xml" xy="332,980" size="80,80">
