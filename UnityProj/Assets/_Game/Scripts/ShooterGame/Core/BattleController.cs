@@ -502,8 +502,8 @@ namespace Game.ShooterGame
             if (DanmakuSystem.Instance != null)
                 DanmakuSystem.Instance.ClearAll();
 
-            // 3. 重置刷怪驱动
-            EntityManagerAccessor.Spawner.RestartAll();
+            // 3. 重置刷怪驱动（StopAll 彻底清空注册状态，避免重复注册导致怪物翻倍）
+            EntityManagerAccessor.Spawner.StopAll();
             _spawnerStarted = false;
 
             // 4. 复位相机震动
