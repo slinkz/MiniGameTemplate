@@ -32,8 +32,10 @@ namespace Game.ShooterGame.UI
             if (battleHUD == null) return;
 
             // 创建全屏 GGraph 作为触摸区
+            // 必须 DrawRect 才有命中区域——Shape.HitTest 在 meshFactory==null 时返回 null
             _touchArea = new GGraph();
             _touchArea.SetSize(GRoot.inst.width, GRoot.inst.height);
+            _touchArea.DrawRect(GRoot.inst.width, GRoot.inst.height, 0, Color.clear, Color.clear);
             _touchArea.touchable = true;
             _touchArea.sortingOrder = 50; // 低于 HUD 元素
             battleHUD.AddChild(_touchArea);
@@ -65,6 +67,9 @@ namespace Game.ShooterGame.UI
         private void OnTouchBegin(EventContext context)
         {
             if (!_inputEnabled) return;
+
+            // 关键：捕获触摸，后续 Move/End 才会路由到此对象
+            context.CaptureTouch();
 
             var touch = context.inputEvent;
             _touchOrigin = new Vector2(touch.x, touch.y);
