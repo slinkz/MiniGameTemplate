@@ -9,8 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8eb5f211c2b6c4438b67745d432bd85, type: 3}
-  m_Name: SG_CurrentLevelIndex
+  m_Script: {fileID: 11500000, guid: 5e19bb6edf7f7464c839e42f8ac205b1, type: 3}
+  m_Name: SG_Level_05
   m_EditorClassIdentifier: 
-  _initialValue: -1
-  _value: -1
+  WaveConfig: {fileID: 11400000, guid: d39f2bd613e75474d986856a8a3f25f5, type: 2}
+  BaseHpRatio: 0.6
+  UnlockRequirement: 0
+  BaseLineYOverride: -1

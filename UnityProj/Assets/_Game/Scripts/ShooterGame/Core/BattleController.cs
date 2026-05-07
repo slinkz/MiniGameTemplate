@@ -35,7 +35,7 @@ namespace Game.ShooterGame
 
         [Header("关卡配置")]
         [SerializeField] private SG_LevelConfigSO[] _levelConfigs;
-        [SerializeField] private IntVariable _currentLevelIndex;
+
 
         [Header("SO 变量（输出）")]
         [SerializeField] private FloatVariable _baseHP;
@@ -68,7 +68,12 @@ namespace Game.ShooterGame
         public BattleState CurrentState { get; private set; }
         private float _stateTimer;
         private SG_LevelConfigSO _currentLevel;
+        private EntitySpawnWaveSO _runtimeWaveConfig;
+        private int? _launchLevelIndex;
+        private bool _battleStartedByFlow;
         private BaseLineDetector _baseLineDetector;
+
+
         private EntitySystemBootstrap _entityBootstrap;
         private EntityClass _baseEntity;
         private EntityClass _playerEntity;
@@ -95,10 +100,9 @@ namespace Game.ShooterGame
 
         private void Awake()
         {
-            int index = Mathf.Clamp(_currentLevelIndex.Value, 0, _levelConfigs.Length - 1);
-            _currentLevel = _levelConfigs[index];
             _baseLineDetector = new BaseLineDetector();
             _entityBootstrap = FindObjectOfType<EntitySystemBootstrap>();
+
 
             // 获取 UI Controller 接口
 
@@ -127,6 +131,14 @@ namespace Game.ShooterGame
                 // 防御性初始化：若从 Boot 场景启动则已初始化，直接跳场景测试时兜底
                 SG_Boot.InitProgress();
                 _progressManager = SG_Boot.Progress;
+
+                // 等待一帧，给 AppFlowNavigator.OnFlowEnter → StartBattle() 时机
+                await System.Threading.Tasks.Task.Yield();
+
+                // 如果 FlowHandler 已经触发了 StartBattle()，则不重复初始化
+                if (_battleStartedByFlow) return;
+
+                // 直跑 Battle 场景：自行启动战斗
                 await InitBattleAsync();
                 EnterState(BattleState.Intro);
             }
@@ -177,16 +189,16 @@ namespace Game.ShooterGame
 
         private async System.Threading.Tasks.Task InitBattleAsync()
         {
-            // 1. 读取关卡配置
-            _currentLevel = _levelConfigs[Mathf.Clamp(_currentLevelIndex.Value, 0, _levelConfigs.Length - 1)];
+            // 1. 解析本次战斗启动上下文
+            ResolveBattleContext();
 
             // 2. 设置波次计数 SO（1-based 展示）
-            // 统一以运行时实际启动的 SpawnPoint.WaveConfig 为权威来源，
-            // 避免与 LevelConfig.WaveConfig 不一致时出现 HUD 显示 1/5、2/4 这类分子分母不同源问题。
-            var runtimeWaveConfig = _spawnPoint != null ? _spawnPoint.WaveConfig : _currentLevel.WaveConfig;
-            int totalWaves = runtimeWaveConfig != null && runtimeWaveConfig.Waves != null
-                ? runtimeWaveConfig.Waves.Length
+
+            int totalWaves = _runtimeWaveConfig != null && _runtimeWaveConfig.Waves != null
+                ? _runtimeWaveConfig.Waves.Length
                 : 0;
+
+
             _totalWaveCount.SetValue(totalWaves);
             _currentWaveIndex.SetValue(totalWaves > 0 ? 1 : 0);
             _displayWaveIndex = totalWaves > 0 ? 1 : 0;
@@ -194,9 +206,10 @@ namespace Game.ShooterGame
 
             // 3. 计算总敌机数
             int totalEnemy = 0;
-            if (runtimeWaveConfig != null && runtimeWaveConfig.Waves != null)
+            if (_runtimeWaveConfig != null && _runtimeWaveConfig.Waves != null)
             {
-                foreach (var wave in runtimeWaveConfig.Waves)
+                foreach (var wave in _runtimeWaveConfig.Waves)
+
                 {
                     if (wave.Groups == null) continue;
                     foreach (var group in wave.Groups)
@@ -296,7 +309,9 @@ namespace Game.ShooterGame
 
         private void EnterState(BattleState newState)
         {
+#if UNITY_EDITOR
             Debug.Log($"[SG_Battle] State → {newState} (time={Time.time:F2}s, frame={Time.frameCount})");
+#endif
             CurrentState = newState;
             _stateTimer = 0f;
 
@@ -468,11 +483,63 @@ namespace Game.ShooterGame
 
         private bool _spawnerStarted;
 
+        public void SetLaunchContext(int? levelIndex)
+        {
+            _launchLevelIndex = levelIndex;
+        }
+
+        /// <summary>
+        /// 由 BattleFlowHandler.OnFlowEnter 显式调用。
+        /// 完整初始化战斗会话，确保时序正确（不依赖 Start 的执行顺序）。
+        /// </summary>
+        public async void StartBattle()
+        {
+            try
+            {
+                _battleStartedByFlow = true;
+
+                // 确保运行时基础设施就绪（从导航进入时应已就绪，防御性等待）
+                await BattleSceneBootstrapper.EnsureInitializedAsync();
+
+                SG_Boot.InitProgress();
+                _progressManager = SG_Boot.Progress;
+
+                await InitBattleAsync();
+                EnterState(BattleState.Intro);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private void ResolveBattleContext()
+        {
+            if (_launchLevelIndex.HasValue)
+            {
+                int index = Mathf.Clamp(_launchLevelIndex.Value, 0, _levelConfigs.Length - 1);
+                _currentLevel = _levelConfigs[index];
+                _runtimeWaveConfig = _currentLevel != null ? _currentLevel.WaveConfig : null;
+                return;
+            }
+
+            _currentLevel = _levelConfigs != null && _levelConfigs.Length > 0 ? _levelConfigs[0] : null;
+            _runtimeWaveConfig = _spawnPoint != null ? _spawnPoint.WaveConfig : null;
+
+            if (_runtimeWaveConfig == null && _currentLevel != null)
+                _runtimeWaveConfig = _currentLevel.WaveConfig;
+        }
+
         private void SetSpawnerEnabled(bool enabled)
         {
             if (enabled && !_spawnerStarted)
             {
-                // 首次启用时启动刷怪（SpawnPoint.AutoStartOnEnable 应设为 false）
+                if (_spawnPoint != null && _runtimeWaveConfig != null)
+                {
+                    _spawnPoint.WaveConfig = _runtimeWaveConfig;
+                }
+
+                // 启动刷怪（SpawnPoint.AutoStartOnEnable 应设为 false）
                 var spawner = EntityManagerAccessor.Spawner;
                 if (spawner != null && _spawnPoint != null)
                 {
@@ -482,6 +549,9 @@ namespace Game.ShooterGame
             }
             // V1 不实现暂停/恢复 Spawner（Intro 期间不会启动，Victory/Defeat 时波次已结束）
         }
+
+
+
 
         private void SetBattleTimePaused(bool paused)
         {
@@ -529,7 +599,14 @@ namespace Game.ShooterGame
         private IEnumerator HandleVictoryConfirm()
         {
             SetBattleTimePaused(false);
-            _progressManager?.MarkLevelCleared(_currentLevelIndex.Value + 1); // 0-based → 1-based
+
+            // 只在从导航正式进入时才保存进度；直跑场景属于测试模式，不写存档
+            if (_launchLevelIndex.HasValue)
+            {
+                int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
+                _progressManager?.MarkLevelCleared(clearedLevelIndex);
+            }
+
             yield return null; // 一帧等待
             AppFlowNavigator.Instance.Pop();
         }

@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c20cc79d1934f044aad650a45566ac86, type: 3}
+  m_Name: SG_Wave_03
+  m_EditorClassIdentifier: 
+  Waves:
+  - Groups:
+    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+      Camp: 0
+      Count: 8
+      SpawnInterval: 0
+      Formation: 1
+      FormationParams:
+        Spacing: 1
+        Angle: 0
+        Radius: 0
+        Columns: 0
+        Jitter: 0
+    TriggerMode: 0
+    TriggerDelay: 1
+  - Groups:
+    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+      Camp: 0
+      Count: 12
+      SpawnInterval: 0
+      Formation: 3
+      FormationParams:
+        Spacing: 1.2
+        Angle: 0
+        Radius: 0
+        Columns: 4
+        Jitter: 0
+    TriggerMode: 1
+    TriggerDelay: 0
+  - Groups:
+    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+      Camp: 0
+      Count: 10
+      SpawnInterval: 0
+      Formation: 2
+      FormationParams:
+        Spacing: 0
+        Angle: 0
+        Radius: 3.5
+        Columns: 0
+        Jitter: 0
+    TriggerMode: 1
+    TriggerDelay: 0
+  - Groups:
+    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+      Camp: 0
+      Count: 8
+      SpawnInterval: 0
+      Formation: 3
+      FormationParams:
+        Spacing: 1.2
+        Angle: 0
+        Radius: 0
+        Columns: 4
+        Jitter: 0
+    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+      Camp: 0
+      Count: 4
+      SpawnInterval: 0.15
+      Formation: 0
+      FormationParams:
+        Spacing: 0
+        Angle: 0
+        Radius: 3
+        Columns: 0
+        Jitter: 0
+    TriggerMode: 1
+    TriggerDelay: 0
+  - Groups:
+    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+      Camp: 0
+      Count: 20
+      SpawnInterval: 0
+      Formation: 3
+      FormationParams:
+        Spacing: 1
+        Angle: 0
+        Radius: 0
+        Columns: 5
+        Jitter: 0
+    TriggerMode: 1
+    TriggerDelay: 0
+  Loop: 0
+  LoopStartWave: 0

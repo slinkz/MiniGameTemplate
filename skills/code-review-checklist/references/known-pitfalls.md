@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：22 条（PIT-007, PIT-014 ~ PIT-031, PIT-034, PIT-035, PIT-036, PIT-037）
+> **当前条目数**：23 条（PIT-007, PIT-014 ~ PIT-031, PIT-034, PIT-035, PIT-036, PIT-037, PIT-038）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -286,6 +286,18 @@
 - **修复**: `SprayPool.FreeAll()` 循环内加 `Data[i] = default;`。同步排查 `ObstaclePool.FreeAll()` 也有相同问题，一并修复。对比 `BulletWorld.FreeAll()`（清 `Cores[i].Flags = 0`）和 `LaserPool.FreeAll()`（清 `Data[i] = default`），它们没有此问题
 - **验证方法**: 所有自定义对象池的 `FreeAll()` 必须让遍历逻辑（检查 Phase / Flags / IsActive）无法再命中已释放的槽位。最简单的规则：**`Free(index)` 怎么清数据，`FreeAll()` 就怎么清**——不能偷懒只重置 free list
 - **严重度**: 🔴 用户可见的运行时 bug，清场功能失效
+
+---
+
+## PIT-038: FairyGUI onTouchBegin 缺少 CaptureTouch — 后续 Move/End 丢失 `[经典]`
+- **分类**: CL-5 生命周期与时序
+- **日期**: 2026-05-06
+- **现象**: `JoystickController.OnTouchBegin` 触发正常（有日志），但 `OnTouchMove` / `OnTouchEnd` 从未触发，摇杆拖动完全无反应
+- **根因**: FairyGUI 触摸事件系统要求在 `onTouchBegin` 回调中调用 `context.CaptureTouch()` 才会将后续 Move/End 事件路由到该对象。不调用 = Stage 不知道谁"拥有"这次触摸，Move/End 被丢弃
+- **修复**: 在 `OnTouchBegin` 的 `_inputEnabled` 检查通过后添加 `context.CaptureTouch()`
+- **验证方法**: 凡是注册了 `onTouchBegin` + `onTouchMove` / `onTouchEnd` 的 FairyGUI 对象，必须确认 Begin 回调中有 `context.CaptureTouch()`。无此调用 = Move/End 100% 丢失
+- **严重度**: 🔴 功能完全不工作
+- **标记 [经典] 原因**: FairyGUI 触摸三件套铁律，Begin 必须 CaptureTouch，否则 Move/End 丢失。IDE 不报错、编译通过、Begin 有回调，极具迷惑性
 
 ---
 

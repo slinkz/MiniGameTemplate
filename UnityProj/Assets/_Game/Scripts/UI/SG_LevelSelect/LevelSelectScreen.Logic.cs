@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using FairyGUI;
 using MiniGameTemplate.Navigation;
 using MiniGameTemplate.UI;
@@ -8,6 +7,7 @@ using MiniGameTemplate.Utils;
 using Game.ShooterGame;
 
 namespace SG_LevelSelect
+
 {
     /// <summary>
     /// 选关界面 — IUIPanel 实现。
@@ -41,11 +41,16 @@ namespace SG_LevelSelect
 
         private enum LevelNodeState { Cleared, Available, Locked }
 
+
         public void OnOpen(object data)
         {
             _progressManager = SG_Boot.Progress;
 
             // Cache level node references
+
+
+
+
             _levelNodes[0] = node_1;
             _levelNodes[1] = node_2;
             _levelNodes[2] = node_3;
@@ -143,6 +148,8 @@ namespace SG_LevelSelect
             GameLog.Log($"[LevelSelectScreen] Level {levelIndex} selected, transitioning to Battle.");
 
             // 通过 Navigator Push 到 Battle 节点（携带关卡数据）
+
+
             var battleNode = SG_FlowNodes.NodeBattle;
             if (battleNode != null)
             {
@@ -151,9 +158,9 @@ namespace SG_LevelSelect
             }
             else
             {
-                // Fallback: 旧路径
-                UIManager.Instance.ClosePanel<LevelSelectScreen>();
-                SceneManager.LoadScene("Battle");
+                Debug.LogError("[LevelSelectScreen] Node_Battle SO is null! " +
+                    "Ensure SG_FlowNodes.NodeBattle is placed in Resources/Navigation/. " +
+                    "Cannot navigate to Battle without a valid NavigationNodeSO.");
             }
         }
 

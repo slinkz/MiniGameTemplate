@@ -470,6 +470,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1736835541}
+  - component: {fileID: 1736835542}
   - component: {fileID: 1736835540}
   m_Layer: 0
   m_Name: BattleController
@@ -495,7 +496,10 @@ MonoBehaviour:
   _debug_AliveEnemyCount: 0
   _levelConfigs:
   - {fileID: 11400000, guid: 99dc46d80ead5604984ddb4f48275e2e, type: 2}
-  _currentLevelIndex: {fileID: 11400000, guid: ad7726193313ac8489bfea0feac56830, type: 2}
+  - {fileID: 11400000, guid: 564bc86d8abfbfe42b0fdfefd4066543, type: 2}
+  - {fileID: 11400000, guid: 9a52b10e6e478e14fa39bf525ff8584f, type: 2}
+  - {fileID: 11400000, guid: 225cabd04fe30f949b739e75aca880e3, type: 2}
+  - {fileID: 11400000, guid: d23036942110c234593b482d6d915b9a, type: 2}
   _baseHP: {fileID: 11400000, guid: 6bff7144902bdfe4fb3ea95cd5e13424, type: 2}
   _currentWaveIndex: {fileID: 11400000, guid: 4bbcea22fe5f293409818d62bcc294f5, type: 2}
   _totalWaveCount: {fileID: 11400000, guid: 6358ca9909ca01547b96dfac915e668e, type: 2}
@@ -530,6 +534,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1736835542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736835539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed93b40049b8b3c44a0db21c8f1902a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _battleController: {fileID: 1736835540}
 --- !u!1 &1740805477
 GameObject:
   m_ObjectHideFlags: 0

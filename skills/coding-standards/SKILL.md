@@ -189,11 +189,108 @@ if (other.CompareTag(TAG_PLAYER)) { }
 
 ---
 
+## 9. 跨场景数据传递（CRITICAL — 2026-05-07 血泪教训）
+
+> **严重级别：P0 — 必须遵守**
+
+### 9.1 唯一正确路径：AppFlowNavigator + IFlowData
+
+所有跨场景数据传递**必须且只能**通过框架提供的 Navigation 机制：
+
+```csharp
+// ✅ 正确：通过导航框架传递数据
+var data = new BattleLevelData { LevelIndex = levelIndex };
+await AppFlowNavigator.Instance.PushAsync(battleNode, data);
+
+// 接收端：IFlowHandler.OnFlowEnter(IFlowData data)
+public void OnFlowEnter(IFlowData data)
+{
+    if (data is BattleLevelData battleData)
+        _controller.SetLaunchContext(battleData.LevelIndex);
+}
+```
+
+### 9.2 禁止的跨场景传参方式
+
+以下方式**全部禁止**，无论看起来多"方便"：
+
+| 禁止方式 | 为什么不行 |
+|----------|-----------|
+| ❌ SO 写运行时值当全局变量 | SO 是项目级资产，Play Mode 下修改不持久化；多入口时状态残留 |
+| ❌ static 字段传参 | 无生命周期管理，热重载丢失，测试困难 |
+| ❌ Resources.Load 在运行时读 SO 当通信 | 本质是文件 IO 伪装通信，与 Addressables/YooAsset 冲突 |
+| ❌ PlayerPrefs 传临时数据 | 持久化到磁盘，性能差，无类型安全 |
+| ❌ DontDestroyOnLoad 当消息总线 | 生命周期不可控，场景重载不重置 |
+| ❌ AssetDatabase.LoadAssetAtPath | Editor-only，真机直接崩 |
+
+### 9.3 直跑场景 = 测试模式
+
+直接运行一个场景（不经导航框架）时，`IFlowData` 为空。此时：
+- 控制器应有**安全的 fallback 行为**（如使用 Inspector 配置的默认值）
+- **禁止写入存档/进度**（`_launchLevelIndex == null` → 不写 ProgressManager）
+- 这是调试通道，不是正式游戏流程
+
+---
+
+## 10. Bug 修复 SOP（修改代码前必须执行）
+
+> **适用场景**：修复任何 bug 之前，必须按此流程操作。禁止直接跳到"改代码"。
+
+### Step 0: 定位问题类型
+
+先判断 bug 属于哪种类型：
+
+| 类型 | 表现 | 诊断方向 |
+|------|------|----------|
+| 数据流断裂 | 数据从 A 到 B 传不过去 | 画完整链路图，找断点 |
+| 时序错误 | 有时好使有时不好使 | 列出生命周期调用顺序（Awake→OnEnable→Start→OnFlowEnter） |
+| 逻辑错误 | 稳定复现但结果不对 | 写出期望 vs 实际的对比 |
+| 配置遗漏 | 功能存在但未生效 | 检查 Inspector 绑定、SO 引用、场景设置 |
+
+### Step 1: 确认框架是否已提供解决机制
+
+**在动手写任何代码之前，先回答这个问题：**
+
+> "这个项目已有的框架/机制中，是否已经提供了解决这个问题的正确路径？"
+
+- 如果有 → 用框架提供的路径，找出为什么它没生效
+- 如果不确定 → 读 TDD / ARCHITECTURE 文档，或**问天命人**
+- **绝不允许**在不确定的情况下自己发明一条路
+
+### Step 2: 禁止事项 Checklist
+
+修复方案写好后，逐项验证：
+
+- [ ] 没有用 SO 当全局变量
+- [ ] 没有用 static 传参
+- [ ] 没有用 Resources.Load 当通信手段
+- [ ] 没有引入 Editor-only API（AssetDatabase、EditorUtility 等）
+- [ ] 修复方案在真机（WebGL/微信小游戏）环境下同样有效
+- [ ] 没有绕过现有框架另起炉灶
+- [ ] 修改不会在场景常驻/热重载时产生状态残留
+
+### Step 3: 真机可行性检查
+
+微信小游戏环境**不支持**：
+- `System.IO.File.*`（用 WX SDK 的 FileSystemManager）
+- `AssetDatabase.*`（Editor-only）
+- `Thread`（WebGL 单线程）
+- 同步阻塞 IO
+
+### 红线
+
+> 如果觉得框架不支持当前需求，**先提出框架改进方案，等天命人确认**。
+> 不要自己 hack。这是铁律。
+
+---
+
 ## 附录：踩坑快速索引
 
 | ID | 陷阱 | 严重级别 | 规则章节 |
 |----|------|----------|----------|
 | PIT-034 | `??` / `?.` 对 Unity Object 无效 | P0 | 1.1 |
 | PIT-035 | `Editor` 命名空间与基类冲突 | P1 | 2.1 |
+| PIT-036 | 跨场景传参绕过 Navigation 框架 | P0 | 9.1 |
+| PIT-037 | 直跑场景测试模式写入真实存档 | P1 | 9.3 |
 
 > 更多踩坑记录见 `code-review-checklist` Skill 的 `references/known-pitfalls.md`
