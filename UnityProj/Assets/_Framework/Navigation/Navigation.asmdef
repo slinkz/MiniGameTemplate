@@ -3,7 +3,8 @@
     "rootNamespace": "MiniGameTemplate.Navigation",
     "references": [
         "MiniGameFramework.Runtime",
-        "FairyGUI"
+        "FairyGUI",
+        "Wx"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -63,9 +63,23 @@ namespace MiniGameTemplate.EditorTools
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 if (!path.EndsWith(".cs")) continue;
                 var content = System.IO.File.ReadAllText(path);
-                var matches = Regex.Matches(content, @"RegisterPanelOpener\(\s*""([^""]+)""");
-                foreach (Match m in matches)
+
+                // 匹配直接字符串字面量: RegisterPanelOpener("XxxPanel", ...)
+                var directMatches = Regex.Matches(content, @"RegisterPanelOpener\(\s*""([^""]+)""");
+                foreach (Match m in directMatches)
                     registeredKeys.Add(m.Groups[1].Value);
+
+                // 匹配常量引用: RegisterPanelOpener(PanelKey, ...) + const string PanelKey = "..."
+                var constRefMatches = Regex.Matches(content, @"RegisterPanelOpener\(\s*([A-Za-z_]\w*)\s*[,)]");
+                foreach (Match m in constRefMatches)
+                {
+                    var varName = m.Groups[1].Value;
+                    if (varName.StartsWith("\"")) continue; // 已被上面处理
+                    // 查找同文件中的 const 声明
+                    var constMatch = Regex.Match(content, @"const\s+string\s+" + Regex.Escape(varName) + @"\s*=\s*""([^""]+)""");
+                    if (constMatch.Success)
+                        registeredKeys.Add(constMatch.Groups[1].Value);
+                }
             }
 
             // 3. 验证每个 FlowNodeSO

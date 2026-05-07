@@ -30,17 +30,65 @@ MonoBehaviour:
       AssetTags: 
       ActiveRuleName: EnableGroup
       Collectors:
-      - CollectPath: Assets/_Game
-        CollectorGUID: 3c00c91e188124446a3c17c22998d327
+      - CollectPath: Assets/_Example
+        CollectorGUID: 1d954e03ae0d07f47b7130c8f892c66f
         CollectorType: 0
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
         AssetTags: 
         UserData: 
-      - CollectPath: Assets/_Example
-        CollectorGUID: 1d954e03ae0d07f47b7130c8f892c66f
+      - CollectPath: Assets/_Game/ConfigData
+        CollectorGUID: 587423abd0a3a2248b324e867bb695f2
         CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/_Game/Configs
+        CollectorGUID: fdc76c4acf26191498da5405a9ff1b8c
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackTopDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/_Game/FairyGUI_Export
+        CollectorGUID: 64e0c1384f2c3a842824a9edc0bde129
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/_Game/Prefabs
+        CollectorGUID: 456743854213b9642a747ec6a73bdab7
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/_Game/Resources/Navigation
+        CollectorGUID: e928638bb4393554aa29d46babc273b3
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackDirectory
+        FilterRuleName: CollectAll
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/_Game/Scenes
+        CollectorGUID: 523f620c6c3f80b45a435976a02ded2a
+        CollectorType: 0
+        AddressRuleName: AddressByFileName
+        PackRuleName: PackSeparately
+        FilterRuleName: CollectScene
+        AssetTags: 
+        UserData: 
+      - CollectPath: Assets/_Game/ScriptableObjects
+        CollectorGUID: 1ddcc00de6878d44cbc6a949a0196d01
+        CollectorType: 2
         AddressRuleName: AddressByFileName
         PackRuleName: PackDirectory
         FilterRuleName: CollectAll
