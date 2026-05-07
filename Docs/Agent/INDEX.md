@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-06 13:12 | 文件总数：67
+> 最后更新：2026-05-07 11:05 | 文件总数：72
 
 ---
 
@@ -20,7 +20,7 @@
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
-| 了解导航系统 | APPFLOW_TDD | 栈式 FlowNode + AppFlowNavigator |
+| 了解导航系统 | APPFLOW_TDD_INDEX | 栈式 FlowNode + AppFlowNavigator |
 | 验收 AppFlow 导航 | APPFLOW_ACCEPTANCE_PLAN | 10 验收项 + PlayMode + 热启动恢复 |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
@@ -64,9 +64,11 @@
 | `_Game/Scripts/ShooterGame/UI/*.cs` | SG_TDD_04 + SG_DEV_PLAN | SG UI Controllers |
 | `_Game/Configs/ShooterGame/**/*.asset` | SG_P4_TASKLIST §P4.1 + SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
-| `_Framework/Navigation/**/*.cs` | APPFLOW_TDD | AppFlow 栈式导航系统 |
-| `_Game/Scenes/Main.unity` | APPFLOW_TDD §4.4 + SG_TDD_01 §4 | 非战斗宿主场景 |
-| `_Game/ScriptableObjects/Config/SD_Main.asset` | APPFLOW_TDD §4.2 | Main 场景定义 SO |
+| `_Framework/Navigation/**/*.cs` | APPFLOW_TDD_01_CORE_DESIGN | AppFlow 栈式导航系统（含面板 Suspend/Resume） |
+| `_Framework/UISystem/Scripts/IUIPanel.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | IPanelSuspendable 可选接口 |
+| `_Framework/UISystem/Scripts/UIManager.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | UIManager Suspend/Resume API |
+| `_Game/Scenes/Main.unity` | APPFLOW_TDD_03_INTEGRATION §4.4 + SG_TDD_01 §4 | 非战斗宿主场景 |
+| `_Game/ScriptableObjects/Config/SD_Main.asset` | APPFLOW_TDD_03_INTEGRATION §4.2 | Main 场景定义 SO |
 | `UIProject/assets/SG_*/**` | SG_TDD_04 §4.2 + SG_UI_DESIGN | SG FairyGUI 白模包（4包16 XML） |
 
 ---
@@ -93,6 +95,8 @@
 | BaseLineDetector | SG_TDD_02 §2.2 | 底线检测器（纯 C#，扫描敌机越线扣基地 HP） |
 | SG_Boot | SG_TDD_01 §9 | ShooterGame 静态启动扩展（Progress 访问点） |
 | SG_ProgressManager | SG_TDD_03 §2.2 | ShooterGame 进度管理（ISaveSystem 封装） |
+| IPanelSuspendable | APPFLOW_TDD_01_CORE_DESIGN §3.5 | 面板 Suspend/Resume 可选接口（OnSuspend + OnResume） |
+| OwnedPanelTypes | APPFLOW_TDD_01_CORE_DESIGN §3.2 | StackEntry 跟踪每栈层面板类型列表（Suspend/Resume 用） |
 | IUIControllers | SG_TDD_04 §1 | Core↔UI 解耦接口（5 个接口） |
 
 ---
@@ -107,7 +111,7 @@
 | CONV | CONV_INDEX | 4 | 编码/命名/平台/工作流约定 |
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
-| APPFLOW | APPFLOW_TDD | — | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 双 Single 场景重构） |
+| APPFLOW | APPFLOW_TDD_INDEX | 5 | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 双 Single + 面板 Suspend/Resume v1.7） |
 | — | APPFLOW_TDD_PK | — | AppFlow TDD PK 评审记录 |
 | — | APPFLOW_TDD_PK2 | — | AppFlow TDD PK #2 评审记录（Unity架构师） |
 | — | APPFLOW_TDD_PK3 | — | AppFlow TDD PK #3 评审记录（编辑器工具开发者） |
