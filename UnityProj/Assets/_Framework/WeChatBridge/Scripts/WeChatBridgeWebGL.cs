@@ -35,6 +35,10 @@ namespace MiniGameTemplate.Platform
         private Action<bool> _privacyCheckCallback;
         private Action<bool> _privacyRequireCallback;
 
+        // Cloud function callbacks (V2 — SG_TDD_06)
+        private int _nextRequestId;
+        private readonly Dictionary<int, Action<bool, string>> _cloudCallbacks = new Dictionary<int, Action<bool, string>>(4);
+
 
         public WeChatBridgeWebGL()
         {
@@ -254,6 +258,42 @@ namespace MiniGameTemplate.Platform
             _fallback.GetClipboardData(onComplete);
         }
 
+        // === Cloud Function (V2 — SG_TDD_06 §2.2) ===
+
+        public void CallCloudFunction(string functionName, string dataJson, Action<bool, string> onComplete)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (TryInitializeNativeBridge() && IsWeChatPlatform)
+            {
+                int reqId = _nextRequestId++;
+                _cloudCallbacks[reqId] = onComplete;
+                WXBridge_CallCloudFunction(reqId, functionName ?? string.Empty, dataJson ?? "{}");
+                return;
+            }
+#endif
+            _fallback.CallCloudFunction(functionName, dataJson, onComplete);
+        }
+
+        [Serializable]
+        private struct CloudFunctionResponse
+        {
+            public bool success;
+            public int requestId;
+            public string name;
+            public string result;
+            public string error;
+        }
+
+        internal void HandleCloudFunctionResult(string json)
+        {
+            var resp = UnityEngine.JsonUtility.FromJson<CloudFunctionResponse>(json);
+            if (_cloudCallbacks.TryGetValue(resp.requestId, out var cb))
+            {
+                _cloudCallbacks.Remove(resp.requestId);
+                cb?.Invoke(resp.success, resp.success ? resp.result : resp.error);
+            }
+        }
+
         internal void HandleRewardedAdClosed(bool isEnded)
         {
             CompleteRewardedAdRequest(isEnded);
@@ -381,6 +421,9 @@ namespace MiniGameTemplate.Platform
 
         [DllImport("__Internal")]
         private static extern void WXBridge_RequirePrivacy();
+
+        [DllImport("__Internal")]
+        private static extern void WXBridge_CallCloudFunction(int requestId, string name, string data);
 #endif
     }
 }

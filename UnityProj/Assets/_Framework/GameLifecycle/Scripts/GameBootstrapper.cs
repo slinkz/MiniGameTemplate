@@ -6,6 +6,7 @@ using MiniGameTemplate.UI;
 using MiniGameTemplate.Audio;
 using MiniGameTemplate.Timing;
 using MiniGameTemplate.Pool;
+using MiniGameTemplate.Platform;
 using MiniGameTemplate.Utils;
 
 namespace MiniGameTemplate.Core
@@ -42,6 +43,15 @@ namespace MiniGameTemplate.Core
         public static ISaveSystem SaveSystem { get; private set; }
 
         /// <summary>
+        /// Shared WeChat bridge instance. Created during boot.
+        /// Game code uses this to access WeChat platform features.
+        /// </summary>
+        public static IWeChatBridge WeChatBridge { get; private set; }
+
+        // Instance-level bridge reference (created in Awake, before async init)
+        private IWeChatBridge _weChatBridge;
+
+        /// <summary>
         /// Ensure SaveSystem exists.
         /// Used by direct scene bootstrappers (e.g. Battle scene) that need the minimum
         /// runtime infrastructure without going through the full Boot scene flow.
@@ -57,6 +67,7 @@ namespace MiniGameTemplate.Core
         {
             _hasBooted = false;
             SaveSystem = null;
+            WeChatBridge = null;
         }
 
         private async void Awake()
@@ -72,6 +83,13 @@ namespace MiniGameTemplate.Core
             _isPrimaryInstance = true;
 
             DontDestroyOnLoad(gameObject);
+
+            // Create WeChat bridge early — needed by SaveSystem factory
+#if UNITY_WEBGL && !UNITY_EDITOR
+            _weChatBridge = new WeChatBridgeWebGL();
+#else
+            _weChatBridge = new WeChatBridgeStub();
+#endif
 
             try
             {
@@ -149,7 +167,9 @@ namespace MiniGameTemplate.Core
         private async System.Threading.Tasks.Task InitializeSystemsAsync()
         {
             // 0. Save System — initialize early so other systems can use it
-            SaveSystem = new PlayerPrefsSaveSystem();
+            // V2 (SG_TDD_06 §4.3): WeChat platform → CloudSaveSystem, otherwise → PlayerPrefsSaveSystem
+            SaveSystem = CreateSaveSystem();
+            WeChatBridge = _weChatBridge; // expose for game code
 
             // 1. Asset System (YooAsset) — must be first, other systems depend on it
             if (_assetConfig == null)
@@ -303,6 +323,26 @@ namespace MiniGameTemplate.Core
             GameLog.Log("[Bootstrapper] FairyGUI default font set to system fonts.");
             await System.Threading.Tasks.Task.CompletedTask;
 #endif
+        }
+
+        /// <summary>
+        /// Factory: create the appropriate ISaveSystem based on platform.
+        /// WeChat environment → CloudSaveSystem (V2); otherwise → PlayerPrefsSaveSystem (V1).
+        /// (SG_TDD_06 §4.3)
+        /// </summary>
+        private ISaveSystem CreateSaveSystem()
+        {
+            if (_weChatBridge.IsWeChatPlatform)
+            {
+                var auth = new WxAuthService(_weChatBridge);
+                var cloudSave = new CloudSaveSystem(auth, _weChatBridge);
+                cloudSave.InitCloudSync(); // Async, non-blocking
+                GameLog.Log("[Bootstrapper] CloudSaveSystem (V2) initialized.");
+                return cloudSave;
+            }
+
+            GameLog.Log("[Bootstrapper] PlayerPrefsSaveSystem (V1) initialized.");
+            return new PlayerPrefsSaveSystem();
         }
 
         private void LoadInitialScene()

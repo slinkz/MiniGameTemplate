@@ -143,6 +143,15 @@ namespace MiniGameTemplate.Platform
         /// Check if the current platform is WeChat Mini Game.
         /// </summary>
         bool IsWeChatPlatform { get; }
+
+        // === Cloud (V2 — SG_TDD_06) ===
+
+        /// <summary>
+        /// Call a WeChat cloud function.
+        /// Callback: (success, resultJsonOrError).
+        /// On timeout (5s), callback fires with success=false.
+        /// </summary>
+        void CallCloudFunction(string functionName, string dataJson, Action<bool, string> onComplete);
     }
 
     /// <summary>

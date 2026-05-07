@@ -1,6 +1,6 @@
 # ShooterGame · 技术设计文档（TDD）
 
-> **版本**：v1.4 | **日期**：2026-05-03 | **状态**：✅ PK 评审完成（含微信真机 PK）  
+> **版本**：v1.6 | **日期**：2026-05-07 | **状态**：✅ PK 评审完成 + V2 云存储实施完成（编译0错误，待真机验证）  
 > **来源**：`SG_GAME_DESIGN.md` v3.2 + `SG_UI_DESIGN.md` v2.0  
 > **命名空间**：`Game.ShooterGame`  
 > **目录**：`Assets/_Game/Scripts/ShooterGame/`  
@@ -17,6 +17,7 @@
 | 3 | [SG_TDD_03_LEVEL_PROGRESS.md](SG_TDD_03_LEVEL_PROGRESS.md) | 关卡配置SO · 存储系统集成 · 关卡解锁 · 数据流 | ~200 |
 | 4 | [SG_TDD_04_UI_CONTROLLERS.md](SG_TDD_04_UI_CONTROLLERS.md) | 6个UI Controller · 数据绑定 · 飘字池 · 血条预损 · 转场编排 | ~350 |
 | 5 | [SG_TDD_05_INPUT_JOYSTICK.md](SG_TDD_05_INPUT_JOYSTICK.md) | 虚拟摇杆 · Vector2Variable · 输入→移动管线 · JoystickConfigSO | ~200 |
+| 6 | [SG_TDD_06_CLOUD_SAVE.md](SG_TDD_06_CLOUD_SAVE.md) | **V2 微信登录 · 云存储 · 跨设备同步 · 离线优先 · 数据迁移** | ~400 |
 
 ---
 
@@ -153,3 +154,5 @@
 | v1.2 | 2026-05-03 | PK Round 2 修正（工具开发者视角）：重复属性修复、UI Controller 引用声明、BaseLineDetector SRP、重试 StopShake、MaxUnlockedLevel 参数化、飘字 Tween 竞态、UI 初始化时序、转场 Coroutine |
 | v1.3 | 2026-05-03 | PK Round 3 修正（PM 视角）：实施优先级拆分子任务+Done When 验收标准、GameStartupFlow 骨架、Action/IEnumerator 修正、SetInputEnabled 实现、Timer 波 V1 铁律、工时 buffer 校准 |
 | v1.4 | 2026-05-03 | 微信真机 PK 修正（WX-001~011）：Save() try-catch+bool、V2 登录升级路径、热启动 Reload、ValidateData 防篡改、totalLevels 参数化、HandleVictoryConfirm 同步更新 |
+| v1.5 | 2026-05-07 | 新增 SG_TDD_06_CLOUD_SAVE.md — V2 微信登录+云存储完整 TDD（初稿 v0.1） |
+| v1.6 | 2026-05-07 | TDD_06 v0.5 实施完成：jslib+桥接层+WxAuthService+CloudSyncService+CloudSaveSystem+SG_ProgressManager.Reload+云函数模板×3 |

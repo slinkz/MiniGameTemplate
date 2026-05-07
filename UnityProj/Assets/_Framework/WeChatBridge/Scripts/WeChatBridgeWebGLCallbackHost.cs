@@ -39,5 +39,11 @@ namespace MiniGameTemplate.Platform
         {
             _bridge?.HandlePrivacyRequireResult(accepted);
         }
+
+        // Invoked by WeChatBridge.jslib (V2 — SG_TDD_06)
+        public void OnCloudFunctionResult(string jsonResult)
+        {
+            _bridge?.HandleCloudFunctionResult(jsonResult);
+        }
     }
 }

@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using MiniGameTemplate.Data;
 
 namespace Game.ShooterGame
 {
     /// <summary>
     /// ShooterGame 进度管理——封装 ISaveSystem 读写。
     /// 纯 C# 类（无 MonoBehaviour）。
-    /// TDD_03 §2.2
+    /// TDD_03 §2.2 / TDD_06 §8.2（V2 新增 Reload）
     /// 
     /// 生命周期（TDD_03 §2.0）：
     ///   创建者：Boot 场景 GameStartupFlow.Awake()
@@ -16,19 +17,12 @@ namespace Game.ShooterGame
     public class SG_ProgressManager
     {
         private const string SAVE_KEY = "sg_progress";
-        private const int CURRENT_VERSION = 1;
+        private const int CURRENT_VERSION = 2; // V2: cloud sync
 
-        private readonly MiniGameTemplate.Data.ISaveSystem _saveSystem;
-        private ProgressData _data;
+        private readonly ISaveSystem _saveSystem;
+        private SharedProgressData _data;
 
-        [System.Serializable]
-        private class ProgressData
-        {
-            public int version = CURRENT_VERSION;
-            public List<int> clearedLevels = new List<int>();
-        }
-
-        public SG_ProgressManager(MiniGameTemplate.Data.ISaveSystem saveSystem)
+        public SG_ProgressManager(ISaveSystem saveSystem)
         {
             _saveSystem = saveSystem;
             Load();
@@ -72,6 +66,17 @@ namespace Game.ShooterGame
             }
         }
 
+        // ── V2 新增（TDD_06 §8.2）──
+
+        /// <summary>
+        /// 重新从 ISaveSystem 加载最新数据。
+        /// 用于云端 merge 完成后刷新内存状态。
+        /// </summary>
+        public void Reload()
+        {
+            Load();
+        }
+
         // ── 内部方法 ──
 
         private void Load()
@@ -79,20 +84,26 @@ namespace Game.ShooterGame
             string json = _saveSystem.LoadString(SAVE_KEY, "");
             if (string.IsNullOrEmpty(json))
             {
-                _data = new ProgressData();
+                _data = new SharedProgressData { version = CURRENT_VERSION };
                 return;
             }
 
             try
             {
-                _data = JsonUtility.FromJson<ProgressData>(json);
-                if (_data.version < CURRENT_VERSION)
+                _data = JsonUtility.FromJson<SharedProgressData>(json);
+                if (_data == null)
+                {
+                    _data = new SharedProgressData { version = CURRENT_VERSION };
+                }
+                else if (_data.version < CURRENT_VERSION)
+                {
                     MigrateData(_data);
+                }
             }
             catch
             {
                 Debug.LogWarning("[SG_ProgressManager] 存档数据损坏，重置");
-                _data = new ProgressData();
+                _data = new SharedProgressData { version = CURRENT_VERSION };
             }
         }
 
@@ -103,15 +114,16 @@ namespace Game.ShooterGame
             _saveSystem.FlushIfDirty();
         }
 
-        private void MigrateData(ProgressData data)
+        private void MigrateData(SharedProgressData data)
         {
+            // V1 → V2: just bump version, data format is the same
             data.version = CURRENT_VERSION;
         }
 
         /// <summary>清除所有进度（调试用）</summary>
         public void ResetAll()
         {
-            _data = new ProgressData();
+            _data = new SharedProgressData { version = CURRENT_VERSION };
             Save();
         }
     }

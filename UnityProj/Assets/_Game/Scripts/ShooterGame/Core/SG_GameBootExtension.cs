@@ -1,11 +1,12 @@
 using UnityEngine;
 using MiniGameTemplate.Core;
+using MiniGameTemplate.Data;
 
 namespace Game.ShooterGame
 {
     /// <summary>
     /// ShooterGame 启动扩展——提供 ProgressManager 静态访问点。
-    /// 基于 TDD_01 §9 设计。
+    /// 基于 TDD_01 §9 / TDD_06 §8.1 设计。
     /// 
     /// 在 Boot 场景中由 GameBootstrapper 初始化流程完成后调用 InitProgress()。
     /// Battle 场景通过 SG_Boot.Progress 访问进度管理器。
@@ -24,14 +25,30 @@ namespace Game.ShooterGame
         /// <summary>
         /// 初始化 ProgressManager。
         /// 确保 GameBootstrapper.SaveSystem 已初始化后再调用。
+        /// V2: 如果 SaveSystem 是 CloudSaveSystem，注册 merge 完成后的 Reload 回调。
         /// </summary>
         public static void InitProgress()
         {
-            if (Progress != null) return;
+            if (Progress != null)
+            {
+                // V2 hot startup: trigger reload if CloudSaveSystem
+                if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
+                {
+                    cloudSave.Reload();
+                }
+                return;
+            }
+
             var saveSystem = GameBootstrapper.SaveSystem;
             if (saveSystem != null)
             {
                 Progress = new SG_ProgressManager(saveSystem);
+
+                // V2 (TDD_06 §8.2): register cloud merge callback
+                if (saveSystem is CloudSaveSystem cloudSave)
+                {
+                    cloudSave.OnCloudMergeCompleted += _ => Progress.Reload();
+                }
             }
             else
             {

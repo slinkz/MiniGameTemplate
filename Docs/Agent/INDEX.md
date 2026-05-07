@@ -17,6 +17,7 @@
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT | 追加到最新 ADR 子文件 |
 | 配置微信广告/SDK | WECHAT_INTEGRATION | 广告 ID + 回调 + jslib |
+| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V2 登录+云同步+CloudSaveSystem |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
@@ -56,10 +57,14 @@
 | `Editor/**/*.cs` | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 编辑器工具 |
 | `*ConfigSO.cs` / `*SO.cs` | SO_WORKFLOWS_INDEX → 01~05 | SO 配置流程 |
 | `Plugins/WeChatSDK/**` | WECHAT_INTEGRATION | 微信集成 |
+| `_Framework/WeChatBridge/Scripts/WxAuth*.cs` | SG_TDD_06 §2.3 | 微信静默登录服务 |
+| `_Framework/WeChatBridge/Scripts/CloudSync*.cs` | SG_TDD_06 §3.5 | 云端进度同步服务 |
+| `_Framework/DataSystem/Scripts/Persistence/Cloud*.cs` | SG_TDD_06 §4.2 | CloudSaveSystem + SharedProgressData |
+| `CloudFunctions/**/*.js` | SG_TDD_06 §3.2 | 微信云函数模板 |
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
 | `_Game/Scripts/ShooterGame/Core/*.cs` | SG_TDD_01~02 + SG_DEV_PLAN | SG 战斗核心 |
 | `_Game/Scripts/ShooterGame/Config/*.cs` | SG_TDD_02~03 + SG_DEV_PLAN | SG 配置 SO |
-| `_Game/Scripts/ShooterGame/Progress/*.cs` | SG_TDD_03 + SG_DEV_PLAN | SG 进度管理 |
+| `_Game/Scripts/ShooterGame/Progress/*.cs` | SG_TDD_03 + SG_TDD_06 + SG_DEV_PLAN | SG 进度管理 |
 | `_Game/Scripts/ShooterGame/Input/*.cs` | SG_TDD_05 + SG_DEV_PLAN | SG 输入桥接 |
 | `_Game/Scripts/ShooterGame/UI/*.cs` | SG_TDD_04 + SG_DEV_PLAN | SG UI Controllers |
 | `_Game/Configs/ShooterGame/**/*.asset` | SG_P4_TASKLIST §P4.1 + SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
@@ -98,6 +103,10 @@
 | IPanelSuspendable | APPFLOW_TDD_01_CORE_DESIGN §3.5 | 面板 Suspend/Resume 可选接口（OnSuspend + OnResume） |
 | OwnedPanelTypes | APPFLOW_TDD_01_CORE_DESIGN §3.2 | StackEntry 跟踪每栈层面板类型列表（Suspend/Resume 用） |
 | IUIControllers | SG_TDD_04 §1 | Core↔UI 解耦接口（5 个接口） |
+| CloudSaveSystem | SG_TDD_06 §4.2 | V2 云存储 ISaveSystem 实现（local+cloud 双写） |
+| WxAuthService | SG_TDD_06 §2.3 | 微信静默登录（cloud function auto-inject openid） |
+| CloudSyncService | SG_TDD_06 §3.5 | 云端进度同步（PullMerge+EnqueueUpload+Retry） |
+| SharedProgressData | SG_TDD_06 §3.3 | V2 共享进度 DTO（version + clearedLevels） |
 
 ---
 
@@ -123,7 +132,7 @@
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |
 | SG | SG_GAME_DESIGN | — | ShooterGame 游戏设计文档 v2.1 |
 | SG | SG_UI_DESIGN | — | ShooterGame UI/交互设计文档 v1.0 |
-| SG_TDD | SG_TDD_INDEX | 5 | ShooterGame 核心技术设计文档 |
+| SG_TDD | SG_TDD_INDEX | 6 | ShooterGame 核心技术设计文档 |
 | SG_TOOLS_TDD | SG_TOOLS_TDD_INDEX | 2 | ShooterGame 编辑器工具 TDD |
 | SG_TDD_PK | — | — | SG_TDD PK 评审记录（10 问题 / 已收敛） |
 | SG_TOOLS_TDD_PK | — | — | SG_TOOLS_TDD PK 评审记录（10 问题 / 已收敛） |

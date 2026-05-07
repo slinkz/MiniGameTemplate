@@ -194,6 +194,15 @@ namespace MiniGameTemplate.Platform
             onComplete?.Invoke(text);
         }
 
+        // === Cloud (V2 — SG_TDD_06) ===
+
+        public void CallCloudFunction(string functionName, string dataJson, Action<bool, string> onComplete)
+        {
+            // Editor / non-WeChat environment: return failure immediately, no network.
+            GameLog.Log($"[WeChatBridge:Stub] CallCloudFunction '{functionName}' — stub: not in wechat environment.");
+            DelayedInvoke(0.1f, () => onComplete?.Invoke(false, "stub: not in wechat environment"));
+        }
+
         // === Helper: Delayed callback to simulate async behavior ===
 
         /// <summary>

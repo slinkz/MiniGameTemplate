@@ -1,88 +1,4 @@
 mergeInto(LibraryManager.library, {
-  $sendToUnity: function (state, method, payload) {
-    if (!state || !state.unityGameObject || typeof SendMessage !== "function") {
-      return;
-    }
-    var value = payload == null ? "" : payload;
-    SendMessage(state.unityGameObject, method, value);
-  },
-
-  $stringifyError: function (err) {
-    if (!err) return "unknown";
-    try {
-      return JSON.stringify(err);
-    } catch (e) {
-      return String(err);
-    }
-  },
-
-  $ensureRewardedAd__deps: ['$sendToUnity', '$stringifyError'],
-  $ensureRewardedAd: function (state) {
-    if (!state.rewardedAdUnitId || typeof wx === "undefined" || !wx.createRewardedVideoAd) {
-      return null;
-    }
-    if (state.rewardedAd) {
-      return state.rewardedAd;
-    }
-    var ad = wx.createRewardedVideoAd({
-      adUnitId: state.rewardedAdUnitId
-    });
-    ad.onError(function (err) {
-      sendToUnity(state, "OnRewardedAdError", stringifyError(err));
-    });
-    ad.onClose(function (result) {
-      var isEnded = true;
-      if (result && typeof result.isEnded !== "undefined") {
-        isEnded = result.isEnded === true;
-      }
-      sendToUnity(state, "OnRewardedAdClosed", isEnded ? "1" : "0");
-    });
-    state.rewardedAd = ad;
-    return ad;
-  },
-
-  $ensureBannerAd: function (state) {
-    if (!state.bannerAdUnitId || typeof wx === "undefined" || !wx.createBannerAd) {
-      return null;
-    }
-    if (state.bannerAd) {
-      return state.bannerAd;
-    }
-    var systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : { windowWidth: 320, windowHeight: 568 };
-    var width = Math.min(320, systemInfo.windowWidth || 320);
-    var ad = wx.createBannerAd({
-      adUnitId: state.bannerAdUnitId,
-      adIntervals: 30,
-      style: {
-        left: ((systemInfo.windowWidth || width) - width) / 2,
-        top: (systemInfo.windowHeight || 568) - 110,
-        width: width
-      }
-    });
-    ad.onResize(function (size) {
-      if (!ad.style) return;
-      var latestInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : systemInfo;
-      ad.style.left = ((latestInfo.windowWidth || size.width) - size.width) / 2;
-      ad.style.top = (latestInfo.windowHeight || 568) - size.height;
-    });
-    state.bannerAd = ad;
-    return ad;
-  },
-
-  $ensureInterstitialAd: function (state) {
-    if (!state.interstitialAdUnitId || typeof wx === "undefined" || !wx.createInterstitialAd) {
-      return null;
-    }
-    if (state.interstitialAd) {
-      return state.interstitialAd;
-    }
-    var ad = wx.createInterstitialAd({
-      adUnitId: state.interstitialAdUnitId
-    });
-    state.interstitialAd = ad;
-    return ad;
-  },
-
   WXBridge_Init: function (gameObjectPtr) {
     var gameObjectName = UTF8ToString(gameObjectPtr);
     if (!window.MiniGameTemplateWXBridge) {
@@ -134,7 +50,6 @@ mergeInto(LibraryManager.library, {
     state.interstitialAdUnitId = interstitial;
   },
 
-  WXBridge_PreloadRewardedAd__deps: ['$ensureRewardedAd'],
   WXBridge_PreloadRewardedAd: function () {
     var state = window.MiniGameTemplateWXBridge;
     if (!state || typeof wx === "undefined" || !state.rewardedAdUnitId) return;
@@ -145,7 +60,6 @@ mergeInto(LibraryManager.library, {
     ad.load().catch(function () {});
   },
 
-  WXBridge_ShowRewardedAd__deps: ['$sendToUnity', '$stringifyError', '$ensureRewardedAd'],
   WXBridge_ShowRewardedAd: function () {
     var state = window.MiniGameTemplateWXBridge;
     if (!state || typeof wx === "undefined" || !state.rewardedAdUnitId) {
@@ -180,7 +94,6 @@ mergeInto(LibraryManager.library, {
     showImpl();
   },
 
-  WXBridge_ShowBannerAd__deps: ['$ensureBannerAd'],
   WXBridge_ShowBannerAd: function () {
     var state = window.MiniGameTemplateWXBridge;
     if (!state || typeof wx === "undefined" || !state.bannerAdUnitId) return;
@@ -198,7 +111,6 @@ mergeInto(LibraryManager.library, {
     state.bannerAd.hide();
   },
 
-  WXBridge_ShowInterstitialAd__deps: ['$ensureInterstitialAd'],
   WXBridge_ShowInterstitialAd: function () {
     var state = window.MiniGameTemplateWXBridge;
     if (!state || typeof wx === "undefined" || !state.interstitialAdUnitId) return;
@@ -249,7 +161,6 @@ mergeInto(LibraryManager.library, {
     }
   },
 
-  WXBridge_CheckPrivacy__deps: ['$sendToUnity'],
   WXBridge_CheckPrivacy: function () {
     var state = window.MiniGameTemplateWXBridge;
     if (!state || typeof wx === "undefined" || !wx.getPrivacySetting) {
@@ -271,7 +182,6 @@ mergeInto(LibraryManager.library, {
     });
   },
 
-  WXBridge_RequirePrivacy__deps: ['$sendToUnity'],
   WXBridge_RequirePrivacy: function () {
     var state = window.MiniGameTemplateWXBridge;
     if (!state || typeof wx === "undefined" || !wx.requirePrivacyAuthorize) {
@@ -288,5 +198,165 @@ mergeInto(LibraryManager.library, {
         sendToUnity(state, "OnPrivacyRequireResult", "0");
       }
     });
+  },
+
+  // === V2: Cloud Function Bridge (SG_TDD_06 §5.1) ===
+
+  WXBridge_CallCloudFunction: function (requestId, namePtr, dataPtr) {
+    var state = window.MiniGameTemplateWXBridge;
+    if (!state || typeof wx === "undefined" || !wx.cloud) {
+      sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
+        success: false,
+        requestId: requestId,
+        name: "",
+        error: "no wx.cloud"
+      }));
+      return;
+    }
+
+    var name = UTF8ToString(namePtr);
+    var data = UTF8ToString(dataPtr);
+    var parsedData = {};
+    try { parsedData = JSON.parse(data); } catch (e) {}
+
+    callCloudFunctionImpl(state, requestId, name, parsedData);
   }
 });
+
+function ensureRewardedAd(state) {
+  if (!state.rewardedAdUnitId || typeof wx === "undefined" || !wx.createRewardedVideoAd) {
+    return null;
+  }
+
+  if (state.rewardedAd) {
+    return state.rewardedAd;
+  }
+
+  var ad = wx.createRewardedVideoAd({
+    adUnitId: state.rewardedAdUnitId
+  });
+
+  ad.onError(function (err) {
+    sendToUnity(state, "OnRewardedAdError", stringifyError(err));
+  });
+
+  ad.onClose(function (result) {
+    var isEnded = true;
+    if (result && typeof result.isEnded !== "undefined") {
+      isEnded = result.isEnded === true;
+    }
+    sendToUnity(state, "OnRewardedAdClosed", isEnded ? "1" : "0");
+  });
+
+  state.rewardedAd = ad;
+  return ad;
+}
+
+function ensureBannerAd(state) {
+  if (!state.bannerAdUnitId || typeof wx === "undefined" || !wx.createBannerAd) {
+    return null;
+  }
+
+  if (state.bannerAd) {
+    return state.bannerAd;
+  }
+
+  var systemInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : { windowWidth: 320, windowHeight: 568 };
+  var width = Math.min(320, systemInfo.windowWidth || 320);
+
+  var ad = wx.createBannerAd({
+    adUnitId: state.bannerAdUnitId,
+    adIntervals: 30,
+    style: {
+      left: ((systemInfo.windowWidth || width) - width) / 2,
+      top: (systemInfo.windowHeight || 568) - 110,
+      width: width
+    }
+  });
+
+  ad.onResize(function (size) {
+    if (!ad.style) return;
+
+    var latestInfo = wx.getSystemInfoSync ? wx.getSystemInfoSync() : systemInfo;
+    ad.style.left = ((latestInfo.windowWidth || size.width) - size.width) / 2;
+    ad.style.top = (latestInfo.windowHeight || 568) - size.height;
+  });
+
+  state.bannerAd = ad;
+  return ad;
+}
+
+function ensureInterstitialAd(state) {
+  if (!state.interstitialAdUnitId || typeof wx === "undefined" || !wx.createInterstitialAd) {
+    return null;
+  }
+
+  if (state.interstitialAd) {
+    return state.interstitialAd;
+  }
+
+  var ad = wx.createInterstitialAd({
+    adUnitId: state.interstitialAdUnitId
+  });
+
+  state.interstitialAd = ad;
+  return ad;
+}
+
+function sendToUnity(state, method, payload) {
+  if (!state || !state.unityGameObject || typeof SendMessage !== "function") {
+    return;
+  }
+
+  var value = payload == null ? "" : payload;
+  SendMessage(state.unityGameObject, method, value);
+}
+
+function stringifyError(err) {
+  if (!err) return "unknown";
+  try {
+    return JSON.stringify(err);
+  } catch (e) {
+    return String(err);
+  }
+}
+
+// === Cloud Function Support (V2 — SG_TDD_06) ===
+
+function callCloudFunctionImpl(state, requestId, name, parsedData) {
+  // 5s timeout guard (TDD §5.1 / UA-006): ensure callback always fires
+  var timeoutId = setTimeout(function () {
+    timeoutId = null;
+    sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
+      success: false,
+      requestId: requestId,
+      name: name,
+      error: "timeout: 5000ms exceeded"
+    }));
+  }, 5000);
+
+  wx.cloud.callFunction({
+    name: name,
+    data: parsedData,
+    success: function (res) {
+      if (timeoutId === null) return; // already timed out, discard
+      clearTimeout(timeoutId);
+      sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
+        success: true,
+        requestId: requestId,
+        name: name,
+        result: JSON.stringify(res.result)
+      }));
+    },
+    fail: function (err) {
+      if (timeoutId === null) return; // already timed out, discard
+      clearTimeout(timeoutId);
+      sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
+        success: false,
+        requestId: requestId,
+        name: name,
+        error: stringifyError(err)
+      }));
+    }
+  });
+}
