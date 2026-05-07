@@ -21,6 +21,7 @@ namespace MiniGameTemplate.UI
     public class UIManager : Singleton<UIManager>
     {
         private readonly Dictionary<Type, GComponent> _activePanels = new Dictionary<Type, GComponent>();
+        private readonly Dictionary<Type, GComponent> _suspendedPanels = new Dictionary<Type, GComponent>();
         private List<KeyValuePair<Type, GComponent>> _closeBuffer;
 
         // Modal overlay management
@@ -83,6 +84,18 @@ namespace MiniGameTemplate.UI
             {
                 ((IUIPanel)existing).OnRefresh(data);
                 return (T)existing;
+            }
+
+            // Check if panel is suspended — resume instead of recreating
+            if (_suspendedPanels.TryGetValue(type, out var suspended))
+            {
+                _suspendedPanels.Remove(type);
+                _activePanels[type] = suspended;
+                suspended.visible = true;
+                if (_modalOverlays.TryGetValue(type, out var overlay))
+                    overlay.visible = true;
+                (suspended as IPanelSuspendable)?.OnResume(data);
+                return (T)suspended;
             }
 
             // Guard: prevent concurrent open calls for the same panel type
@@ -225,6 +238,96 @@ namespace MiniGameTemplate.UI
                 CleanupPanel(_closeBuffer[i].Key, _closeBuffer[i].Value);
 
             _closeBuffer.Clear();
+        }
+
+        // ================================================================
+        //  Suspend / Resume — 面板挂起与恢复（方案 B：Hide/Show 生命周期）
+        // ================================================================
+
+        /// <summary>
+        /// Suspend all active panels: hide from GRoot, call OnSuspend, move to suspended dict.
+        /// Returns the list of suspended panel types (for Navigator to track ownership).
+        /// </summary>
+        public List<Type> SuspendAllPanels()
+        {
+            var suspended = new List<Type>(_activePanels.Count);
+
+            foreach (var kvp in _activePanels)
+            {
+                var panel = kvp.Value;
+
+                // Call lifecycle (optional interface)
+                (panel as IPanelSuspendable)?.OnSuspend();
+
+                // Hide: remove from display tree but keep instance alive
+                panel.visible = false;
+
+                // Also hide modal overlay if exists
+                if (_modalOverlays.TryGetValue(kvp.Key, out var overlay))
+                    overlay.visible = false;
+
+                _suspendedPanels[kvp.Key] = panel;
+                suspended.Add(kvp.Key);
+            }
+
+            _activePanels.Clear();
+            return suspended;
+        }
+
+        /// <summary>
+        /// Resume previously suspended panels by type list.
+        /// Moves them back to active dict, makes visible, calls OnResume.
+        /// </summary>
+        public void ResumePanels(List<Type> panelTypes, object data = null)
+        {
+            if (panelTypes == null) return;
+
+            for (int i = 0; i < panelTypes.Count; i++)
+            {
+                var type = panelTypes[i];
+                if (!_suspendedPanels.TryGetValue(type, out var panel))
+                    continue;
+
+                _suspendedPanels.Remove(type);
+                _activePanels[type] = panel;
+
+                // Show
+                panel.visible = true;
+
+                // Restore modal overlay
+                if (_modalOverlays.TryGetValue(type, out var overlay))
+                    overlay.visible = true;
+
+                // Call lifecycle (optional interface)
+                (panel as IPanelSuspendable)?.OnResume(data);
+            }
+        }
+
+        /// <summary>
+        /// Close (dispose) specific suspended panels by type list.
+        /// Used when a node is permanently removed from the stack.
+        /// </summary>
+        public void CloseSuspendedPanels(List<Type> panelTypes)
+        {
+            if (panelTypes == null) return;
+
+            for (int i = 0; i < panelTypes.Count; i++)
+            {
+                var type = panelTypes[i];
+                if (!_suspendedPanels.TryGetValue(type, out var panel))
+                    continue;
+
+                _suspendedPanels.Remove(type);
+                CleanupPanel(type, panel);
+            }
+        }
+
+        /// <summary>
+        /// Check if a panel type is currently suspended.
+        /// </summary>
+        public bool IsPanelSuspended<T>() where T : GComponent, IUIPanel
+        {
+            return _suspendedPanels.ContainsKey(typeof(T));
         }
 
         // ---- Private helpers ----

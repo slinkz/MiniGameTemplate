@@ -49,6 +49,35 @@ namespace MiniGameTemplate.UI
     }
 
     /// <summary>
+    /// Optional interface for panels that need Suspend/Resume lifecycle hooks.
+    /// When a Navigator Push hides this panel, OnSuspend() is called.
+    /// When a Navigator Pop restores this panel, OnResume() is called.
+    ///
+    /// Panels that don't implement this interface will simply be hidden/shown
+    /// without any lifecycle callback — which is fine for most static panels.
+    ///
+    /// Implement this when you need to:
+    /// - Pause/resume animations or timers
+    /// - Hide/show platform ads (banner, interstitial)
+    /// - Unsubscribe/resubscribe from per-frame events
+    /// - Refresh data when returning from a sub-flow
+    /// </summary>
+    public interface IPanelSuspendable
+    {
+        /// <summary>
+        /// Called when the panel is being suspended (hidden but kept alive).
+        /// Triggered by Navigator Push — a new node covers this panel.
+        /// </summary>
+        void OnSuspend();
+
+        /// <summary>
+        /// Called when the panel is being resumed after suspension.
+        /// Triggered by Navigator Pop — the covering node is removed and this panel reappears.
+        /// </summary>
+        void OnResume(object data);
+    }
+
+    /// <summary>
     /// Extension interface for dialog/popup panels that need a modal overlay.
     /// UIManager automatically creates a semi-transparent overlay behind the dialog
     /// and optionally closes the dialog when the overlay is clicked.

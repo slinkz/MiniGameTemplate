@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using MiniGameTemplate.Core;
 
@@ -23,9 +24,6 @@ namespace MiniGameTemplate.Navigation
         [Tooltip("离开时是否卸载场景（仅 _requiredScene != null 时生效）")]
         [SerializeField] private bool _unloadSceneOnExit = true;
 
-        [Tooltip("进入此节点前是否关闭所有已打开面板")]
-        [SerializeField] private bool _closeAllPanelsOnEnter = true;
-
         [Header("元数据")]
         [SerializeField] private string _displayName;
 
@@ -37,7 +35,6 @@ namespace MiniGameTemplate.Navigation
         public SceneDefinition RequiredScene => _requiredScene;
         public string PanelTypeName => _panelTypeName;
         public bool UnloadSceneOnExit => _unloadSceneOnExit;
-        public bool CloseAllPanelsOnEnter => _closeAllPanelsOnEnter;
         public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
         public string NodeId => _nodeId;
 
@@ -58,7 +55,7 @@ namespace MiniGameTemplate.Navigation
 
             // 4. NodeId 自动填充（首次创建时）
             if (string.IsNullOrEmpty(_nodeId))
-                _nodeId = System.Guid.NewGuid().ToString("N");
+                _nodeId = Guid.NewGuid().ToString("N");
         }
 
         /// <summary>Editor-only: 用于 FlowNodeSOEditor 读取 SerializedProperty 的名称。</summary>
@@ -66,7 +63,6 @@ namespace MiniGameTemplate.Navigation
         public const string PROP_PANEL_TYPE_NAME = "_panelTypeName";
         public const string PROP_REQUIRED_SCENE = "_requiredScene";
         public const string PROP_UNLOAD_SCENE_ON_EXIT = "_unloadSceneOnExit";
-        public const string PROP_CLOSE_ALL_PANELS_ON_ENTER = "_closeAllPanelsOnEnter";
         public const string PROP_DISPLAY_NAME = "_displayName";
 #endif
     }

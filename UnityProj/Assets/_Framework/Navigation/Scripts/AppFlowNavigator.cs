@@ -27,6 +27,8 @@ namespace MiniGameTemplate.Navigation
         {
             public FlowNodeSO Node;
             [SerializeReference] public IFlowData Data;
+            /// <summary>该栈层拥有的面板类型列表（Suspend/Resume 用）。非序列化——热启动走 EnterNode 重建。</summary>
+            [NonSerialized] public List<Type> OwnedPanelTypes;
         }
 
         // ---------- 状态 ----------
@@ -83,11 +85,19 @@ namespace MiniGameTemplate.Navigation
             _timeoutCoroutine = StartCoroutine(TransitionTimeoutCoroutine());
             try
             {
-                // 挂起前节点（PK UA-007）
+                // 挂起前节点的 FlowHandler（PK UA-007）
                 var previousHandler = _currentFlowHandler as IFlowSuspendable;
                 previousHandler?.OnFlowSuspend();
 
+                // 挂起前节点拥有的面板（方案 B：Hide 而非 Dispose）
                 var previous = CurrentNode;
+                if (_stack.Count > 0)
+                {
+                    var entry = _stack[_stack.Count - 1];
+                    entry.OwnedPanelTypes = UIManager.Instance.SuspendAllPanels();
+                    _stack[_stack.Count - 1] = entry;
+                }
+
                 _stack.Add(new StackEntry { Node = node, Data = data });
                 await EnterNodeAsync(node, data);
                 OnNavigated?.Invoke(previous, node);
@@ -126,9 +136,24 @@ namespace MiniGameTemplate.Navigation
                 var leaving = _stack[^1];
                 _stack.RemoveAt(_stack.Count - 1);
 
+                // Close leaving node's active panels (permanent departure)
+                UIManager.Instance.CloseAllPanels();
+                // Close leaving node's tracked suspended panels (if any nested Push happened)
+                UIManager.Instance.CloseSuspendedPanels(leaving.OwnedPanelTypes);
+
                 await ExitNodeAsync(leaving.Node);
 
+                // Resume returning node's suspended panels
                 var returning = _stack[^1];
+                UIManager.Instance.ResumePanels(returning.OwnedPanelTypes, returnData ?? returning.Data);
+                // Clear ownership — they're back in _activePanels now
+                if (_stack.Count > 0)
+                {
+                    var entry = _stack[_stack.Count - 1];
+                    entry.OwnedPanelTypes = null;
+                    _stack[_stack.Count - 1] = entry;
+                }
+
                 await EnterNodeAsync(returning.Node, returnData ?? returning.Data, isReturning: true);
                 OnNavigated?.Invoke(leaving.Node, returning.Node);
 #if UNITY_EDITOR
@@ -167,14 +192,28 @@ namespace MiniGameTemplate.Navigation
             _timeoutCoroutine = StartCoroutine(TransitionTimeoutCoroutine());
             try
             {
+                // Close current active panels first
+                UIManager.Instance.CloseAllPanels();
+
                 while (_stack.Count - 1 > targetIndex)
                 {
                     var leaving = _stack[^1];
                     _stack.RemoveAt(_stack.Count - 1);
+                    // Close this layer's suspended panels
+                    UIManager.Instance.CloseSuspendedPanels(leaving.OwnedPanelTypes);
                     await ExitNodeAsync(leaving.Node);
                 }
 
+                // Resume returning node's suspended panels
                 var returning = _stack[^1];
+                UIManager.Instance.ResumePanels(returning.OwnedPanelTypes, returnData ?? returning.Data);
+                if (_stack.Count > 0)
+                {
+                    var entry = _stack[_stack.Count - 1];
+                    entry.OwnedPanelTypes = null;
+                    _stack[_stack.Count - 1] = entry;
+                }
+
                 await EnterNodeAsync(returning.Node, returnData ?? returning.Data, isReturning: true);
                 OnNavigated?.Invoke(null, returning.Node);
 #if UNITY_EDITOR
@@ -208,6 +247,9 @@ namespace MiniGameTemplate.Navigation
                     var leaving = _stack[^1];
                     previous = leaving.Node;
                     _stack.RemoveAt(_stack.Count - 1);
+                    // Replace = permanent departure: close all panels of leaving node
+                    UIManager.Instance.CloseAllPanels();
+                    UIManager.Instance.CloseSuspendedPanels(leaving.OwnedPanelTypes);
                     await ExitNodeAsync(leaving.Node);
                 }
 
@@ -238,14 +280,26 @@ namespace MiniGameTemplate.Navigation
             _timeoutCoroutine = StartCoroutine(TransitionTimeoutCoroutine());
             try
             {
+                // Close current active panels
+                UIManager.Instance.CloseAllPanels();
+
                 while (_stack.Count > 1)
                 {
                     var leaving = _stack[^1];
                     _stack.RemoveAt(_stack.Count - 1);
+                    UIManager.Instance.CloseSuspendedPanels(leaving.OwnedPanelTypes);
                     await ExitNodeAsync(leaving.Node);
                 }
 
+                // Resume root node's suspended panels
                 var root = _stack[0];
+                UIManager.Instance.ResumePanels(root.OwnedPanelTypes, root.Data);
+                {
+                    var entry = _stack[0];
+                    entry.OwnedPanelTypes = null;
+                    _stack[0] = entry;
+                }
+
                 await EnterNodeAsync(root.Node, root.Data, isReturning: true);
                 OnNavigated?.Invoke(null, root.Node);
 #if UNITY_EDITOR
@@ -394,25 +448,19 @@ namespace MiniGameTemplate.Navigation
 
         private async Task EnterNodeAsync(FlowNodeSO node, IFlowData data, bool isReturning = false)
         {
-            // 1. 清面板（Pop 返回纯 UI 节点时跳过，PK WX-007）
-            if (node.CloseAllPanelsOnEnter && !isReturning)
-            {
-                UIManager.Instance.CloseAllPanels();
-            }
-
-            // 2. 加载场景（如果需要）— 对称 API（PK UA-004）
+            // 1. 加载场景（如果需要）— 对称 API（PK UA-004）
             if (node.RequiredScene != null)
             {
                 await SceneLoader.Instance.LoadSceneAsync(node.RequiredScene);
             }
 
-            // 3. 打开面板（如果配置了）— 注册表模式，PK WX-001
-            if (!string.IsNullOrEmpty(node.PanelTypeName))
+            // 2. 打开面板（仅首次进入时，返回时面板已通过 Resume 恢复）
+            if (!isReturning && !string.IsNullOrEmpty(node.PanelTypeName))
             {
                 await OpenPanelByRegistryAsync(node.PanelTypeName, data);
             }
 
-            // 4. 查找场景内 IFlowHandler（PK UA-008：不在 SO 上）
+            // 3. 查找场景内 IFlowHandler（PK UA-008：不在 SO 上）
             _currentFlowHandler = null;
             if (node.RequiredScene != null)
             {
@@ -427,7 +475,7 @@ namespace MiniGameTemplate.Navigation
                 }
             }
 
-            // 5. 调用钩子（PK UA-007：区分 Enter vs Resume）
+            // 4. 调用钩子（PK UA-007：区分 Enter vs Resume）
             if (isReturning)
             {
                 (_currentFlowHandler as IFlowSuspendable)?.OnFlowResume(data);

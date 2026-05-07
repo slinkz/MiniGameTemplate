@@ -32,7 +32,7 @@ namespace MainMenu
     ///   - Demo entries → load demo scenes
     ///   - Future: 养成、商店等模块入口
     /// </summary>
-    public partial class MainMenuPanel : IUIPanel
+    public partial class MainMenuPanel : IUIPanel, IPanelSuspendable
     {
         /// <summary>面板注册表 Key（FlowNodeSO._panelTypeName 配这个值）。</summary>
         public const string PanelKey = "MainMenuPanel";
@@ -90,6 +90,19 @@ namespace MainMenu
         public void OnRefresh(object data)
         {
             // Only update data — do NOT re-bind events
+            ApplyData(data);
+        }
+
+        public void OnSuspend()
+        {
+            // Hide banner ad when another node covers us
+            if (_enableBannerAd)
+                _weChatBridge?.HideBannerAd();
+        }
+
+        public void OnResume(object data)
+        {
+            // Restore banner ad + refresh data when returning from sub-flow
             ApplyData(data);
         }
 
