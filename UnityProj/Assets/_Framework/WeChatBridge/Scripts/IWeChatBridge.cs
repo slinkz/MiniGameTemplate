@@ -147,6 +147,14 @@ namespace MiniGameTemplate.Platform
         // === Cloud (V2 — SG_TDD_06) ===
 
         /// <summary>
+        /// Initialize WeChat cloud development environment.
+        /// Must be called before any CallCloudFunction invocations.
+        /// Pass empty/null envId to use default environment.
+        /// Safe to call multiple times (idempotent at JS layer).
+        /// </summary>
+        void InitCloud(string envId);
+
+        /// <summary>
         /// Call a WeChat cloud function.
         /// Callback: (success, resultJsonOrError).
         /// On timeout (5s), callback fires with success=false.

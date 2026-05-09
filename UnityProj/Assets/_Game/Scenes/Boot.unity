@@ -154,6 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _gameConfig: {fileID: 11400000, guid: 85247d8cb2806804aaef258976467ec0, type: 2}
   _assetConfig: {fileID: 11400000, guid: 621a653f016bc4247bfed42faf0483c1, type: 2}
+  _weChatConfig: {fileID: 11400000, guid: c7f98fa064ea5264d9c660d39a07635a, type: 2}
   _startupFlowBehaviour: {fileID: 1372121062}
 --- !u!4 &1372121061
 Transform:
@@ -187,7 +188,4 @@ MonoBehaviour:
   _progressSpeed: 0.4
   _rootFlowNode: {fileID: 11400000, guid: 70823a309b077d74688ce63d96325d24, type: 2}
   _flowNodeRegistry: {fileID: 11400000, guid: fc38c8b27e17c9b4aa988105fc4e8bc3, type: 2}
-  _rewardedAdUnitId: 
-  _bannerAdUnitId: 
-  _interstitialAdUnitId: 
-  _enableBannerAdInMainMenu: 1
+  _weChatConfig: {fileID: 11400000, guid: c7f98fa064ea5264d9c660d39a07635a, type: 2}

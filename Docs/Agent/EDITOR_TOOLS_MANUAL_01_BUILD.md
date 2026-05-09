@@ -97,7 +97,7 @@ EditorApplication.ExecuteMenuItem("Tools/MiniGame Template/Build/Validate WeChat
 2. AssetConfig.PlayMode → WebGL
 3. YooAsset SBP 构建 Bundle（LZ4 + ClearAndCopyAll）
 4. 版本号自动生成 `yyyy-MM-dd-HHmm`
-5. 构建完成后提示是否立即执行导出后处理
+5. 构建完成后提示下一步操作
 
 ### Agent MCP 调用
 ```csharp
@@ -127,26 +127,6 @@ BuildModeSwitch.SwitchToEditorMode();
 
 ---
 
-## 导出后处理 (Post-Export)
-
-**菜单路径**：`Tools/MiniGame/导出后处理 (Post-Export)`
-**源码**：`BuildModeSwitch.cs` → `PostExport()`
-**用途**：微信转换完成后的一站式后处理
-
-### 操作步骤
-1. 从微信转换工具配置读取导出根目录
-2. 拷贝 `webgl/StreamingAssets/` → `minigame/StreamingAssets/`
-3. 拷贝首包资源文件（`*.webgl.data.unityweb.bin.txt/br`）
-4. 主包大小预警（>1.9MB 警告）
-5. 汇报结果弹窗
-
-### Agent MCP 调用
-```csharp
-BuildModeSwitch.PostExport();
-```
-
----
-
 ## Dev Server（本地开发服务器）
 
 **菜单路径**：`Tools/MiniGame Template/Dev Server`
@@ -155,11 +135,11 @@ BuildModeSwitch.PostExport();
 
 ### 前置条件
 - Node.js 已安装（npx 可用）
-- 微信导出目录已存在 `minigame/` 子目录
+- 微信导出目录已存在 `webgl/` 子目录
 
 ### 操作步骤
 1. 打开窗口
-2. 配置 Node.js 目录（可选，自动探测）、端口（默认 8001）、服务根目录（自动检测 minigame/）
+2. 配置 Node.js 目录（可选，自动探测）、端口（默认 8001）、服务根目录（自动检测 webgl/）
 3. 点击「▶ 启动服务器」
 4. 自动执行 CDN 一致性检查
 5. 使用「🔍 健康检查」验证服务可用

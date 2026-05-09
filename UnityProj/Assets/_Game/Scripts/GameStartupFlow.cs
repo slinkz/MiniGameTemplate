@@ -39,18 +39,9 @@ namespace Game
         [Tooltip("FlowNode Registry（栈序列化恢复需要）")]
         [SerializeField] private FlowNodeRegistry _flowNodeRegistry;
 
-        [Header("WeChat Ads (Optional)")]
-        [Tooltip("Rewarded video ad unit id. Leave empty to fallback to stub behavior.")]
-        [SerializeField] private string _rewardedAdUnitId = "";
-
-        [Tooltip("Banner ad unit id. Leave empty to fallback to stub behavior.")]
-        [SerializeField] private string _bannerAdUnitId = "";
-
-        [Tooltip("Interstitial ad unit id. Leave empty to fallback to stub behavior.")]
-        [SerializeField] private string _interstitialAdUnitId = "";
-
-        [Tooltip("Whether main menu should display banner ads.")]
-        [SerializeField] private bool _enableBannerAdInMainMenu = true;
+        [Header("WeChat Platform")]
+        [Tooltip("WeChat platform configuration (single source of truth).")]
+        [SerializeField] private WeChatConfig _weChatConfig;
 
         // Resolved at runtime
         private IWeChatBridge _weChatBridge;
@@ -73,8 +64,7 @@ namespace Game
             UIManager.RegisterBinder("SG_Popup", SG_Popup.SG_PopupBinder.BindAll);
             UIManager.RegisterBinder("SG_Loading", SG_Loading.SG_LoadingBinder.BindAll);
 
-            WeChatBridgeFactory.SetAdUnitIds(_rewardedAdUnitId, _bannerAdUnitId, _interstitialAdUnitId);
-            _weChatBridge = WeChatBridgeFactory.Create();
+            _weChatBridge = GameBootstrapper.WeChatBridge ?? WeChatBridgeFactory.CreateWithConfig(_weChatConfig);
             _weChatBridge.PreloadRewardedAd();
 
 
@@ -154,7 +144,7 @@ namespace Game
                     {
                         StartGameEvent = _startGameEvent,
                         WeChatBridge = _weChatBridge,
-                        EnableBannerAd = _enableBannerAdInMainMenu
+                        EnableBannerAd = _weChatConfig != null && _weChatConfig.EnableBannerAdInMainMenu
                     };
                     await AppFlowNavigator.Instance.PushAsync(_rootFlowNode, menuData);
                     GameLog.Log("[StartupFlow] Root node pushed via AppFlowNavigator. Startup flow complete.");
@@ -166,7 +156,7 @@ namespace Game
                     {
                         StartGameEvent = _startGameEvent,
                         WeChatBridge = _weChatBridge,
-                        EnableBannerAd = _enableBannerAdInMainMenu
+                        EnableBannerAd = _weChatConfig != null && _weChatConfig.EnableBannerAdInMainMenu
                     };
                     await UIManager.Instance.OpenPanelAsync<MainMenu.MainMenuPanel>(menuData);
                     GameLog.Log("[StartupFlow] Main menu opened (legacy). Startup flow complete.");

@@ -86,9 +86,9 @@ namespace MiniGameTemplate.EditorTools
                 string wxRoot = EditorPrefs.GetString(PREF_WX_EXPORT_ROOT, "");
                 if (!string.IsNullOrEmpty(wxRoot))
                 {
-                    string minigameDir = Path.Combine(wxRoot, "minigame");
-                    if (Directory.Exists(minigameDir))
-                        _rootDir = minigameDir;
+                    string webglDir = Path.Combine(wxRoot, "webgl");
+                    if (Directory.Exists(webglDir))
+                        _rootDir = webglDir;
                 }
             }
 
@@ -229,7 +229,7 @@ namespace MiniGameTemplate.EditorTools
             // Root directory
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginChangeCheck();
-            _rootDir = EditorGUILayout.TextField("服务根目录", _rootDir);
+            _rootDir = EditorGUILayout.TextField("服务器根目录", _rootDir);
             if (EditorGUI.EndChangeCheck())
             {
                 EditorPrefs.SetString(PREF_ROOT_DIR, _rootDir);
@@ -728,7 +728,7 @@ namespace MiniGameTemplate.EditorTools
             string wxRoot = EditorPrefs.GetString(PREF_WX_EXPORT_ROOT, "");
             if (!string.IsNullOrEmpty(wxRoot))
             {
-                string minigameDir = Path.Combine(wxRoot, "minigame");
+                string minigameDir = Path.Combine(wxRoot, "webgl");
                 if (Directory.Exists(minigameDir))
                 {
                     _rootDir = minigameDir;
@@ -742,8 +742,8 @@ namespace MiniGameTemplate.EditorTools
             string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "../.."));
             string[] candidates =
             {
-                Path.Combine(projectRoot, "output", "minigame"),
-                Path.Combine(projectRoot, "Build", "minigame"),
+                Path.Combine(projectRoot, "output", "webgl"),
+                Path.Combine(projectRoot, "Build", "webgl"),
             };
 
             foreach (string candidate in candidates)

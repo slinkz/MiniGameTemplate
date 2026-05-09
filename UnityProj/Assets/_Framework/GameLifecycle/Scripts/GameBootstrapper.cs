@@ -26,6 +26,10 @@ namespace MiniGameTemplate.Core
         [Header("Asset Configuration")]
         [SerializeField] private AssetConfig _assetConfig;
 
+        [Header("WeChat Platform")]
+        [Tooltip("WeChat platform configuration (ads, cloud, etc). Single source of truth.")]
+        [SerializeField] private WeChatConfig _weChatConfig;
+
         [Header("Startup Flow (Optional)")]
         [Tooltip("Assign a MonoBehaviour implementing IStartupFlow to run game-specific startup " +
                  "(loading UI, privacy check, main menu). If null, goes directly to LoadInitialScene.")]
@@ -84,12 +88,9 @@ namespace MiniGameTemplate.Core
 
             DontDestroyOnLoad(gameObject);
 
-            // Create WeChat bridge early — needed by SaveSystem factory
-#if UNITY_WEBGL && !UNITY_EDITOR
-            _weChatBridge = new WeChatBridgeWebGL();
-#else
-            _weChatBridge = new WeChatBridgeStub();
-#endif
+            // Create WeChat bridge early — needed by SaveSystem factory.
+            // Must go through factory so the whole app shares ONE bridge instance.
+            _weChatBridge = WeChatBridgeFactory.CreateWithConfig(_weChatConfig);
 
             try
             {

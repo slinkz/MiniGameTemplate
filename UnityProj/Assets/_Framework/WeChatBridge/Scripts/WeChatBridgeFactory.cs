@@ -11,6 +11,7 @@ namespace MiniGameTemplate.Platform
         private static string _rewardedAdUnitId = string.Empty;
         private static string _bannerAdUnitId = string.Empty;
         private static string _interstitialAdUnitId = string.Empty;
+        private static string _cloudEnvId = string.Empty;
 
         [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -19,6 +20,7 @@ namespace MiniGameTemplate.Platform
             _rewardedAdUnitId = string.Empty;
             _bannerAdUnitId = string.Empty;
             _interstitialAdUnitId = string.Empty;
+            _cloudEnvId = string.Empty;
         }
 
         public static IWeChatBridge Create()
@@ -32,7 +34,22 @@ namespace MiniGameTemplate.Platform
             _instance = new WeChatBridgeStub();
 #endif
             ApplyAdConfig(_instance);
+            ApplyCloudConfig(_instance);
             return _instance;
+        }
+
+        /// <summary>
+        /// Apply all settings from a WeChatConfig SO and create/return the bridge.
+        /// Preferred entry point — single source of truth, one call does everything.
+        /// </summary>
+        public static IWeChatBridge CreateWithConfig(WeChatConfig config)
+        {
+            if (config != null)
+            {
+                SetAdUnitIds(config.RewardedAdUnitId, config.BannerAdUnitId, config.InterstitialAdUnitId);
+                SetCloudEnvId(config.CloudEnvId);
+            }
+            return Create();
         }
 
         /// <summary>
@@ -50,6 +67,19 @@ namespace MiniGameTemplate.Platform
         }
 
         /// <summary>
+        /// Configure cloud environment ID for wx.cloud.init().
+        /// Can be called before or after Create(). 
+        /// Pass empty/null for default environment.
+        /// </summary>
+        public static void SetCloudEnvId(string envId)
+        {
+            _cloudEnvId = (envId ?? string.Empty).Trim();
+
+            if (_instance != null)
+                ApplyCloudConfig(_instance);
+        }
+
+        /// <summary>
         /// Override the bridge instance (useful for testing).
         /// SEC: Only available in Editor and Development builds to prevent runtime injection attacks.
         /// </summary>
@@ -58,6 +88,7 @@ namespace MiniGameTemplate.Platform
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _instance = bridge;
             ApplyAdConfig(_instance);
+            ApplyCloudConfig(_instance);
 #else
             UnityEngine.Debug.LogError("[WeChatBridgeFactory] SEC: SetOverride is disabled in release builds.");
 #endif
@@ -68,6 +99,14 @@ namespace MiniGameTemplate.Platform
             if (bridge is IWeChatAdConfigurable configurable)
             {
                 configurable.ConfigureAds(_rewardedAdUnitId, _bannerAdUnitId, _interstitialAdUnitId);
+            }
+        }
+
+        private static void ApplyCloudConfig(IWeChatBridge bridge)
+        {
+            if (!string.IsNullOrEmpty(_cloudEnvId))
+            {
+                bridge.InitCloud(_cloudEnvId);
             }
         }
     }

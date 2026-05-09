@@ -260,6 +260,19 @@ namespace MiniGameTemplate.Platform
 
         // === Cloud Function (V2 — SG_TDD_06 §2.2) ===
 
+        public void InitCloud(string envId)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (TryInitializeNativeBridge() && IsWeChatPlatform)
+            {
+                WXBridge_InitCloud(envId ?? string.Empty);
+                GameLog.Log($"[WeChatBridge:WebGL] Cloud initialized (env={envId ?? "default"}).");
+                return;
+            }
+#endif
+            _fallback.InitCloud(envId);
+        }
+
         public void CallCloudFunction(string functionName, string dataJson, Action<bool, string> onComplete)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -424,6 +437,9 @@ namespace MiniGameTemplate.Platform
 
         [DllImport("__Internal")]
         private static extern void WXBridge_CallCloudFunction(int requestId, string name, string data);
+
+        [DllImport("__Internal")]
+        private static extern void WXBridge_InitCloud(string envId);
 #endif
     }
 }

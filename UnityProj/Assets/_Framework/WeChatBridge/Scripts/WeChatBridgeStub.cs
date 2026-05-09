@@ -196,6 +196,11 @@ namespace MiniGameTemplate.Platform
 
         // === Cloud (V2 — SG_TDD_06) ===
 
+        public void InitCloud(string envId)
+        {
+            GameLog.Log($"[WeChatBridge:Stub] InitCloud(env={envId ?? "default"}) — no-op in Editor.");
+        }
+
         public void CallCloudFunction(string functionName, string dataJson, Action<bool, string> onComplete)
         {
             // Editor / non-WeChat environment: return failure immediately, no network.

@@ -1,8 +1,8 @@
 ---
 system: wechat
 scope: sdk-integration
-last_verified: 2026-05-02
-related_code: Assets/Plugins/WeChatSDK/**, Assets/_Framework/WeChat/**
+last_verified: 2026-05-08
+related_code: Assets/_Framework/WeChatBridge/**, Assets/_Framework/AssetSystem/WechatFileSystem/**
 ---
 
 # 微信小游戏 SDK 接入指南
@@ -29,6 +29,8 @@ MiniGameTemplate 提供了 `IWeChatBridge` 抽象接口层。模板内置了桩�
 - ✅ CDN 单一源头架构（AssetConfig.CdnUrl → 运行时自动派生 HostServerUrl）
 - ✅ `MiniGameBuildPipeline` 微信小游戏硬性 PlayerSettings
 - ✅ 启动时隐私授权检查（PrivacyDialog → ConfirmDialog 二次确认）
+- ✅ 云开发 Cloud Init 自动化（jslib 自包含，导出后零操作）
+- ✅ Cloud Function 全链路（InitCloud → CallCloudFunction → 5s 超时回调）
 
 ## 接入步骤
 
@@ -99,6 +101,8 @@ wx.ShowInterstitialAd();
 | 隐私 | `CheckPrivacyAuthorize(callback)` | 检查隐私授权状态（callback 参数 needAuthorize 表示是否需要弹窗授权） |
 | 隐私 | `RequirePrivacyAuthorize(callback)` | 发起隐私授权请求（用户同意/拒绝后回调） |
 | 隐私 | `GetPrivacySettingName()` | 获取隐私设置名称（用于 UI 显示） |
+| 云开发 | `InitCloud(envId)` | 初始化云开发环境（必须在 CallCloudFunction 前调用） |
+| 云开发 | `CallCloudFunction(name, data, callback)` | 调用微信云函数（5s 超时保护） |
 
 ## 构建配置
 
@@ -210,7 +214,7 @@ Access-Control-Allow-Headers: Content-Type
 #### 5. CDN 目录结构建议
 
 ```
-https://cdn.example.com/minigame/{package_name}/
+https://cdn.example.com/webgl/{package_name}/
 ├── PackageManifest_{version}.version    # 版本号文件
 ├── PackageManifest_{version}.bytes      # 清单文件
 ├── {bundle_hash}.bundle                 # AssetBundle 文件
@@ -274,7 +278,7 @@ Dev Server                      ← 辅助工具，读取 CDN 配置验证一致
 
 4. 启动 Dev Server
    Unity 菜单 → Tools → MiniGame Template → Dev Server
-   - 服务根目录指向 minigame/ 导出目录
+   - 服务根目录指向 webgl/ 导出目录
    - 点击"启动服务器"
    - 点击"检查 CDN 一致性"确认配置正确
 
@@ -295,7 +299,7 @@ Dev Server                      ← 辅助工具，读取 CDN 配置验证一致
 
 在 `AssetConfig` 中填入 CDN URL 即可自动切换：
 ```
-Host Server Url: https://cdn.yoursite.com/minigame/DefaultPackage
+Host Server Url: https://cdn.yoursite.com/webgl/DefaultPackage
 ```
 
 此时 Bundle 构建时 `Copy Buildin File Option` 改为 **None**（不再放 StreamingAssets），
@@ -337,3 +341,68 @@ GameStartupFlow.CheckPrivacyAsync()
 ```
 
 **关键注意**：PrivacyDialog 和 ConfirmDialog 的 `SortOrder` 必须高于 `LAYER_LOADING`（600），否则对话框会被 LoadingPanel 遮挡导致界面卡死。当前设置为 `LAYER_LOADING + 100 = 700`。
+
+
+## 云开发（Cloud）
+
+### 概述
+
+微信云开发（`wx.cloud`）提供免服务器的云函数调用能力。本模板通过自有 jslib 实现 cloud.init + callFunction，
+**导出后零操作**——无需手动编辑 `game.js`。
+
+### 架构与调用链路
+
+```
+[C# 层]                         [JS 层 (WeChatBridge.jslib)]              [微信 Runtime]
+                                                                          
+GameStartupFlow                                                            
+  └→ WeChatBridgeFactory.SetCloudEnvId(envId)                              
+       └→ bridge.InitCloud(envId)                                          
+            └→ WXBridge_InitCloud(envIdPtr)  ──→  wx.cloud.init({env})  ──→ ✅ Cloud Ready
+                                                                          
+WxAuthService / CloudSyncService                                           
+  └→ bridge.CallCloudFunction(name, data, cb)                              
+       └→ WXBridge_CallCloudFunction(id, name, data)                       
+            └→ callCloudFunctionImpl(...)  ──→  wx.cloud.callFunction()    
+                 ├→ success → SendMessage("OnCloudFunctionResult", json)    
+                 └→ fail/timeout(5s) → SendMessage("OnCloudFunctionResult") 
+```
+
+### 配置方法
+
+在 `GameStartupFlow` Inspector 面板中配置：
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `_cloudEnvId` | 云开发环境 ID | `cloud1-2abc3def456` |
+
+留空则使用默认环境（`wx.cloud.init()` 无参数）。
+
+### 时序保证
+
+1. `WeChatBridgeFactory.SetCloudEnvId()` 在 `Create()` 之前调用
+2. `Create()` 内部自动执行 `ApplyCloudConfig()` → `bridge.InitCloud(envId)`
+3. 后续任何 `CallCloudFunction()` 调用时 `wx.cloud` 已就绪
+
+### 关键调研结论（2026-05-08）
+
+**问题**：每次 Unity 导出微信小游戏，`game.js` 会从模板重新生成，之前手动加的 `wx.cloud.init()` 丢失。
+
+**方案评估**：
+
+| 方案 | 原理 | 结论 |
+|------|------|------|
+| A. **自有 jslib InitCloud** ✅ | 在 WeChatBridge.jslib 中新增 `WXBridge_InitCloud` | **采用** — 自控、稳定、导出后零操作 |
+| B. SDK `WX.cloud.Init()` | 通过 SDK DLL 的 WXCloud C# 类调用 | 弃选 — 依赖 DLL 内部 API，签名可能随版本变 |
+| C. PostBuild 模板注入 | LifeCycleEvent hook 在导出后自动插入代码 | 弃选 — `LifeCycleEvent` 在 DLL 中，API 不公开 |
+| D. 修改 SDK 模板 game.js | 直接改包内文件 | 弃选 — SDK 升级覆盖 |
+
+**最终实施**：方案 A。在 jslib 中自包含 `wx.cloud.init(config)` 调用，C# 端通过 DllImport 驱动。
+整条链路都在项目代码内，不依赖 SDK 内部 API，不怕 SDK 版本升级。
+
+### 注意事项
+
+1. `InitCloud` 是幂等的——重复调用不会报错（JS 层 wx.cloud.init 是幂等的）
+2. 如果 `envId` 为空字符串，调用 `wx.cloud.init()` 无参版本（使用默认环境）
+3. 非微信环境（Editor / 非 WebGL）走 Stub 空实现，日志提示但不报错
+4. Cloud Function 有 5s 超时保护（`callCloudFunctionImpl` 内 `setTimeout`）
