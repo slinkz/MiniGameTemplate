@@ -269,6 +269,7 @@ namespace MiniGameTemplate.Platform
                 GameLog.Log($"[WeChatBridge:WebGL] Cloud initialized (env={envId ?? "default"}).");
                 return;
             }
+            GameLog.LogWarning($"[WeChatBridge:WebGL] InitCloud FALLBACK — native={_nativeInitialized}, IsWeChatPlatform={IsWeChatPlatform}");
 #endif
             _fallback.InitCloud(envId);
         }
@@ -280,9 +281,11 @@ namespace MiniGameTemplate.Platform
             {
                 int reqId = _nextRequestId++;
                 _cloudCallbacks[reqId] = onComplete;
+                GameLog.Log($"[WeChatBridge:WebGL] CallCloudFunction '{functionName}' reqId={reqId}");
                 WXBridge_CallCloudFunction(reqId, functionName ?? string.Empty, dataJson ?? "{}");
                 return;
             }
+            GameLog.LogWarning($"[WeChatBridge:WebGL] CallCloudFunction '{functionName}' FALLBACK — native={_nativeInitialized}, IsWeChatPlatform={IsWeChatPlatform}");
 #endif
             _fallback.CallCloudFunction(functionName, dataJson, onComplete);
         }
@@ -299,11 +302,16 @@ namespace MiniGameTemplate.Platform
 
         internal void HandleCloudFunctionResult(string json)
         {
+            GameLog.Log($"[WeChatBridge:WebGL] HandleCloudFunctionResult received: {(json?.Length > 200 ? json.Substring(0, 200) + "..." : json)}");
             var resp = UnityEngine.JsonUtility.FromJson<CloudFunctionResponse>(json);
             if (_cloudCallbacks.TryGetValue(resp.requestId, out var cb))
             {
                 _cloudCallbacks.Remove(resp.requestId);
                 cb?.Invoke(resp.success, resp.success ? resp.result : resp.error);
+            }
+            else
+            {
+                GameLog.LogWarning($"[WeChatBridge:WebGL] HandleCloudFunctionResult — no callback for reqId={resp.requestId} (possibly timed out)");
             }
         }
 

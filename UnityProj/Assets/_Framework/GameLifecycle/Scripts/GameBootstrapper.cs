@@ -333,6 +333,8 @@ namespace MiniGameTemplate.Core
         /// </summary>
         private ISaveSystem CreateSaveSystem()
         {
+            GameLog.Log($"[Bootstrapper] CreateSaveSystem — IsWeChatPlatform={_weChatBridge.IsWeChatPlatform}");
+
             if (_weChatBridge.IsWeChatPlatform)
             {
                 var auth = new WxAuthService(_weChatBridge);
@@ -342,7 +344,7 @@ namespace MiniGameTemplate.Core
                 return cloudSave;
             }
 
-            GameLog.Log("[Bootstrapper] PlayerPrefsSaveSystem (V1) initialized.");
+            GameLog.Log("[Bootstrapper] PlayerPrefsSaveSystem (V1) initialized — NOT WeChat platform, cloud login skipped.");
             return new PlayerPrefsSaveSystem();
         }
 

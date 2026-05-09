@@ -2,6 +2,7 @@ mergeInto(LibraryManager.library, {
 
   WXBridge_Init: function (gameObjectPtr) {
     var gameObjectName = UTF8ToString(gameObjectPtr);
+    console.log("[WXBridge:JS] WXBridge_Init called — gameObjectName=" + gameObjectName + ", typeof wx=" + typeof wx);
     if (!window.MiniGameTemplateWXBridge) {
       window.MiniGameTemplateWXBridge = {
         unityGameObject: gameObjectName,
@@ -30,12 +31,12 @@ mergeInto(LibraryManager.library, {
           SendMessage(state.unityGameObject, method, value);
         },
 
-        stringifyError: function (err) {
-          if (!err) return "unknown";
+        stringifyError: function (e) {
+          if (!e) return "unknown";
           try {
-            return JSON.stringify(err);
-          } catch (e) {
-            return String(err);
+            return JSON.stringify(e);
+          } catch (ex) {
+            return String(e);
           }
         },
 
@@ -52,8 +53,8 @@ mergeInto(LibraryManager.library, {
             adUnitId: state.rewardedAdUnitId
           });
 
-          ad.onError(function (err) {
-            helpers.sendToUnity(state, "OnRewardedAdError", helpers.stringifyError(err));
+          ad.onError(function (adErr) {
+            helpers.sendToUnity(state, "OnRewardedAdError", helpers.stringifyError(adErr));
           });
 
           ad.onClose(function (result) {
@@ -179,8 +180,8 @@ mergeInto(LibraryManager.library, {
     }
 
     var showImpl = function () {
-      ad.show().catch(function (err) {
-        helpers.sendToUnity(state, "OnRewardedAdError", helpers.stringifyError(err));
+      ad.show().catch(function (showErr) {
+        helpers.sendToUnity(state, "OnRewardedAdError", helpers.stringifyError(showErr));
         helpers.sendToUnity(state, "OnRewardedAdClosed", "0");
       });
     };
@@ -306,9 +307,14 @@ mergeInto(LibraryManager.library, {
   // === V2: Cloud Function Bridge (SG_TDD_06 §5.1) ===
 
   WXBridge_InitCloud: function (envIdPtr) {
-    if (typeof wx === "undefined" || !wx.cloud) return;
+    console.log("[WXBridge:JS] WXBridge_InitCloud called");
+    if (typeof wx === "undefined" || !wx.cloud) {
+      console.error("[WXBridge:JS] InitCloud FAILED — wx or wx.cloud is undefined. typeof wx=" + typeof wx);
+      return;
+    }
 
     var envId = UTF8ToString(envIdPtr);
+    console.log("[WXBridge:JS] InitCloud envId=" + (envId || "(empty, using default)"));
     if (!envId || envId === "") {
       wx.cloud.init();
     } else {
@@ -319,12 +325,15 @@ mergeInto(LibraryManager.library, {
       window.MiniGameTemplateWXBridge = { unityGameObject: "" };
     }
     window.MiniGameTemplateWXBridge.cloudInitialized = true;
+    console.log("[WXBridge:JS] InitCloud SUCCESS — cloudInitialized=true");
   },
 
   WXBridge_CallCloudFunction: function (requestId, namePtr, dataPtr) {
     var state = window.MiniGameTemplateWXBridge;
     var helpers = window.__wxBridgeHelpers;
+    console.log("[WXBridge:JS] CallCloudFunction called — requestId=" + requestId + ", state=" + !!state + ", wx=" + (typeof wx) + ", wx.cloud=" + !!(typeof wx !== "undefined" && wx.cloud));
     if (!state || typeof wx === "undefined" || !wx.cloud) {
+      console.error("[WXBridge:JS] CallCloudFunction ABORT — missing state/wx/wx.cloud");
       if (helpers) {
         helpers.sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
           success: false,
@@ -341,17 +350,35 @@ mergeInto(LibraryManager.library, {
     var parsedData = {};
     try { parsedData = JSON.parse(data); } catch (e) {}
 
-    var timeoutId = setTimeout(function () {
-      timeoutId = null;
+    // Guard: ensure cloud was initialized before calling
+    if (!state.cloudInitialized) {
+      console.error("[WXBridge:JS] CallCloudFunction ABORT — cloudInitialized=false! Did WXBridge_InitCloud succeed?");
       if (helpers) {
         helpers.sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
           success: false,
           requestId: requestId,
           name: name,
-          error: "timeout: 5000ms exceeded"
+          error: "cloud not initialized"
         }));
       }
-    }, 5000);
+      return;
+    }
+
+    console.log("[WXBridge:JS] CallCloudFunction invoking wx.cloud.callFunction — name=" + name + ", data=" + data);
+
+    var CLOUD_TIMEOUT_MS = 15000;
+    var timeoutId = setTimeout(function () {
+      timeoutId = null;
+      console.error("[WXBridge:JS] CallCloudFunction TIMEOUT (" + CLOUD_TIMEOUT_MS + "ms) — name=" + name + ". Cloud function cold start may need longer, or the function does not exist.");
+      if (helpers) {
+        helpers.sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
+          success: false,
+          requestId: requestId,
+          name: name,
+          error: "timeout: " + CLOUD_TIMEOUT_MS + "ms exceeded"
+        }));
+      }
+    }, CLOUD_TIMEOUT_MS);
 
     wx.cloud.callFunction({
       name: name,
@@ -359,6 +386,7 @@ mergeInto(LibraryManager.library, {
       success: function (res) {
         if (timeoutId === null) return;
         clearTimeout(timeoutId);
+        console.log("[WXBridge:JS] CallCloudFunction SUCCESS — name=" + name + ", result=" + JSON.stringify(res.result));
         if (helpers) {
           helpers.sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
             success: true,
@@ -368,15 +396,16 @@ mergeInto(LibraryManager.library, {
           }));
         }
       },
-      fail: function (err) {
+      fail: function (failRes) {
         if (timeoutId === null) return;
         clearTimeout(timeoutId);
+        console.error("[WXBridge:JS] CallCloudFunction FAIL — name=" + name + ", err=" + JSON.stringify(failRes));
         if (helpers) {
           helpers.sendToUnity(state, "OnCloudFunctionResult", JSON.stringify({
             success: false,
             requestId: requestId,
             name: name,
-            error: helpers.stringifyError(err)
+            error: helpers.stringifyError(failRes)
           }));
         }
       }

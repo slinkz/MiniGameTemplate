@@ -47,6 +47,8 @@ namespace MiniGameTemplate.Platform
         /// </summary>
         public void Login(Action<bool, string> onComplete)
         {
+            GameLog.Log($"[WxAuth] Login called — state={_state}, failCount={_failCount}, IsLoggedIn={IsLoggedIn}");
+
             // Already gave up this session
             if (_failCount >= MAX_FAIL_COUNT)
             {
@@ -58,6 +60,7 @@ namespace MiniGameTemplate.Platform
             // De-duplicate concurrent calls
             if (_state == AuthState.LoggingIn)
             {
+                GameLog.Log("[WxAuth] Already logging in — queuing callback.");
                 _pendingCallbacks.Add(onComplete);
                 return;
             }
@@ -65,6 +68,7 @@ namespace MiniGameTemplate.Platform
             // Already logged in and token valid
             if (IsLoggedIn)
             {
+                GameLog.Log("[WxAuth] Already logged in — returning cached openid.");
                 onComplete?.Invoke(true, _openId);
                 return;
             }
@@ -73,9 +77,12 @@ namespace MiniGameTemplate.Platform
             _pendingCallbacks.Clear();
             _pendingCallbacks.Add(onComplete);
 
+            GameLog.Log("[WxAuth] Calling cloud function 'login'...");
             // Call "login" cloud function — cloud-dev auto-injects OPENID, no wx.login code needed
             _bridge.CallCloudFunction("login", "{}", (success, result) =>
             {
+                GameLog.Log($"[WxAuth] Cloud function 'login' returned — success={success}, result={(result?.Length > 100 ? result.Substring(0, 100) + "..." : result)}");
+
                 if (!success)
                 {
                     _failCount++;

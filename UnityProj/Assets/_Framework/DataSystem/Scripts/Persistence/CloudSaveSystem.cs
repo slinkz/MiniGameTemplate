@@ -35,11 +35,12 @@ namespace MiniGameTemplate.Data
         /// </summary>
         public void InitCloudSync()
         {
+            GameLog.Log("[CloudSave] InitCloudSync — calling _authService.Login()...");
             _authService.Login((success, openid) =>
             {
                 if (!success)
                 {
-                    GameLog.LogWarning("[CloudSave] Login failed — running in local-only mode.");
+                    GameLog.LogWarning($"[CloudSave] Login failed (reason={openid}) — running in local-only mode.");
                     return;
                 }
 
