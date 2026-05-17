@@ -1,7 +1,7 @@
 ---
 system: wechat
 scope: sdk-integration
-last_verified: 2026-05-08
+last_verified: 2026-05-17
 related_code: Assets/_Framework/WeChatBridge/**, Assets/_Framework/AssetSystem/WechatFileSystem/**
 ---
 

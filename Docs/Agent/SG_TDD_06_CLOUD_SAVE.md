@@ -1,7 +1,7 @@
-# SG_TDD_06: 微信登录与云存储系统（V2）
+# SG_TDD_06: 微信登录与云存储系统（V3 云端权威）
 
 > 父文档：[SG_TDD_INDEX.md](SG_TDD_INDEX.md)  
-> **版本**：v0.5 | **日期**：2026-05-07 | **状态**：✅ 实施完成（编译零错误，待真机验证）  
+> **版本**：v0.6 | **日期**：2026-05-17 | **状态**：✅ 实施完成（编译零错误，真机验证通过）  
 > **前置依赖**：SG_TDD_03（V1 本地存储）已落地并验收通过
 
 ---
@@ -21,7 +21,7 @@
 
 1. **零感知升级**：V1 老用户不需要任何操作，首次静默登录自动迁移
 2. **离线优先**：网络不可用时游戏照常运行，联网后自动同步
-3. **不丢数据**：冲突时取并集（union merge），宁可多不可少
+3. **云端权威**（v0.6 改）：启动时拉取云端数据**无条件覆盖**本地；云端为空 = 新玩家/管理员重置。不再做 seed 或 union merge
 4. **最小服务端**：使用微信云开发（TCB），零运维
 5. **ISaveSystem 接口不变**：上层 `SG_ProgressManager` 代码零修改
 
@@ -71,7 +71,7 @@
     → CloudSaveSystem 构造
        ├── 1. 从本地 Storage 加载（V1 兼容）
        ├── 2. 异步触发静默登录
-       └── 3. 登录成功后 → 下拉云端进度 → union merge → 写回本地
+       └── 3. 登录成功后 → 下拉云端进度 → 无条件覆盖本地（v0.6 改：不再 merge）
 ```
 
 ### 1.3 关键设计决策
@@ -80,7 +80,7 @@
 |---|------|------|------|
 | D-01 | 服务端技术栈 | 微信云开发（TCB） | 零运维、免备案、天然 openid 信任链 |
 | D-02 | 登录方式 | wx.login 静默登录 | 无需用户授权、无感知 |
-| D-03 | 冲突策略 | Union Merge（取并集） | 宁可多不可少，通关记录只加不减 |
+| D-03 | 冲突策略 | 云端权威覆盖（v0.6 改） | 云端为唯一源头；管理员可在控制台删档重置；不再 seed 或 merge |
 | D-04 | 同步时机 | 写后异步 + 启动时拉取 | 平衡实时性和性能 |
 | D-05 | 离线处理 | 本地队列 + 指数退避重试 | 网络恢复后自动同步 |
 | D-06 | ISaveSystem 替换 | 新建 CloudSaveSystem 实现 | 不改 V1 接口，透明升级 |
@@ -382,21 +382,11 @@ exports.main = async (event, context) => {
     const { OPENID } = cloud.getWXContext();
     const { clearedLevels, version, clientVersion } = event;
     
-    // 服务端 union merge：读取现有数据 → 合并 → 写回
-    let existingLevels = [];
-    try {
-        const existing = await db.collection('progress').doc(OPENID).get();
-        existingLevels = existing.data.clearedLevels || [];
-    } catch (e) {
-        // 文档不存在，空数组
-    }
-    
-    // 取并集
-    const merged = [...new Set([...existingLevels, ...clearedLevels])].sort((a, b) => a - b);
-    
+    // v0.6 改：直接覆盖写入（不再做 union merge）
+    // 客户端是唯一写入源，云端直接 set 覆写
     const data = {
         version: version || 2,
-        clearedLevels: merged,
+        clearedLevels: clearedLevels || [],
         lastSyncTime: Date.now(),
         clientVersion: clientVersion || "unknown"
     };
@@ -463,7 +453,7 @@ namespace MiniGameTemplate.Platform
     /// <summary>
     /// 云端进度同步服务。
     /// 职责：将本地进度异步同步到微信云开发数据库。
-    /// 设计：写后异步上传 + 启动时下拉合并。
+    /// V3 设计：启动时云端权威覆盖本地 + 通关后异步上传。不做 merge/seed。
     /// </summary>
     public class CloudSyncService
     {
@@ -492,10 +482,11 @@ namespace MiniGameTemplate.Platform
         }
         
         /// <summary>
-        /// 启动时拉取云端进度，与本地合并。
+        /// 启动时拉取云端进度。云端权威：无条件覆盖本地。
+        /// (v0.6 改：不再 merge，不再 seed)
         /// </summary>
-        /// <param name="localData">当前本地存档 JSON</param>
-        /// <param name="onComplete">合并后的数据 JSON（可能与 localData 不同）</param>
+        /// <param name="localData">Unused (kept for API compat). Cloud is authoritative — empty cloud = new player.</param>
+        /// <param name="onComplete">(success, cloudJson). Empty string when cloud has no data.</param>
         public void PullAndMerge(string localData, Action<bool, string> onComplete)
         {
             if (!_auth.IsLoggedIn)
@@ -521,19 +512,17 @@ namespace MiniGameTemplate.Platform
                     || cloudResult.data.clearedLevels == null 
                     || cloudResult.data.clearedLevels.Count == 0)
                 {
-                    // 云端无数据，首次上传本地数据
-                    EnqueueUpload(localData);
+                    // v0.6 改：云端无数据 = 新玩家/管理员重置。不 seed，直接返回空
                     State = SyncState.Idle;
-                    onComplete?.Invoke(true, localData);
+                    onComplete?.Invoke(true, "");
                     return;
                 }
                 
-                // Union merge（直接用 cloudResult.data 的 clearedLevels）
+                // v0.6 改：云端权威覆盖（不再 merge，直接用云端数据）
                 string cloudJson = JsonUtility.ToJson(cloudResult.data);
-                string merged = MergeProgress(localData, cloudJson);
                 State = SyncState.Idle;
                 LastSyncTime = Time.realtimeSinceStartup;
-                onComplete?.Invoke(true, merged);
+                onComplete?.Invoke(true, cloudJson);
             });
         }
         
@@ -609,9 +598,8 @@ namespace MiniGameTemplate.Platform
         }
         
         /// <summary>
-        /// Union merge：取两份 clearedLevels 的并集。
-        /// (v0.2 修正：去掉 JsonHelper 依赖，云端直接返回 int 数组在 ProgressData 中)
-        /// (v0.4 修正，回应 UA-001：使用共享 ProgressData DTO)
+        /// [V3 已弃用] Union merge：取两份 clearedLevels 的并集。
+        /// V3 改为云端权威覆盖，此方法不再被调用，保留仅供参考。
         /// </summary>
         private static string MergeProgress(string localJson, string cloudJson)
         {
@@ -702,12 +690,12 @@ namespace MiniGameTemplate.Data
                 string localProgress = _local.LoadString("sg_progress", "");
                 _syncService.PullAndMerge(localProgress, (merged, mergedJson) =>
                 {
-                    if (merged && mergedJson != localProgress)
+                    if (merged)
                     {
-                        // 云端有新数据，写回本地
+                        // v0.6 改：无条件覆盖本地（含空值），确保云端删档/重置能传播
                         _local.SaveString("sg_progress", mergedJson);
                         _local.FlushIfDirty();
-                        Debug.Log("[CloudSave] 云端进度已合并到本地");
+                        Debug.Log("[CloudSave] 云端进度已覆盖本地");
                     }
                     _initialMergeDone = true;
                     // 通知上层刷新（v0.2 新增）
@@ -961,12 +949,14 @@ if (typeof wx !== 'undefined' && wx.cloud) {
 
 ### 7.1 迁移策略
 
+> **v0.6 变更**：删除 seed 机制。微信小游戏从模板诞生就内置云存档，不存在"中途接入"的迁移场景。
+
 | 场景 | 处理 |
 |------|------|
-| V1 老用户首次联网 | 本地有数据 + 云端无数据 → 上传本地数据到云端 |
-| V1 老用户首次联网（云端已有旧数据） | union merge 后写回 |
+| ~~V1 老用户首次联网~~ | ~~上传本地 seed~~ → **V3 不再 seed**。云端为空 = 新玩家，从零开始 |
 | 全新用户 | 本地无数据 + 云端无数据 → 正常创建 |
-| V2 用户换设备 | 新设备本地无数据 + 云端有数据 → 下拉云端数据到本地 |
+| V2/V3 用户换设备 | 新设备本地无数据 + 云端有数据 → 下拉云端数据覆盖本地 |
+| 管理员在控制台删除云端记录 | 下次启动拉取到空数据 → 本地也清空（重新开始） |
 
 ### 7.2 版本号约定
 
@@ -1047,7 +1037,7 @@ public void Reload()
 | V2-BC-01 | 登录失败不阻塞游戏启动 | 代码路径：Login 回调 false → 游戏正常运行 |
 | V2-BC-02 | 本地写入始终同步完成（不等云端） | CloudSaveSystem.SaveString → _local.SaveString 是同步的 |
 | V2-BC-03 | 云端上传失败不影响本地存档 | 上传失败仅打 Warning，本地数据已落盘 |
-| V2-BC-04 | Merge 策略为 Union（只加不减） | MergeProgress 使用 HashSet 并集 |
+| V2-BC-04 | ~~Merge 策略为 Union~~ → V3 云端权威覆盖 | PullCloudProgress 返回云端原始数据，不做 merge；空 = 新玩家 |
 | V2-BC-05 | Token 不持久化到 Storage | WxAuthService._token 仅内存变量 |
 | V2-BC-06 | 超时 5s 自动放弃本次云函数调用 | jslib 层 setTimeout 或 WeChatBridgeWebGL 内置超时回调 |
 | V2-BC-07 | 指数退避最多重试 3 次 | MAX_RETRY=3, delay=2/4/8s |
@@ -1095,7 +1085,7 @@ public void Reload()
 |---|----------|------|---------|
 | R-01 | 微信云开发免费额度限制 | 调用次数超限 | 监控用量；DAU>1万时评估付费/迁移自建 |
 | R-02 | wx.cloud 初始化时机 | 过早调用 API 失败 | game.js 最早初始化 + C# 侧 ready 检查 |
-| R-03 | 多设备并发写入冲突 | 极小概率数据覆盖 | 云函数内 union merge（服务端保底） |
+| R-03 | 多设备并发写入冲突 | 极小概率数据覆盖 | V3 直接 set 覆写（最后一次写入胜出）；单设备场景下无冲突 |
 | R-04 | PlayerPrefs WebGL 限制 | 微信环境下 PlayerPrefs 底层走 localStorage | 已验证可用，V1 已在用 |
 | R-05 | 云函数冷启动延迟 | 首次调用可能 >3s | 启动时 Login 调用即预热云函数 |
 
@@ -1110,3 +1100,4 @@ public void Reload()
 | v0.3 | 2026-05-07 | PK R2 回应 CS-009~010：CloudSyncService 改为 IWeChatBridge 依赖注入 / 工厂方法签名修正 / 去掉幽灵 WxCloudBridge 类 |
 | v0.4 | 2026-05-07 | PK R3（Unity架构师攻方）回应 UA-001~007：SharedProgressData 共享 DTO / 数据流形态表+GetProgressResult / Stub 实现+Login语义澄清 / 命名空间修正→Platform / jslib 5s setTimeout 超时保护 |
 | v0.5 | 2026-05-07 | 实施完成：jslib CallCloudFunction(5s超时) + IWeChatBridge.CallCloudFunction + WxAuthService + CloudSyncService(PullMerge+Upload+Retry) + CloudSaveSystem(ISaveSystem工厂) + SG_ProgressManager.Reload + 云函数模板×3 |
+| v0.6 | 2026-05-17 | **V3 云端权威模式**：①删除 seed 机制（cloud empty 不再回传本地数据）②启动时无条件用云端覆盖本地（含空值）③saveProgress 云函数直接 set 覆写（不做 union merge）④修正过时 XML 文档注释 |

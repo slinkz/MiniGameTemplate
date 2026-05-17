@@ -340,7 +340,8 @@ namespace MiniGameTemplate.Core
                 var auth = new WxAuthService(_weChatBridge);
                 var cloudSave = new CloudSaveSystem(auth, _weChatBridge);
                 cloudSave.InitCloudSync(); // Async, non-blocking
-                GameLog.Log("[Bootstrapper] CloudSaveSystem (V2) initialized.");
+
+                GameLog.Log("[Bootstrapper] CloudSaveSystem (V3 cloud-authoritative) initialized.");
                 return cloudSave;
             }
 

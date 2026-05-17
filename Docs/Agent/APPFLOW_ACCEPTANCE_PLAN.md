@@ -1,7 +1,7 @@
 ---
 system: navigation
 scope: acceptance
-last_verified: 2026-05-05T23:36
+last_verified: 2026-05-17
 ---
 
 # AppFlow 导航系统 — 验收计划
@@ -54,12 +54,15 @@ last_verified: 2026-05-05T23:36
 | AC-7 | 战斗中快速连点暂停→返回按钮 | 不崩溃，最多只执行一次 Pop（Console 有 Warning） | ⬜ |
 | AC-8 | AppFlowNavigator Inspector（Play Mode） | 栈可视化显示正确层级 | ⬜ |
 
-### 热启动恢复
+### ~~热启动恢复~~ → 冷启动清栈验证（2026-05-17 变更）
+
+> **背景**：热启动恢复功能已暂时禁用。`TryRestoreNavigationStackAsync()` 冷启动一律清空 `appflow_stack`。
+> 以下验收项更新为验证冷启动行为的正确性。
 
 | # | 操作 | 预期结果 | PASS/FAIL |
 |---|------|---------|-----------|
-| AC-9 | 进入战斗 → Console 执行 `AppFlowNavigator.Instance.SaveStackToStorage()` → 停止 Play Mode → 重新进入 Play Mode | 恢复到战斗节点（如果 Data 标记了 [Serializable]） | ⬜ |
-| AC-10 | 手动在 PlayerPrefs 中写入损坏的 JSON → 进入 Play Mode | 正常降级到主菜单首屏（不崩溃） | ⬜ |
+| AC-9 | 进入选关界面 → 在微信开发者工具终止 → 刷新 | 回到主菜单首屏（不跳到选关界面）。Console 输出 `[StartupFlow] Cold boot — cleared stored stack` | ⬜ |
+| AC-10 | 手动在 Storage 中写入损坏的 appflow_stack JSON → 刷新 | 正常回到主菜单首屏（不崩溃）。ClearStoredStack 清理损坏数据 | ⬜ |
 
 ---
 
@@ -80,7 +83,7 @@ last_verified: 2026-05-05T23:36
 |---|------|---------|---------|
 | C1 | `BattleController.cs` | 3 处 `SceneManager.LoadScene("Boot")` → `AppFlowNavigator.Instance.Pop()` | 全文搜索无 "LoadScene" |
 | C2 | `BattleController.cs` | 无 `using UnityEngine.SceneManagement` | 全文搜索确认 |
-| C3 | `GameStartupFlow.cs` | `TryRestoreStackAsync()` 在 `PushAsync(Node_MainMenu)` 之前调用 | 读代码确认 |
+| C3 | `GameStartupFlow.cs` | `TryRestoreNavigationStackAsync()` 冷启动一律清栈 + return false（2026-05-17 改） | 读代码确认 |
 | C4 | `SceneLoader.cs` | `LoadSceneAsync(Task)` + `UnloadSceneAsync` + `_sceneHandleCache` 存在 | 读代码确认 |
 | C5 | `ExampleSceneNavigator.cs` | 类标注 `[Obsolete]` | 读代码确认 |
 
@@ -94,7 +97,7 @@ last_verified: 2026-05-05T23:36
 2. **检查 SO 资产**（§2 表格逐项核对）
 3. **进入 Play Mode** → 执行 §3 正常流程 AC-1~AC-6
 4. **测试异常防护** → AC-7~AC-8
-5. **测试热启动** → AC-9~AC-10（可选，需手动在 Console 触发 Save）
+5. **测试冷启动清栈** → AC-9~AC-10（在微信开发者工具中验证）
 6. **验证编辑器工具** → §4 ET-1~ET-4
 7. **代码路径检查**（可选）→ §5 C1~C5
 
@@ -106,9 +109,9 @@ last_verified: 2026-05-05T23:36
 
 ### 如果 AC-9 失败
 
-- 确认 Data 类（如 `BattleLevelData`）是否标记了 `[Serializable]`
-- 检查 `FlowNodeRegistry` SO 是否包含所有 3 个 FlowNode
-- 检查 Console 日志中 `[AppFlow]` 前缀的警告/错误
+- 确认 `TryRestoreNavigationStackAsync` 是否为新版（冷启动一律清栈 + return false）
+- 检查是否有其他代码在启动时读取 `appflow_stack` 并恢复栈
+- 检查 Console 日志中 `[StartupFlow]` 前缀的输出
 
 ---
 

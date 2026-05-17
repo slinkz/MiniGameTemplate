@@ -1,16 +1,16 @@
 ---
 system: navigation
 scope: appflow-tdd-index
-last_verified: 2026-05-07
+last_verified: 2026-05-17
 related_code: Assets/_Framework/Navigation/*.cs, Assets/_Framework/UISystem/Scripts/IUIPanel.cs, Assets/_Framework/UISystem/Scripts/UIManager.cs
 ---
 
 # AppFlow 导航系统 — TDD 索引
 
-> **版本**：v1.7（面板 Suspend/Resume 生命周期）  
-> **状态**：✅ Phase 1~4 全部完成 + 3 轮 PK 评审通过 + 场景策略重构 + 面板 Hide/Show 生命周期  
+> **版本**：v1.8（冷启动清栈 — 热启动恢复暂时禁用）  
+> **状态**：✅ Phase 1~4 全部完成 + 3 轮 PK 评审通过 + 场景策略重构 + 面板 Hide/Show 生命周期 + 冷启动清栈  
 > **作者**：广智  
-> **日期**：2026-05-07  
+> **日期**：2026-05-17  
 > **ADR**：ADR-034  
 > **PK 记录**：  
 > - [APPFLOW_TDD_PK.md](APPFLOW_TDD_PK.md)（#1 微信全栈：12 问题 / 1 轮 / 100% 收敛）  
@@ -70,6 +70,7 @@ related_code: Assets/_Framework/Navigation/*.cs, Assets/_Framework/UISystem/Scri
 
 | 版本 | 日期 | 作者 | 变更 |
 |------|------|------|------|
+| v1.8 | 2026-05-17 | 广智 | 冷启动清栈：TryRestoreNavigationStackAsync 一律清空 appflow_stack + return false（热启动恢复暂时禁用）|
 | v1.7 | 2026-05-07 | 广智 | 面板 Suspend/Resume 生命周期（方案 B）：删除 CloseAllPanelsOnEnter，新增 IPanelSuspendable + UIManager API + OwnedPanelTypes |
 | v1.6 | 2026-05-06 | 广智 | 双 Single 场景切换重构（Boot→Main⇄Battle） |
 | v1.5 | 2026-05-05 | 广智 | Phase 4 栈序列化（微信热启动恢复） |

@@ -2,7 +2,7 @@
 system: navigation
 scope: appflow-tdd-impl-plan
 parent: APPFLOW_TDD_INDEX
-last_verified: 2026-05-07
+last_verified: 2026-05-17
 ---
 
 # AppFlow TDD — §7 实施计划 + §8 后续演进
@@ -51,9 +51,12 @@ last_verified: 2026-05-07
 | 3.2 | `ExampleSceneNavigator` 标注 `[Obsolete]` | ✅ 2026-05-05 |
 | 3.3 | 验证 Battle 场景 IsAdditive 模式下 EntitySystemBootstrap 正常工作 | ✅ MCP 编译验证通过 |
 
-### Phase 4：栈序列化 — 微信热启动恢复（~2h）✅ 已完成
+### Phase 4：栈序列化 — ~~微信热启动恢复~~ 冷启动清栈（~2h）✅ 已完成
 
-> **从 V2 移入 V1**（2026-05-05）。微信小游戏随时可能被系统杀死并热启动恢复，不支持栈恢复 = 每次热启动回到首屏，用户体验不可接受。
+> **从 V2 移入 V1**（2026-05-05）。  
+> **2026-05-17 变更**：热启动恢复功能暂时禁用。冷启动（RunAsync 被调用 = 进程重启）一律清空 `appflow_stack`，走正常主界面。  
+> SaveStackToStorage 仍在每次导航后写入（为未来热启动准备），但启动时不读回。  
+> 未来启用热启动需通过 jslib 注册 wx.onShow 回调设置内存标记。
 
 | 步骤 | 内容 | 状态 |
 |------|------|------|
@@ -82,8 +85,8 @@ last_verified: 2026-05-07
 | AC-6 | 快速连点不崩溃 | _isTransitioning 防护 |
 | AC-7 | 编译 0 errors 0 warnings | — |
 | AC-8 | 微信小游戏真机验证 | 场景切换无白屏 |
-| AC-9 | 热启动恢复：进入战斗 → 杀进程 → 重新打开 → 恢复到战斗节点 | 栈正确恢复 |
-| AC-10 | 存储数据损坏/版本不匹配 → 正常降级到首屏 | 无崩溃无白屏 |
+| AC-9 | ~~热启动恢复~~ 冷启动清栈：终止+刷新后回到主菜单首屏 | 2026-05-17 改：不再恢复栈，一律清栈走正常启动 |
+| AC-10 | 存储数据损坏/版本不匹配 → 正常降级到首屏 | 冷启动直接清栈，JSON 内容无影响 |
 
 ---
 

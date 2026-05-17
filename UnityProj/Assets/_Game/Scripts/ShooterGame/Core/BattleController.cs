@@ -1,9 +1,13 @@
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.Danmaku;
 using MiniGameTemplate.Entity;
 using MiniGameTemplate.Navigation;
+using MiniGameTemplate.Core;
+using MiniGameTemplate.Platform;
+using MiniGameTemplate.UI;
 using EntityClass = MiniGameTemplate.Entity.Entity;
 #if UNITY_EDITOR
 using Unity.Profiling;
@@ -87,6 +91,7 @@ namespace Game.ShooterGame
         private IVictoryPanelController _victoryPanel;
         private IDefeatPanelController _defeatPanel;
         private IJoystickController _joystickController;
+        private bool _isHandlingVictory;
 
         // ── 公共接口 ──
 
@@ -260,8 +265,7 @@ namespace Game.ShooterGame
             _defeatPanel?.BindEvents(
                 () => StartCoroutine(HandleRetry()),
                 () => StartCoroutine(HandleDefeatQuit()));
-            _victoryPanel?.BindEvents(
-                () => StartCoroutine(HandleVictoryConfirm()));
+            _victoryPanel?.BindEvents(HandleVictoryConfirmAsync);
             _pausePanel?.BindEvents(
                 OnResumeFromPause,
                 () => StartCoroutine(HandlePauseQuit()));
@@ -596,19 +600,60 @@ namespace Game.ShooterGame
             _victoryPanel?.Show();
         }
 
-        private IEnumerator HandleVictoryConfirm()
+        /// <summary>
+        /// 胜利确认流程（async 版）。
+        /// 存档 + 等云端确认 → Pop 回选关。
+        /// 云端重试由全局 OnUploadFailedNeedRetry → NetworkRetryService 弹框处理，
+        /// 本方法只需 await 直到上传成功。
+        /// </summary>
+        private async void HandleVictoryConfirmAsync()
         {
-            SetBattleTimePaused(false);
+            if (_isHandlingVictory) return;
+            _isHandlingVictory = true;
 
-            // 只在从导航正式进入时才保存进度；直跑场景属于测试模式，不写存档
-            if (_launchLevelIndex.HasValue)
+            try
             {
-                int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
-                _progressManager?.MarkLevelCleared(clearedLevelIndex);
-            }
+                SetBattleTimePaused(false);
 
-            yield return null; // 一帧等待
-            AppFlowNavigator.Instance.Pop();
+                // 直跑场景属于测试模式，不写存档，直接 Pop
+                if (!_launchLevelIndex.HasValue)
+                {
+                    await Task.Yield();
+                    AppFlowNavigator.Instance.Pop();
+                    return;
+                }
+
+                int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
+
+                // 本地写入 + 触发 EnqueueUpload
+                _progressManager?.MarkLevelCleared(clearedLevelIndex);
+
+                // 尝试获取 CloudSyncService（仅微信环境有）
+                if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
+                {
+                    var syncService = cloudSave.SyncService;
+
+                    // 显示遮罩：屏蔽输入 + 视觉反馈"正在保存"
+                    // 如果上传失败弹重试框，NetworkRetryService 会自动 Hide 遮罩再弹框
+                    LoadingMaskService.Show("正在保存进度...");
+
+                    // 等待上传完成。如果失败，全局 NetworkRetryService 弹框会自动处理重试，
+                    // WaitForIdleAsync 会一直等到最终成功才 complete。
+                    await syncService.WaitForIdleAsync();
+
+                    LoadingMaskService.Hide();
+                }
+
+                await Task.Yield(); // 一帧等待
+                AppFlowNavigator.Instance.Pop();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                LoadingMaskService.Hide(); // 兜底清理遮罩（Hide 在未 Show 时是 no-op）
+                // 兜底：即使出异常也尝试 Pop，避免玩家卡死在胜利面板
+                try { AppFlowNavigator.Instance.Pop(); } catch { }
+            }
         }
 
         private IEnumerator HandleDefeatQuit()

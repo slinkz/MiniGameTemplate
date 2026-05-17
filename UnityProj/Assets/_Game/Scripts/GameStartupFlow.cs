@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Core;
+using MiniGameTemplate.Data;
 using MiniGameTemplate.Navigation;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.UI;
@@ -67,6 +68,15 @@ namespace Game
             _weChatBridge = GameBootstrapper.WeChatBridge ?? WeChatBridgeFactory.CreateWithConfig(_weChatConfig);
             _weChatBridge.PreloadRewardedAd();
 
+            // Inject framework service providers — abstractions that let framework-level code
+            // show UI without depending on game-layer FairyGUI implementations.
+            NetworkRetryService.SetProvider(new ConfirmDialogRetryProvider());
+            LoadingMaskService.SetProvider(new FairyGUILoadingMaskProvider());
+
+            // Register cloud upload retry handler — uses NetworkRetryService (generic mechanism).
+            // Any cloud operation that fails after its own MAX_RETRY will show a blocking retry dialog.
+            RegisterCloudRetryHandler();
+
 
             // --- Phase 1: Loading screen ---
             Common.LoadingPanel loadingPanel;
@@ -131,9 +141,9 @@ namespace Game
             // Initialize ShooterGame progress manager (idempotent)
             Game.ShooterGame.SG_Boot.InitProgress();
 
-            // --- Phase 4: Try restore navigation stack (热启动恢复) ---
-            // Editor 环境下每次 Play 都是冷启动（full domain reload），不存在热启动语义。
-            // 栈恢复仅在真机微信 wx.onShow 热启动场景下有意义。
+            // --- Phase 4: Clear stale navigation stack (冷启动清栈) ---
+            // RunAsync 被调用 = 进程重启 = 冷启动，一律清空旧栈走正常启动。
+            // 热启动恢复功能暂未启用（需 wx.onShow 回调配合内存标记判断）。
             bool restored = await TryRestoreNavigationStackAsync();
             if (!restored)
             {
@@ -165,72 +175,22 @@ namespace Game
         }
 
         /// <summary>
-        /// Phase 4: 尝试从存储恢复导航栈（微信热启动恢复）。
-        /// 成功返回 true，失败返回 false（走正常启动）。
+        /// Phase 4: 尝试从存储恢复导航栈。
         /// 
-        /// 设计决策：Editor 环境下每次 Play 都是 full domain reload（冷启动），
-        /// 不存在微信 wx.onShow 热启动语义，因此直接返回 false 走正常启动。
-        /// 如需在 Editor 测试热启动恢复，可通过菜单工具手动模拟。
+        /// 设计决策（2026-05-17 修改）：
+        /// 走完整 Boot → Awake → RunAsync 流程 = 冷启动（包括微信开发者工具终止+刷新）。
+        /// 冷启动一律清空 appflow_stack，走正常主界面流程。
+        /// 
+        /// 热启动恢复功能暂时禁用。未来如需支持微信 wx.onShow 热启动恢复，
+        /// 应通过 jslib 注册 wx.onShow 回调设置内存标记，仅在标记为热启动时才恢复栈。
+        /// 当前阶段每次 RunAsync 被调用都意味着进程重启，不存在热启动语义。
         /// </summary>
-        private
-#if UNITY_EDITOR
-            Task<bool>
-#else
-            async Task<bool>
-#endif
-            TryRestoreNavigationStackAsync()
+        private Task<bool> TryRestoreNavigationStackAsync()
         {
-#if UNITY_EDITOR
-            // Editor = 冷启动，不恢复栈
+            // 冷启动：清空持久化的导航栈，走正常启动
             ClearStoredStack();
-            GameLog.Log("[StartupFlow] Editor cold boot — skipped stack restore.");
+            GameLog.Log("[StartupFlow] Cold boot — cleared stored stack, using normal startup.");
             return Task.FromResult(false);
-#else
-            if (_flowNodeRegistry == null) return false;
-
-            string json = null;
-            try
-            {
-#if UNITY_WEBGL
-                // 微信小游戏: wx.getStorageSync
-                json = WeChatWASM.WX.StorageGetStringSync("appflow_stack", "");
-#else
-                // Standalone: PlayerPrefs
-                json = UnityEngine.PlayerPrefs.GetString("appflow_stack", "");
-#endif
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogWarning($"[StartupFlow] Failed to read stored stack: {ex.Message}");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(json)) return false;
-
-            var entries = FlowStackSerializer.DeserializeStack(json, _flowNodeRegistry);
-            if (entries == null || entries.Count == 0)
-            {
-                GameLog.Log("[StartupFlow] Stored stack invalid or empty — fallback to normal startup.");
-                ClearStoredStack();
-                return false;
-            }
-
-            GameLog.Log($"[StartupFlow] Restoring navigation stack ({entries.Count} entries)...");
-
-            // 恢复栈：将中间层静默压入，只对栈顶执行完整 EnterNode
-            var navigator = AppFlowNavigator.Instance;
-            for (int i = 0; i < entries.Count - 1; i++)
-            {
-                navigator.PushSilent(entries[i].Node, entries[i].Data);
-            }
-
-            // 栈顶节点完整进入
-            var top = entries[^1];
-            await navigator.PushAsync(top.Node, top.Data);
-
-            GameLog.Log("[StartupFlow] Navigation stack restored successfully.");
-            return true;
-#endif
         }
 
         private void ClearStoredStack()
@@ -325,6 +285,24 @@ namespace Game
                 return false;
 
             return await RequestPrivacyAuthorizeAsync();
+        }
+
+        /// <summary>
+        /// Wire CloudSyncService.OnUploadFailedNeedRetry → NetworkRetryService.
+        /// Safe to call even if SaveSystem is not CloudSaveSystem (simply does nothing).
+        /// This is the single bridge point — any future cloud operations can follow
+        /// the same pattern: fail after retries → fire event → NetworkRetryService handles UI.
+        /// </summary>
+        private void RegisterCloudRetryHandler()
+        {
+            if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
+            {
+                cloudSave.SyncService.OnUploadFailedNeedRetry += (retryAction) =>
+                {
+                    NetworkRetryService.ShowBlockingRetry(retryAction);
+                };
+                GameLog.Log("[StartupFlow] Cloud retry handler registered via NetworkRetryService.");
+            }
         }
     }
 }

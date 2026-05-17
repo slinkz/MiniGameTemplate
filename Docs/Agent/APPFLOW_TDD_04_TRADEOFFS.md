@@ -2,7 +2,7 @@
 system: navigation
 scope: appflow-tdd-tradeoffs
 parent: APPFLOW_TDD_INDEX
-last_verified: 2026-05-07
+last_verified: 2026-05-17
 ---
 
 # AppFlow TDD — §5 权衡分析 + §6 风险与缓解
@@ -53,5 +53,5 @@ last_verified: 2026-05-07
 | R6 | 并发 Push/Pop（快速连点） | 栈状态不一致 | `_isTransitioning` 互斥锁 + 日志警告 + UI 层禁用按钮 |
 | R7 | Transition 超时锁死 | 导航器永久不可用 | Coroutine 超时（10s）→ 强制重置 + LogError（PK WX-012 + UA-006） |
 | R8 | 面板自注册时序：Navigator 尚未就绪时 [RIOM] 触发 | 注册失败 | `AfterSceneLoad` 时机确保所有 Singleton 已初始化；或用 lazy 注册队列 |
-| R9 | 热启动恢复时 Data 类结构变更（字段增删改） | JSON 反序列化失败 | `JsonUtility` try-catch + 失败则丢弃该层级 → fallback 到上一有效节点 |
-| R10 | 存储写入失败（微信 `wx.setStorageSync` 容量满/异常） | 下次热启动无法恢复 | try-catch + 静默降级（不影响当前游戏）+ 超过 4KB 告警日志 |
+| R9 | ~~热启动恢复时 Data 类结构变更~~ → **风险已消除**（2026-05-17 热启动恢复暂时禁用） | 冷启动一律清栈 | 未来启用时再评估 |
+| R10 | 存储写入失败（微信 `wx.setStorageSync` 容量满/异常） | 下次热启动无法恢复 | try-catch + 静默降级（不影响当前游戏）+ 超过 4KB 告警日志；当前热启动恢复已禁用，影响更低 |

@@ -6,10 +6,13 @@ using MiniGameTemplate.Utils;
 namespace MiniGameTemplate.Data
 {
     /// <summary>
-    /// V2 cloud-backed save system (SG_TDD_06 §4.2).
-    /// Strategy: write instantly to local + async enqueue upload to cloud.
-    /// Read: always from local (ms-level). Startup: one-time merge from cloud.
-    /// 
+    /// V3 cloud-backed save system (cloud-authoritative).
+    /// Strategy:
+    ///   - Write: instantly to local + async upload to cloud.
+    ///   - Read: always from local (ms-level).
+    ///   - Startup: pull cloud → overwrite local (no merge).
+    ///   - Upload failure: block player with retry dialog (handled by UI via event).
+    ///
     /// Replacement condition: WeChat Mini Game environment + cloud-dev configured.
     /// Non-WeChat environments automatically degrade to PlayerPrefsSaveSystem.
     /// </summary>
@@ -19,7 +22,6 @@ namespace MiniGameTemplate.Data
         private readonly CloudSyncService _syncService;
         private readonly WxAuthService _authService;
 
-        private bool _initialMergeDone;
         private const string PROGRESS_KEY = "sg_progress";
 
         public CloudSaveSystem(WxAuthService authService, IWeChatBridge bridge)
@@ -30,7 +32,14 @@ namespace MiniGameTemplate.Data
         }
 
         /// <summary>
-        /// Start async login + cloud pull-merge. Non-blocking.
+        /// Expose the sync service so upper layers can subscribe to
+        /// OnUploadFailedNeedRetry and show a blocking retry dialog.
+        /// </summary>
+        public CloudSyncService SyncService => _syncService;
+
+        /// <summary>
+        /// Start async login + cloud pull. Non-blocking.
+        /// Cloud data overwrites local on success (cloud-authoritative).
         /// Call once at startup after construction.
         /// </summary>
         public void InitCloudSync()
@@ -44,65 +53,42 @@ namespace MiniGameTemplate.Data
                     return;
                 }
 
-                // Pull cloud and merge
+                // Pull cloud → overwrite local (cloud is authoritative, no merge)
                 string localProgress = _local.LoadString(PROGRESS_KEY, "");
-                _syncService.PullAndMerge(localProgress, (merged, mergedJson) =>
+                _syncService.PullCloudProgress(localProgress, (pulled, cloudJson) =>
                 {
-                    if (merged && mergedJson != localProgress)
+                    if (pulled)
                     {
-                        // Cloud has newer data — write back to local
-                        _local.SaveString(PROGRESS_KEY, mergedJson);
+                        // Cloud is authoritative — always overwrite local, even with empty.
+                        // This ensures admin-reset / cloud wipe propagates to local cache.
+                        _local.SaveString(PROGRESS_KEY, cloudJson ?? "");
                         _local.FlushIfDirty();
-                        GameLog.Log("[CloudSave] Cloud progress merged to local.");
+
+                        if (!string.IsNullOrEmpty(cloudJson))
+                            GameLog.Log("[CloudSave] Cloud progress pulled → local overwritten.");
+                        else
+                            GameLog.Log("[CloudSave] Cloud is empty → local cache cleared.");
                     }
-                    _initialMergeDone = true;
-                    // Notify upper layer to refresh
-                    OnCloudMergeCompleted?.Invoke(mergedJson ?? localProgress);
+                    OnCloudPullCompleted?.Invoke(pulled ? (cloudJson ?? "") : localProgress);
                 });
             });
         }
 
-        // === Merge notification (TDD §4.2 / CS-002) ===
+        // === Cloud pull notification ===
 
         /// <summary>
-        /// Fires when cloud merge completes. UI layer listens to refresh display.
-        /// Parameter: merged progress JSON.
+        /// Fires when cloud pull completes. UI layer listens to refresh display.
+        /// Parameter: progress JSON from cloud (or local fallback).
         /// </summary>
-        public event Action<string> OnCloudMergeCompleted;
+        public event Action<string> OnCloudPullCompleted;
 
-        /// <summary>
-        /// Hot-reload: re-pull cloud and merge. Call on wx.onShow (hot startup).
-        /// </summary>
-        public void Reload()
-        {
-            string localProgress = _local.LoadString(PROGRESS_KEY, "");
-
-            if (!_authService.IsLoggedIn)
-            {
-                // Not logged in — just notify with local data
-                OnCloudMergeCompleted?.Invoke(localProgress);
-                return;
-            }
-
-            _syncService.PullAndMerge(localProgress, (merged, mergedJson) =>
-            {
-                if (merged && mergedJson != localProgress)
-                {
-                    _local.SaveString(PROGRESS_KEY, mergedJson);
-                    _local.FlushIfDirty();
-                }
-                _initialMergeDone = true;
-                OnCloudMergeCompleted?.Invoke(mergedJson ?? localProgress);
-            });
-        }
-
-        // === ISaveSystem implementation (all delegate to _local + progress key triggers cloud) ===
+        // === ISaveSystem implementation ===
 
         public void SaveString(string key, string value)
         {
             _local.SaveString(key, value);
 
-            // Only progress data triggers cloud sync (intentional design — TDD §4.2 / CS-003)
+            // Only progress data triggers cloud sync
             if (key == PROGRESS_KEY)
             {
                 _syncService.EnqueueUpload(value);

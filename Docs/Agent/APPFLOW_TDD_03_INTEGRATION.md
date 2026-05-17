@@ -2,7 +2,7 @@
 system: navigation
 scope: appflow-tdd-integration
 parent: APPFLOW_TDD_INDEX
-last_verified: 2026-05-07
+last_verified: 2026-05-17
 ---
 
 # AppFlow TDD — §4 系统集成
@@ -86,22 +86,28 @@ last_verified: 2026-05-07
   Pop()  ← 同上效果
 ```
 
-### 热启动恢复（V1 Phase 4）
+### ~~热启动恢复（V1 Phase 4）~~ → 冷启动清栈（2026-05-17 变更）
+
+> **设计决策**：走完整 Boot → Awake → RunAsync 流程 = 冷启动（包括微信开发者工具终止+刷新）。
+> 冷启动一律清空 `appflow_stack`，走正常主界面流程。
+> 热启动恢复功能**暂时禁用**。未来如需支持微信 wx.onShow 热启动恢复，
+> 应通过 jslib 注册 wx.onShow 回调设置内存标记，仅在标记为热启动时才恢复栈。
 
 ```
-[微信热启动] 
-  App.onShow → GameBootstrapper 判断 isHotRestart
+[进程启动 / 微信开发者工具刷新]
+  GameBootstrapper.Awake → InitializeSystems → IStartupFlow.RunAsync
   ↓
-[GameStartupFlow 完成]
-  TryRestoreStackAsync() → wx.getStorageSync("appflow_stack")
-  ↓ JSON 存在且 version 匹配
-  FlowStackSerializer.DeserializeStack(json)
-  → FlowNodeRegistry.GetByNodeId(id) 逐层恢复
-  → Stack: [MainMenu, LevelSelect, Battle]  (恢复到杀进程前)
-  → 进入栈顶节点 EnterNodeAsync(Battle, savedData)
-  ↓ JSON 不存在 / version 不匹配 / nodeId 找不到
-  fallback → PushAsync(Node_MainMenu)  (正常首屏)
+[GameStartupFlow Phase 4]
+  TryRestoreNavigationStackAsync()
+  → ClearStoredStack()  // 一律清空 appflow_stack
+  → return false        // 走正常启动
+  ↓
+[正常启动]
+  PushAsync(Node_MainMenu) → 主菜单首屏
 ```
+
+> **SaveStackToStorage 仍在运行**：每次导航后仍写入 `appflow_stack`（为未来热启动做准备），
+> 但 `TryRestoreNavigationStackAsync` 在启动时不读回。
 
 ---
 

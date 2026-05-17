@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-07 11:05 | 文件总数：72
+> 最后更新：2026-05-17 09:00 | 文件总数：72
 
 ---
 
@@ -17,12 +17,12 @@
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT | 追加到最新 ADR 子文件 |
 | 配置微信广告/SDK/云开发 | WECHAT_INTEGRATION | 广告 ID + 云开发 + 回调 + jslib |
-| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V2 登录+云同步+CloudSaveSystem |
+| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V3 云端权威模式（登录+云同步+CloudSaveSystem） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
 | 了解导航系统 | APPFLOW_TDD_INDEX | 栈式 FlowNode + AppFlowNavigator |
-| 验收 AppFlow 导航 | APPFLOW_ACCEPTANCE_PLAN | 10 验收项 + PlayMode + 热启动恢复 |
+| 验收 AppFlow 导航 | APPFLOW_ACCEPTANCE_PLAN | 10 验收项 + PlayMode + 冷启动清栈（热启动恢复已禁用） |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
@@ -72,6 +72,7 @@
 | `_Framework/Navigation/**/*.cs` | APPFLOW_TDD_01_CORE_DESIGN | AppFlow 栈式导航系统（含面板 Suspend/Resume） |
 | `_Framework/UISystem/Scripts/IUIPanel.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | IPanelSuspendable 可选接口 |
 | `_Framework/UISystem/Scripts/UIManager.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | UIManager Suspend/Resume API |
+| `_Game/Scripts/GameStartupFlow.cs` | APPFLOW_TDD_03_INTEGRATION §4.3 + APPFLOW_ACCEPTANCE_PLAN | 启动流程 + 冷启动清栈 |
 | `_Game/Scenes/Main.unity` | APPFLOW_TDD_03_INTEGRATION §4.4 + SG_TDD_01 §4 | 非战斗宿主场景 |
 | `_Game/ScriptableObjects/Config/SD_Main.asset` | APPFLOW_TDD_03_INTEGRATION §4.2 | Main 场景定义 SO |
 | `UIProject/assets/SG_*/**` | SG_TDD_04 §4.2 + SG_UI_DESIGN | SG FairyGUI 白模包（4包16 XML） |
@@ -103,9 +104,9 @@
 | IPanelSuspendable | APPFLOW_TDD_01_CORE_DESIGN §3.5 | 面板 Suspend/Resume 可选接口（OnSuspend + OnResume） |
 | OwnedPanelTypes | APPFLOW_TDD_01_CORE_DESIGN §3.2 | StackEntry 跟踪每栈层面板类型列表（Suspend/Resume 用） |
 | IUIControllers | SG_TDD_04 §1 | Core↔UI 解耦接口（5 个接口） |
-| CloudSaveSystem | SG_TDD_06 §4.2 | V2 云存储 ISaveSystem 实现（local+cloud 双写） |
+| CloudSaveSystem | SG_TDD_06 §4.2 | V3 云端权威 ISaveSystem 实现（local+cloud 覆盖，不 merge） |
 | WxAuthService | SG_TDD_06 §2.3 | 微信静默登录（cloud function auto-inject openid） |
-| CloudSyncService | SG_TDD_06 §3.5 | 云端进度同步（PullMerge+EnqueueUpload+Retry） |
+| CloudSyncService | SG_TDD_06 §3.5 | 云端进度同步（Pull覆盖+EnqueueUpload+Retry，V3 不再 seed/merge） |
 | SharedProgressData | SG_TDD_06 §3.3 | V2 共享进度 DTO（version + clearedLevels） |
 
 ---
@@ -120,7 +121,7 @@
 | CONV | CONV_INDEX | 4 | 编码/命名/平台/工作流约定 |
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
-| APPFLOW | APPFLOW_TDD_INDEX | 5 | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 双 Single + 面板 Suspend/Resume v1.7） |
+| APPFLOW | APPFLOW_TDD_INDEX | 5 | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 3 轮 PK + 面板 Suspend/Resume + 冷启动清栈 v1.8） |
 | — | APPFLOW_TDD_PK | — | AppFlow TDD PK 评审记录 |
 | — | APPFLOW_TDD_PK2 | — | AppFlow TDD PK #2 评审记录（Unity架构师） |
 | — | APPFLOW_TDD_PK3 | — | AppFlow TDD PK #3 评审记录（编辑器工具开发者） |
