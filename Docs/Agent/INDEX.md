@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-17 09:00 | 文件总数：72
+> 最后更新：2026-05-17 18:50 | 文件总数：72
 
 ---
 
@@ -16,7 +16,7 @@
 | 新增子弹花样 | SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT | 追加到最新 ADR 子文件 |
-| 配置微信广告/SDK/云开发 | WECHAT_INTEGRATION | 广告 ID + 云开发 + 回调 + jslib |
+| 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 |
 | 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V3 云端权威模式（登录+云同步+CloudSaveSystem） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
@@ -55,8 +55,10 @@
 | `RuntimeAtlas/**/*.cs` | ATLAS_TDD_INDEX | 动态图集 |
 | `OBB/**/*.cs` | OBB_TDD_INDEX | OBB 碰撞 |
 | `Editor/**/*.cs` | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 编辑器工具 |
+| `_Framework/Editor/LocalHttpServerWindow.cs` | WECHAT_INTEGRATION §Dev Server + EDITOR_TOOLS_MANUAL | Dev Server 一键 CDN 环境切换 |
 | `*ConfigSO.cs` / `*SO.cs` | SO_WORKFLOWS_INDEX → 01~05 | SO 配置流程 |
-| `_Framework/WeChatBridge/**` | WECHAT_INTEGRATION | 微信集成（广告+云开发+隐私） |
+| `_Framework/WeChatBridge/**` | WECHAT_INTEGRATION | 微信集成（广告+云开发+隐私+CDN） |
+| `_Framework/WeChatBridge/Scripts/WXDataCDNHelper.cs` | WECHAT_INTEGRATION §CDN地址架构 | 运行时从 DATA_CDN 读取 CDN 地址 |
 | `_Framework/WeChatBridge/Scripts/WxAuth*.cs` | SG_TDD_06 §2.3 | 微信静默登录服务 |
 | `_Framework/WeChatBridge/Scripts/CloudSync*.cs` | SG_TDD_06 §3.5 | 云端进度同步服务 |
 | `_Framework/DataSystem/Scripts/Persistence/Cloud*.cs` | SG_TDD_06 §4.2 | CloudSaveSystem + SharedProgressData |
@@ -108,6 +110,8 @@
 | WxAuthService | SG_TDD_06 §2.3 | 微信静默登录（cloud function auto-inject openid） |
 | CloudSyncService | SG_TDD_06 §3.5 | 云端进度同步（Pull覆盖+EnqueueUpload+Retry，V3 不再 seed/merge） |
 | SharedProgressData | SG_TDD_06 §3.3 | V2 共享进度 DTO（version + clearedLevels） |
+| WXDataCDNHelper | WECHAT_INTEGRATION §CDN地址架构 | 运行时从 JS 层 DATA_CDN 读取 CDN 地址（单一数据源） |
+| CDN 单一数据源 | WECHAT_INTEGRATION §CDN地址架构 | CDN 只在微信转换面板配一处，运行时 WXDataCDNHelper 读取 |
 
 ---
 

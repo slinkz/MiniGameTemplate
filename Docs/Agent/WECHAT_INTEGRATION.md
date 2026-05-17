@@ -2,7 +2,7 @@
 system: wechat
 scope: sdk-integration
 last_verified: 2026-05-17
-related_code: Assets/_Framework/WeChatBridge/**, Assets/_Framework/AssetSystem/WechatFileSystem/**
+related_code: Assets/_Framework/WeChatBridge/**, Assets/_Framework/AssetSystem/WechatFileSystem/**, Assets/_Framework/Editor/LocalHttpServerWindow.cs
 ---
 
 # 微信小游戏 SDK 接入指南
@@ -26,7 +26,8 @@ MiniGameTemplate 提供了 `IWeChatBridge` 抽象接口层。模板内置了桩�
 - ✅ `AssetService` WebGL 模式（WebPlayModeParameters + WechatFileSystem 完整接入）
 - ✅ `WechatFileSystem` 扩展包（IFileSystem 实现 + 6 个 Operation + WechatFileSystemCreater 工厂）
 - ✅ `RemoteServices` URL 规范化（反斜杠 / 双斜杠 / TrimEnd 防御）
-- ✅ CDN 单一源头架构（AssetConfig.CdnUrl → 运行时自动派生 HostServerUrl）
+- ✅ CDN 单一数据源架构（运行时通过 `WXDataCDNHelper.GetDataCDN()` 从 JS 层读取 DATA_CDN，AssetConfig 不再存储 CDN 地址）
+- ✅ Dev Server 一键 CDN 环境切换（`LocalHttpServerWindow`：本地调试 ↔ 远程真机）
 - ✅ `MiniGameBuildPipeline` 微信小游戏硬性 PlayerSettings
 - ✅ 启动时隐私授权检查（PrivacyDialog → ConfirmDialog 二次确认）
 - ✅ 云开发 Cloud Init 自动化（jslib 自包含，导出后零操作）
@@ -39,7 +40,7 @@ MiniGameTemplate 提供了 `IWeChatBridge` 抽象接口层。模板内置了桩�
 1. 从 [微信小游戏官方文档](https://developers.weixin.qq.com/minigame/dev/guide/) 导入 WX-WASM-SDK-V2（com.qq.weixin.minigame）
    - 该 SDK 会自动定义 `WEIXINMINIGAME` 编译符号
 2. WechatFileSystem 扩展包已内置（`Assets/_Framework/AssetSystem/WechatFileSystem/`），无需额外导入
-3. 在 `AssetConfig` SO 中配置 `CdnUrl`（CDN 基址，如 `https://cdn.example.com`），确保与 `MiniGameConfig.ProjectConf.CDN` 一致
+3. CDN 地址只需在**微信转换面板**（`MiniGameConfig.ProjectConf.CDN`）配置一处。运行时通过 `WXDataCDNHelper.GetDataCDN()` 自动读取，无需在 `AssetConfig` SO 中重复配置
 
 ### 2. 配置广告位 ID（必须）
 
@@ -136,7 +137,8 @@ wx.ShowInterstitialAd();
 ```
 Assets/_Framework/AssetSystem/
 ├── Scripts/
-│   └── AssetService.cs                    # 入口，WebGL case 使用 WechatFileSystem
+│   ├── AssetService.cs                    # 入口，WebGL case 使用 WechatFileSystem
+│   └── AssetConfig.cs                     # Play Mode + 包名配置（不含 CDN 地址）
 └── WechatFileSystem/
     ├── WechatFileSystem.cs                # IFileSystem 实现 + WechatFileSystemCreater 工厂
     └── Operation/
@@ -146,6 +148,12 @@ Assets/_Framework/AssetSystem/
         ├── WXFSLoadBundleOperation.cs     # Bundle 加载（缓存命中 → 本地加载，未命中 → CDN 下载）
         ├── WXFSDownloadFileOperation.cs   # 文件下载（通过 UnityWebRequest）
         └── WXFSClearCacheOperations.cs    # 缓存清理（全清 / 清理未使用）
+
+Assets/_Framework/WeChatBridge/
+├── Scripts/
+│   └── WXDataCDNHelper.cs                 # 运行时从 JS 层读取 DATA_CDN（单一数据源）
+└── Plugins/WebGL/
+    └── WeChatBridge.jslib                 # 含 WXBridge_GetDataCDN 函数
 ```
 
 ### 初始化流程
@@ -154,11 +162,13 @@ Assets/_Framework/AssetSystem/
 
 ```
 #if UNITY_WEBGL && WEIXINMINIGAME
-  1. 计算缓存根目录: WX.env.USER_DATA_PATH + "/__GAME_FILE_CACHE/yoo"
-  2. 设置时间切片: YooAssets.SetOperationSystemMaxTimeSlice(100)
-  3. 创建 WechatFileSystemCreater.CreateFileSystemParameters(packageRoot, remoteServices)
-  4. 配置 WebPlayModeParameters.WebGLForceSyncLoadAsset = true
-  5. 执行 InitializeAsync → RequestPackageVersionAsync → UpdatePackageManifestAsync
+  1. 读取 CDN: WXDataCDNHelper.GetDataCDN()（从 JS 层 DATA_CDN 读取，单一数据源）
+  2. 计算缓存根目录: WX.env.USER_DATA_PATH + "/__GAME_FILE_CACHE/yoo"
+  3. 设置时间切片: YooAssets.SetOperationSystemMaxTimeSlice(100)
+  4. 计算 hostUrl: {cdnUrl}/StreamingAssets/yoo/{PackageName}
+  5. 创建 WechatFileSystemCreater.CreateFileSystemParameters(packageRoot, remoteServices)
+  6. 配置 WebPlayModeParameters.WebGLForceSyncLoadAsset = true
+  7. 执行 InitializeAsync → RequestPackageVersionAsync → UpdatePackageManifestAsync
 #else
   回退到标准 DefaultWebServerFileSystem（非微信 WebGL 环境）
 #endif
@@ -197,7 +207,7 @@ Access-Control-Allow-Headers: Content-Type
 
 #### 3. HTTPS 强制
 
-`AssetConfig` 中的 `CdnUrl` 和 `FallbackCdnUrl` **生产环境必须使用 HTTPS**。
+CDN 地址（`MiniGameConfig.ProjectConf.CDN`）**生产环境必须使用 HTTPS**。
 `AssetService` 已内置 URL 安全校验——非 HTTPS 在 Release 构建中会报错阻断初始化。
 本地开发时允许 HTTP（私网地址自动豁免）。
 
@@ -221,8 +231,8 @@ https://cdn.example.com/webgl/{package_name}/
 └── ...
 ```
 
-`AssetConfig.CdnUrl` 只需配到 `https://cdn.example.com` 级别。
-运行时自动派生完整路径：`{CdnUrl}/StreamingAssets/yoo/{PackageName}`。
+`MiniGameConfig.ProjectConf.CDN` 只需配到 `https://cdn.example.com` 级别。
+运行时自动派生完整路径：`{DATA_CDN}/StreamingAssets/yoo/{PackageName}`。
 
 ### 缓存空间管理
 
@@ -247,26 +257,36 @@ var clearUnusedOp = package.ClearCacheFilesAsync(new ClearCacheFilesOptions {
 
 没有线上 CDN 时，使用内置的 **Dev Server** 在本地提供 HTTP 文件服务进行测试。
 
-### CDN 地址架构
+### CDN 地址架构（2026-05-17 重构）
 
 ```
-MiniGameConfig.ProjectConf.CDN  ← 唯一源头 (Single Source of Truth)
-    ↓ 微信转换导出 → game.js DATA_CDN  ✅（原生支持）
+MiniGameConfig.ProjectConf.CDN  ← 唯一配置点 (Single Source of Truth)
+    ↓ 微信转换导出
     ↓
-AssetConfig.CdnUrl              ← 必须与 MiniGameConfig.CDN 一致
-    ↓ 运行时自动派生
-    └→ HostServerUrl = {CdnUrl}/StreamingAssets/yoo/{PackageName}
+game.js DATA_CDN               ← 导出产物（自动生成）
+    ↓ 运行时
     ↓
-Dev Server                      ← 辅助工具，读取 CDN 配置验证一致性
+WXDataCDNHelper.GetDataCDN()   ← C# 运行时读取（jslib WXBridge_GetDataCDN）
+    ↓
+AssetService.InitializeAsync() ← 自动派生 HostServerUrl
+    └→ HostServerUrl = {DATA_CDN}/StreamingAssets/yoo/{PackageName}
 ```
+
+**铁律**：CDN 地址只在微信转换面板配置一处。`AssetConfig` SO 不再存储 CDN 地址。禁止双配置。
 
 ### 操作步骤
 
 ```
-1. 配置 CDN 地址
-   - 微信转换面板 → 游戏资源CDN: http://192.168.x.x:8001
-   - AssetConfig SO → CdnUrl: http://192.168.x.x:8001 （必须一致）
-   - AssetConfig SO → Play Mode: WebGL
+1. 配置 CDN 地址（二选一）
+
+   方式 A：手动配置
+   - 微信转换面板 → 游戏资源CDN → 填入地址
+
+   方式 B：Dev Server 一键切换（推荐）
+   - Unity 菜单 → Tools → MiniGame Template → Dev Server
+   - 点击「🏠 本地调试」自动写入 http://{本机IP}:{端口}
+   - 点击「☁️ 远程真机」自动写入生产 CDN 地址
+   - 切换后需重新「转换小游戏」导出才生效
 
 2. 构建 AssetBundle
    Unity 菜单 → YooAsset → AssetBundle Builder
@@ -276,11 +296,11 @@ Dev Server                      ← 辅助工具，读取 CDN 配置验证一致
 3. 导出微信小游戏
    Unity 菜单 → 微信小游戏 → 生成并转换
 
-4. 启动 Dev Server
+4. 启动 Dev Server（本地调试时）
    Unity 菜单 → Tools → MiniGame Template → Dev Server
    - 服务根目录指向 webgl/ 导出目录
-   - 点击"启动服务器"
-   - 点击"检查 CDN 一致性"确认配置正确
+   - 点击「▶ 启动服务器」
+   - 启动时会自动检测 CDN 是否匹配，不匹配弹窗询问是否切换
 
 5. 微信开发者工具
    导入构建产物 → 预览 / 真机调试
@@ -290,16 +310,17 @@ Dev Server                      ← 辅助工具，读取 CDN 配置验证一致
 
 启动成功时会输出：
 ```
-[AssetService] WebGL mode: CDN=http://192.168.x.x:8001 → HostServerUrl=http://192.168.x.x:8001/StreamingAssets/yoo/DefaultPackage
+[AssetService] WebGL mode: DATA_CDN=http://192.168.x.x:8001 → HostServerUrl=http://192.168.x.x:8001/StreamingAssets/yoo/DefaultPackage
 ```
 
 看到这条日志说明 CDN 配置生效。
 
 ### 切换到生产 CDN 模式
 
-在 `AssetConfig` 中填入 CDN URL 即可自动切换：
+使用 Dev Server 面板的「☁️ 远程真机」按钮，一键切换到生产 CDN 地址。
+也可手动在微信转换面板修改 CDN 地址：
 ```
-Host Server Url: https://cdn.yoursite.com/webgl/DefaultPackage
+MiniGameConfig.ProjectConf.CDN: https://cdn.yoursite.com
 ```
 
 此时 Bundle 构建时 `Copy Buildin File Option` 改为 **None**（不再放 StreamingAssets），
@@ -384,21 +405,11 @@ WxAuthService / CloudSyncService
 2. `Create()` 内部自动执行 `ApplyCloudConfig()` → `bridge.InitCloud(envId)`
 3. 后续任何 `CallCloudFunction()` 调用时 `wx.cloud` 已就绪
 
-### 关键调研结论（2026-05-08）
+### 设计决策
 
-**问题**：每次 Unity 导出微信小游戏，`game.js` 会从模板重新生成，之前手动加的 `wx.cloud.init()` 丢失。
-
-**方案评估**：
-
-| 方案 | 原理 | 结论 |
-|------|------|------|
-| A. **自有 jslib InitCloud** ✅ | 在 WeChatBridge.jslib 中新增 `WXBridge_InitCloud` | **采用** — 自控、稳定、导出后零操作 |
-| B. SDK `WX.cloud.Init()` | 通过 SDK DLL 的 WXCloud C# 类调用 | 弃选 — 依赖 DLL 内部 API，签名可能随版本变 |
-| C. PostBuild 模板注入 | LifeCycleEvent hook 在导出后自动插入代码 | 弃选 — `LifeCycleEvent` 在 DLL 中，API 不公开 |
-| D. 修改 SDK 模板 game.js | 直接改包内文件 | 弃选 — SDK 升级覆盖 |
-
-**最终实施**：方案 A。在 jslib 中自包含 `wx.cloud.init(config)` 调用，C# 端通过 DllImport 驱动。
-整条链路都在项目代码内，不依赖 SDK 内部 API，不怕 SDK 版本升级。
+**Cloud Init 方案**：自有 jslib `WXBridge_InitCloud`（方案 A）。在 jslib 中自包含 `wx.cloud.init(config)` 调用，
+C# 端通过 DllImport 驱动。整条链路在项目代码内，不依赖 SDK 内部 API，不怕 SDK 版本升级。
+导出后零操作——无需手动编辑 `game.js`。详见 ADR 或 2026-05-08 调研记录。
 
 ### 注意事项
 
