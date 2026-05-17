@@ -328,6 +328,19 @@ mergeInto(LibraryManager.library, {
     console.log("[WXBridge:JS] InitCloud SUCCESS — cloudInitialized=true");
   },
 
+  // === V3: Runtime DATA_CDN accessor ===
+
+  WXBridge_GetDataCDN: function (bufferPtr, bufferSize) {
+    var cdn = "";
+    if (typeof GameGlobal !== "undefined" && GameGlobal.unityNamespace && GameGlobal.unityNamespace.DATA_CDN) {
+      cdn = GameGlobal.unityNamespace.DATA_CDN;
+    }
+    if (bufferPtr && bufferSize > 0) {
+      stringToUTF8(cdn, bufferPtr, bufferSize);
+    }
+    return lengthBytesUTF8(cdn);
+  },
+
   WXBridge_CallCloudFunction: function (requestId, namePtr, dataPtr) {
     var state = window.MiniGameTemplateWXBridge;
     var helpers = window.__wxBridgeHelpers;

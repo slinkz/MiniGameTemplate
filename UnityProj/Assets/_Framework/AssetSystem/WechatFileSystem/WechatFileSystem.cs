@@ -242,16 +242,17 @@ namespace MiniGameTemplate.Asset
             // WeChat SDK's XHR layer will prepend the page origin to relative URLs,
             // so the RemoteServices URL must be a valid HTTP endpoint.
             //
-            // CdnUrl in AssetConfig is the Single Source of Truth.
-            // HostServerUrl is derived automatically: {CdnUrl}/StreamingAssets/yoo/{PackageName}
+            // CDN URL is read at runtime from the WeChat conversion panel (game.js DATA_CDN)
+            // via WXDataCDNHelper.GetDataCDN(). No duplicate config needed.
+            // HostServerUrl is derived automatically: {DATA_CDN}/StreamingAssets/yoo/{PackageName}
             // For local testing: use Dev Server tool (Tools → MiniGame Template → Dev Server).
             if (RemoteServices == null)
             {
                 throw new Exception(
                     "[WechatFileSystem] RemoteServices is null! " +
                     "WeChat Mini Game requires an HTTP endpoint for asset loading.\n" +
-                    "Set CdnUrl in AssetConfig (e.g. https://cdn.example.com for production, " +
-                    "or http://192.168.x.x:8001 for local Dev Server).");
+                    "Set the CDN URL in the WeChat conversion panel (游戏资源CDN field). " +
+                    "It will be read automatically at runtime via DATA_CDN.");
             }
 
             // CRITICAL: double slashes in URL cause WeChat to silently fail loading

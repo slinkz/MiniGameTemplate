@@ -16,15 +16,16 @@ namespace MiniGameTemplate.EditorTools
     /// WeChat export directory, with one-click start/stop.
     ///
     /// **Architecture**: MiniGameConfig.ProjectConf.CDN is the Single Source of Truth
-    /// for CDN addresses. This tool is a helper — it reads from CDN config and verifies
-    /// consistency, but does NOT write CDN addresses. Change CDN in the WeChat export panel
-    /// or AssetConfig, and this tool follows.
+    /// for CDN addresses. This tool can both READ and WRITE the CDN value, providing
+    /// one-click switching between local dev and remote production environments.
     ///
-    /// Saves ~2 min/session of terminal juggling.
+    /// Saves ~2 min/session of terminal juggling + eliminates manual CDN URL entry.
     ///
     /// Access via: Tools → MiniGame Template → Dev Server
     ///
     /// CHANGELOG:
+    /// 2026-05-17  Feature: One-click CDN environment switch (local dev ↔ remote). Auto-prompt on server start. WriteMiniGameConfigCdn support.
+    /// 2026-05-17  Refactor: Remove AssetConfig CDN references (CDN now read from DATA_CDN at runtime).
     /// 2026-04-28  Refactor: Dev Server is now a follower, not the source. Reads CDN from configs, verifies consistency. Removed SyncServerUrlToConfigs write-back logic.
     /// 2026-04-27  Fix: IsPortInUse now checks IPAddress.Any (0.0.0.0) in addition to Loopback — prevents silent conflict with WeChat DevTools static server.
     /// 2026-04-27  Fix: wrap npx.cmd with "cmd /c" so the process stays alive for http-server's lifetime (npx.cmd batch exits immediately).
@@ -42,8 +43,10 @@ namespace MiniGameTemplate.EditorTools
         private const string PREF_ROOT_DIR = "MiniGame_DevServer_RootDir";
         private const string PREF_NODEJS_DIR = "MiniGame_DevServer_NodejsDir";
         private const string PREF_WX_EXPORT_ROOT = "MiniGame_WXExportRoot"; // shared with BuildModeSwitch
+        private const string PREF_CDN_REMOTE = "MiniGame_CDN_Remote";
 
         private const int DEFAULT_PORT = 8001;
+        private const string DEFAULT_CDN_REMOTE = "https://cloud1-d4gagblcpd52c5630-1429432433.tcloudbaseapp.com";
 
         // ──────────────── State ────────────────
         private static Process _serverProcess;
@@ -62,6 +65,7 @@ namespace MiniGameTemplate.EditorTools
         private bool _autoScrollLog = true;
         private bool _portConflict; // shows "kill occupying process" button
         private string _consistencyCheckResult = ""; // CDN consistency check result for UI display
+        [SerializeField] private string _cdnRemote = "";  // Remote production CDN preset
 
         // ──────────────── Menu Entry ────────────────
 
@@ -79,6 +83,7 @@ namespace MiniGameTemplate.EditorTools
             _port = EditorPrefs.GetInt(PREF_PORT, DEFAULT_PORT);
             _rootDir = EditorPrefs.GetString(PREF_ROOT_DIR, "");
             _nodejsDir = EditorPrefs.GetString(PREF_NODEJS_DIR, "");
+            _cdnRemote = EditorPrefs.GetString(PREF_CDN_REMOTE, DEFAULT_CDN_REMOTE);
 
             // Auto-detect root dir from WX export root if not set
             if (string.IsNullOrEmpty(_rootDir))
@@ -101,6 +106,7 @@ namespace MiniGameTemplate.EditorTools
             if (!string.IsNullOrEmpty(_rootDir))
                 EditorPrefs.SetString(PREF_ROOT_DIR, _rootDir);
             EditorPrefs.SetString(PREF_NODEJS_DIR, _nodejsDir ?? "");
+            EditorPrefs.SetString(PREF_CDN_REMOTE, _cdnRemote ?? DEFAULT_CDN_REMOTE);
         }
 
         // ──────────────── GUI ────────────────
@@ -321,21 +327,90 @@ namespace MiniGameTemplate.EditorTools
 
         private void DrawConsistencySection()
         {
-            EditorGUILayout.LabelField("CDN 一致性检查", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("CDN 环境切换", EditorStyles.boldLabel);
 
             EditorGUILayout.HelpBox(
-                "MiniGameConfig.ProjectConf.CDN 是唯一源头。\n" +
-                "AssetConfig.CdnUrl 必须与其一致。\n" +
-                "本工具仅读取和验证，不修改配置。",
+                "一键切换微信转换面板的 CDN 地址（MiniGameConfig.ProjectConf.CDN）。\n" +
+                "切换后需重新导出才能生效。",
                 MessageType.None);
 
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("🔍 检查 CDN 一致性", GUILayout.Height(24)))
+            // ── Current CDN Display ──
+            string currentCdn = ReadMiniGameConfigCdn();
+            string displayCdn = string.IsNullOrEmpty(currentCdn) ? "(空)" : currentCdn;
+
+            // Determine which environment is active
+            string localCdn = GetLocalCdnUrl();
+            string remoteCdn = !string.IsNullOrEmpty(_cdnRemote) ? _cdnRemote : DEFAULT_CDN_REMOTE;
+            string activeEnv = "❓ 自定义";
+            if (!string.IsNullOrEmpty(currentCdn))
             {
-                CheckCdnConsistency();
+                if (NormalizeCdn(currentCdn) == NormalizeCdn(localCdn))
+                    activeEnv = "🏠 本地调试";
+                else if (NormalizeCdn(currentCdn) == NormalizeCdn(remoteCdn))
+                    activeEnv = "☁️ 远程真机";
+            }
+            else
+            {
+                activeEnv = "❌ 未配置";
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("当前环境", activeEnv, EditorStyles.boldLabel);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.TextField("CDN 地址", displayCdn);
+            if (GUILayout.Button("复制", GUILayout.Width(50)))
+            {
+                if (!string.IsNullOrEmpty(currentCdn))
+                {
+                    GUIUtility.systemCopyBuffer = currentCdn;
+                    Debug.Log($"{LOG_PREFIX} CDN 地址已复制: {currentCdn}");
+                }
             }
             EditorGUILayout.EndHorizontal();
 
+            GUILayout.Space(4);
+
+            // ── One-Click Switch Buttons ──
+            EditorGUILayout.BeginHorizontal();
+
+            bool isLocal = !string.IsNullOrEmpty(currentCdn) && NormalizeCdn(currentCdn) == NormalizeCdn(localCdn);
+            bool isRemote = !string.IsNullOrEmpty(currentCdn) && NormalizeCdn(currentCdn) == NormalizeCdn(remoteCdn);
+
+            using (new EditorGUI.DisabledScope(isLocal))
+            {
+                if (GUILayout.Button($"🏠 本地调试\n{TruncateUrl(localCdn, 35)}", GUILayout.Height(36)))
+                {
+                    SwitchCdn(localCdn, "本地调试");
+                }
+            }
+
+            using (new EditorGUI.DisabledScope(isRemote))
+            {
+                if (GUILayout.Button($"☁️ 远程真机\n{TruncateUrl(remoteCdn, 35)}", GUILayout.Height(36)))
+                {
+                    SwitchCdn(remoteCdn, "远程真机");
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(4);
+
+            // ── Preset Config (foldout) ──
+            EditorGUI.BeginChangeCheck();
+            _cdnRemote = EditorGUILayout.TextField("远程 CDN 地址", _cdnRemote);
+            if (EditorGUI.EndChangeCheck())
+            {
+                EditorPrefs.SetString(PREF_CDN_REMOTE, _cdnRemote);
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("本地 CDN 地址", $"自动 = http://{{本机IP}}:{_port}");
+            EditorGUILayout.EndHorizontal();
+
+            // ── Result Message ──
             if (!string.IsNullOrEmpty(_consistencyCheckResult))
             {
                 bool isError = _consistencyCheckResult.Contains("❌");
@@ -345,99 +420,101 @@ namespace MiniGameTemplate.EditorTools
             }
         }
 
-        // ──────────────── CDN Consistency Check ────────────────
-
         /// <summary>
-        /// Read CDN values from both AssetConfig and MiniGameConfig (read-only),
-        /// compare them, and report whether they are consistent.
-        ///
-        /// This tool does NOT write to any config — MiniGameConfig.ProjectConf.CDN
-        /// is the Single Source of Truth. If they differ, the user must fix it
-        /// in the WeChat export panel or AssetConfig inspector.
+        /// Get the local CDN URL based on current machine IP and configured port.
         /// </summary>
-        private void CheckCdnConsistency()
+        private string GetLocalCdnUrl()
         {
-            string assetConfigCdn = ReadAssetConfigCdn();
-            string miniGameConfigCdn = ReadMiniGameConfigCdn();
-            string result = "";
-
-            // Report what we found
-            result += $"AssetConfig.CdnUrl: {(string.IsNullOrEmpty(assetConfigCdn) ? "(空)" : assetConfigCdn)}\n";
-            result += $"MiniGameConfig.CDN: {(string.IsNullOrEmpty(miniGameConfigCdn) ? "(空)" : miniGameConfigCdn)}\n";
-
-            // Check server match
-            if (_isRunning && !string.IsNullOrEmpty(_serverUrl))
-            {
-                result += $"Dev Server URL:     {_serverUrl}\n";
-            }
-
-            result += "\n";
-
-            // Consistency logic
-            bool assetEmpty = string.IsNullOrEmpty(assetConfigCdn);
-            bool miniEmpty = string.IsNullOrEmpty(miniGameConfigCdn);
-
-            if (assetEmpty && miniEmpty)
-            {
-                result += "❌ 两个 CDN 配置都为空！请先在微信转换面板设置 CDN 地址，\n" +
-                          "然后在 AssetConfig 中填入相同的值。";
-            }
-            else if (assetEmpty)
-            {
-                result += $"⚠️ AssetConfig.CdnUrl 为空！\n" +
-                          $"请将其设为: {miniGameConfigCdn}（与 MiniGameConfig.CDN 一致）";
-            }
-            else if (miniEmpty)
-            {
-                result += $"⚠️ MiniGameConfig.CDN 为空！\n" +
-                          $"请在微信转换面板中将 CDN 设为: {assetConfigCdn}";
-            }
-            else if (NormalizeCdn(assetConfigCdn) == NormalizeCdn(miniGameConfigCdn))
-            {
-                result += "✅ CDN 配置一致！";
-
-                // Also check if server matches (when running)
-                if (_isRunning && !string.IsNullOrEmpty(_serverUrl))
-                {
-                    if (NormalizeCdn(assetConfigCdn) == NormalizeCdn(_serverUrl))
-                    {
-                        result += "\n✅ Dev Server 地址与 CDN 配置匹配。";
-                    }
-                    else
-                    {
-                        result += $"\n⚠️ Dev Server ({_serverUrl}) 与 CDN 配置 ({assetConfigCdn}) 不匹配！\n" +
-                                  "请更新 CDN 配置后重新导出，或调整 Dev Server 端口。";
-                    }
-                }
-            }
-            else
-            {
-                result += $"❌ CDN 配置不一致！\n" +
-                          $"AssetConfig: {assetConfigCdn}\n" +
-                          $"MiniGameConfig: {miniGameConfigCdn}\n" +
-                          "请确保两者填写完全相同的 CDN 基址。";
-            }
-
-            _consistencyCheckResult = result;
-            AppendLog("CDN 一致性检查完成");
-            Debug.Log($"{LOG_PREFIX} CDN 一致性检查:\n{result}");
+            return $"http://{GetLocalIP()}:{_port}";
         }
 
         /// <summary>
-        /// Read AssetConfig._cdnUrl from the first found AssetConfig asset. (Read-only)
+        /// Truncate a URL for display in buttons.
         /// </summary>
-        private static string ReadAssetConfigCdn()
+        private static string TruncateUrl(string url, int maxLen)
         {
-            string[] guids = AssetDatabase.FindAssets("t:AssetConfig");
-            if (guids.Length == 0) return null;
+            if (string.IsNullOrEmpty(url)) return "(空)";
+            if (url.Length <= maxLen) return url;
+            return url.Substring(0, maxLen - 3) + "...";
+        }
 
-            string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-            if (asset == null) return null;
+        /// <summary>
+        /// Switch CDN to the given URL and report result.
+        /// </summary>
+        private void SwitchCdn(string newCdnUrl, string envName)
+        {
+            if (string.IsNullOrEmpty(newCdnUrl))
+            {
+                _consistencyCheckResult = "❌ CDN 地址为空，无法切换！";
+                return;
+            }
 
-            var so = new SerializedObject(asset);
-            var cdnProp = so.FindProperty("_cdnUrl");
-            return cdnProp?.stringValue;
+            bool success = WriteMiniGameConfigCdn(newCdnUrl);
+            if (success)
+            {
+                _consistencyCheckResult = $"✅ 已切换到 [{envName}]: {newCdnUrl}\n" +
+                    "请重新「转换小游戏」导出以生效。";
+                AppendLog($"CDN 已切换 → [{envName}] {newCdnUrl}");
+                Debug.Log($"{LOG_PREFIX} CDN 已切换 → [{envName}] {newCdnUrl}");
+            }
+            else
+            {
+                _consistencyCheckResult = "❌ 切换失败！未找到 MiniGameConfig 资产。";
+                Debug.LogError($"{LOG_PREFIX} CDN 切换失败: 未找到 MiniGameConfig");
+            }
+
+            Repaint();
+        }
+
+        // ──────────────── CDN Config Write ────────────────
+
+        /// <summary>
+        /// Write a new CDN value to MiniGameConfig.ProjectConf.CDN.
+        /// Uses SerializedObject to support Undo and proper asset marking.
+        /// Returns true if successful.
+        /// </summary>
+        private static bool WriteMiniGameConfigCdn(string newCdnUrl)
+        {
+            // MiniGameConfig is stored in WX-WASM-SDK-V2 plugin
+            string[] guids = AssetDatabase.FindAssets("MiniGameConfig t:ScriptableObject");
+            if (guids.Length == 0)
+            {
+                // Fallback: search by known path
+                string knownPath = "Assets/WX-WASM-SDK-V2/Editor/MiniGameConfig.asset";
+                if (File.Exists(Path.Combine(Application.dataPath, "../", knownPath)))
+                {
+                    guids = new[] { AssetDatabase.AssetPathToGUID(knownPath) };
+                }
+            }
+
+            if (guids.Length == 0) return false;
+
+            foreach (string guid in guids)
+            {
+                if (string.IsNullOrEmpty(guid)) continue;
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                if (asset == null) continue;
+
+                var so = new SerializedObject(asset);
+                var projConfProp = so.FindProperty("ProjectConf");
+                if (projConfProp == null) continue;
+
+                var cdnProp = projConfProp.FindPropertyRelative("CDN");
+                if (cdnProp == null) continue;
+
+                // Trim trailing slash for consistency
+                string cleanUrl = newCdnUrl.TrimEnd('/');
+                cdnProp.stringValue = cleanUrl;
+                so.ApplyModifiedProperties();
+                EditorUtility.SetDirty(asset);
+                AssetDatabase.SaveAssets();
+
+                Debug.Log($"[DevServer] MiniGameConfig.ProjectConf.CDN → {cleanUrl}");
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -606,8 +683,33 @@ namespace MiniGameTemplate.EditorTools
 
                 Debug.Log($"{LOG_PREFIX} 服务器已启动 → {_serverUrl} (PID: {_serverProcess.Id})");
 
-                // Auto-check CDN consistency after server starts
-                CheckCdnConsistency();
+                // Auto-check: if CDN doesn't match the dev server, offer to switch
+                string currentCdn = ReadMiniGameConfigCdn();
+                string localCdn = GetLocalCdnUrl();
+                if (!string.IsNullOrEmpty(currentCdn) && NormalizeCdn(currentCdn) == NormalizeCdn(localCdn))
+                {
+                    _consistencyCheckResult = "✅ CDN 已指向本机 Dev Server。";
+                }
+                else
+                {
+                    bool autoSwitch = EditorUtility.DisplayDialog(
+                        "Dev Server 已启动",
+                        $"CDN 当前为:\n{(string.IsNullOrEmpty(currentCdn) ? "(空)" : currentCdn)}\n\n" +
+                        $"Dev Server 地址为:\n{localCdn}\n\n" +
+                        "是否自动切换 CDN 到 Dev Server？\n" +
+                        "（切换后需重新「转换小游戏」导出）",
+                        "切换", "不切换");
+
+                    if (autoSwitch)
+                    {
+                        SwitchCdn(localCdn, "本地调试");
+                    }
+                    else
+                    {
+                        _consistencyCheckResult = $"⚠️ CDN ({currentCdn}) 与 Dev Server ({localCdn}) 不一致。\n" +
+                            "如需使用本地资源调试，请点击「🏠 本地调试」按钮切换。";
+                    }
+                }
             }
             catch (Exception ex)
             {

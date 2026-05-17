@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 1372121061}
   - component: {fileID: 1372121060}
   - component: {fileID: 1372121062}
+  - component: {fileID: 1372121063}
   m_Layer: 0
   m_Name: GameBootstrapper
   m_TagString: Untagged
@@ -189,3 +190,23 @@ MonoBehaviour:
   _rootFlowNode: {fileID: 11400000, guid: 70823a309b077d74688ce63d96325d24, type: 2}
   _flowNodeRegistry: {fileID: 11400000, guid: fc38c8b27e17c9b4aa988105fc4e8bc3, type: 2}
   _weChatConfig: {fileID: 11400000, guid: c7f98fa064ea5264d9c660d39a07635a, type: 2}
+--- !u!114 &1372121063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372121059}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a723f7fd716aac049aa24e9186f18685, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scaleMode: 1
+  screenMatchMode: 1
+  designResolutionX: 720
+  designResolutionY: 1280
+  fallbackScreenDPI: 96
+  defaultSpriteDPI: 96
+  constantScaleFactor: 1
+  ignoreOrientation: 1

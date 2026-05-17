@@ -14,5 +14,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _defaultPackageName: DefaultPackage
   _playMode: 0
-  _cdnUrl: http://10.31.53.95:8001
-  _fallbackCdnUrl: 
