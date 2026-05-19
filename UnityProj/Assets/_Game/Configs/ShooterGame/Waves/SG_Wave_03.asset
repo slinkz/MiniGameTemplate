@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Waves:
   - Groups:
-    - EntityConfig: {fileID: 11400000, guid: 0a5a8a816cf49f043b7d40ba8660474c, type: 2}
+    - EntityConfig: {fileID: 11400000, guid: f5f930cb3c80f9245b7e3c40a1509ab6, type: 2}
       Camp: 0
-      Count: 8
+      Count: 3
       SpawnInterval: 0
       Formation: 1
       FormationParams:

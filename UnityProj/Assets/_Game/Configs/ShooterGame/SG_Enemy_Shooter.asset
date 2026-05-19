@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 104333c424327d1409c656f1f269a462, type: 3}
-  m_Name: SG_Base
+  m_Name: SG_Enemy_Shooter
   m_EditorClassIdentifier: 
   ConfigId: 0
-  DisplayName: SG_Base
-  Camp: 1
-  Components: 0104
-  PoolMax: 128
-  MaxHp: 100
-  MoveSpeed: 0
-  TurnSpeed: 360
-  CollisionRadius: 4
-  KnockbackDistance: 0.5
-  KnockbackDuration: 0.2
+  DisplayName: Shooter Enemy
+  Camp: 0
+  Components: 0001030402080b
+  PoolMax: 32
+  MaxHp: 40
+  MoveSpeed: 1.5
+  TurnSpeed: 0
+  CollisionRadius: 0.5
+  KnockbackDistance: 0
+  KnockbackDuration: 0
   IFrameCount: 0
   HitStopFrames: 0
   KnockbackCurve:
@@ -31,25 +31,25 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  EnableEntityCollision: 0
+  EnableEntityCollision: 1
   CollisionLayer: 0
-  ContactDamage: 0
+  ContactDamage: 25
   ContactDamageInterval: 0.5
   AttackPower: 0
   CritRate: 0
   CritDamageMultiplier: 2
   AutoAimRadius: 0
   AutoAimSearchInterval: 0.2
-  AttackInterval: 1
+  AttackInterval: 1.5
   FirstAttackDelay: 1
-  AttackBulletPattern: {fileID: 0}
-  AttackFireOffset: {x: 0, y: 0}
+  AttackBulletPattern: {fileID: 11400000, guid: 0e0ff4377909b744a9cf0448988b4e2b, type: 2}
+  AttackFireOffset: {x: 0, y: -0.3}
   SkillConfig: {fileID: 0}
-  AIBehavior: {fileID: 0}
+  AIBehavior: {fileID: 11400000, guid: 7a9c477a00daf5c49919f6e6a1065feb, type: 2}
   ViewPrefab: {fileID: 0}
   ViewPoolDef: {fileID: 0}
   SpriteAnimData: {fileID: 0}
-  DebugColor: {r: 0.2, g: 1, b: 0.4, a: 1}
+  DebugColor: {r: 0.8, g: 0.2, b: 0.1, a: 1}
   HitFlashDuration: 0.1
   HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
   ShowDamageNumber: 1

@@ -242,6 +242,9 @@ namespace Game.ShooterGame
             // 6b. V2 Sprint 1: 注入伤害转发链路
             SetupDamageRedirectChain();
 
+            // 6c. 订阅基地 OnDamaged 事件 → 同步 BaseHP SO + 死亡判定
+            _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
+
             // 7. 初始化底线检测器（ET-003: 只传检测所需参数）
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
                 ? -_currentLevel.BaseLineYOverride : _baseLineY;
@@ -355,11 +358,23 @@ namespace Game.ShooterGame
             var ctx = evt.Context;
             playerHealth.TakeDamage(ref ctx);
 
-            // 同步 BaseHP SO 变量（归一化 0~1）
+            // BaseHP SO 同步已由 OnBaseDamaged 统一处理
+        }
+
+        /// <summary>
+        /// 基地受伤回调（无论来源：底线突破 / 弹丸直击 / 飞机伤害转发）。
+        /// 同步 BaseHP SO 变量 + 检查死亡 → Defeat。
+        /// </summary>
+        private void OnBaseDamaged(OnDamaged evt)
+        {
             var baseHealth = _baseEntity?.GetComponent(ComponentType.Health) as HealthComponent;
-            if (baseHealth != null)
+            if (baseHealth == null) return;
+
+            _baseHP.SetValue(baseHealth.HpRatio);
+
+            if (baseHealth.IsDead && CurrentState == BattleState.Playing)
             {
-                _baseHP.SetValue(baseHealth.HpRatio);
+                EnterState(BattleState.Defeat);
             }
         }
 
@@ -737,6 +752,9 @@ namespace Game.ShooterGame
 
             // 3b. V2 Sprint 1: 重新注入伤害转发链路
             SetupDamageRedirectChain();
+
+            // 3c. 重新订阅基地 OnDamaged 事件
+            _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
 
             // 4. 重新初始化底线检测器
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0

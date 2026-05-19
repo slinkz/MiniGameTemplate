@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Player
   Camp: 1
-  Components: 0304
+  Components: 030401
   PoolMax: 128
   MaxHp: 1
   MoveSpeed: 5
@@ -41,6 +41,7 @@ MonoBehaviour:
   AutoAimRadius: 0
   AutoAimSearchInterval: 0.2
   AttackInterval: 1
+  FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 0}
   AttackFireOffset: {x: 0, y: 0}
   SkillConfig: {fileID: 0}
