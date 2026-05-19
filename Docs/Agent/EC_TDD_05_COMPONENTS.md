@@ -347,7 +347,7 @@ if (buff != null)
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `Type` | `ComponentType.Buff = 10` | |
-| `MAX_BUFFS` | `const 8` | 固定槽位数组，零 GC |
+| `MAX_BUFFS` | `const 16` | 固定槽位数组，零 GC（v2.2 扩容：8→16，超限 LogWarning 提示扩容） |
 | `MoveSpeedModifier` | `float`（只读） | 乘法叠加 → Clamp[0.4, 2.5] |
 | `AttackIntervalModifier` | `float`（只读） | 乘法叠加 → Clamp[0.3, 3.0] |
 | `DamageTakenModifier` | `float`（只读） | 乘法叠加，不 Clamp（允许无敌/脆弱） |

@@ -84,6 +84,10 @@ namespace Game.ShooterGame
         private SG_ProgressManager _progressManager;
         private int _displayWaveIndex;
 
+        // V2 Sprint 1: 伤害转发链路
+        private InvincibilityModifier _invincibilityModifier;
+        private DamageRedirectModifier _damageRedirectModifier;
+
 
         // UI Controller 接口（通过 Init 或 GetComponent 动态绑定）
         private IBattleHUDController _hudController;
@@ -235,6 +239,9 @@ namespace Game.ShooterGame
             // 6. Spawn 玩家飞机 Entity
             SpawnPlayer();
 
+            // 6b. V2 Sprint 1: 注入伤害转发链路
+            SetupDamageRedirectChain();
+
             // 7. 初始化底线检测器（ET-003: 只传检测所需参数）
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
                 ? -_currentLevel.BaseLineYOverride : _baseLineY;
@@ -307,6 +314,53 @@ namespace Game.ShooterGame
                 new Vector2(0, -5f),
                 270f); // 朝上（竖版飞机默认朝上）
             // Camp 由 EntityConfigSO.Camp 自动设置，SG_Player 配置为 Player 阵营
+        }
+
+        // ── V2 Sprint 1: 伤害转发链路 ──
+
+        /// <summary>
+        /// 为玩家飞机注入 IDamageModifier 链：
+        /// InvincibilityModifier(priority=-1) → DamageRedirectModifier(priority=0)
+        /// 并订阅飞机的 OnCollisionHit 事件，将弹幕碰撞转化为 TakeDamage 调用。
+        /// TDD S1.3
+        /// </summary>
+        private void SetupDamageRedirectChain()
+        {
+            var playerHealth = _playerEntity.GetComponent(ComponentType.Health) as HealthComponent;
+            if (playerHealth == null) return;
+
+            // 1. 创建并注册 InvincibilityModifier
+            _invincibilityModifier = new InvincibilityModifier();
+            _invincibilityModifier.SetHealthComponent(playerHealth);
+            playerHealth.AddModifier(_invincibilityModifier);
+
+            // 2. 创建并注册 DamageRedirectModifier
+            _damageRedirectModifier = new DamageRedirectModifier();
+            _damageRedirectModifier.SetBaseEntity(_baseEntity);
+            playerHealth.AddModifier(_damageRedirectModifier);
+
+            // 3. 订阅飞机的 OnCollisionHit 事件 → TakeDamage
+            _playerEntity.EventBus.Subscribe<OnCollisionHit>(OnPlayerCollisionHit);
+        }
+
+        /// <summary>
+        /// 飞机被弹丸命中回调。构造 DamageContext → HealthComponent.TakeDamage。
+        /// 伤害流程：TakeDamage → InvincibilityModifier → DamageRedirectModifier → 基地扣血。
+        /// </summary>
+        private void OnPlayerCollisionHit(OnCollisionHit evt)
+        {
+            var playerHealth = _playerEntity?.GetComponent(ComponentType.Health) as HealthComponent;
+            if (playerHealth == null) return;
+
+            var ctx = evt.Context;
+            playerHealth.TakeDamage(ref ctx);
+
+            // 同步 BaseHP SO 变量（归一化 0~1）
+            var baseHealth = _baseEntity?.GetComponent(ComponentType.Health) as HealthComponent;
+            if (baseHealth != null)
+            {
+                _baseHP.SetValue(baseHealth.HpRatio);
+            }
         }
 
         // ── 状态转换 ──
@@ -680,6 +734,9 @@ namespace Game.ShooterGame
             // 3. 重新 Spawn 基地 + 玩家
             SpawnBase();
             SpawnPlayer();
+
+            // 3b. V2 Sprint 1: 重新注入伤害转发链路
+            SetupDamageRedirectChain();
 
             // 4. 重新初始化底线检测器
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0

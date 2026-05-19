@@ -17,7 +17,8 @@ namespace MiniGameTemplate.Entity
         AI = 8,
         Attack = 9,
         Buff = 10,     // Phase 3A (P3.4)
-        // 预留 11~15
+        EnemyShoot = 11, // V2 Sprint 1: 敌机射击组件
+        // 预留 12~15
         MAX = 16
     }
 }

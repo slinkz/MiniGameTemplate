@@ -97,6 +97,10 @@ namespace MiniGameTemplate.Entity
         [Tooltip("攻击间隔（秒），0 = 不攻击")]
         public float AttackInterval = 1f;
 
+        [Tooltip("首次开火延迟（秒）。每只敌机独立计时，从 Spawn 时刻开始。V2 Sprint 1 新增。")]
+        [Min(0f)]
+        public float FirstAttackDelay = 1.0f;
+
         [Tooltip("攻击弹幕 Pattern（BulletPatternSO，发射配置）")]
         public Danmaku.BulletPatternSO AttackBulletPattern;
 

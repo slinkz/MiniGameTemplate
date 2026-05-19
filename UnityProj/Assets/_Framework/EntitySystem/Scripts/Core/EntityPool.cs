@@ -123,6 +123,7 @@ namespace MiniGameTemplate.Entity
                 case ComponentType.AutoAim:   return new AutoAimComponent();
                 case ComponentType.Skill:     return new SkillComponent();
                 case ComponentType.Buff:      return new BuffComponent();
+                case ComponentType.EnemyShoot: return new EnemyShootComponent();
                 default:
                     Debug.LogWarning($"[EntityPool] 未知组件类型：{type}，跳过创建。");
                     return null;

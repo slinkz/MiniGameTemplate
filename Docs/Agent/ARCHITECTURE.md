@@ -56,7 +56,7 @@ MiniGameTemplate 采用 **ScriptableObject 驱动的组件化架构**：
 ├────────────────────────────────────────────────────────┤
 │  战斗能力层（Phase 3A）                                  │
 │  ├── SkillComponent（CD 状态机 + ISkillEffect 效果链）   │
-│  ├── BuffComponent（8 槽位 + 乘法叠加 + Clamp）         │
+│  ├── BuffComponent（16 槽位 + 乘法叠加 + Clamp）         │
 │  ├── AutoAimComponent（空间查询 + 目标锁定）             │
 │  ├── DamageDealer（静态工具类 + 重入保护）               │
 │  └── CampUtility（阵营判定）                             │
