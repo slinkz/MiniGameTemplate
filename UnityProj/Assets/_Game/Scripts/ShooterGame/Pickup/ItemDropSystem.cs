@@ -88,7 +88,9 @@ namespace Game.ShooterGame
                 }
             }
 
-            // 掉落表无修复道具 → 降级为普通 Roll
+            // 掉落表无修复道具 → 降级为普通 Roll。
+            // 设计意图：保底机制核心目标是"给玩家东西"以维持正反馈。
+            // 当策划配表漏配修复道具时，不应直接吞掉这次保底机会。
             var fallback = table.Roll();
             if (fallback != null)
             {

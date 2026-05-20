@@ -18,6 +18,12 @@ namespace Game.ShooterGame
         private readonly List<SkillConfigSO> _lastUnlockedSkills = new List<SkillConfigSO>(8);
         private readonly List<BuffConfigSO> _lastUnlockedPassives = new List<BuffConfigSO>(4);
 
+        // 复用 buffer —— 避免每次调用都 new List（Y-3 优化）
+        private readonly List<SkillConfigSO> _skillBuffer = new List<SkillConfigSO>(8);
+        private readonly List<BuffConfigSO> _passiveBuffer = new List<BuffConfigSO>(4);
+        private readonly List<SkillConfigSO> _newSkillBuffer = new List<SkillConfigSO>(4);
+        private readonly List<BuffConfigSO> _newPassiveBuffer = new List<BuffConfigSO>(4);
+
         public SkillUnlockManager(
             SkillUnlockTableSO skillTable,
             PassiveUnlockTableSO passiveTable,
@@ -31,46 +37,53 @@ namespace Game.ShooterGame
             RefreshCache();
         }
 
-        /// <summary>获取当前已解锁的主动技能列表</summary>
+        /// <summary>
+        /// 获取当前已解锁的主动技能列表。
+        /// 注意：返回的是内部 buffer 引用，调用方不应缓存此引用（下次调用会覆盖）。
+        /// </summary>
         public List<SkillConfigSO> GetUnlockedSkills()
         {
-            var result = new List<SkillConfigSO>(8);
+            _skillBuffer.Clear();
             for (int i = 0; i < _skillTable.Count; i++)
             {
                 var entry = _skillTable.GetEntry(i);
                 if (IsConditionMet(entry.ConditionType, entry.ConditionParam))
                 {
-                    result.Add(entry.Skill);
+                    _skillBuffer.Add(entry.Skill);
                 }
             }
-            return result;
+            return _skillBuffer;
         }
 
-        /// <summary>获取当前已解锁的被动技能列表（返回 BuffConfigSO）</summary>
+        /// <summary>
+        /// 获取当前已解锁的被动技能列表（返回 BuffConfigSO）。
+        /// 注意：返回的是内部 buffer 引用，调用方不应缓存此引用。
+        /// </summary>
         public List<BuffConfigSO> GetUnlockedPassives()
         {
-            var result = new List<BuffConfigSO>(4);
+            _passiveBuffer.Clear();
             for (int i = 0; i < _passiveTable.Count; i++)
             {
                 var entry = _passiveTable.GetEntry(i);
                 if (IsConditionMet(entry.ConditionType, entry.ConditionParam))
                 {
-                    result.Add(entry.BuffConfig);
+                    _passiveBuffer.Add(entry.BuffConfig);
                 }
             }
-            return result;
+            return _passiveBuffer;
         }
 
         /// <summary>
         /// 检查是否有新解锁内容（对比上次调用时的缓存）。
         /// 返回 true = 有新解锁，newSkills/newPassives 包含新增项。
+        /// 注意：out 参数为内部 buffer 引用，调用方应立即消费。
         /// </summary>
         public bool CheckNewUnlocks(
             out List<SkillConfigSO> newSkills,
             out List<BuffConfigSO> newPassives)
         {
-            newSkills = new List<SkillConfigSO>(4);
-            newPassives = new List<BuffConfigSO>(4);
+            _newSkillBuffer.Clear();
+            _newPassiveBuffer.Clear();
 
             var currentSkills = GetUnlockedSkills();
             var currentPassives = GetUnlockedPassives();
@@ -80,7 +93,7 @@ namespace Game.ShooterGame
             {
                 if (!_lastUnlockedSkills.Contains(currentSkills[i]))
                 {
-                    newSkills.Add(currentSkills[i]);
+                    _newSkillBuffer.Add(currentSkills[i]);
                 }
             }
 
@@ -89,7 +102,7 @@ namespace Game.ShooterGame
             {
                 if (!_lastUnlockedPassives.Contains(currentPassives[i]))
                 {
-                    newPassives.Add(currentPassives[i]);
+                    _newPassiveBuffer.Add(currentPassives[i]);
                 }
             }
 
@@ -99,7 +112,9 @@ namespace Game.ShooterGame
             _lastUnlockedPassives.Clear();
             _lastUnlockedPassives.AddRange(currentPassives);
 
-            return newSkills.Count > 0 || newPassives.Count > 0;
+            newSkills = _newSkillBuffer;
+            newPassives = _newPassiveBuffer;
+            return _newSkillBuffer.Count > 0 || _newPassiveBuffer.Count > 0;
         }
 
         // ── 内部 ──

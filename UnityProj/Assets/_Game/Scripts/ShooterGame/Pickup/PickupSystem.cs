@@ -50,9 +50,12 @@ namespace Game.ShooterGame
 
         /// <summary>
         /// 清空所有道具（关卡重置时调用）。
+        /// 必须清零数组防止幽灵数据残留（PIT-037 同类型）。
         /// </summary>
         public void Clear()
         {
+            for (int i = 0; i < _activeCount; i++)
+                _pickups[i] = default;
             _activeCount = 0;
         }
 

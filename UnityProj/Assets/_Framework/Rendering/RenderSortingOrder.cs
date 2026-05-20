@@ -4,6 +4,9 @@ namespace MiniGameTemplate.Rendering
     /// 共享渲染排序常量（按 ADR-014）。
     /// 值越小越先渲染（更靠后方），值越大越后渲染（更靠前方）。
     /// ADR-029 v2：移除 Additive 层排序常量。
+    /// 
+    /// 层级间预留间距（10~50），方便未来插入新层级而不影响现有排序。
+    /// 当前层级栈（从后到前）：Trail(90) → Bullet(100) → Laser(120) → Pickup(150) → VFX(200) → DmgNum(300)
     /// </summary>
     public static class RenderSortingOrder
     {
