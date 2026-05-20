@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using UnityEngine;
 using FairyGUI;
+using MiniGameTemplate.Entity;
 using MiniGameTemplate.Navigation;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;

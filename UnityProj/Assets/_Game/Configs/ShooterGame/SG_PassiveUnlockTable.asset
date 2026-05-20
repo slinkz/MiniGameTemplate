@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfe66f5fa55b89b4c80a1facae06c6e6, type: 3}
+  m_Name: SG_PassiveUnlockTable
+  m_EditorClassIdentifier: 
+  _entries:
+  - BuffConfig: {fileID: 11400000, guid: 681e970bd7bb80a40b7f99821321c1fa, type: 2}
+    ConditionType: 0
+    ConditionParam: 0
+    DisplayName: "\u5B50\u5F39\u7A7F\u900F"
+    Description: "\u9ED8\u8BA4\u89E3\u9501"
+  - BuffConfig: {fileID: 11400000, guid: 55bd76a188a836b4ea7c561a082e9bbc, type: 2}
+    ConditionType: 1
+    ConditionParam: 3
+    DisplayName: "\u66B4\u51FB\u5F3A\u5316"
+    Description: "\u901A\u5173\u7B2C 3 \u5173\u89E3\u9501"
+  - BuffConfig: {fileID: 11400000, guid: 62441977d5374554cad59f94368d0a93, type: 2}
+    ConditionType: 1
+    ConditionParam: 5
+    DisplayName: "\u78C1\u5438\u8303\u56F4"
+    Description: "\u901A\u5173\u7B2C 5 \u5173\u89E3\u9501"
+  - BuffConfig: {fileID: 11400000, guid: b7edea99fe0a1c44fad40b67892af964, type: 2}
+    ConditionType: 2
+    ConditionParam: 3
+    DisplayName: "\u5C3E\u7FFC\u53CD\u51FB"
+    Description: "\u7D2F\u8BA1\u88AB\u547D\u4E2D 30 \u6B21\u89E3\u9501"

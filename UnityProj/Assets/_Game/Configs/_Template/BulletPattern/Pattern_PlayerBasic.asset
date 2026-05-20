@@ -45,7 +45,7 @@ MonoBehaviour:
   Lifetime: 4
   DelayBeforeAccel: 0
   DelaySpeedScale: 0
-  AccelDuration: 0.3
+  AccelDuration: 0
   IsHoming: 0
   HomingStrength: 2
   HomingDelay: 0

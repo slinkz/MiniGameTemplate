@@ -22,11 +22,12 @@ namespace Game.ShooterGame
 
             if (data is BattleLevelData battleData)
             {
-                _battleController.SetLaunchContext(battleData.LevelIndex);
+                // V2 Sprint 2: 传递完整数据（含装备技能/被动）
+                _battleController.SetLaunchContext(battleData);
             }
             else
             {
-                _battleController.SetLaunchContext(null);
+                _battleController.SetLaunchContext((int?)null);
             }
 
             // 显式触发战斗初始化，消除 Start() 时序竞争

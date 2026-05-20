@@ -569,6 +569,9 @@ MonoBehaviour:
   _defeatPanelRef: {fileID: 489195642}
   _joystickControllerRef: {fileID: 2074278862}
   _playerInputBridge: {fileID: 1740805478}
+  _normalDropTable: {fileID: 11400000, guid: c06a4dc863574c4478f7a29b1cedb073, type: 2}
+  _eliteDropTable: {fileID: 11400000, guid: 43b31c647eed1734788cbe77f9760b19, type: 2}
+  _pickupMaterial: {fileID: 2100000, guid: fe253be44246c7c41b5770332c7628dd, type: 2}
 --- !u!4 &1736835541
 Transform:
   m_ObjectHideFlags: 0

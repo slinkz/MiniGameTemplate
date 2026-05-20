@@ -37,7 +37,7 @@ MonoBehaviour:
   Size: {x: 1, y: 1}
   RotateToDirection: 1
   CollisionRadius: 0.15
-  MotionType: 2
+  MotionType: 0
   SineAmplitude: 1
   SineFrequency: 0.5
   SpiralAngularVelocity: 30

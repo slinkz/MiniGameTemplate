@@ -88,6 +88,17 @@ namespace Game.ShooterGame
         private InvincibilityModifier _invincibilityModifier;
         private DamageRedirectModifier _damageRedirectModifier;
 
+        // V2 Sprint 2: 道具 & 技能系统
+        [Header("V2 Sprint 2: 道具系统")]
+        [SerializeField] private DropTableSO _normalDropTable;
+        [SerializeField] private DropTableSO _eliteDropTable;
+        [SerializeField] private Material _pickupMaterial;
+
+        private PickupSystem _pickupSystem;
+        private ItemDropSystem _itemDropSystem;
+        private PickupRenderer _pickupRenderer;
+        private BattleLevelData _battleLevelData;
+
 
         // UI Controller 接口（通过 Init 或 GetComponent 动态绑定）
         private IBattleHUDController _hudController;
@@ -176,6 +187,13 @@ namespace Game.ShooterGame
             }
         }
 
+        private void LateUpdate()
+        {
+            // V2 Sprint 2: 道具渲染（与弹幕/VFX 同阶段提交 DrawMesh）
+            if (_pickupRenderer != null && _pickupSystem != null)
+                _pickupRenderer.Render(_pickupSystem);
+        }
+
         private void OnDestroy()
         {
             // 取消订阅
@@ -192,6 +210,10 @@ namespace Game.ShooterGame
             // 清理弹幕系统（DontDestroyOnLoad，不随场景销毁）
             if (DanmakuSystem.Instance != null)
                 DanmakuSystem.Instance.ClearAll();
+
+            // 清理道具渲染器
+            _pickupRenderer?.Dispose();
+            _pickupRenderer = null;
         }
 
         // ── 初始化 ──
@@ -244,6 +266,42 @@ namespace Game.ShooterGame
 
             // 6c. 订阅基地 OnDamaged 事件 → 同步 BaseHP SO + 死亡判定
             _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
+
+            // 6d. V2 Sprint 2: 技能多槽位初始化（从 BattleLevelData 读取装备）
+            if (_battleLevelData?.EquippedSkills != null && _battleLevelData.EquippedSkills.Length > 0)
+            {
+                var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
+                skillComp?.InitWithEquipment(_battleLevelData.EquippedSkills);
+            }
+
+            // 6e. V2 Sprint 2: 被动技能在战斗开始时 ApplyBuff
+            if (_battleLevelData?.EquippedPassives != null)
+            {
+                var buffComp = _playerEntity.GetComponent(ComponentType.Buff) as BuffComponent;
+                if (buffComp != null)
+                {
+                    for (int i = 0; i < _battleLevelData.EquippedPassives.Length; i++)
+                    {
+                        var passive = _battleLevelData.EquippedPassives[i];
+                        if (passive != null)
+                            buffComp.ApplyBuff(passive);
+                    }
+                }
+            }
+
+            // 6f. V2 Sprint 2: 初始化道具系统
+            _pickupSystem = new PickupSystem();
+            _pickupSystem.Init(_playerEntity, _baseEntity, _progressManager);
+
+            _itemDropSystem = new ItemDropSystem();
+            _itemDropSystem.Init(_normalDropTable, _eliteDropTable, _pickupSystem);
+
+            // 6g. V2 Sprint 2: 初始化道具渲染器
+            _pickupRenderer = new PickupRenderer();
+            if (_pickupMaterial != null)
+                _pickupRenderer.Initialize(_pickupMaterial);
+            else
+                Debug.LogWarning("[BattleController] _pickupMaterial is null — 道具将不可见！请在 Inspector 中赋值。");
 
             // 7. 初始化底线检测器（ET-003: 只传检测所需参数）
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
@@ -317,6 +375,15 @@ namespace Game.ShooterGame
                 new Vector2(0, -5f),
                 270f); // 朝上（竖版飞机默认朝上）
             // Camp 由 EntityConfigSO.Camp 自动设置，SG_Player 配置为 Player 阵营
+
+            // GDD v1.6: 全自动射击——Spawn 后立即设置 ControlComponent（不等 InputBridge.Init，
+            // 因为中间有 await 会导致 Entity Tick 使用默认 Vector2.right 瞄准方向）
+            var ctrl = _playerEntity.GetComponent(ComponentType.Control) as ControlComponent;
+            if (ctrl != null)
+            {
+                ctrl.SetAttackInput(true);
+                ctrl.SetAimInput(Vector2.up);
+            }
         }
 
         // ── V2 Sprint 1: 伤害转发链路 ──
@@ -357,6 +424,9 @@ namespace Game.ShooterGame
 
             var ctx = evt.Context;
             playerHealth.TakeDamage(ref ctx);
+
+            // V2 Sprint 2: 记录被命中次数（成就 ID=3 用）
+            _progressManager?.RecordHit();
 
             // BaseHP SO 同步已由 OnBaseDamaged 统一处理
         }
@@ -411,6 +481,9 @@ namespace Game.ShooterGame
                     SetSpawnerEnabled(false);
                     SetInputEnabled(false);
                     SetBattleTimePaused(true);
+                    // V2 Sprint 2: 记录死亡次数 + 刷新计数器
+                    _progressManager?.RecordDeath();
+                    _progressManager?.FlushCounters();
                     _defeatPanel?.Show();
                     break;
             }
@@ -460,6 +533,9 @@ namespace Game.ShooterGame
 
                 // 2. 波次推进检测
                 UpdateWaveIndex();
+
+                // 2b. V2 Sprint 2: 道具系统 Tick
+                _pickupSystem?.Tick(dt);
 
                 // 3. 通关判定
                 if (EntityManagerAccessor.Spawner.IsAllWavesCleared)
@@ -530,6 +606,9 @@ namespace Game.ShooterGame
                 if (health != null && health.IsDead)
                 {
                     _killCount.ApplyChange(1);
+
+                    // V2 Sprint 2: 触发道具掉落
+                    _itemDropSystem?.OnEnemyKilled(entity.Position);
                 }
             }
         }
@@ -559,6 +638,17 @@ namespace Game.ShooterGame
         public void SetLaunchContext(int? levelIndex)
         {
             _launchLevelIndex = levelIndex;
+        }
+
+        /// <summary>
+        /// V2 Sprint 2: 接收完整的 BattleLevelData（含装备数据）。
+        /// 由 BattleFlowHandler.OnFlowEnter 调用。
+        /// </summary>
+        public void SetLaunchContext(BattleLevelData data)
+        {
+            if (data == null) return;
+            _launchLevelIndex = data.LevelIndex;
+            _battleLevelData = data;
         }
 
         /// <summary>
@@ -694,6 +784,10 @@ namespace Game.ShooterGame
 
                 int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
 
+                // V2 Sprint 2: 更新成就计数器
+                _progressManager?.UpdateMaxKills(_killCount.Value);
+                _progressManager?.FlushCounters();
+
                 // 本地写入 + 触发 EnqueueUpload
                 _progressManager?.MarkLevelCleared(clearedLevelIndex);
 
@@ -755,6 +849,33 @@ namespace Game.ShooterGame
 
             // 3c. 重新订阅基地 OnDamaged 事件
             _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
+
+            // 3d. V2 Sprint 2: 重新注入技能多槽位
+            if (_battleLevelData?.EquippedSkills != null && _battleLevelData.EquippedSkills.Length > 0)
+            {
+                var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
+                skillComp?.InitWithEquipment(_battleLevelData.EquippedSkills);
+            }
+
+            // 3e. V2 Sprint 2: 重新施加被动 Buff
+            if (_battleLevelData?.EquippedPassives != null)
+            {
+                var buffComp = _playerEntity.GetComponent(ComponentType.Buff) as BuffComponent;
+                if (buffComp != null)
+                {
+                    for (int i = 0; i < _battleLevelData.EquippedPassives.Length; i++)
+                    {
+                        var passive = _battleLevelData.EquippedPassives[i];
+                        if (passive != null)
+                            buffComp.ApplyBuff(passive);
+                    }
+                }
+            }
+
+            // 3f. V2 Sprint 2: 重置道具系统
+            _pickupSystem?.Clear();
+            _itemDropSystem?.Reset();
+            _pickupSystem?.Init(_playerEntity, _baseEntity, _progressManager);
 
             // 4. 重新初始化底线检测器
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0

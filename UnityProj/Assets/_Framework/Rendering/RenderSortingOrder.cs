@@ -16,6 +16,9 @@ namespace MiniGameTemplate.Rendering
         /// <summary>激光默认层</summary>
         public const int LaserDefault = 120;
 
+        /// <summary>道具层（弹丸之上、VFX 之下）</summary>
+        public const int Pickup = 150;
+
         /// <summary>VFX 层</summary>
         public const int VFX = 200;
 

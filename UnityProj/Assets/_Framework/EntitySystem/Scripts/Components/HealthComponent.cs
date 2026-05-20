@@ -230,6 +230,20 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
+        /// 治疗（恢复 HP，不超过 MaxHp）。V2 Sprint 2：道具修复用。
+        /// </summary>
+        /// <param name="amount">恢复量（正整数）</param>
+        /// <returns>实际恢复量</returns>
+        public int Heal(int amount)
+        {
+            if (!IsActive || amount <= 0) return 0;
+            int before = _currentHp;
+            _currentHp += amount;
+            if (_currentHp > _maxHp) _currentHp = _maxHp;
+            return _currentHp - before;
+        }
+
+        /// <summary>
         /// 直接设置 HP（用于治疗/满血重置等非伤害场景）。
         /// </summary>
         public void SetHp(int hp)

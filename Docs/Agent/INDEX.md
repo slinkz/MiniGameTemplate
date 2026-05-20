@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-19 10:20 | 文件总数：84
+> 最后更新：2026-05-19 22:10 | 文件总数：85
 
 ---
 
@@ -111,7 +111,7 @@
 | CloudSaveSystem | SG_TDD_06 §4.2 | V3 云端权威 ISaveSystem 实现（local+cloud 覆盖，不 merge） |
 | WxAuthService | SG_TDD_06 §2.3 | 微信静默登录（cloud function auto-inject openid） |
 | CloudSyncService | SG_TDD_06 §3.5 | 云端进度同步（Pull覆盖+EnqueueUpload+Retry，V3 不再 seed/merge） |
-| SharedProgressData | SG_TDD_06 §3.3 | V2 共享进度 DTO（version + clearedLevels） |
+| SharedProgressData | SG_TDD_06 §3.3 + SG_V2_TDD_02 §S2.5 | V3 共享进度 DTO（version + clearedLevels + 解锁/成就/星级） |
 | WXDataCDNHelper | WECHAT_INTEGRATION §CDN地址架构 | 运行时从 JS 层 DATA_CDN 读取 CDN 地址（单一数据源） |
 | CDN 单一数据源 | WECHAT_INTEGRATION §CDN地址架构 | CDN 只在微信转换面板配一处，运行时 WXDataCDNHelper 读取 |
 | 主动技能（6种） | SG_GDD_01 §各技能节 | 散射/穿透/追踪/范围/护盾/激光 |
@@ -181,3 +181,5 @@
 | SG_P3_ACCEPTANCE_PLAN | — | — | SG-P3 FairyGUI 白模包验收计划（✅ 验收通过 2026-05-06） |
 | SG_P4_TASKLIST | — | — | SG-P4 集成验收任务清单（✅ 全部通过 2026-05-17） |
 | APPFLOW_ACCEPTANCE_PLAN | — | — | AppFlow 导航系统验收计划（⬜ 待天命人验收） |
+| SG_V2_S1_ACCEPTANCE | — | — | V2 Sprint 1 验收手册（✅ 验收通过 2026-05-19） |
+| SG_V2_S2_ACCEPTANCE | — | — | V2 Sprint 2 验收手册（⬜ 待验收） |

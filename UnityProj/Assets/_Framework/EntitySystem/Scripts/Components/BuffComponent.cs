@@ -26,7 +26,7 @@ namespace MiniGameTemplate.Entity
         public int TickOrder => TickOrders.Buff; // 50
 
         // ── 常量 ──
-        private const int MAX_BUFFS = 8;
+        private const int MAX_BUFFS = 16;
 
         // v0.4（GD-004）：属性修正 Clamp 常量 [占位符]
         private const float MIN_MOVE_SPEED_RATIO = 0.4f;
