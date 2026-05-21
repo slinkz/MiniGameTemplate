@@ -9,16 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4054456887634494681113d9c4aa7d25, type: 3}
-  m_Name: SG_Skill_LaserBeam
+  m_Script: {fileID: 11500000, guid: adb4a6d1e09c9834f86fdaead38615ef, type: 3}
+  m_Name: SG_Passive_Crit
   m_EditorClassIdentifier: 
-  DisplayName: "\u6FC0\u5149\u5C04\u7EBF"
-  TriggerMode: 1
-  CooldownTime: 3
-  CastTime: 0.2
-  RecoveryTime: 0.6
-  Effects: []
-  AttachedDotConfig: {fileID: 11400000, guid: 3d263146d75bed0418ddf40dbbd0364e, type: 2}
+  DisplayName: "\u66B4\u51FB\u63D0\u5347"
+  PassiveId: 5002
+  CooldownTime: 8
+  TriggerMode: 0
+  LinkedBuff: {fileID: 11400000, guid: 0e15f253246a18f498d4853d3fe3248d, type: 2}
+  ActivateEffects: []
+  BulletDirections: 0
   references:
     version: 2
     RefIds: []

@@ -7,8 +7,8 @@ namespace Game.ShooterGame
 {
     /// <summary>
     /// 被动技能解锁表 SO。策划配置所有被动技能的解锁条件。
-    /// 被动走 Buff 桥接（BuffConfigSO）。
-    /// TDD_02 S2.1
+    /// V2 Sprint 3：被动走 PassiveAbilitySO（CD 驱动 + Buff 桥接）。
+    /// TDD_02 S2.1 → TDD_03 S3.5
     /// </summary>
     [CreateAssetMenu(menuName = "ShooterGame/PassiveUnlockTable")]
     public class PassiveUnlockTableSO : ScriptableObject
@@ -16,8 +16,8 @@ namespace Game.ShooterGame
         [Serializable]
         public struct Entry
         {
-            [Tooltip("被动对应的 Buff 配置（被动走 Buff 桥接）")]
-            public BuffConfigSO BuffConfig;
+            [Tooltip("被动技能配置（PassiveAbilitySO）")]
+            public PassiveAbilitySO PassiveConfig;
             public UnlockConditionType ConditionType;
             [Tooltip("ClearLevel=关卡编号(1-based), Achievement=成就ID")]
             public int ConditionParam;
@@ -42,16 +42,16 @@ namespace Game.ShooterGame
             var seen = new HashSet<int>();
             for (int i = 0; i < _entries.Length; i++)
             {
-                if (_entries[i].BuffConfig == null)
+                if (_entries[i].PassiveConfig == null)
                 {
-                    Debug.LogError($"[PassiveUnlockTable] Entry[{i}] BuffConfig 引用为空", this);
+                    Debug.LogError($"[PassiveUnlockTable] Entry[{i}] PassiveConfig 引用为空", this);
                     continue;
                 }
 
-                int id = _entries[i].BuffConfig.GetInstanceID();
+                int id = _entries[i].PassiveConfig.GetInstanceID();
                 if (!seen.Add(id))
                 {
-                    Debug.LogError($"[PassiveUnlockTable] 重复被动: {_entries[i].BuffConfig.name}", this);
+                    Debug.LogError($"[PassiveUnlockTable] 重复被动: {_entries[i].PassiveConfig.name}", this);
                 }
 
                 if (_entries[i].ConditionType == UnlockConditionType.ClearLevel)

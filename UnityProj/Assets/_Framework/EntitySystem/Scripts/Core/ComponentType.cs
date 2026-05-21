@@ -18,7 +18,8 @@ namespace MiniGameTemplate.Entity
         Attack = 9,
         Buff = 10,     // Phase 3A (P3.4)
         EnemyShoot = 11, // V2 Sprint 1: 敌机射击组件
-        // 预留 12~15
+        Passive = 12,   // V2 Sprint 3: 被动技能组件
+        // 预留 13~15
         MAX = 16
     }
 }

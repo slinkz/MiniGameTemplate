@@ -9,12 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f87802753d999748bccc9e401f30424, type: 3}
-  m_Name: SG_Passive_Retaliate
+  m_Script: {fileID: 11500000, guid: 0e336069261ee41459ce55a53f7a5e03, type: 3}
+  m_Name: SG_Dot_Burn
   m_EditorClassIdentifier: 
-  DisplayName: "\u5C3E\u7FFC\u53CD\u51FB"
-  BuffId: 2004
-  Duration: 0
-  MoveSpeedModifier: 1
-  AttackIntervalModifier: 1
-  DamageTakenModifier: 1
+  DisplayName: "\u71C3\u70E7"
+  DotId: 4001
+  Tag: 1
+  DamagePerTick: 5
+  Interval: 0.5
+  Duration: 3
+  VfxPrefab: {fileID: 0}

@@ -6,7 +6,7 @@ namespace Game.ShooterGame
     /// <summary>
     /// 技能解锁管理器——纯 C# 服务，不继承 MonoBehaviour。
     /// 查询 SkillUnlockTableSO / PassiveUnlockTableSO + SG_ProgressManager 计算解锁状态。
-    /// TDD_02 S2.1
+    /// TDD_02 S2.1 → TDD_03 S3.5（Sprint 3 升级 PassiveAbilitySO）
     /// </summary>
     public class SkillUnlockManager
     {
@@ -16,13 +16,13 @@ namespace Game.ShooterGame
 
         // 缓存上次已解锁列表（用于 CheckNewUnlocks 对比）
         private readonly List<SkillConfigSO> _lastUnlockedSkills = new List<SkillConfigSO>(8);
-        private readonly List<BuffConfigSO> _lastUnlockedPassives = new List<BuffConfigSO>(4);
+        private readonly List<PassiveAbilitySO> _lastUnlockedPassives = new List<PassiveAbilitySO>(4);
 
         // 复用 buffer —— 避免每次调用都 new List（Y-3 优化）
         private readonly List<SkillConfigSO> _skillBuffer = new List<SkillConfigSO>(8);
-        private readonly List<BuffConfigSO> _passiveBuffer = new List<BuffConfigSO>(4);
+        private readonly List<PassiveAbilitySO> _passiveBuffer = new List<PassiveAbilitySO>(4);
         private readonly List<SkillConfigSO> _newSkillBuffer = new List<SkillConfigSO>(4);
-        private readonly List<BuffConfigSO> _newPassiveBuffer = new List<BuffConfigSO>(4);
+        private readonly List<PassiveAbilitySO> _newPassiveBuffer = new List<PassiveAbilitySO>(4);
 
         public SkillUnlockManager(
             SkillUnlockTableSO skillTable,
@@ -56,10 +56,10 @@ namespace Game.ShooterGame
         }
 
         /// <summary>
-        /// 获取当前已解锁的被动技能列表（返回 BuffConfigSO）。
+        /// 获取当前已解锁的被动技能列表（返回 PassiveAbilitySO）。
         /// 注意：返回的是内部 buffer 引用，调用方不应缓存此引用。
         /// </summary>
-        public List<BuffConfigSO> GetUnlockedPassives()
+        public List<PassiveAbilitySO> GetUnlockedPassives()
         {
             _passiveBuffer.Clear();
             for (int i = 0; i < _passiveTable.Count; i++)
@@ -67,7 +67,7 @@ namespace Game.ShooterGame
                 var entry = _passiveTable.GetEntry(i);
                 if (IsConditionMet(entry.ConditionType, entry.ConditionParam))
                 {
-                    _passiveBuffer.Add(entry.BuffConfig);
+                    _passiveBuffer.Add(entry.PassiveConfig);
                 }
             }
             return _passiveBuffer;
@@ -80,7 +80,7 @@ namespace Game.ShooterGame
         /// </summary>
         public bool CheckNewUnlocks(
             out List<SkillConfigSO> newSkills,
-            out List<BuffConfigSO> newPassives)
+            out List<PassiveAbilitySO> newPassives)
         {
             _newSkillBuffer.Clear();
             _newPassiveBuffer.Clear();

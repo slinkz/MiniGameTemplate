@@ -31,6 +31,21 @@ namespace MiniGameTemplate.Entity
         [Header("效果列表")]
         [SerializeReference]
         public ISkillEffect[] Effects = System.Array.Empty<ISkillEffect>();
+
+        [Header("V2 Sprint 3: DOT 附带")]
+        [Tooltip("技能命中时附带施加的 DOT（null=不施加）。用于激光等持续命中技能。")]
+        public DotConfigSO AttachedDotConfig;
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Effects 为空时提示（预期 Sprint 3+ 才实装 ISkillEffect）
+            if (Effects == null || Effects.Length == 0)
+            {
+                Debug.LogWarning($"[SkillConfigSO] '{name}' Effects 为空——技能无实际效果", this);
+            }
+        }
+#endif
     }
 
     public enum SkillTriggerMode : byte

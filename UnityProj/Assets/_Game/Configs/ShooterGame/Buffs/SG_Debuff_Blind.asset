@@ -10,11 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f87802753d999748bccc9e401f30424, type: 3}
-  m_Name: SG_Passive_Magnet
+  m_Name: SG_Debuff_Blind
   m_EditorClassIdentifier: 
-  DisplayName: "\u78C1\u5438\u8303\u56F4"
-  BuffId: 2003
-  Duration: 0
+  DisplayName: "\u81F4\u76F2"
+  BuffId: 3003
+  Tag: 1
+  StackMode: 0
+  MaxStacks: 1
+  Duration: 2
   MoveSpeedModifier: 1
-  AttackIntervalModifier: 1
+  AttackIntervalModifier: 3
   DamageTakenModifier: 1
+  BulletCountModifier: 1
+  GrantsPierce: 0
+  CritRateBonus: 0
+  CritMultiplierOverride: 0
+  PickupRadiusModifier: 1
+  VfxPrefab: {fileID: 0}

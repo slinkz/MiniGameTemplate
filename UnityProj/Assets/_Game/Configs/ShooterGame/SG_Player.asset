@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Player
   Camp: 1
-  Components: 0103040507090a
+  Components: 0103040507090a0c
   PoolMax: 128
   MaxHp: 1
   MoveSpeed: 5

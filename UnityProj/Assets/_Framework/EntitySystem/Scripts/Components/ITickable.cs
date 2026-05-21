@@ -16,11 +16,12 @@ namespace MiniGameTemplate.Entity
 
     /// <summary>
     /// Tick 优先级常量。各组件使用此常量确保执行顺序稳定。
-    /// 时序：Buff=50 → Decision=100 → AutoAim=120 → Attack=150 → Skill=160 → Health=250 → Movement=300 → Animation=400
+    /// 时序：Buff=50 → Passive=60 → Decision=100 → AutoAim=120 → Attack=150 → Skill=160 → Health=250 → Movement=300 → Animation=400
     /// </summary>
     public static class TickOrders
     {
         public const int Buff      = 50;   // BuffComponent（属性修正最先生效）
+        public const int Passive   = 60;   // PassiveComponent（V2 Sprint 3：被动 CD 驱动）
         public const int Decision  = 100;  // ControlComponent / AIComponent
         public const int AutoAim   = 120;  // AutoAimComponent（Attack 之前）
         public const int Attack    = 150;  // AttackComponent

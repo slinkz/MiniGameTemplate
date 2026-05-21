@@ -88,6 +88,9 @@ namespace Game.ShooterGame
         private InvincibilityModifier _invincibilityModifier;
         private DamageRedirectModifier _damageRedirectModifier;
 
+        // V2 Sprint 3: Buff 伤害修正（共享实例——无状态，所有 Entity 复用）
+        private readonly BuffDamageModifier _buffDamageModifier = new BuffDamageModifier();
+
         // V2 Sprint 2: 道具 & 技能系统
         [Header("V2 Sprint 2: 道具系统")]
         [SerializeField] private DropTableSO _normalDropTable;
@@ -199,7 +202,10 @@ namespace Game.ShooterGame
             // 取消订阅
             var mgr = EntityManagerAccessor.Instance;
             if (mgr != null)
+            {
                 mgr.OnDespawned -= OnEntityDespawned;
+                mgr.OnSpawned -= OnEntitySpawnedRegisterBuff; // V2 Sprint 3
+            }
 
             // 清理暂停按钮事件绑定
             var hudView = _hudController?.GetView();
@@ -264,6 +270,15 @@ namespace Game.ShooterGame
             // 6b. V2 Sprint 1: 注入伤害转发链路
             SetupDamageRedirectChain();
 
+            // 6b2. V2 Sprint 3: 为基地和玩家注册 BuffDamageModifier
+            RegisterBuffDamageModifier(_baseEntity);
+            RegisterBuffDamageModifier(_playerEntity);
+
+            // 6b3. V2 Sprint 3: 订阅 OnSpawned 为后续敌机自动注册
+            var mgr0 = EntityManagerAccessor.Instance;
+            if (mgr0 != null)
+                mgr0.OnSpawned += OnEntitySpawnedRegisterBuff;
+
             // 6c. 订阅基地 OnDamaged 事件 → 同步 BaseHP SO + 死亡判定
             _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
 
@@ -274,19 +289,11 @@ namespace Game.ShooterGame
                 skillComp?.InitWithEquipment(_battleLevelData.EquippedSkills);
             }
 
-            // 6e. V2 Sprint 2: 被动技能在战斗开始时 ApplyBuff
-            if (_battleLevelData?.EquippedPassives != null)
+            // 6e. V2 Sprint 3: 被动技能 CD 驱动（升级 Sprint 2 的开局 ApplyBuff 方案）
+            if (_battleLevelData?.EquippedPassives != null && _battleLevelData.EquippedPassives.Length > 0)
             {
-                var buffComp = _playerEntity.GetComponent(ComponentType.Buff) as BuffComponent;
-                if (buffComp != null)
-                {
-                    for (int i = 0; i < _battleLevelData.EquippedPassives.Length; i++)
-                    {
-                        var passive = _battleLevelData.EquippedPassives[i];
-                        if (passive != null)
-                            buffComp.ApplyBuff(passive);
-                    }
-                }
+                var passiveComp = _playerEntity.GetComponent(ComponentType.Passive) as PassiveComponent;
+                passiveComp?.InitWithPassives(_battleLevelData.EquippedPassives);
             }
 
             // 6f. V2 Sprint 2: 初始化道具系统
@@ -429,6 +436,31 @@ namespace Game.ShooterGame
             _progressManager?.RecordHit();
 
             // BaseHP SO 同步已由 OnBaseDamaged 统一处理
+        }
+
+        // ── V2 Sprint 3: BuffDamageModifier 注册 ──
+
+        /// <summary>
+        /// 为指定 Entity 注册 BuffDamageModifier（共享实例）。
+        /// 只对有 HealthComponent + BuffComponent 的 Entity 注册。
+        /// </summary>
+        private void RegisterBuffDamageModifier(EntityClass entity)
+        {
+            if (entity == null) return;
+            var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
+            if (health == null) return;
+            // 检查是否有 BuffComponent（无则不需要修正）
+            var buff = entity.GetComponent(ComponentType.Buff);
+            if (buff == null) return;
+            health.AddModifier(_buffDamageModifier);
+        }
+
+        /// <summary>
+        /// EntityManager.OnSpawned 回调——自动为所有新生成的 Entity 注册 BuffDamageModifier。
+        /// </summary>
+        private void OnEntitySpawnedRegisterBuff(EntityClass entity, EntityConfigSO config)
+        {
+            RegisterBuffDamageModifier(entity);
         }
 
         /// <summary>
@@ -847,6 +879,10 @@ namespace Game.ShooterGame
             // 3b. V2 Sprint 1: 重新注入伤害转发链路
             SetupDamageRedirectChain();
 
+            // 3b2. V2 Sprint 3: 重新注册 BuffDamageModifier
+            RegisterBuffDamageModifier(_baseEntity);
+            RegisterBuffDamageModifier(_playerEntity);
+
             // 3c. 重新订阅基地 OnDamaged 事件
             _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
 
@@ -857,19 +893,11 @@ namespace Game.ShooterGame
                 skillComp?.InitWithEquipment(_battleLevelData.EquippedSkills);
             }
 
-            // 3e. V2 Sprint 2: 重新施加被动 Buff
-            if (_battleLevelData?.EquippedPassives != null)
+            // 3e. V2 Sprint 3: 重新初始化被动组件
+            if (_battleLevelData?.EquippedPassives != null && _battleLevelData.EquippedPassives.Length > 0)
             {
-                var buffComp = _playerEntity.GetComponent(ComponentType.Buff) as BuffComponent;
-                if (buffComp != null)
-                {
-                    for (int i = 0; i < _battleLevelData.EquippedPassives.Length; i++)
-                    {
-                        var passive = _battleLevelData.EquippedPassives[i];
-                        if (passive != null)
-                            buffComp.ApplyBuff(passive);
-                    }
-                }
+                var passiveComp = _playerEntity.GetComponent(ComponentType.Passive) as PassiveComponent;
+                passiveComp?.InitWithPassives(_battleLevelData.EquippedPassives);
             }
 
             // 3f. V2 Sprint 2: 重置道具系统

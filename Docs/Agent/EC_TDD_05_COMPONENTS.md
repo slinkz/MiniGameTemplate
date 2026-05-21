@@ -1,7 +1,7 @@
 ﻿---
 system: entity-component
 scope: components-detail
-last_verified: 2026-05-02
+last_verified: 2026-05-21
 depends_on: [EC_TDD_01_OVERVIEW, EC_TDD_02_CORE_ARCH]
 related_code: Assets/_Framework/EntitySystem/Components/*.cs
 ---
@@ -338,28 +338,52 @@ if (buff != null)
 
 **近战攻击（GD-R4-009）**：统一走弹幕系统（射程≈0.5、速度=0、存活≈0.1s）。
 
-### 4.10 BuffComponent（Phase 3A P3.4）
+### 4.10 BuffComponent（V2 扩展 — Sprint 3）
 
-> 管理 Entity 身上的 Buff 列表和聚合属性修正。
+> 管理 Entity 身上的 Buff/DOT 列表和聚合属性修正。
 
 **TickOrder**：50（最先执行，属性修正在 Decision/Attack 之前生效）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `Type` | `ComponentType.Buff = 10` | |
-| `MAX_BUFFS` | `const 16` | 固定槽位数组，零 GC（v2.2 扩容：8→16，超限 LogWarning 提示扩容） |
+| `MAX_BUFFS` | `const 16` | 固定槽位数组，零 GC |
+| `_buffSlots[16]` | `BuffSlot` | Buff 槽位（含 Tag/StackMode/VfxInstanceId/BulletCountMod） |
+| `_dotSlots[16]` | `DotSlot` | DOT 槽位（DotId/DmgPerTick/Interval/Duration/Timer） |
 | `MoveSpeedModifier` | `float`（只读） | 乘法叠加 → Clamp[0.4, 2.5] |
-| `AttackIntervalModifier` | `float`（只读） | 乘法叠加 → Clamp[0.3, 3.0] |
-| `DamageTakenModifier` | `float`（只读） | 乘法叠加，不 Clamp（允许无敌/脆弱） |
+| `AttackIntervalModifier` | `float`（只读） | 乘法叠加 → Clamp[MIN_ATTACK_INTERVAL_RATIO=0.3, 3.0] |
+| `DamageTakenModifier` | `float`（只读） | 乘法叠加，不 Clamp |
+| `HasActivePierce` | `bool`（只读） | 穿透状态（被动桥接 Buff 设置） |
+| `CritRateBonus` | `float`（只读） | 暴击率加成 |
+| `PickupRadiusModifier` | `float`（只读） | 拾取半径倍率 |
 
 **API**：
-- `ApplyBuff(BuffConfigSO)` → 同 ID 完整刷新（SA-013），槽满返回 false
-- `RemoveBuff(int buffId)` → 按 ID 移除
-- `ActiveBuffCount` → 当前活跃数
+- `ApplyBuff(BuffConfigSO)` → 同 ID Refresh/Stack 模式 | 槽满 LogWarning
+- `RemoveBuff(int buffId)` / `RemoveByTag(BuffTag)` — Tag 清除同时遍历 Buff+DOT
+- `ApplyDot(DotConfigSO)` → 同 ID 刷新 Duration
+- `GetBulletCountModifier()` → 乘法累积 BulletCountMod
 
-**属性同步**：Buff → Movement push by-ID（`SpeedModifierIds.Buff`），Attack pull `AttackIntervalModifier`
+**Tick 逻辑**：Buff 倒计时 → 过期移除 → DOT while(timer>=interval) DealDamage → RecalcModifiers → SyncMoveSpeed
 
-**Tick 逻辑**：倒计时 → 过期移除 → `RecalcModifiers()` → `SyncMoveSpeedToMovement()`
+### 4.11 PassiveComponent（V2 Sprint 3 新增）
+
+> 3 槽被动技能组件，独立 CD 周期触发。
+
+**TickOrder**：60（在 Buff=50 之后）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `Type` | `ComponentType.Passive = 12` | |
+| `MAX_PASSIVES` | `const 3` | 固定 3 槽位 |
+| `PassiveSlot[3]` | struct | Config/CooldownTimer/IsActive/BuffApplied |
+
+**API**：
+- `InitWithPassives(PassiveAbilitySO[])` → 初始 CD=1f，订阅 OnCollisionHit
+- `Reset()` → 取消 OnCollisionHit 订阅
+
+**触发模式**：
+- `AutoOnReady`：CD≤0 自动激活 → ApplyBuff(LinkedBuff) 或执行 ActivateEffects
+- `OnHit`：OnCollisionHit 事件 → CD 就绪时激活（CD 归零等待下一 tick）
 
 ---
 

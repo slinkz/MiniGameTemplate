@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint3-buff-dot-passive
-last_verified: 2026-05-18
+last_verified: 2026-05-21
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_02_SKILL_EQUIP_ITEM, SG_GDD_02_PASSIVE_BUFFS]
 related_code: Assets/_Framework/EntitySystem/Components/Buff*, Passive*, Assets/_Game/Configs/ShooterGame/Buffs/*, Dots/*, Passives/*
 ---

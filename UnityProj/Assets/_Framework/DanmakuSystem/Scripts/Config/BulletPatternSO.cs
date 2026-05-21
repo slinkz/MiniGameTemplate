@@ -65,5 +65,9 @@ namespace MiniGameTemplate.Danmaku
 
         [Header("音效")]
         public AudioClipSO FireSFX;
+
+        [Header("V2 Sprint 3: DOT（V3 准备）")]
+        [Tooltip("弹丸命中时附带施加的 DOT（null=不施加）。V2 全部 null——无特殊子弹。")]
+        public MiniGameTemplate.Entity.DotConfigSO OnHitDotConfig;
     }
 }

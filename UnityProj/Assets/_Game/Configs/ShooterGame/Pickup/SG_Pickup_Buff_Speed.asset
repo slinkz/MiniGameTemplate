@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DisplayName: "\u75BE\u98CE\u52A0\u901F"
   Type: 0
-  BuffConfig: {fileID: 11400000, guid: 098cf8387406277469cc9f2ed740eafb, type: 2}
+  BuffConfig: {fileID: 11400000, guid: 50dafa34a81b7f64ab7d6160ccd85dc8, type: 2}
   RepairAmount: 10
   AmmoBuffConfig: {fileID: 0}
   CoinAmount: 10

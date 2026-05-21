@@ -9,16 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4054456887634494681113d9c4aa7d25, type: 3}
-  m_Name: SG_Skill_LaserBeam
+  m_Script: {fileID: 11500000, guid: adb4a6d1e09c9834f86fdaead38615ef, type: 3}
+  m_Name: SG_Passive_Retaliate
   m_EditorClassIdentifier: 
-  DisplayName: "\u6FC0\u5149\u5C04\u7EBF"
+  DisplayName: "\u5C3E\u7FFC\u53CD\u51FB"
+  PassiveId: 5004
+  CooldownTime: 5
   TriggerMode: 1
-  CooldownTime: 3
-  CastTime: 0.2
-  RecoveryTime: 0.6
-  Effects: []
-  AttachedDotConfig: {fileID: 11400000, guid: 3d263146d75bed0418ddf40dbbd0364e, type: 2}
+  LinkedBuff: {fileID: 0}
+  ActivateEffects: []
+  BulletDirections: 8
   references:
     version: 2
     RefIds: []

@@ -1,8 +1,8 @@
 ---
 system: entity-component
 scope: so-entity-configs
-last_verified: 2026-05-02
-related_code: Assets/_Framework/EntitySystem/Scripts/Config/*.cs, Assets/_Framework/EntitySystem/Scripts/View/SpriteAnimDataSO.cs
+last_verified: 2026-05-21
+related_code: Assets/_Framework/EntitySystem/Scripts/Config/*.cs, Assets/_Framework/EntitySystem/Scripts/View/SpriteAnimDataSO.cs, Assets/_Framework/EntitySystem/Scripts/Components/PassiveComponent.cs
 ---
 
 # SO 配置流程 — 02 Entity 系统
@@ -253,3 +253,60 @@ Idle → [触发] → Casting → [CastTime] → Execute Effects → Recovery �
 - `Clips[0]` = Idle（兜底动画）
 - AnimId 超出范围自动回退到 `Clips[0]`
 - 空数组 `GetClip()` 返回 null
+
+---
+
+## DotConfigSO（Sprint 3 新增）
+
+**菜单路径**：`Create → Entity/DotConfig`
+**命名空间**：`MiniGameTemplate.Entity`
+**源码**：`Assets/_Framework/EntitySystem/Scripts/Config/DotConfigSO.cs`
+**实例目录**：`Assets/_Game/Configs/ShooterGame/Dots/`
+
+### 字段清单
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `DotId` | `int` | 0 | 唯一 ID [4000,4999]（OnValidate 校验） |
+| `DisplayName` | `string` | `""` | 调试/UI 显示名 |
+| `DamagePerTick` | `int` | 1 | 每次 Tick 伤害 [Min(1)] |
+| `TickInterval` | `float` | 1f | Tick 间隔秒 [Min(0.1)] |
+| `Duration` | `float` | 3f | 持续时间秒 [Min(0.1)] |
+| `Tag` | `BuffTag` | Negative | DOT 标签 |
+| `VfxPrefab` | `GameObject` | null | VFX 预制件（V2 预留） |
+
+### 使用说明
+
+- 同 ID DOT 重复施加 → 刷新 Duration（不叠加伤害）
+- `BuffComponent.ApplyDot()` + `Tick()` 内 `while(timer>=interval)` 驱动
+- 激光技能通过 `SkillConfigSO.AttachedDotConfig` 引用
+
+---
+
+## PassiveAbilitySO（Sprint 3 新增）
+
+**菜单路径**：`Create → Entity/PassiveAbility`
+**命名空间**：`MiniGameTemplate.Entity`
+**源码**：`Assets/_Framework/EntitySystem/Scripts/Config/PassiveAbilitySO.cs`
+**实例目录**：`Assets/_Game/Configs/ShooterGame/Passives/`
+
+### 字段清单
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `PassiveId` | `int` | 0 | 唯一 ID [5000,5999]（OnValidate 校验） |
+| `DisplayName` | `string` | `""` | 调试/UI 显示名 |
+| `Description` | `string` | `""` | 描述文本 |
+| `Icon` | `Sprite` | null | 被动图标 |
+| `Cooldown` | `float` | 5f | CD 秒 [Min(0.1)] |
+| `TriggerMode` | `PassiveTriggerMode` | AutoOnReady | 触发模式：AutoOnReady / OnHit |
+| `LinkedBuff` | `BuffConfigSO` | null | 关联 Buff（桥接模式） |
+| `ActivateEffects` | `ISkillEffect[]` | `[]` | 即时型效果数组 |
+| `BulletDirections` | `int` | 0 | 环形弹方向数（PA-04 Retaliate 用） |
+
+### 使用说明
+
+- AutoOnReady：CD 归零自动激活 → ApplyBuff(LinkedBuff) 或执行 ActivateEffects
+- OnHit：订阅 `OnCollisionHit` 事件 → CD 就绪时激活
+- 最多 3 个被动并行（`PassiveComponent.MAX_PASSIVES = 3`）
+- `PassiveComponent.InitWithPassives()` 由 BattleController 调用

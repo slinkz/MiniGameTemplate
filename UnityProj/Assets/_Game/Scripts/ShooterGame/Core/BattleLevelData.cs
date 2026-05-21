@@ -27,9 +27,10 @@ namespace Game.ShooterGame
 
         /// <summary>
         /// 已装备的被动技能列表（最多 3 个）。
-        /// 被动走 Buff 桥接：每个 BuffConfigSO 在战斗开始时 ApplyBuff。
+        /// V2 Sprint 3：被动走 PassiveComponent CD 驱动。
+        /// 内部通过 LinkedBuff 桥接 BuffComponent。
         /// </summary>
-        [NonSerialized] public BuffConfigSO[] EquippedPassives;
+        [NonSerialized] public PassiveAbilitySO[] EquippedPassives;
 
         public override string ToString()
         {

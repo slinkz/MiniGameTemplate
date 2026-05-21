@@ -10,11 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f87802753d999748bccc9e401f30424, type: 3}
-  m_Name: SG_Buff_Zephyr
+  m_Name: SG_Buff_MoveUp
   m_EditorClassIdentifier: 
-  DisplayName: "\u75BE\u98CE"
-  BuffId: 1001
+  DisplayName: "\u79FB\u901F\u63D0\u5347"
+  BuffId: 1002
+  Tag: 0
+  StackMode: 0
+  MaxStacks: 1
   Duration: 5
   MoveSpeedModifier: 1.5
-  AttackIntervalModifier: 0.7
+  AttackIntervalModifier: 1
   DamageTakenModifier: 1
+  BulletCountModifier: 1
+  GrantsPierce: 0
+  CritRateBonus: 0
+  CritMultiplierOverride: 0
+  PickupRadiusModifier: 1
+  VfxPrefab: {fileID: 0}

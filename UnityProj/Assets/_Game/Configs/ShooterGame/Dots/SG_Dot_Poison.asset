@@ -9,12 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f87802753d999748bccc9e401f30424, type: 3}
-  m_Name: SG_Passive_CritUp
+  m_Script: {fileID: 11500000, guid: 0e336069261ee41459ce55a53f7a5e03, type: 3}
+  m_Name: SG_Dot_Poison
   m_EditorClassIdentifier: 
-  DisplayName: "\u66B4\u51FB\u5F3A\u5316"
-  BuffId: 2002
-  Duration: 0
-  MoveSpeedModifier: 1
-  AttackIntervalModifier: 1
-  DamageTakenModifier: 1
+  DisplayName: "\u4E2D\u6BD2"
+  DotId: 4002
+  Tag: 1
+  DamagePerTick: 3
+  Interval: 1
+  Duration: 5
+  VfxPrefab: {fileID: 0}
