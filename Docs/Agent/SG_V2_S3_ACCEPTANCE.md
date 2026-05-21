@@ -133,11 +133,11 @@ related_code: Assets/_Framework/EntitySystem/Scripts/Components/Buff*, Passive*,
 
 | # | 验收项 | 操作 | 预期 | 状态 |
 |---|--------|------|------|------|
-| D1 | 电弧 DOT | 装备激光技能出击 → 命中敌机 | 敌机每 0.3s 受 8 伤害，持续 1.5s（总伤 ~40） | ⬜ |
-| D2 | DOT 刷新 | 激光持续命中已有 DOT 的敌机 | Duration 刷新（不叠加伤害），伤害节奏不变 | ⬜ |
-| D3 | DOT 到期 | 激光停止命中，等待 1.5s | DOT 自动清除，敌机不再受 tick 伤害 | ⬜ |
-| D4 | 燃烧/中毒 预创建 | Inspector 检查 SO | SO 资产存在，V2 运行时无触发路径（无效果正常） | ⬜ |
-| D5 | DotId 范围 | T5 工具校验 | 4001~4003 ∈ [4000,4999] | ⬜ |
+| D1 | 电弧 DOT | 装备激光技能出击 → 命中敌机 | 敌机每 0.3s 受 8 伤害，持续 1.5s（总伤 ~40） | ✅ 真机通过 |
+| D2 | DOT 刷新 | 激光持续命中已有 DOT 的敌机 | Duration 刷新（不叠加伤害），伤害节奏不变 | ✅ 真机通过 |
+| D3 | DOT 到期 | 激光停止命中，等待 1.5s | DOT 自动清除，敌机不再受 tick 伤害 | ✅ 真机通过 |
+| D4 | 燃烧/中毒 预创建 | Inspector 检查 SO | SO 资产存在，V2 运行时无触发路径（无效果正常） | ✅ MCP 验证 |
+| D5 | DotId 范围 | T5 工具校验 | 4001~4003 ∈ [4000,4999] | ✅ MCP: 12B+3D+4P 全合规 |
 
 ### 步骤 4：被动技能系统（E 系列）
 
@@ -158,17 +158,17 @@ related_code: Assets/_Framework/EntitySystem/Scripts/Components/Buff*, Passive*,
 
 | # | 场景 | 预期 | 状态 |
 |---|------|------|------|
-| G1 | 4 种 Buff 道具 | 拾取各 Buff 道具效果正确（SpeedUp/MoveUp/Shield/Berserk） | ⬜ |
-| G2 | Buff 到期清除 | Duration 后属性恢复，ActiveBuffCount 减少 | ⬜ |
-| G3 | DamageTaken 修正 | 护盾免伤 / 脆弱加伤 | ⬜ |
-| G4 | BulletCount 修正 | 火力全开子弹数 ×2（通过 GetBulletCountModifier 查询） | ⬜ |
-| G5 | 攻速钳制 | 极端叠加不突破比率 0.3 | ⬜ |
-| G6 | 电弧 DOT | 激光命中施加持续伤害 | ⬜ |
-| G7 | 4 种被动 | 各被动独立 CD + 效果正确 | ⬜ |
-| G8 | 被动 Buff 桥接 | 被动通过 Buff 实现，到期自动清除 | ⬜ |
-| G9 | PA-04 碰撞触发 | 被命中时反击弹幕 | ⬜ |
-| G10 | T5 ID 检测 | 菜单命令运行通过 | ⬜ |
-| G11 | SO OnValidate | 错误配置即时标红 | ⬜ |
+| G1 | 4 种 Buff 道具 | 拾取各 Buff 道具效果正确（SpeedUp/MoveUp/Shield/Berserk） | 🔜 延后至全 Sprint 完成后统一真机验收 |
+| G2 | Buff 到期清除 | Duration 后属性恢复，ActiveBuffCount 减少 | ✅ MCP: 1s Buff→Tick(1.1s)→Count 1→0, AI 0.50→1.00 |
+| G3 | DamageTaken 修正 | 护盾免伤 / 脆弱加伤 | ✅ MCP: Shield(×0)=0 → +Vuln(×2)=0 → -Shield=2.0 → clean=1.0 |
+| G4 | BulletCount 修正 | 火力全开子弹数 ×2（通过 GetBulletCountModifier 查询） | ✅ MCP: 注入 BCM=2 → GetBulletCountModifier()=2.0 |
+| G5 | 攻速钳制 | 极端叠加不突破比率 0.3 | ✅ MCP: ×0.5×0.3×0.1=0.015 → 钳制到 0.3000 |
+| G6 | 电弧 DOT | 激光命中施加持续伤害 | 🔜 延后至全 Sprint 完成后统一真机验收 |
+| G7 | 4 种被动 | 各被动独立 CD + 效果正确 | 🔜 延后至全 Sprint 完成后统一真机验收 |
+| G8 | 被动 Buff 桥接 | 被动通过 Buff 实现，到期自动清除 | 🔜 延后至全 Sprint 完成后统一真机验收 |
+| G9 | PA-04 碰撞触发 | 被命中时反击弹幕 | 🔜 延后至全 Sprint 完成后统一真机验收 |
+| G10 | T5 ID 检测 | 菜单命令运行通过 | ✅ MCP: 12B+3D+4P 全合规，零冲突零越界 |
+| G11 | SO OnValidate | 错误配置即时标红 | ✅ MCP: 5 个空 Effects SO Warning 正确触发 |
 
 ---
 
@@ -176,9 +176,9 @@ related_code: Assets/_Framework/EntitySystem/Scripts/Components/Buff*, Passive*,
 
 | # | 指标 | 目标 | 工具 | 状态 |
 |---|------|------|------|------|
-| P1 | BuffComponent.Tick | < 0.1ms（含 DOT） | Profiler Deep Profile | ⬜ |
-| P2 | PassiveComponent.Tick | < 0.05ms | Profiler Deep Profile | ⬜ |
-| P3 | 热路径零 GC | 0 bytes/frame（战斗循环） | Profiler Deep Profile | ⬜ |
+| P1 | BuffComponent.Tick | < 0.1ms（含 DOT） | Profiler Deep Profile | 🔜 延后至全 Sprint 完成后统一验收 |
+| P2 | PassiveComponent.Tick | < 0.05ms | Profiler Deep Profile | 🔜 延后至全 Sprint 完成后统一验收 |
+| P3 | 热路径零 GC | 0 bytes/frame（战斗循环） | Profiler Deep Profile | 🔜 延后至全 Sprint 完成后统一验收 |
 
 **性能验收操作**：
 1. 开启 Profiler → Deep Profile
@@ -267,15 +267,15 @@ var playerType = System.Type.GetType("MiniGameTemplate.Entity.Entity, MiniGameTe
 | E2 Crit 自动激活 | ✅ | CritRateBonus=0.2 |
 | E3 Magnet 自动激活 | ✅ | PickupRadiusModifier=2.0 |
 | E8 3 被动并行 | ✅ | 3 slots 各自独立 CD，互不干扰 |
-| D 系列（DOT） | ⬜ | 需激光技能实际命中（待真机） |
-| E4-E6（OnHit 被动） | ⬜ | 需实际碰撞事件（待真机） |
-| G 系列（集成） | 🔶 | 代码层全覆盖，物理碰撞链待真机 |
+| D 系列（DOT） | ✅ | D1~D3 真机通过, D4 MCP SO 验证, D5 MCP T5 校验(12B+3D+4P 全合规) |
+| E4-E6（OnHit 被动） | 🔜 | 延后至全 Sprint 完成后统一真机验收 |
+| G 系列（集成） | 🔶 | 6/11 MCP PASS, 5 项延后至统一真机验收 |
 
 ### 运行时错误
 ✅ 零 Error / 零 Warning（排除已知 LaserBeam Effects 空提示）
 
 ### 性能验收（§4）
-🔶 延后到真机 + Profiler Deep Profile
+🔜 延后至全 Sprint 完成后统一真机验收（天命人决策 2026-05-21）
 
 ---
 
@@ -326,4 +326,20 @@ var playerType = System.Type.GetType("MiniGameTemplate.Entity.Entity, MiniGameTe
 
 ---
 
-_创建于 2026-05-21 | v1.3（MCP 自动验收：编译/T5/SO/引用链/Buff全链路/被动系统 全 PASS）_
+### G 系列 MCP 集成验收（2026-05-21 22:20）
+
+| # | 场景 | 结果 | 验证方式 | 数据 |
+|---|------|------|---------|------|
+| G2 | Buff 到期清除 | ✅ | PlayMode + Tick 推进 | 1s Buff → Tick(0.5s) 仍在 → Tick(0.6s) 清除, AI 0.50→1.00 |
+| G3 | DamageTaken 修正 | ✅ | PlayMode + ApplyBuff/RemoveBuff | Shield(×0)=0 → +Vuln(×2)=0 → -Shield=2.0 → clean=1.0 |
+| G4 | BulletCount 修正 | ✅ | PlayMode + 运行时注入 BCM=2 | GetBulletCountModifier() 1→2→1 |
+| G5 | 攻速钳制 | ✅ | PlayMode + 三重攻速叠加 | ×0.5×0.3×0.1=0.015 → Clamp=0.3000 |
+| G10 | T5 ID 检测 | ✅ | Editor 菜单命令 | 12B+3D+4P 全合规，零冲突 |
+| G11 | SO OnValidate | ✅ | SetDirty 触发 | 5 个空 Effects SkillConfigSO Warning 全部触发 |
+
+**延后至全 Sprint 完成后统一真机验收**（天命人决策 2026-05-21）：
+- G1(道具拾取) / G6(DOT) / G7(被动效果) / G8(Buff桥接) / G9(碰撞反击)
+- E4-E6(OnHit 碰撞被动)
+- P1-P3(性能 Profiler)
+
+_创建于 2026-05-21 | v1.5（Sprint 3 逻辑验收关闭，真机/性能验收延后至统一验收）_

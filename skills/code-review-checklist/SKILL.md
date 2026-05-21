@@ -42,7 +42,7 @@ description: >
 
 ### 第三步：分类检查清单逐项验证
 
-以下是从历史踩坑中提炼的 **8 类必检项**。每个改动必须逐一过一遍，标记 ✅ 或 ❌：
+以下是从历史踩坑中提炼的 **10 类必检项**。每个改动必须逐一过一遍，标记 ✅ 或 ❌：
 
 ---
 
@@ -219,6 +219,53 @@ Assets/_Example/ClickGame/
 
 ---
 
+#### CL-10: 方法重载安全（🔴 阻塞级 — 2026-05-19 新增）
+
+> 新增方法重载时，必须检查所有已有调用点是否产生歧义。
+
+**验证方法**：
+
+1. **新增重载后全局搜索已有调用点**：
+   - 搜索被重载的方法名，逐一检查每个调用点的参数是否可能匹配多个重载
+   - 重点检查传递 `null`、`default`、字面量 `0` 的调用点
+
+2. **null 歧义检测**（CS0121 高发区）：
+   - `null` 同时匹配 nullable value type（`int?`、`float?`）和 reference type（类/接口）
+   - 如果两个重载的对应参数分别是 nullable value type 和 reference type，已有调用点传 `null` 必定报 CS0121
+   - 修复方式：显式转型 `(int?)null` 或 `(BattleLevelData)null`
+
+3. **隐式转换歧义检测**：
+   - `0` / `1` 等整数字面量可能同时匹配 `int`、`float`、`enum`、`bool`（隐式转换）
+   - `default` 在泛型和非泛型重载间可能产生歧义
+
+**典型错误**：
+- Sprint 2 新增 `SetLaunchContext(BattleLevelData)` 后，已有 `SetLaunchContext(null)` 对 `int?` 和 `BattleLevelData` 产生 CS0121 歧义
+- AI 生成重载时通常只验证新代码能编译，不回溯检查已有调用点
+
+**红线**：新增重载后必须全局搜索所有调用点，确认零歧义。
+
+---
+
+### 第三步半：MCP 编译验证铁律（🔴 2026-05-19 新增）
+
+> 通过 Unity MCP 验证编译结果时，**必须先触发重新编译**，否则得到的是旧缓存。
+
+**操作顺序（不可跳过）**：
+
+1. 外部编辑器修改 .cs 文件后（包括 replace_in_file、write_to_file）
+2. **先执行** `unity_execute_code("UnityEditor.AssetDatabase.Refresh()")` 强制触发增量编译
+3. **再执行** `unity_get_compilation_errors` 查询编译结果
+4. 如果跳过第 2 步，`unity_get_compilation_errors` 返回的是上一次编译周期的结果，可能是 0E/0W 的**假阳性**
+
+**为什么需要这一步**：
+- Unity Editor 只在获得窗口焦点（`OnApplicationFocus`）或显式 `AssetDatabase.Refresh()` 时触发增量编译
+- MCP 远程操作不触发窗口焦点事件
+- 不 Refresh 直接查 → 拿到旧结果 → 错误地标记"编译通过" → 带 bug 代码被提交
+
+**红线**：所有代码审查报告中标注"编译 0E/0W"之前，必须确认已执行过 `AssetDatabase.Refresh()` 且返回的错误时间戳在文件修改之后。
+
+---
+
 ### 第四步：输出审查报告
 
 审查完成后，输出结构化审查报告：
@@ -239,6 +286,7 @@ Assets/_Example/ClickGame/
 - [✅/❌] CL-7 FairyGUI 改动完整性
 - [✅/❌] CL-8 第三方库命名空间验证
 - [✅/❌] CL-9 架构一致性（跨场景传参/框架合规/真机可行）
+- [✅/❌] CL-10 方法重载安全（null 歧义/隐式转换/调用点回溯）
 
 ### 发现的问题
 [按 🔴/🟡/💭 分级列出]
@@ -252,7 +300,7 @@ Assets/_Example/ClickGame/
 当新的编译错误或运行时 bug 被修复后，**必须立即**执行以下操作：
 
 1. 在 `references/known-pitfalls.md`（活跃层）中追加一条新的 PIT 记录
-2. 评估该错误是否属于已有的 CL-1 ~ CL-8 类别
+2. 评估该错误是否属于已有的 CL-1 ~ CL-10 类别
 3. 如果不属于任何已有类别，在 SKILL.md 中新增 CL-N 检查项
 4. 如果属于已有类别但暴露了新的子模式，在对应 CL 中补充说明
 

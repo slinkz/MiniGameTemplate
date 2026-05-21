@@ -296,6 +296,24 @@ namespace MiniGameTemplate.Entity
             _activeCount = 0;
         }
 
+        // ──────────── 公开查询 ────────────
+
+        /// <summary>
+        /// 根据 EntityId 查找对应 View GO 的 Transform。
+        /// 用途：激光/喷雾挂载源需要 Transform 跟踪（Attached 模式）。
+        /// 返回 null 表示该 Entity 尚无视图（如直跑场景测试模式）。
+        /// 复杂度 O(N)，N ≤ MAX_VIEWS(256)，非热路径（仅发射瞬间调用一次）。
+        /// </summary>
+        public Transform GetViewTransform(uint entityId)
+        {
+            for (int i = 0; i < _activeCount; i++)
+            {
+                if (_viewEntityIds[i] == entityId && _viewGOs[i] != null)
+                    return _viewGOs[i].transform;
+            }
+            return null;
+        }
+
         // ──────────── 内部工具 ────────────
 
         /// <summary>线性查找 Entity（N≤256，可接受）</summary>

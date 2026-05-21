@@ -19,6 +19,10 @@ namespace MiniGameTemplate.Danmaku
         private RuntimeAtlasManager _runtimeAtlas;
         private int _quadCount;
 
+        // WarnOnce 标志——每类警告只输出一次，避免每帧刷日志
+        private bool _warnedNullTexture;
+        private bool _warnedInvalidBinding;
+
         /// <summary>上帧绘制的 Quad 数（调试用）</summary>
         public int DrawCount => _quadCount;
 
@@ -68,11 +72,19 @@ namespace MiniGameTemplate.Danmaku
                 if (laser.SegmentCount == 0) continue;
 
                 var type = registry.GetLaserType(laser.LaserTypeIndex);
-                if (type.LaserTexture == null) continue;
+                if (type.LaserTexture == null)
+                {
+                    WarnOnce(ref _warnedNullTexture, $"[LaserRenderer] Laser[{i}] 的 LaserType '{type.name}' 未设置 LaserTexture，渲染跳过。请在 Inspector 中为该 LaserTypeSO 指定纹理。");
+                    continue;
+                }
 
                 // L2.3: 通过 Resolver 解算纹理（PI-005: 简化签名）
                 var binding = RuntimeAtlasBindingResolver.ResolveLaser(_runtimeAtlas, type);
-                if (!binding.IsValid) continue;
+                if (!binding.IsValid)
+                {
+                    WarnOnce(ref _warnedInvalidBinding, $"[LaserRenderer] Laser[{i}] 的 LaserType '{type.name}' Atlas 绑定无效（binding.IsValid=false），渲染跳过。");
+                    continue;
+                }
 
                 // L2.4: Atlas 模式用 binding.UVRect，非 Atlas 模式用 full rect
                 bool usesAtlas = binding.UsesRuntimeAtlas;
@@ -243,6 +255,14 @@ namespace MiniGameTemplate.Danmaku
 
             uvYAccum = uvYEnd;
             lengthAccum += seg.Length;
+        }
+
+        /// <summary>只在首次时输出警告，避免每帧刷屏。</summary>
+        private static void WarnOnce(ref bool flag, string message)
+        {
+            if (flag) return;
+            flag = true;
+            Debug.LogWarning(message);
         }
     }
 }

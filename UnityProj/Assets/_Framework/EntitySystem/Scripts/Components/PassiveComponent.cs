@@ -168,8 +168,8 @@ namespace MiniGameTemplate.Entity
             {
                 if (_slots[i].Config == null) continue;
                 if (_slots[i].Config.TriggerMode != PassiveTriggerMode.OnHit) continue;
-                if (_slots[i].CooldownTimer > 0f) continue; // CD 中
-                if (_slots[i].IsEffectActive) continue; // 已激活
+                if (_slots[i].CooldownTimer > 0f) continue;
+                if (_slots[i].IsEffectActive) continue;
 
                 ActivateSlot(ref _slots[i]);
             }
@@ -215,7 +215,6 @@ namespace MiniGameTemplate.Entity
                     slot.IsEffectActive = false;
                 }
             }
-
             // 3. 重置 CD
             slot.CooldownTimer = slot.TotalCooldown;
         }

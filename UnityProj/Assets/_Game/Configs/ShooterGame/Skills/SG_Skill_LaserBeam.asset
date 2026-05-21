@@ -17,8 +17,16 @@ MonoBehaviour:
   CooldownTime: 3
   CastTime: 0.2
   RecoveryTime: 0.6
-  Effects: []
+  Effects:
+  - rid: 4957692913003266048
   AttachedDotConfig: {fileID: 11400000, guid: 3d263146d75bed0418ddf40dbbd0364e, type: 2}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 4957692913003266048
+      type: {class: FireLaserEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
+      data:
+        LaserType: {fileID: 11400000, guid: 0efb11435b90f1c47992b0aec6658631, type: 2}
+        Length: 12
+        FireOffset: {x: 0, y: 0.5}
+        LifetimeOverride: 0

@@ -52,3 +52,4 @@ MonoBehaviour:
   BurstCount: 1
   BurstInterval: 0.12
   FireSFX: {fileID: 0}
+  OnHitDotConfig: {fileID: 0}

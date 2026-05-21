@@ -18,6 +18,7 @@ MonoBehaviour:
   CastTime: 0.3
   RecoveryTime: 0.2
   Effects: []
+  AttachedDotConfig: {fileID: 0}
   references:
     version: 2
     RefIds: []

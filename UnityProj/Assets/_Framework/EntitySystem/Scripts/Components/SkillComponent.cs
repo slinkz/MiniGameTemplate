@@ -206,13 +206,25 @@ namespace MiniGameTemplate.Entity
 
         private void ExecuteEffects(SkillConfigSO config, float dt)
         {
+            // 查找施法者的 View Transform（激光/喷雾 Attached 模式需要）
+            UnityEngine.Transform casterTransform = null;
+            var viewBridge = EntityManagerAccessor.ViewBridge;
+            if (viewBridge != null)
+                casterTransform = viewBridge.GetViewTransform(_owner.Id.Value);
+
+            // 单次查询 AutoAim，同时供 HasTarget 判断和 AimDirection 计算
+            var autoAim = _owner.GetComponent(ComponentType.AutoAim) as ITargetProvider;
+            bool hasTarget = autoAim != null && autoAim.HasTarget;
+
             var ctx = new SkillContext
             {
                 Caster = _owner,
                 CastPosition = _owner.Position,
-                AimDirection = GetAimDirection(),
+                AimDirection = GetAimDirection(autoAim),
                 DeltaTime = dt,
                 SkillConfig = config,
+                CasterTransform = casterTransform,
+                HasTarget = hasTarget,
             };
 
             for (int i = 0; i < config.Effects.Length; i++)
@@ -242,9 +254,9 @@ namespace MiniGameTemplate.Entity
             }
         }
 
-        private Vector2 GetAimDirection()
+        /// <param name="autoAim">已查询的 AutoAim 组件（可为 null）</param>
+        private Vector2 GetAimDirection(ITargetProvider autoAim)
         {
-            var autoAim = _owner.GetComponent(ComponentType.AutoAim) as ITargetProvider;
             if (autoAim != null && autoAim.HasTarget)
                 return (autoAim.TargetPosition - _owner.Position).normalized;
 

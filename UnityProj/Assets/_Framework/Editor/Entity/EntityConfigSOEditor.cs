@@ -35,13 +35,19 @@ namespace MiniGameTemplate.EditorTools
         private SerializedProperty _collisionLayer;
         private SerializedProperty _contactDamage;
         private SerializedProperty _contactDamageInterval;
+        // 自动瞄准（P3.1）
+        private SerializedProperty _autoAimRadius;
+        private SerializedProperty _autoAimSearchInterval;
         // 攻击
         private SerializedProperty _attackPower;
         private SerializedProperty _critRate;
         private SerializedProperty _critDamageMultiplier;
         private SerializedProperty _attackInterval;
+        private SerializedProperty _firstAttackDelay;
         private SerializedProperty _attackBulletPattern;
         private SerializedProperty _attackFireOffset;
+        // 技能（P3.3）
+        private SerializedProperty _skillConfig;
         private SerializedProperty _aiBehavior;
         // View 桥接（Phase 1.9）
         private SerializedProperty _viewPrefab;
@@ -81,13 +87,19 @@ namespace MiniGameTemplate.EditorTools
             _collisionLayer = serializedObject.FindProperty("CollisionLayer");
             _contactDamage = serializedObject.FindProperty("ContactDamage");
             _contactDamageInterval = serializedObject.FindProperty("ContactDamageInterval");
+            // 自动瞄准（P3.1）
+            _autoAimRadius = serializedObject.FindProperty("AutoAimRadius");
+            _autoAimSearchInterval = serializedObject.FindProperty("AutoAimSearchInterval");
             // 攻击
             _attackPower = serializedObject.FindProperty("AttackPower");
             _critRate = serializedObject.FindProperty("CritRate");
             _critDamageMultiplier = serializedObject.FindProperty("CritDamageMultiplier");
             _attackInterval = serializedObject.FindProperty("AttackInterval");
+            _firstAttackDelay = serializedObject.FindProperty("FirstAttackDelay");
             _attackBulletPattern = serializedObject.FindProperty("AttackBulletPattern");
             _attackFireOffset = serializedObject.FindProperty("AttackFireOffset");
+            // 技能（P3.3）
+            _skillConfig = serializedObject.FindProperty("SkillConfig");
             _aiBehavior = serializedObject.FindProperty("AIBehavior");
             // View 桥接（Phase 1.9）
             _viewPrefab = serializedObject.FindProperty("ViewPrefab");
@@ -186,8 +198,26 @@ namespace MiniGameTemplate.EditorTools
                 EditorGUILayout.PropertyField(_critDamageMultiplier);
                 EditorGUILayout.Space(4);
                 EditorGUILayout.PropertyField(_attackInterval);
+                EditorGUILayout.PropertyField(_firstAttackDelay);
                 EditorGUILayout.PropertyField(_attackBulletPattern);
                 EditorGUILayout.PropertyField(_attackFireOffset);
+
+                // 自动瞄准
+                EditorGUILayout.Space(4);
+                DrawSectionTitle("自动瞄准（AutoAim）");
+                EditorGUILayout.PropertyField(_autoAimRadius);
+                if (_autoAimRadius.floatValue > 0)
+                {
+                    EditorGUILayout.PropertyField(_autoAimSearchInterval);
+                }
+            }
+
+            // ──── 技能组件配置（条件显示）────
+            if (HasComponent(ComponentType.Skill))
+            {
+                EditorGUILayout.Space(8);
+                DrawSectionTitle("技能组件配置（因勾选了 Skill 而显示）");
+                EditorGUILayout.PropertyField(_skillConfig);
             }
 
             // ──── AI 组件配置（条件显示）────

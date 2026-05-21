@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：23 条（PIT-007, PIT-014 ~ PIT-031, PIT-034, PIT-035, PIT-036, PIT-037, PIT-038）
+> **当前条目数**：25 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-040）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -298,6 +298,29 @@
 - **验证方法**: 凡是注册了 `onTouchBegin` + `onTouchMove` / `onTouchEnd` 的 FairyGUI 对象，必须确认 Begin 回调中有 `context.CaptureTouch()`。无此调用 = Move/End 100% 丢失
 - **严重度**: 🔴 功能完全不工作
 - **标记 [经典] 原因**: FairyGUI 触摸三件套铁律，Begin 必须 CaptureTouch，否则 Move/End 丢失。IDE 不报错、编译通过、Begin 有回调，极具迷惑性
+
+---
+
+## PIT-039: 方法重载 + 裸 null 参数 → CS0121 歧义 `[经典]`
+- **分类**: CL-10 方法重载安全
+- **日期**: 2026-05-19
+- **现象**: `BattleFlowHandler` 调用 `SetLaunchContext(null)` 编译报 CS0121——`int?` 和 `BattleLevelData` 两个重载对 `null` 同等匹配
+- **根因**: Sprint 2 新增 `SetLaunchContext(BattleLevelData)` 重载后，已有调用点的裸 `null` 既能隐式匹配 nullable value type (`int?`) 又能匹配 reference type (`BattleLevelData`)，编译器无法决策
+- **修复**: 显式转型 `SetLaunchContext((int?)null)` 消除歧义
+- **验证方法**: 新增方法重载时，全局搜索已有调用点中传递 `null` / `default` 的地方；如果目标参数类型中有 nullable value type 与 reference type 并存，必须显式转型
+- **严重度**: 🔴 编译失败
+- **标记 [经典] 原因**: 新增重载是常见操作，裸 null 是 C# 中极易忽略的歧义源；AI 生成重载时几乎不会检查已有调用点的 null 传参
+
+---
+
+## PIT-040: MCP 编译检查返回旧缓存 — AssetDatabase.Refresh 铁律
+- **分类**: CL-10 方法重载安全 / 工作流
+- **日期**: 2026-05-19
+- **现象**: 外部编辑器修改 .cs 文件后，MCP 调用 `unity_get_compilation_errors` 返回 0E/0W（假阳性），实际上 Unity 尚未重新编译
+- **根因**: Unity Editor 只在获得窗口焦点或显式调用 `AssetDatabase.Refresh()` 时才触发增量编译。MCP 远程查询的是"上一次编译周期"的结果，不是文件当前状态的编译结果
+- **修复**: 每次外部修改 .cs 后，必须先 `unity_execute_code("AssetDatabase.Refresh()")` 等编译完成，再查 `unity_get_compilation_errors`
+- **验证方法**: 任何"MCP 说 0 错误"的结果，检查时间戳是否在文件修改之后；若不确定，一律先 Refresh 再查
+- **严重度**: 🔴 工作流假阳性，会导致带编译错误的代码被标记为"审查通过"
 
 ---
 

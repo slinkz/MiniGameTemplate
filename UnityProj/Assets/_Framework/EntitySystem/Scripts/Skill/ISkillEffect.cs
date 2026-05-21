@@ -47,5 +47,16 @@ namespace MiniGameTemplate.Entity
         public float DeltaTime;
         /// <summary>技能配置引用（v0.4 GD-017）</summary>
         public SkillConfigSO SkillConfig;
+        /// <summary>
+        /// 施法者的 View Transform（可选，null = 无视图/测试模式）。
+        /// 用于激光/喷雾 Attached 模式——需要 Transform 做帧同步跟踪。
+        /// 由 SkillComponent 通过 EntityViewBridge 查询后填充。
+        /// </summary>
+        public Transform CasterTransform;
+        /// <summary>
+        /// 施法者是否有有效目标（由 AutoAim 组件提供）。
+        /// ISkillEffect 可根据此标记决定是否发射（如激光无目标不发射）。
+        /// </summary>
+        public bool HasTarget;
     }
 }
