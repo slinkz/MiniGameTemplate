@@ -20,7 +20,7 @@ MonoBehaviour:
   Effects:
   - rid: 4957692961924055043
   AttachedDotConfig: {fileID: 11400000, guid: 3d263146d75bed0418ddf40dbbd0364e, type: 2}
-  SourceTagId: 0
+  SourceTagId: 3
   references:
     version: 2
     RefIds:
@@ -28,7 +28,8 @@ MonoBehaviour:
       type: {class: FireLaserEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
       data:
         LaserType: {fileID: 11400000, guid: 0efb11435b90f1c47992b0aec6658631, type: 2}
-        Length: 12
+        Length: 30
         FireOffset: {x: 0, y: 0.5}
         LifetimeOverride: 0
-        RequiresTarget: 0
+        RequiresTarget: 1
+        TrackTarget: 1

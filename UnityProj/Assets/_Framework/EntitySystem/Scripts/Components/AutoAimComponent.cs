@@ -38,6 +38,9 @@ namespace MiniGameTemplate.Entity
         /// <summary>当前瞄准方向（归一化），AttackComponent 读取此值</summary>
         public Vector2 AimDirection { get; private set; }
 
+        /// <summary>当前锁定目标 Entity（可能为 null / 已死亡），外部读取前应检查 HasTarget</summary>
+        public Entity CurrentTarget => _currentTarget;
+
         // ── 配置 ──
         private Entity _owner;
         private float _searchRadius;

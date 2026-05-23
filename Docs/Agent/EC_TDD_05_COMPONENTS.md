@@ -1,7 +1,7 @@
 ﻿---
 system: entity-component
 scope: components-detail
-last_verified: 2026-05-23
+last_verified: 2026-05-24
 depends_on: [EC_TDD_01_OVERVIEW, EC_TDD_02_CORE_ARCH]
 related_code: Assets/_Framework/EntitySystem/Components/*.cs
 ---
@@ -310,7 +310,7 @@ public interface IAIAction
 - `Auto`：每帧 CD 就绪即触发
 - `Manual`：需 `IDecisionMaker.GetDecision().WantsAttack == true`
 
-**效果执行**：遍历 `_config.Effects[]`（`ISkillEffect`），传入 `SkillContext{Caster, CastPosition, AimDirection, DeltaTime, SkillConfig}`。
+**效果执行**：遍历 `_config.Effects[]`（`ISkillEffect`），传入 `SkillContext{Caster, CastPosition, AimDirection, DeltaTime, SkillConfig, CasterTransform, HasTarget, SourceTagId}`。
 
 ### 4.9 AttackComponent（v2.4 → v2.6 更新）
 
@@ -334,7 +334,7 @@ if (buff != null)
 
 **发射决策链**：DecisionMaker.WantsAttack → CD就绪 → `DanmakuSystem.FireBullets(pattern, pos, angle, ownerId)`
 
-**瞄准优先级**：AutoAim 锁定方向 > DecisionCommand.AimDirection > Entity.Rotation
+**瞄准优先级**：DecisionCommand.AimDirection > Entity.Rotation（普攻永远朝实体正前方，不跟随 AutoAim 目标——AutoAim 仅供 SkillComponent 使用）
 
 **近战攻击（GD-R4-009）**：统一走弹幕系统（射程≈0.5、速度=0、存活≈0.1s）。
 

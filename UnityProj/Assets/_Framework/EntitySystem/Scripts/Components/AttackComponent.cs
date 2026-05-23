@@ -103,21 +103,14 @@ namespace MiniGameTemplate.Entity
 
         private float GetFireAngle(Vector2 aimDir)
         {
-            // 优先级 1：AutoAim 锁定方向（P3.1）
-            var autoAim = _owner.GetComponent(ComponentType.AutoAim);
-            if (autoAim is ITargetProvider tp && tp.HasTarget)
-            {
-                var dir = ((AutoAimComponent)autoAim).AimDirection;
-                return Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-            }
-
-            // 优先级 2：DecisionCommand 瞄准方向
+            // 普攻永远朝实体正前方射击，不跟随 AutoAim 目标
+            // 优先级 1：DecisionCommand 瞄准方向（手动操控时可覆盖）
             if (aimDir.sqrMagnitude > 0.01f)
             {
                 return Mathf.Atan2(aimDir.y, aimDir.x) * Mathf.Rad2Deg;
             }
 
-            // 优先级 3：Entity 朝向
+            // 优先级 2：Entity 朝向
             return _owner.Rotation;
         }
 

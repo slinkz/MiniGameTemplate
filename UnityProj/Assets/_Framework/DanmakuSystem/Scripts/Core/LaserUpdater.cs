@@ -32,7 +32,20 @@ namespace MiniGameTemplate.Danmaku
                         continue;
                     }
                     laser.Origin = attachRegistry.GetWorldPosition(laser.AttachId, laser.Origin);
-                    laser.Angle = attachRegistry.GetWorldAngle(laser.AttachId, laser.Angle);
+                    laser.Angle = attachRegistry.GetWorldAngle(laser.AttachId, laser.Angle, out Transform resolvedTarget);
+
+                    // 追踪目标时：激光长度 = 发射口到目标的距离（激光末端精确到达目标）
+                    float distToTarget = attachRegistry.GetDistanceToTarget(laser.AttachId, resolvedTarget);
+                    if (distToTarget >= 0f)
+                    {
+                        laser.Length = distToTarget;
+                    }
+                    else if (attachRegistry.HasTargetResolver(laser.AttachId))
+                    {
+                        // 有追踪 resolver 但目标丢失（所有敌人死亡）→ 立即回收激光
+                        FreeLaser(pool, attachRegistry, i);
+                        continue;
+                    }
                 }
 
                 laser.Elapsed += dt;

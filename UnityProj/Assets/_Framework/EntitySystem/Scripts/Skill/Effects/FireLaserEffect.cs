@@ -43,6 +43,9 @@ namespace MiniGameTemplate.Entity
         [Tooltip("是否需要有效目标才能发射（默认 true：无目标不发射）")]
         public bool RequiresTarget = true;
 
+        [Tooltip("是否追踪目标（激光持续朝向目标位置，默认 true）")]
+        public bool TrackTarget = true;
+
         public bool Execute(SkillContext ctx)
         {
             if (LaserType == null)
@@ -78,8 +81,26 @@ namespace MiniGameTemplate.Entity
                 Vector2 localOffset = (Vector2)ctx.CasterTransform.InverseTransformVector(
                     new Vector3(FireOffset.x, FireOffset.y, 0f));
 
+                // 构建目标解析器：每帧返回当前锁定目标的最新 Transform
+                // 闭包捕获 owner Entity，支持目标死亡后 AutoAim 自动切换新目标
+                System.Func<Transform> targetResolver = null;
+                if (TrackTarget && ctx.Caster != null)
+                {
+                    var owner = ctx.Caster;
+                    targetResolver = () =>
+                    {
+                        if (owner == null || !owner.IsAlive) return null;
+                        var aim = owner.GetComponent(ComponentType.AutoAim) as AutoAimComponent;
+                        if (aim == null || !aim.HasTarget) return null;
+                        var target = aim.CurrentTarget;
+                        if (target == null || !target.IsAlive) return null;
+                        var vb = EntityManagerAccessor.ViewBridge;
+                        return vb?.GetViewTransform(target.Id.Value);
+                    };
+                }
+
                 int index = ds.FireLaser(LaserType, ctx.CasterTransform, Length,
-                    LifetimeOverride, localOffset, angleOffset, ctx.SourceTagId);
+                    LifetimeOverride, localOffset, angleOffset, ctx.SourceTagId, targetResolver);
                 return index >= 0;
             }
 

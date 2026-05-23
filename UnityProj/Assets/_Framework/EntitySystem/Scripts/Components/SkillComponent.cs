@@ -159,8 +159,9 @@ namespace MiniGameTemplate.Entity
                         }
                         else
                         {
-                            ExecuteEffects(slot.Config, dt);
-                            EnterRecovery(ref slot);
+                            // 效果执行失败（如无目标）→ 留在 Idle，下帧重试，不进 CD
+                            if (ExecuteEffects(slot.Config, dt))
+                                EnterRecovery(ref slot);
                         }
                     }
                     break;
@@ -169,8 +170,11 @@ namespace MiniGameTemplate.Entity
                     slot.CastTimer -= dt;
                     if (slot.CastTimer <= 0)
                     {
-                        ExecuteEffects(slot.Config, dt);
-                        EnterRecovery(ref slot);
+                        // 前摇结束但效果失败 → 退回 Idle 重试（不浪费 CD）
+                        if (ExecuteEffects(slot.Config, dt))
+                            EnterRecovery(ref slot);
+                        else
+                            slot.State = SkillState.Idle;
                     }
                     break;
 
@@ -204,7 +208,11 @@ namespace MiniGameTemplate.Entity
             };
         }
 
-        private void ExecuteEffects(SkillConfigSO config, float dt)
+        /// <summary>
+        /// 执行技能效果。返回 true = 至少一个效果成功执行；false = 全部跳过（如无目标）。
+        /// 返回 false 时技能不进 CD，下一帧重试。
+        /// </summary>
+        private bool ExecuteEffects(SkillConfigSO config, float dt)
         {
             // 查找施法者的 View Transform（激光/喷雾 Attached 模式需要）
             UnityEngine.Transform casterTransform = null;
@@ -228,10 +236,13 @@ namespace MiniGameTemplate.Entity
                 SourceTagId = config.SourceTagId,
             };
 
+            bool anySuccess = false;
             for (int i = 0; i < config.Effects.Length; i++)
             {
-                config.Effects[i]?.Execute(ctx);
+                if (config.Effects[i]?.Execute(ctx) == true)
+                    anySuccess = true;
             }
+            return anySuccess;
         }
 
         private void EnterRecovery(ref SkillSlot slot)
@@ -255,12 +266,27 @@ namespace MiniGameTemplate.Entity
             }
         }
 
-        /// <param name="autoAim">已查询的 AutoAim 组件（可为 null）</param>
+        /// <summary>
+        /// 瞄准方向优先级链（与 AttackComponent.GetFireAngle 对齐）：
+        /// 1. AutoAim 锁定目标 → 目标方向
+        /// 2. DecisionCommand.AimDirection → 玩家输入/默认朝上
+        /// 3. Entity.Rotation → 角度转向量（兜底）
+        /// </summary>
         private Vector2 GetAimDirection(ITargetProvider autoAim)
         {
+            // 优先级 1：AutoAim 有目标
             if (autoAim != null && autoAim.HasTarget)
                 return (autoAim.TargetPosition - _owner.Position).normalized;
 
+            // 优先级 2：Decision 瞄准方向（ControlComponent 或 AI 提供）
+            if (_cachedDecisionMaker != null)
+            {
+                Vector2 aimDir = _cachedDecisionMaker.GetDecision().AimDirection;
+                if (aimDir.sqrMagnitude > 0.01f)
+                    return aimDir.normalized;
+            }
+
+            // 优先级 3：Entity 朝向角度
             float rad = _owner.Rotation * Mathf.Deg2Rad;
             return new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
         }

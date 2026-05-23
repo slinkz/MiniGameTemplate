@@ -16,6 +16,9 @@ namespace MiniGameTemplate.Entity
         [Tooltip("发射偏移")]
         public Vector2 FireOffset;
 
+        [Tooltip("true = 永远朝实体正前方射击，忽略自瞄方向")]
+        public bool UseForwardDirection;
+
         public bool Execute(SkillContext ctx)
         {
             if (Pattern == null) return false;
@@ -23,7 +26,13 @@ namespace MiniGameTemplate.Entity
             if (ds == null) return false;
 
             Vector2 pos = ctx.CastPosition + FireOffset;
-            float angle = Mathf.Atan2(ctx.AimDirection.y, ctx.AimDirection.x) * Mathf.Rad2Deg;
+
+            // UseForwardDirection: 用 CasterTransform.up（实体正前方），忽略 AutoAim
+            Vector2 dir = UseForwardDirection && ctx.CasterTransform != null
+                ? (Vector2)ctx.CasterTransform.up
+                : ctx.AimDirection;
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+
             ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value, ctx.SourceTagId);
             return true;
         }

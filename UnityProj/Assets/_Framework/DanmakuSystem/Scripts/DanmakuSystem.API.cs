@@ -132,11 +132,26 @@ namespace MiniGameTemplate.Danmaku
             float lifetime = 0f, Vector2 localOffset = default, float angleOffset = 0f,
             int sourceTag = 0)
         {
+            return FireLaser(type, source, length, lifetime, localOffset, angleOffset, sourceTag, null);
+        }
+
+        /// <summary>
+        /// 发射激光（Attached 模式 + 目标追踪——激光每帧朝向目标）。
+        /// targetResolver 每帧被调用，返回最新目标 Transform；支持目标死亡后自动切换新目标。
+        /// </summary>
+        public int FireLaser(LaserTypeSO type, Transform source, float length,
+            float lifetime, Vector2 localOffset, float angleOffset,
+            int sourceTag, System.Func<Transform> targetResolver)
+        {
             if (type == null || source == null)
                 return -1;
 
             byte attachId = _attachRegistry.Register(source, localOffset, angleOffset);
             if (attachId == 0) return -1;
+
+            // 设置追踪目标解析器
+            if (targetResolver != null)
+                _attachRegistry.SetTarget(attachId, targetResolver);
 
             Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
             float angle = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);

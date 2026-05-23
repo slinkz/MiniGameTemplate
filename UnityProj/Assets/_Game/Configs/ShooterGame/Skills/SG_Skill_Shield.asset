@@ -20,7 +20,7 @@ MonoBehaviour:
   Effects:
   - rid: 4957692961924055044
   AttachedDotConfig: {fileID: 0}
-  SourceTagId: 0
+  SourceTagId: 4
   references:
     version: 2
     RefIds:
