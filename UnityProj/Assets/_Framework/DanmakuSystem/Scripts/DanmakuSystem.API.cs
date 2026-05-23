@@ -109,26 +109,28 @@ namespace MiniGameTemplate.Danmaku
             _scheduler.Schedule(group, origin, baseAngle, playerPos);
         }
 
-        /// <summary>发射单个弹幕。ownerEntityId = 发射者 Entity ID（0=无 Owner）。</summary>
-        public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle, uint ownerEntityId = 0)
+        /// <summary>发射单个弹幕。ownerEntityId = 发射者 Entity ID（0=无 Owner）。sourceTag = 伤害来源标记（0=基础攻击）。</summary>
+        public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle,
+            uint ownerEntityId = 0, int sourceTag = 0)
         {
-            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId);
+            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId, sourceTag);
         }
 
         /// <summary>
         /// 发射激光（Detached 模式——发射后固定不动）。
         /// </summary>
         public int FireLaser(LaserTypeSO type, Vector2 origin, float angle,
-            float length, float lifetime = 0f)
+            float length, float lifetime = 0f, int sourceTag = 0)
         {
-            return FireLaserInternal(type, origin, angle, length, lifetime, 0);
+            return FireLaserInternal(type, origin, angle, length, lifetime, 0, sourceTag);
         }
 
         /// <summary>
         /// 发射激光（Attached 模式——每帧跟随挂载 Transform 的位置和朝向）。
         /// </summary>
         public int FireLaser(LaserTypeSO type, Transform source, float length,
-            float lifetime = 0f, Vector2 localOffset = default, float angleOffset = 0f)
+            float lifetime = 0f, Vector2 localOffset = default, float angleOffset = 0f,
+            int sourceTag = 0)
         {
             if (type == null || source == null)
                 return -1;
@@ -139,7 +141,7 @@ namespace MiniGameTemplate.Danmaku
             Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
             float angle = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);
 
-            return FireLaserInternal(type, origin, angle, length, lifetime, attachId);
+            return FireLaserInternal(type, origin, angle, length, lifetime, attachId, sourceTag);
         }
 
         /// <summary>
@@ -198,6 +200,7 @@ namespace MiniGameTemplate.Danmaku
             _scheduler.ClearAll();
             _spawnerDriver.ClearAll();
             _trailPool.FreeAll();
+            _damageNumbers.ClearAll();
         }
 
         /// <summary>
@@ -237,7 +240,7 @@ namespace MiniGameTemplate.Danmaku
         }
 
         private int FireLaserInternal(LaserTypeSO type, Vector2 origin, float angle,
-            float length, float lifetime, byte attachId)
+            float length, float lifetime, byte attachId, int sourceTag = 0)
         {
             if (type == null)
             {
@@ -271,6 +274,7 @@ namespace MiniGameTemplate.Danmaku
             laser.TickTimer = 0f;
             laser.SegmentCount = 0;
             laser.VisualLength = 0f;
+            laser.SourceTag = sourceTag;
 
             return index;
         }

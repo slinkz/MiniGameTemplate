@@ -1,7 +1,7 @@
 # ShooterGame V2 技能系统 TDD · 索引
 
-> **版本**：v1.3  
-> **日期**：2026-05-19  
+> **版本**：v1.4  
+> **日期**：2026-05-22  
 > **GDD 版本**：v2.4（SG_GDD_INDEX）  
 > **定位**：V2 技能系统逐 Sprint 实施方案 + 验收方案
 
@@ -64,13 +64,13 @@ Sprint 5（策划工具+UI+打磨）
 
 ## 子文件列表
 
-| 文件 | Sprint | 主题 | 预估工时 |
-|------|--------|------|---------|
-| [SG_V2_TDD_01](SG_V2_TDD_01_ENEMY_SHOOTING.md) | Sprint 1 | 敌方射击 + 碰撞规则 + 伤害转发 | ~10h |
-| [SG_V2_TDD_02](SG_V2_TDD_02_SKILL_EQUIP_ITEM.md) | Sprint 2 | 技能解锁 + 战前装备 + 道具系统 | ~14h |
-| [SG_V2_TDD_03](SG_V2_TDD_03_BUFF_DOT_PASSIVE.md) | Sprint 3 | Buff 扩展 + DOT + 被动技能 | ~15h |
-| [SG_V2_TDD_04](SG_V2_TDD_04_LEVEL_BALANCE.md) | Sprint 4 | 关卡编排 + 数值平衡 | ~8h |
-| [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h |
+| 文件 | Sprint | 主题 | 预估工时 | 状态 |
+|------|--------|------|---------|------|
+| [SG_V2_TDD_01](SG_V2_TDD_01_ENEMY_SHOOTING.md) | Sprint 1 | 敌方射击 + 碰撞规则 + 伤害转发 | ~10h | ✅ 编码+逻辑验收通过 |
+| [SG_V2_TDD_02](SG_V2_TDD_02_SKILL_EQUIP_ITEM.md) | Sprint 2 | 技能解锁 + 战前装备 + 道具系统 | ~14h | ✅ 编码+逻辑验收通过 |
+| [SG_V2_TDD_03](SG_V2_TDD_03_BUFF_DOT_PASSIVE.md) | Sprint 3 | Buff 扩展 + DOT + 被动技能 | ~15h | ✅ 编码+逻辑验收通过 |
+| [SG_V2_TDD_04](SG_V2_TDD_04_LEVEL_BALANCE.md) | Sprint 4 | 关卡编排 + 数值平衡 | ~8h | ✅ 编码+逻辑验收通过 |
+| [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h | ⬜ 待启动 |
 
 **总计**：~65.5h（单人 ~13~16 天）
 

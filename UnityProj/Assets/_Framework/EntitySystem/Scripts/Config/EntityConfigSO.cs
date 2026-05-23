@@ -66,11 +66,14 @@ namespace MiniGameTemplate.Entity
         [Tooltip("碰撞层（0=默认，与所有层碰撞。相同非零层才碰撞。）")]
         public int CollisionLayer = 0;
 
-        [Tooltip("接触伤害值（0=不造成接触伤害）")]
+        [Tooltip("接触伤害值（敌机碰撞飞机时，0=不造成接触伤害）")]
         public int ContactDamage = 0;
 
         [Tooltip("接触伤害间隔（秒）。防止每帧重复伤害。")]
         public float ContactDamageInterval = 0.5f;
+
+        [Tooltip("底线突破伤害（敌机越过底线时对基地造成的伤害，0=使用 ContactDamage）")]
+        public int BaseLineBreachDamage = 0;
 
         [Header("战斗属性")]
         [Tooltip("攻击力（覆盖弹幕 BulletTypeSO.Damage，0 = 使用弹幕配置的固定伤害）")]

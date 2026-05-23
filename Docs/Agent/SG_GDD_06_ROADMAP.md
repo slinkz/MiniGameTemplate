@@ -25,11 +25,11 @@ related_code: Assets/_Game/Scripts/ShooterGame/**
 |------|------|------|
 | S2.1 | SkillUnlockTableSO / PassiveUnlockTableSO 设计实现 | 2h |
 | S2.2 | 解锁进度存档（与云存档系统对接） | 2h |
-| S2.3 | 出战准备 Bottom Sheet（FairyGUI：build 展示 + 出击）（v1.7 简化） | 3h |
+| S2.3 | ~~出战准备 Bottom Sheet~~ → **延后至 S5.7 合入**（2026-05-22 决策：数据管线已通，UI 不阻塞） | ~~3h~~ → 0h（工时移至 S5.7） |
 | S2.4 | PickupConfigSO / DropTableSO 设计实现（Buff/修复/弹药/金币） | 2h |
 | S2.5 | 道具 Entity + 拾取逻辑 | 3h |
 | S2.6 | 掉落概率调试 + Play Mode 验证 | 2h |
-| **Sprint 2 总计** | | **~14h** |
+| **Sprint 2 总计** | | **~11h**（S2.3 3h 移至 S5） |
 
 ### Sprint 3：Buff + DOT + 被动
 
@@ -62,11 +62,13 @@ related_code: Assets/_Game/Scripts/ShooterGame/**
 | S5.4 | T8 SO 一致性构建验证器（IPreprocessBuildWithReport） | 2h |
 | S5.5 | T9 PickupConfigSO 自定义 Inspector（v1.5 新增） | 1.5h |
 | S5.6 | 战斗 UI（被动栏 + CD 指示器 + 通知条 + 暂停菜单 Buff 列表）（v2.3 修正：Buff 栏 v2.2 已移除，Boss 血条为 V3） | 4h |
-| S5.7 | 新手引导 + 音效 + 最终打磨 | 3h |
-| **Sprint 5 总计** | | **~18.5h** |
+| S5.7 | 选关界面 V2 升级 + 出战准备 Bottom Sheet（PK-R3 UID-011 + S2.3 延后合入） | 3h + 3h = 6h |
+| S5.8 | 新手引导 + 音效 + 最终打磨 | 3h |
+| **Sprint 5 总计** | | **~24.5h**（含 S2.3 移入的 3h） |
 
 ### 总计预估：~65.5h（单人 ~13~16 天）
 
+> **v2.4 工时变化**：S2.3 出战准备 Bottom Sheet（3h）从 Sprint 2 移至 Sprint 5 S5.7 合入（2026-05-22 决策，数据管线已通，UI 不阻塞）
 > **v2.3 工时变化**：-1h（S5.6 移除 Buff 栏开发，Boss 血条推迟到 V3）
 > **v1.7 工时变化**：-2h（出战准备从全屏→Bottom Sheet 简化）
 

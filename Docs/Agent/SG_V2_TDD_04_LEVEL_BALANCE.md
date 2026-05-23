@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint4-level-balance
-last_verified: 2026-05-18
+last_verified: 2026-05-22
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_03_BUFF_DOT_PASSIVE, SG_GDD_05_SUPPLEMENT]
 related_code: Assets/_Game/Scripts/ShooterGame/Core/BattleController*, Assets/_Game/Configs/ShooterGame/Levels/*, Assets/_Framework/EntitySystem/**
 ---
@@ -167,7 +167,7 @@ related_code: Assets/_Game/Scripts/ShooterGame/Core/BattleController*, Assets/_G
 | B2 | 伤害数值 | 敌弹命中飞机 | 扣血值与表一致 | 射手=5, 散射=4 |
 | B3 | 碰撞伤害 | 敌机碰飞机 | 基地扣 10 | 固定值正确 |
 | B4 | 底线伤害 | 敌机越线 | 基地扣 15 | 固定值正确 |
-| B5 | 通关可行性 | 每关全装备通关 | 全部可通关 | 无死局 |
+| B5 | 通关可行性 | 每关全装备通关（⚠️ S4 用 `BattleDebugLauncher`，UI 端到端→S5.8） | 全部可通关 | 无死局 |
 | B6 | 难度递进 | 1→5 逐关 | 明显感受到压力递增 | 体感验证 |
 
 ---
@@ -258,7 +258,7 @@ V2 不持久化    → 纯局内临时数据
 | C1 | sourceTag 写入 | Profiler/断点 | 弹丸 sourceTag 与技能对应 | 值正确 |
 | C2 | 伤害累计 | 通关后检查 _damageStats | 各来源伤害总和 = 敌机总 HP 损失 | 守恒 |
 | C3 | 散射贡献 | 只带散射通关 | 散射占比 ~90%+（余下为基础攻击） | 比例合理 |
-| C4 | 多技能分布 | 全装备通关 | 各技能都有贡献记录 | 无遗漏 |
+| C4 | 多技能分布 | 全装备通关（⚠️ S4 用 `BattleDebugLauncher`，UI 端到端→S5.8） | 各技能都有贡献记录 | 无遗漏 |
 | C5 | DOT 记录 | 激光附带电弧 DOT | DOT 伤害独立记录 | sourceId=4003 |
 | C6 | 数据冻结 | 战斗结束后 | _damageStats 不再变化 | 快照隔离 |
 | C7 | int[] 回收 | 战斗结束 | _sourceTags 随 BulletWorld 清理 | 无内存泄漏 |
@@ -391,7 +391,7 @@ SG_ProgressManager.SaveLevelResult(BattleResultData result):
 
 | # | 场景 | 预期 | 状态 |
 |---|------|------|------|
-| F1 | 5 关全部可玩 | 全装备可通关，节奏符合设计 | ⬜ |
+| F1 | 5 关全部可玩 | 全装备可通关，节奏符合设计（⚠️ S4 用 `BattleDebugLauncher`，UI 端到端→S5.8） | ⬜ |
 | F2 | 难度递进 | 1→5 压力感递增 | ⬜ |
 | F3 | 波间间歇 | 教学宽松→高压紧凑 | ⬜ |
 | F4 | 敌机数值 | HP 倍率+伤害值正确 | ⬜ |
@@ -412,10 +412,12 @@ SG_ProgressManager.SaveLevelResult(BattleResultData result):
 
 ---
 
-_创建于 2026-05-18 | Sprint 4 TDD v1.3_
+_创建于 2026-05-18 | Sprint 4 TDD v1.4_
 
 **变更历史**：
 - v1.0（2026-05-18）：初始版本
 - v1.1（2026-05-18）：PK-R1 Unity 架构师回写（UA-008 两阶段判定）
 - v1.2（2026-05-18）：PK-R2 Unity 编辑器工具开发者回写
 - v1.3（2026-05-18）：天命人决策——取消 WaitingClear，最后敌机死亡直接暂停+Victory
+- v1.4（2026-05-22）：标注 B5/C4/F1 全装备验收项使用 `_debugEquipAll` 临时方案，UI 端到端验收延后至 S5.8
+- v1.5（2026-05-23）：`_debugEquipAll` 正式实现为 `BattleDebugLauncher` 组件，更新所有引用

@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Player
   Camp: 1
-  Components: 0103040507090a0c
+  Components: 010304050607090a0c
   PoolMax: 128
   MaxHp: 1
   MoveSpeed: 5
@@ -35,6 +35,7 @@ MonoBehaviour:
   CollisionLayer: 0
   ContactDamage: 9999
   ContactDamageInterval: 0.5
+  BaseLineBreachDamage: 0
   AttackPower: 10
   CritRate: 0
   CritDamageMultiplier: 2

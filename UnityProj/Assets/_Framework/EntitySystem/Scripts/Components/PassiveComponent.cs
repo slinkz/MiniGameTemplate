@@ -73,6 +73,10 @@ namespace MiniGameTemplate.Entity
         /// </summary>
         public void InitWithPassives(PassiveAbilitySO[] equipped)
         {
+            // 防重复订阅：先清理旧订阅（Retry/重新初始化场景）
+            if (_owner != null)
+                _owner.EventBus.Unsubscribe<OnCollisionHit>(OnOwnerHit);
+
             // 先清空
             for (int i = 0; i < MAX_PASSIVES; i++)
                 _slots[i] = default;

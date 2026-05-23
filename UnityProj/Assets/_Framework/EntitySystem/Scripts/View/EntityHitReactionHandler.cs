@@ -59,22 +59,29 @@ namespace MiniGameTemplate.Entity
         /// <summary>
         /// 每帧更新表现（闪白淡出 + 伤害数字漂浮 + 死亡延迟倒计时）。
         /// 由 Bootstrap 在 ViewBridge.SyncAll() 之后调用。
+        /// 
+        /// 注意：伤害数字是纯视觉效果，使用 unscaledDeltaTime 驱动——
+        /// 不受 timeScale 影响，避免暂停时冻住导致泄漏。
+        /// 闪白/死亡延迟属于游戏逻辑，仍用 dt（受 timeScale 影响）。
         /// </summary>
         public void Tick(float dt, EntityManager entityManager)
         {
             TickFlash(dt);
-            TickDamageNumbers(dt);
+            TickDamageNumbers(Time.unscaledDeltaTime);
             TickDeathDelays(dt, entityManager);
         }
 
         /// <summary>清除所有状态（DespawnAll 时调用）</summary>
         public void ClearAll()
         {
-            // 回收伤害数字 GO
-            for (int i = 0; i < _damageNumberCount; i++)
+            // 回收伤害数字 GO（遍历数组全量而非仅 count，防止 swap-remove 残留引用泄漏）
+            for (int i = 0; i < MAX_DAMAGE_NUMBERS; i++)
             {
                 if (_damageNumbers[i].Go != null && _damageNumberPool != null)
+                {
                     _poolManager.Return(_damageNumberPool, _damageNumbers[i].Go);
+                }
+                _damageNumbers[i] = default;
             }
             _damageNumberCount = 0;
             _flashCount = 0;
@@ -296,8 +303,10 @@ namespace MiniGameTemplate.Entity
                     if (state.Go != null && _damageNumberPool != null)
                         _poolManager.Return(_damageNumberPool, state.Go);
 
-                    // swap-remove
-                    _damageNumbers[i] = _damageNumbers[--_damageNumberCount];
+                    // swap-remove + 清空尾部槽位（防止残留 Go 引用）
+                    _damageNumberCount--;
+                    _damageNumbers[i] = _damageNumbers[_damageNumberCount];
+                    _damageNumbers[_damageNumberCount] = default;
                 }
             }
         }

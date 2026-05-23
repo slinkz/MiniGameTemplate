@@ -17,7 +17,7 @@ MonoBehaviour:
   Camp: 0
   Components: 03040108
   PoolMax: 128
-  MaxHp: 30
+  MaxHp: 20
   MoveSpeed: 2
   TurnSpeed: 360
   CollisionRadius: 0.4
@@ -33,14 +33,16 @@ MonoBehaviour:
     m_RotationOrder: 4
   EnableEntityCollision: 1
   CollisionLayer: 0
-  ContactDamage: 15
+  ContactDamage: 10
   ContactDamageInterval: 0.5
+  BaseLineBreachDamage: 15
   AttackPower: 0
   CritRate: 0
   CritDamageMultiplier: 2
   AutoAimRadius: 0
   AutoAimSearchInterval: 0.2
   AttackInterval: 1
+  FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 0}
   AttackFireOffset: {x: 0, y: 0}
   SkillConfig: {fileID: 0}

@@ -27,6 +27,7 @@ namespace MiniGameTemplate.Entity
                 AttackerId = ctx.Caster.Id,
                 SourcePosition = ctx.CastPosition,
                 HasSourcePosition = true,
+                SourceId = ctx.SourceTagId,
             };
             DamageDealer.DealAreaDamage(ctx.CastPosition, Radius, hostileCamp, dmgCtx, MaxTargets);
             return true; // v0.4 ATK-012：施放成功语义

@@ -125,6 +125,9 @@ namespace MiniGameTemplate.Entity
                 ctx.SourcePosition = core.Position;
                 ctx.HasSourcePosition = true;
 
+                // Sprint 4: 伤害来源标记（弹丸溯源 → damageStats 累加）
+                ctx.SourceId = ds.BulletWorld.SourceTags[bulletIndex];
+
                 // 从 OwnerEntityId 查找发射者 Entity，读取战斗属性
                 if (core.OwnerEntityId != 0)
                 {
@@ -167,6 +170,7 @@ namespace MiniGameTemplate.Entity
             {
                 ctx.SourcePosition = ds.LaserPool.Data[laserIndex].Origin;
                 ctx.HasSourcePosition = true;
+                ctx.SourceId = ds.LaserPool.Data[laserIndex].SourceTag;
             }
 
             _owner.EventBus.Publish(new OnCollisionHit { Context = ctx });

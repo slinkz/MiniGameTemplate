@@ -47,6 +47,10 @@ namespace MiniGameTemplate.Danmaku
                 _laserMaterialAtlas.EnableKeyword("_ATLASMODE_ON");
             }
 
+            // 重置 WarnOnce 标志——重新初始化后应允许再次输出配置警告
+            _warnedNullTexture = false;
+            _warnedInvalidBinding = false;
+
             // ADR-030：激光桶允许在首次发射对应类型时按需创建。
             _batchManager.Initialize(System.Array.Empty<RenderBatchManager.BucketRegistration>(), maxQuadsPerBucket);
         }

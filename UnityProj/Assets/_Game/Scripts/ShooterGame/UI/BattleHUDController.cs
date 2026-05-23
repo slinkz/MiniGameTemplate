@@ -31,6 +31,7 @@ namespace Game.ShooterGame.UI
         public GComponent View => _view;
         private GProgressBar _hpBar;
         private GTextField _waveText;
+        private GTextField _hpPctText;
 
         // 血条预损动画
         private float _displayHP = 1f;
@@ -61,8 +62,7 @@ namespace Game.ShooterGame.UI
             _view.MakeFullScreen();
             _hpBar = _view.GetChild("hp_bar").asProgress;
             _waveText = _view.GetChild("text_wave").asTextField;
-
-
+            _hpPctText = _view.GetChild("text_hp_pct")?.asTextField;
         }
 
         /// <summary>
@@ -184,7 +184,8 @@ namespace Game.ShooterGame.UI
 
         private void UpdateHPText(float ratio)
         {
-            // V1：不显示百分比文字（由 FairyGUI 包内决定是否有此元素）
+            if (_hpPctText != null)
+                _hpPctText.text = $"{Mathf.RoundToInt(ratio * 100)}%";
         }
 
         // ── 波次 ──

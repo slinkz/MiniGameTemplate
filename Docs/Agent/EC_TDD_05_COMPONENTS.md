@@ -1,7 +1,7 @@
 ﻿---
 system: entity-component
 scope: components-detail
-last_verified: 2026-05-21
+last_verified: 2026-05-23
 depends_on: [EC_TDD_01_OVERVIEW, EC_TDD_02_CORE_ARCH]
 related_code: Assets/_Framework/EntitySystem/Components/*.cs
 ---
@@ -378,8 +378,8 @@ if (buff != null)
 | `PassiveSlot[3]` | struct | Config/CooldownTimer/IsActive/BuffApplied |
 
 **API**：
-- `InitWithPassives(PassiveAbilitySO[])` → 初始 CD=1f，订阅 OnCollisionHit
-- `Reset()` → 取消 OnCollisionHit 订阅
+- `InitWithPassives(PassiveAbilitySO[])` → 幂等：先 Unsubscribe 旧 OnCollisionHit 再重新订阅（防 Retry 双绑定），初始 CD=1f
+- `Reset()` → 取消 OnCollisionHit 订阅 + 清空 slots
 
 **触发模式**：
 - `AutoOnReady`：CD≤0 自动激活 → ApplyBuff(LinkedBuff) 或执行 ActivateEffects

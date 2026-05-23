@@ -68,5 +68,8 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>截断/折射后的实际总视觉长度（所有线段长度之和）</summary>
         public float VisualLength;
+
+        /// <summary>伤害来源标记（Sprint 4 伤害统计：0=基础攻击, 1~6=技能）</summary>
+        public int SourceTag;
     }
 }

@@ -306,6 +306,11 @@ namespace MiniGameTemplate.Entity
                 _entityManager.OnSpawned -= _viewBridge.OnEntitySpawned;
                 _entityManager.OnDespawned -= _viewBridge.OnEntityDespawned;
                 _entityManager.OnSpawned -= _hitHandler.RegisterEntity;
+
+                // 正式 Despawn 所有 Entity：触发 CollisionComponent.Reset()
+                // → 从 DanmakuSystem.TargetRegistry 注销碰撞目标，
+                // 防止场景卸载后 DontDestroyOnLoad 的 DanmakuSystem 继续命中僵尸 Entity
+                _entityManager.DespawnAll();
             }
 
             // 清理

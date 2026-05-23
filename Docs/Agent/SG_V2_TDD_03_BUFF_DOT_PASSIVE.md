@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint3-buff-dot-passive
-last_verified: 2026-05-21
+last_verified: 2026-05-23
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_02_SKILL_EQUIP_ITEM, SG_GDD_02_PASSIVE_BUFFS]
 related_code: Assets/_Framework/EntitySystem/Components/Buff*, Passive*, Assets/_Game/Configs/ShooterGame/Buffs/*, Dots/*, Passives/*
 ---
@@ -212,7 +212,8 @@ PassiveComponent : IEntityComponent, ITickable
 │   ├── float activeDuration   // 效果持续时间（从 LinkedBuff.Duration 读取）
 │   ├── float activeTimer      // 效果计时
 ├── Init(Entity entity, PassiveAbilitySO[] equipped):
-│   → 填充 _slots，初始化 CD
+│   → 幂等：先 Unsubscribe 旧 OnCollisionHit（防 Retry 路径双绑定）
+│   → 填充 _slots，初始化 CD=1f
 ├── Tick(float dt):
 │   → for each slot:
 │       if (slot.isActive)

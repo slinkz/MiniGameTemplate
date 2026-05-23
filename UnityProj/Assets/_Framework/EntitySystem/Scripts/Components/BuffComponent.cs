@@ -127,6 +127,7 @@ namespace MiniGameTemplate.Entity
                             AttackerId = default, // DOT 无明确发射者
                             HitType = CollisionEventType.SprayHit, // 复用 SprayHit 类型表示持续伤害
                             Type = DamageType.Magical, // DOT 默认魔法伤害
+                            SourceId = dot.DotId, // Sprint 4: DOT 伤害溯源
                         };
                         DamageDealer.DealDamageToEntity(_owner, ctx);
                     }

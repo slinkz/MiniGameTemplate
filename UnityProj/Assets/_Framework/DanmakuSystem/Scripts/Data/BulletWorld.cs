@@ -19,6 +19,13 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>修饰数据数组（延迟变速/追踪延迟）</summary>
         public readonly BulletModifier[] Modifiers;
 
+        /// <summary>
+        /// 伤害来源标记数组（Sprint 4 伤害统计）。
+        /// 0=基础攻击，1~6=技能 sourceTag，7=反击弹幕，100+=DOT。
+        /// 与 Cores 同容量同生命周期，8KB@2048（可忽略）。
+        /// </summary>
+        public readonly int[] SourceTags;
+
         /// <summary>精确活跃弹丸数（Allocate +1 / Free -1）</summary>
         public int ActiveCount { get; private set; }
 
@@ -34,6 +41,7 @@ namespace MiniGameTemplate.Danmaku
             Cores = new BulletCore[capacity];
             Trails = new BulletTrail[capacity];
             Modifiers = new BulletModifier[capacity];
+            SourceTags = new int[capacity];
             _freeSlots = new int[capacity];
 
             // 倒序入栈，Allocate 时从 0 开始分配
@@ -66,6 +74,7 @@ namespace MiniGameTemplate.Danmaku
         public void Free(int index)
         {
             Cores[index].Flags = 0;
+            SourceTags[index] = 0;
             _freeSlots[_freeTop++] = index;
             ActiveCount--;
         }
@@ -79,6 +88,7 @@ namespace MiniGameTemplate.Danmaku
             for (int i = Capacity - 1; i >= 0; i--)
             {
                 Cores[i].Flags = 0;
+                SourceTags[i] = 0;
                 _freeSlots[_freeTop++] = i;
             }
             ActiveCount = 0;

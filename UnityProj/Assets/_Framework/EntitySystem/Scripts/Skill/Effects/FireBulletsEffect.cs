@@ -24,7 +24,7 @@ namespace MiniGameTemplate.Entity
 
             Vector2 pos = ctx.CastPosition + FireOffset;
             float angle = Mathf.Atan2(ctx.AimDirection.y, ctx.AimDirection.x) * Mathf.Rad2Deg;
-            ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value);
+            ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value, ctx.SourceTagId);
             return true;
         }
     }

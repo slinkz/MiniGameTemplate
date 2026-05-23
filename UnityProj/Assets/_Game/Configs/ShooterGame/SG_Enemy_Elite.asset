@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 104333c424327d1409c656f1f269a462, type: 3}
+  m_Name: SG_Enemy_Elite
+  m_EditorClassIdentifier: 
+  ConfigId: 0
+  DisplayName: SG_Enemy_Elite
+  Camp: 0
+  Components: 0001030402080b
+  PoolMax: 16
+  MaxHp: 120
+  MoveSpeed: 1
+  TurnSpeed: 0
+  CollisionRadius: 0.6
+  KnockbackDistance: 0
+  KnockbackDuration: 0
+  IFrameCount: 0
+  HitStopFrames: 0
+  KnockbackCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  EnableEntityCollision: 1
+  CollisionLayer: 0
+  ContactDamage: 10
+  ContactDamageInterval: 0.5
+  BaseLineBreachDamage: 15
+  AttackPower: 0
+  CritRate: 0
+  CritDamageMultiplier: 2
+  AutoAimRadius: 0
+  AutoAimSearchInterval: 0.2
+  AttackInterval: 3
+  FirstAttackDelay: 0.8
+  AttackBulletPattern: {fileID: 11400000, guid: d2086ef65f5aba84a960a8d39613658c, type: 2}
+  AttackFireOffset: {x: 0, y: -0.4}
+  SkillConfig: {fileID: 0}
+  AIBehavior: {fileID: 11400000, guid: 7a9c477a00daf5c49919f6e6a1065feb, type: 2}
+  ViewPrefab: {fileID: 0}
+  ViewPoolDef: {fileID: 0}
+  SpriteAnimData: {fileID: 0}
+  DebugColor: {r: 1, g: 0.85, b: 0, a: 1}
+  HitFlashDuration: 0.1
+  HitFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  ShowDamageNumber: 1
+  SpawnEffect: {fileID: 0}
+  HitEffect: {fileID: 0}
+  DeathEffect: {fileID: 0}
+  DeathDelay: 0.5

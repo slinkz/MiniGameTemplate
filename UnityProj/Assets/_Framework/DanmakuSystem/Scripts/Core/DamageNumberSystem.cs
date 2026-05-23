@@ -137,6 +137,18 @@ namespace MiniGameTemplate.Danmaku
                 : (RuntimeAtlasStats?)null;
         }
 
+        /// <summary>
+        /// 清除所有活跃飘字——关卡切换/重试时由 DanmakuSystem.ClearAll() 调用。
+        /// </summary>
+        public void ClearAll()
+        {
+            for (int i = 0; i < MAX_NUMBERS; i++)
+                _buffer[i].Lifetime = 0f;
+
+            _head = 0;
+            _count = 0;
+        }
+
         public void Dispose()
         {
             _batchManager?.Dispose();

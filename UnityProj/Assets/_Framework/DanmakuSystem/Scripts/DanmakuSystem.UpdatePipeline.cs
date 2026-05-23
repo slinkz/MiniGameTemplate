@@ -86,7 +86,8 @@ namespace MiniGameTemplate.Danmaku
             _laserRenderer.Rebuild(_laserPool, _typeRegistry);
             _laserWarningRenderer.Rebuild(_laserPool, _typeRegistry);
             _vfxRuntime?.RenderVFX();   // R4.0：VFX 渲染从独立 LateUpdate 收编到统一管线
-            _damageNumbers.Rebuild(dt);
+            // 飘字是纯视觉反馈，生命周期用真实时间（不受暂停/子弹时间影响）
+            _damageNumbers.Rebuild(Time.unscaledDeltaTime);
 
             // 渲染统计帧结束
             RenderBatchManagerRuntimeStats.EndFrame();

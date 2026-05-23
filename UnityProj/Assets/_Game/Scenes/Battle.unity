@@ -522,6 +522,7 @@ GameObject:
   - component: {fileID: 1736835541}
   - component: {fileID: 1736835542}
   - component: {fileID: 1736835540}
+  - component: {fileID: 1736835543}
   m_Layer: 0
   m_Name: BattleController
   m_TagString: Untagged
@@ -600,6 +601,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _battleController: {fileID: 1736835540}
+--- !u!114 &1736835543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736835539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9668aa79390e5a4a81d22093acf290e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _enabled: 1
+  _debugLevelIndex: 0
+  _overrideSkills: 1
+  _debugSkills:
+  - {fileID: 11400000, guid: 8f6e891c4f5fa464fb0355da7a613eac, type: 2}
+  - {fileID: 11400000, guid: a301d0699718735419bb7a1358dc76f3, type: 2}
+  - {fileID: 11400000, guid: 62ce2d4cb5816344bbd697853c26c667, type: 2}
+  - {fileID: 11400000, guid: d7f6dbc0f3f51a4449b9b9f2ad8b7c67, type: 2}
+  - {fileID: 11400000, guid: ffc54240b088aad4bb5adee0e407d28a, type: 2}
+  - {fileID: 11400000, guid: 1ceae7c4a22d75c46b157b45d9666700, type: 2}
+  _overridePassives: 1
+  _debugPassives:
+  - {fileID: 11400000, guid: f977e00aa81891a438d927d2c6d5a397, type: 2}
+  - {fileID: 11400000, guid: 0ae22207935ded54bb9788b42b89a269, type: 2}
+  - {fileID: 11400000, guid: e8703ed8e5a26e947b309bbb65a71f5b, type: 2}
+  - {fileID: 11400000, guid: e9a5022c01763a945a877642f0e44e4e, type: 2}
+  _status: Idle
 --- !u!1 &1740805477
 GameObject:
   m_ObjectHideFlags: 0

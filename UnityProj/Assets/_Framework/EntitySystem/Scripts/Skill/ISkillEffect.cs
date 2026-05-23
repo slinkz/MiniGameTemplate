@@ -58,5 +58,12 @@ namespace MiniGameTemplate.Entity
         /// ISkillEffect 可根据此标记决定是否发射（如激光无目标不发射）。
         /// </summary>
         public bool HasTarget;
+
+        /// <summary>
+        /// 伤害来源标记（Sprint 4 伤害统计）。
+        /// 由 SkillComponent 从 SkillConfigSO.SourceTagId 填充。
+        /// 0=基础攻击，1~6=技能 sourceTag，7=反击弹幕，100+=DOT。
+        /// </summary>
+        public int SourceTagId;
     }
 }

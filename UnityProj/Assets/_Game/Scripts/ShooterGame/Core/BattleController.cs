@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using MiniGameTemplate.Data;
@@ -35,6 +36,12 @@ namespace Game.ShooterGame
         [SerializeField] private string _debug_CurrentState;
         [SerializeField] private float _debug_StateTimer;
         [SerializeField] private int _debug_AliveEnemyCount;
+
+        // ── Debug Launcher 注入点 ──
+        private BattleDebugLauncher _debugLauncher;
+
+        /// <summary>由 BattleDebugLauncher.Awake() 调用注册。</summary>
+        public void SetDebugLauncher(BattleDebugLauncher launcher) => _debugLauncher = launcher;
 #endif
 
         [Header("关卡配置")]
@@ -102,6 +109,12 @@ namespace Game.ShooterGame
         private PickupRenderer _pickupRenderer;
         private BattleLevelData _battleLevelData;
 
+        // V2 Sprint 4: 伤害统计 + 星级评价
+        private Dictionary<int, int> _damageStats;
+        private float _battleTimer;
+        private BattleResultData _lastBattleResult;
+        private bool _damageStatsFrozen;
+
 
         // UI Controller 接口（通过 Init 或 GetComponent 动态绑定）
         private IBattleHUDController _hudController;
@@ -160,6 +173,19 @@ namespace Game.ShooterGame
 
                 // 如果 FlowHandler 已经触发了 StartBattle()，则不重复初始化
                 if (_battleStartedByFlow) return;
+
+                // 直跑 Battle 场景：注入 DebugLauncher 配置（仅编辑器）
+#if UNITY_EDITOR
+                if (_debugLauncher != null)
+                {
+                    var debugData = _debugLauncher.BuildDebugLevelData();
+                    if (debugData != null)
+                    {
+                        _launchLevelIndex = debugData.LevelIndex;
+                        _battleLevelData = debugData;
+                    }
+                }
+#endif
 
                 // 直跑 Battle 场景：自行启动战斗
                 await InitBattleAsync();
@@ -261,6 +287,12 @@ namespace Game.ShooterGame
             // 4. 重置击杀计数
             _killCount.SetValue(0);
 
+            // 4b. V2 Sprint 4: 初始化伤害统计
+            _damageStats = new Dictionary<int, int>(16);
+            _battleTimer = 0f;
+            _damageStatsFrozen = false;
+            _lastBattleResult = null;
+
             // 5. Spawn 基地 Entity
             SpawnBase();
 
@@ -279,8 +311,14 @@ namespace Game.ShooterGame
             if (mgr0 != null)
                 mgr0.OnSpawned += OnEntitySpawnedRegisterBuff;
 
-            // 6c. 订阅基地 OnDamaged 事件 → 同步 BaseHP SO + 死亡判定
+            // 6c. 订阅基地 OnDamaged 事件 → 死亡判定
             _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
+
+            // 6c2. 订阅基地 HealthComponent.OnHpChanged → 自动同步 BaseHP SO
+            //       单一数据源：HealthComponent 是权威，所有 HP 变化自动推送到 FloatVariable。
+            var baseHealthForSync = _baseEntity.GetComponent(ComponentType.Health) as HealthComponent;
+            if (baseHealthForSync != null)
+                baseHealthForSync.OnHpChanged += OnBaseHpChanged;
 
             // 6d. V2 Sprint 2: 技能多槽位初始化（从 BattleLevelData 读取装备）
             if (_battleLevelData?.EquippedSkills != null && _battleLevelData.EquippedSkills.Length > 0)
@@ -313,10 +351,10 @@ namespace Game.ShooterGame
             // 7. 初始化底线检测器（ET-003: 只传检测所需参数）
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
                 ? -_currentLevel.BaseLineYOverride : _baseLineY;
-            _baseLineDetector.Init(effectiveBaseLineY, _baseEntity, _baseHP);
+            _baseLineDetector.Init(effectiveBaseLineY, _baseEntity);
 
-            // 8. 设置 BaseHP SO 初始值
-            _baseHP.SetValue(1.0f);
+            // 8. 初始同步 BaseHP SO（SpawnBase 中 SetHp 在订阅前执行，需要 kick 初始值）
+            _baseHP.SetValue(baseHealthForSync != null ? baseHealthForSync.HpRatio : 1.0f);
 
             // 9. 初始化 UI Controllers（ET-007）
             // 异步加载 SG_Battle + SG_Popup FairyGUI 包 → 再创建 HUD
@@ -457,27 +495,57 @@ namespace Game.ShooterGame
 
         /// <summary>
         /// EntityManager.OnSpawned 回调——自动为所有新生成的 Entity 注册 BuffDamageModifier。
+        /// V2 Sprint 4: 同时订阅 Enemy OnDamaged 用于伤害统计。
         /// </summary>
         private void OnEntitySpawnedRegisterBuff(EntityClass entity, EntityConfigSO config)
         {
             RegisterBuffDamageModifier(entity);
+
+            // Sprint 4: 订阅敌机受伤事件 → damageStats 累加
+            if (entity.Camp == EnumCamp.Enemy)
+            {
+                entity.EventBus.Subscribe<OnDamaged>(OnEnemyDamaged);
+            }
+        }
+
+        /// <summary>
+        /// Sprint 4: 敌机受伤回调——累加 damageStats。
+        /// 只在战斗进行中（未冻结）时累加。
+        /// </summary>
+        private void OnEnemyDamaged(OnDamaged evt)
+        {
+            if (_damageStatsFrozen || _damageStats == null) return;
+            if (evt.Damage <= 0) return;
+
+            int key = evt.SourceId;
+            if (_damageStats.TryGetValue(key, out int current))
+                _damageStats[key] = current + evt.Damage;
+            else
+                _damageStats[key] = evt.Damage;
         }
 
         /// <summary>
         /// 基地受伤回调（无论来源：底线突破 / 弹丸直击 / 飞机伤害转发）。
-        /// 同步 BaseHP SO 变量 + 检查死亡 → Defeat。
+        /// BaseHP SO 同步已由 OnHpChanged 事件自动处理，此处只负责死亡判定 → Defeat。
         /// </summary>
         private void OnBaseDamaged(OnDamaged evt)
         {
             var baseHealth = _baseEntity?.GetComponent(ComponentType.Health) as HealthComponent;
             if (baseHealth == null) return;
 
-            _baseHP.SetValue(baseHealth.HpRatio);
-
             if (baseHealth.IsDead && CurrentState == BattleState.Playing)
             {
                 EnterState(BattleState.Defeat);
             }
+        }
+
+        /// <summary>
+        /// HealthComponent.OnHpChanged 回调——单一出口同步 BaseHP FloatVariable SO。
+        /// 替代原先散落在 5+ 处的手动 SetValue()。
+        /// </summary>
+        private void OnBaseHpChanged(float hpRatio)
+        {
+            _baseHP.SetValue(hpRatio);
         }
 
         // ── 状态转换 ──
@@ -506,6 +574,7 @@ namespace Game.ShooterGame
                     SetSpawnerEnabled(false);
                     SetInputEnabled(false);
                     SetBattleTimePaused(true);
+                    FreezeBattleResult(true);
                     StartCoroutine(ShowVictoryAfterDelay(_victoryDelay));
                     break;
 
@@ -513,6 +582,7 @@ namespace Game.ShooterGame
                     SetSpawnerEnabled(false);
                     SetInputEnabled(false);
                     SetBattleTimePaused(true);
+                    FreezeBattleResult(false);
                     // V2 Sprint 2: 记录死亡次数 + 刷新计数器
                     _progressManager?.RecordDeath();
                     _progressManager?.FlushCounters();
@@ -522,6 +592,61 @@ namespace Game.ShooterGame
         }
 
         // ── Tick 逻辑 ──
+
+        // ── V2 Sprint 4: 战斗结果冻结 ──
+
+        /// <summary>
+        /// 冻结伤害统计 + 构建 BattleResultData。
+        /// Victory/Defeat 进入时调用。
+        /// </summary>
+        private void FreezeBattleResult(bool isVictory)
+        {
+            _damageStatsFrozen = true;
+
+            // 读取基地 HP
+            int baseHpRemaining = 0;
+            int baseHpMax = _baseEntityConfig.MaxHp;
+            var baseHealth = _baseEntity != null
+                ? _baseEntity.GetComponent(ComponentType.Health) as HealthComponent
+                : null;
+            if (baseHealth != null)
+            {
+                baseHpRemaining = baseHealth.CurrentHp;
+                baseHpMax = baseHealth.MaxHp;
+            }
+
+            // 计算星级
+            int stars = isVictory
+                ? BattleResultCalculator.CalcStars(baseHpRemaining, baseHpMax)
+                : 0;
+
+            // 构建快照副本（防止外部修改）
+            var statsSnapshot = _damageStats != null
+                ? new Dictionary<int, int>(_damageStats)
+                : new Dictionary<int, int>();
+
+            _lastBattleResult = new BattleResultData
+            {
+                IsVictory = isVictory,
+                Stars = stars,
+                LevelIndex = _launchLevelIndex ?? 0,
+                TotalKills = _killCount.Value,
+                BattleTime = _battleTimer,
+                CoinsEarned = 0, // V3 预留
+                DamageStats = statsSnapshot,
+                BaseHpRemaining = baseHpRemaining,
+                BaseHpMax = baseHpMax,
+            };
+
+#if UNITY_EDITOR
+            Debug.Log($"[SG_Battle] Result: Victory={isVictory}, Stars={stars}, " +
+                      $"HP={baseHpRemaining}/{baseHpMax}, Kills={_killCount.Value}, " +
+                      $"Time={_battleTimer:F1}s, Sources={statsSnapshot.Count}");
+#endif
+        }
+
+        /// <summary>获取最近一次战斗结果（结算面板用）</summary>
+        public BattleResultData LastBattleResult => _lastBattleResult;
 
         private void TickIntro(float dt)
         {
@@ -537,6 +662,9 @@ namespace Game.ShooterGame
             using (s_TickPlayingMarker.Auto())
 #endif
             {
+                // 0. V2 Sprint 4: 累加战斗计时
+                _battleTimer += dt;
+
                 // 1. 底线检测
 #if UNITY_EDITOR
                 bool baseDead;
@@ -776,10 +904,17 @@ namespace Game.ShooterGame
             _cameraShaker.StopShake();
 
             // 5. 重置 SO 变量
-            _baseHP.SetValue(1.0f);
+            // 注：_baseHP 不再手动 SetValue(1.0f)——由 HandleRetry 中
+            //     SpawnBase() → SetHp() → OnHpChanged → OnBaseHpChanged 自动推送真实值。
             _currentWaveIndex.SetValue(1);
             _killCount.SetValue(0);
             _displayWaveIndex = 1;
+
+            // 5b. V2 Sprint 4: 重置伤害统计
+            _damageStats?.Clear();
+            _battleTimer = 0f;
+            _damageStatsFrozen = false;
+            _lastBattleResult = null;
         }
 
         // ── 转场流程 ──
@@ -806,6 +941,11 @@ namespace Game.ShooterGame
             {
                 SetBattleTimePaused(false);
 
+                // 退场前清理战斗残留（飘字等池对象位于 DontDestroyOnLoad，不随场景卸载）
+                _entityBootstrap?.HitReactionHandler?.ClearAll();
+                if (DanmakuSystem.Instance != null)
+                    DanmakuSystem.Instance.ClearAll();
+
                 // 直跑场景属于测试模式，不写存档，直接 Pop
                 if (!_launchLevelIndex.HasValue)
                 {
@@ -815,6 +955,12 @@ namespace Game.ShooterGame
                 }
 
                 int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
+
+                // V2 Sprint 4: 存档星级（只升不降）
+                if (_lastBattleResult != null && _lastBattleResult.Stars > 0)
+                {
+                    _progressManager?.UpdateLevelStars(clearedLevelIndex, _lastBattleResult.Stars);
+                }
 
                 // V2 Sprint 2: 更新成就计数器
                 _progressManager?.UpdateMaxKills(_killCount.Value);
@@ -854,6 +1000,10 @@ namespace Game.ShooterGame
         private IEnumerator HandleDefeatQuit()
         {
             SetBattleTimePaused(false);
+            // 退场前清理战斗残留（飘字等池对象位于 DontDestroyOnLoad，不随场景卸载）
+            _entityBootstrap?.HitReactionHandler?.ClearAll();
+            if (DanmakuSystem.Instance != null)
+                DanmakuSystem.Instance.ClearAll();
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }
@@ -886,6 +1036,14 @@ namespace Game.ShooterGame
             // 3c. 重新订阅基地 OnDamaged 事件
             _baseEntity.EventBus.Subscribe<OnDamaged>(OnBaseDamaged);
 
+            // 3c2. 重新订阅基地 OnHpChanged → 自动同步 BaseHP SO
+            var retryBaseHealth = _baseEntity.GetComponent(ComponentType.Health) as HealthComponent;
+            if (retryBaseHealth != null)
+                retryBaseHealth.OnHpChanged += OnBaseHpChanged;
+
+            // 3c3. Kick 初始值（SetHp 在订阅前已执行）
+            _baseHP.SetValue(retryBaseHealth != null ? retryBaseHealth.HpRatio : 1.0f);
+
             // 3d. V2 Sprint 2: 重新注入技能多槽位
             if (_battleLevelData?.EquippedSkills != null && _battleLevelData.EquippedSkills.Length > 0)
             {
@@ -908,7 +1066,7 @@ namespace Game.ShooterGame
             // 4. 重新初始化底线检测器
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
                 ? -_currentLevel.BaseLineYOverride : _baseLineY;
-            _baseLineDetector.Init(effectiveBaseLineY, _baseEntity, _baseHP);
+            _baseLineDetector.Init(effectiveBaseLineY, _baseEntity);
 
             // 5. 重新初始化 PlayerInputBridge
             _playerInputBridge.Init(_playerEntity);
@@ -931,6 +1089,10 @@ namespace Game.ShooterGame
         private IEnumerator HandlePauseQuit()
         {
             SetBattleTimePaused(false);
+            // 退场前清理战斗残留（飘字等池对象位于 DontDestroyOnLoad，不随场景卸载）
+            _entityBootstrap?.HitReactionHandler?.ClearAll();
+            if (DanmakuSystem.Instance != null)
+                DanmakuSystem.Instance.ClearAll();
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }

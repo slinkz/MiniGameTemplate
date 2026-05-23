@@ -1,9 +1,9 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint2-skill-equip-item
-last_verified: 2026-05-18
+last_verified: 2026-05-22
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_01_ENEMY_SHOOTING, SG_GDD_01_ACTIVE_SKILLS, SG_GDD_03_ITEMS_CONFIG]
-version: v1.4
+version: v1.5
 related_code: Assets/_Framework/EntitySystem/Components/Skill*, Assets/_Game/Scripts/ShooterGame/**
 ---
 
@@ -127,6 +127,11 @@ SharedProgressData（已有，扩展）:
 ---
 
 ### S2.3 出战准备 Bottom Sheet（3h）
+
+> **⏳ 延后说明（2026-05-22 决策）**：S2.3 的 UI 实现与验收（C1~C8）整体延后至 **Sprint 5** 与选关界面 V2 升级（S5.7）一并开发和验收。
+> - **原因**：数据管线（`BattleLevelData.EquippedSkills/Passives` → `SkillComponent` 多槽位 → `BattleController.Init`）已在 S2.6 打通，当前 `EquippedSkills=null` 走 `EntityConfigSO.SkillConfig` 单技能兜底不影响 S3/S4 功能开发。出战准备 UI 属表现层，不阻塞后续 Sprint。
+> - **临时方案**（✅ 已实现）：`BattleDebugLauncher` 组件（`#if UNITY_EDITOR`），直跑 Battle 场景时在 Inspector 配置技能/被动组合，自动注入 `BattleLevelData`。
+> - **S5 验收时**：C1~C8 全部验收 + S5.7 选关界面联调 + S5.8 最终整合测试。
 
 #### 实施方案
 

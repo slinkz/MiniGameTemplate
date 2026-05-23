@@ -36,6 +36,10 @@ namespace MiniGameTemplate.Entity
         [Tooltip("技能命中时附带施加的 DOT（null=不施加）。用于激光等持续命中技能。")]
         public DotConfigSO AttachedDotConfig;
 
+        [Header("V2 Sprint 4: 伤害统计")]
+        [Tooltip("伤害来源标记 ID（0=基础攻击，1~6=技能槽位，7=反击弹幕）。用于 damageStats 累加。")]
+        public int SourceTagId;
+
 #if UNITY_EDITOR
         private void OnValidate()
         {

@@ -23,7 +23,8 @@ namespace MiniGameTemplate.Danmaku
             DanmakuTypeRegistry registry,
             DifficultyProfileSO difficulty = null,
             TrailPool trailPool = null,
-            uint ownerEntityId = 0)
+            uint ownerEntityId = 0,
+            int sourceTag = 0)
         {
             var type = pattern.BulletType;
             if (type == null) return;
@@ -60,6 +61,9 @@ namespace MiniGameTemplate.Danmaku
                 ref var core = ref world.Cores[slot];
                 core.Position = origin;
                 core.Velocity = velocity;
+
+                // Sprint 4: 写入来源标记（伤害统计用）
+                world.SourceTags[slot] = sourceTag;
                 core.Lifetime = pattern.Lifetime * (difficulty?.LifetimeMultiplier ?? 1f);
                 core.Elapsed = 0;
                 core.Radius = type.CollisionRadius;

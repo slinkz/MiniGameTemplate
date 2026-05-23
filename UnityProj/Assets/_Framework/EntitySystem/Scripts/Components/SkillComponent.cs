@@ -225,6 +225,7 @@ namespace MiniGameTemplate.Entity
                 SkillConfig = config,
                 CasterTransform = casterTransform,
                 HasTarget = hasTarget,
+                SourceTagId = config.SourceTagId,
             };
 
             for (int i = 0; i < config.Effects.Length; i++)

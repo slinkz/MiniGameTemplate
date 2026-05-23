@@ -33,8 +33,9 @@ MonoBehaviour:
     m_RotationOrder: 4
   EnableEntityCollision: 1
   CollisionLayer: 0
-  ContactDamage: 25
+  ContactDamage: 10
   ContactDamageInterval: 0.5
+  BaseLineBreachDamage: 15
   AttackPower: 0
   CritRate: 0
   CritDamageMultiplier: 2

@@ -17,8 +17,16 @@ MonoBehaviour:
   CooldownTime: 10
   CastTime: 0
   RecoveryTime: 0.3
-  Effects: []
+  Effects:
+  - rid: 4957692961924055044
   AttachedDotConfig: {fileID: 0}
+  SourceTagId: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 4957692961924055044
+      type: {class: ApplyBuffEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
+      data:
+        BuffConfig: {fileID: 11400000, guid: f2bcdf1be67669d47b566cf2db65bf09, type: 2}
+        ApplyToSelf: 1
+        SearchRadius: 5

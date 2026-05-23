@@ -79,7 +79,7 @@ namespace MiniGameTemplate.Entity
                     new Vector3(FireOffset.x, FireOffset.y, 0f));
 
                 int index = ds.FireLaser(LaserType, ctx.CasterTransform, Length,
-                    LifetimeOverride, localOffset, angleOffset);
+                    LifetimeOverride, localOffset, angleOffset, ctx.SourceTagId);
                 return index >= 0;
             }
 
@@ -87,7 +87,8 @@ namespace MiniGameTemplate.Entity
             Vector2 pos = ctx.CastPosition + FireOffset;
             float angle = Mathf.Atan2(ctx.AimDirection.y, ctx.AimDirection.x);
 
-            int detachedIndex = ds.FireLaser(LaserType, pos, angle, Length, LifetimeOverride);
+            int detachedIndex = ds.FireLaser(LaserType, pos, angle, Length, LifetimeOverride,
+                ctx.SourceTagId);
             return detachedIndex >= 0;
         }
     }

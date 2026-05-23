@@ -17,8 +17,15 @@ MonoBehaviour:
   CooldownTime: 8
   CastTime: 0
   RecoveryTime: 0.5
-  Effects: []
+  Effects:
+  - rid: 4957692961924055041
   AttachedDotConfig: {fileID: 0}
+  SourceTagId: 0
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 4957692961924055041
+      type: {class: FireBulletsEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
+      data:
+        Pattern: {fileID: 11400000, guid: 8c8a3536bc00092409cc5775697bca76, type: 2}
+        FireOffset: {x: 0, y: 0}

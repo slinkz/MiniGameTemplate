@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using MiniGameTemplate.Data;
 using MiniGameTemplate.Danmaku;
 using MiniGameTemplate.Entity;
 using EntityClass = MiniGameTemplate.Entity.Entity;
@@ -11,6 +10,7 @@ namespace Game.ShooterGame
     /// 底线检测——每帧扫描敌方 Entity，穿过底线则扣基地 HP。
     /// 纯 C# 类（无 MonoBehaviour），由 BattleController 驱动 Tick。
     /// 只负责检测+扣血，不触发视觉反馈（SRP）。
+    /// HP 同步由 HealthComponent.OnHpChanged → BattleController.OnBaseHpChanged 自动推送。
     /// TDD_02 §2.2
     /// </summary>
     public class BaseLineDetector
@@ -18,7 +18,6 @@ namespace Game.ShooterGame
         private float _baseLineY;
         private EntityClass _baseEntity;
         private HealthComponent _baseHealth;
-        private FloatVariable _baseHPVariable;
 
         /// <summary>本帧是否有敌机突破底线</summary>
         public bool HasBreachThisFrame { get; private set; }
@@ -26,12 +25,11 @@ namespace Game.ShooterGame
         /// <summary>本帧突破底线的敌机数量（BattleController 据此触发反馈）</summary>
         public int BreachCountThisFrame { get; private set; }
 
-        public void Init(float baseLineY, EntityClass baseEntity, FloatVariable baseHPVar)
+        public void Init(float baseLineY, EntityClass baseEntity)
         {
             _baseLineY = baseLineY;
             _baseEntity = baseEntity;
             _baseHealth = baseEntity.GetComponent(ComponentType.Health) as HealthComponent;
-            _baseHPVariable = baseHPVar;
         }
 
         /// <summary>
@@ -62,18 +60,20 @@ namespace Game.ShooterGame
                     BreachCountThisFrame++;
                     _breachedEnemies.Add(entity);
 
-                    // 对基地造成伤害
-                    int damage = entity.ConfigSO != null
-                        ? entity.ConfigSO.ContactDamage : 15;
+                    // 对基地造成伤害（优先 BaseLineBreachDamage，fallback ContactDamage）
+                    int damage = 15;
+                    if (entity.ConfigSO != null)
+                    {
+                        damage = entity.ConfigSO.BaseLineBreachDamage > 0
+                            ? entity.ConfigSO.BaseLineBreachDamage
+                            : entity.ConfigSO.ContactDamage;
+                    }
                     var ctx = new DamageContext
                     {
                         BaseDamage = damage,
                         AttackerId = entity.Id,
                     };
                     _baseHealth.TakeDamage(ref ctx);
-
-                    // 更新 SO 变量（归一化 0~1）
-                    _baseHPVariable.SetValue(_baseHealth.HpRatio);
                 }
             }
 

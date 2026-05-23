@@ -1,3 +1,5 @@
+using System;
+
 namespace MiniGameTemplate.Entity
 {
     /// <summary>
@@ -38,6 +40,19 @@ namespace MiniGameTemplate.Entity
         /// <summary>HP 百分比（0~1）</summary>
         public float HpRatio => _maxHp > 0 ? (float)_currentHp / _maxHp : 0f;
 
+        /// <summary>
+        /// HP 变化时触发（参数为归一化 HpRatio 0~1）。
+        /// 所有修改 _currentHp 的路径（TakeDamage / SetHp / Heal / Init）均自动发布。
+        /// 单一事件源——外部只需订阅此事件即可，无需关心 HP 是怎么变的。
+        /// </summary>
+        public event Action<float> OnHpChanged;
+
+        /// <summary>统一的 HP 变化通知出口。</summary>
+        private void NotifyHpChanged()
+        {
+            OnHpChanged?.Invoke(HpRatio);
+        }
+
         // ── 无敌帧（P2.4 新增）──
         private int _iFrameMax;       // 配置的无敌帧数（从 EntityConfigSO 读取）
         private int _iFrameRemaining; // 当前剩余无敌帧
@@ -63,6 +78,8 @@ namespace MiniGameTemplate.Entity
             // 从配置读取属性
             _maxHp = owner.ConfigSO != null ? owner.ConfigSO.MaxHp : 100;
             _currentHp = _maxHp;
+            // 注：Init 时不触发 NotifyHpChanged——订阅方尚未就绪。
+            // 由外部调用 SetHp() 或首次 TakeDamage 触发。
 
             _iFrameMax = owner.ConfigSO != null ? owner.ConfigSO.IFrameCount : 0;
             _hitStopFrames = owner.ConfigSO != null ? owner.ConfigSO.HitStopFrames : 0;
@@ -77,6 +94,7 @@ namespace MiniGameTemplate.Entity
             _iFrameRemaining = 0;
             _modifierCount = 0;
             _owner = null;
+            OnHpChanged = null; // 清理订阅，防止 Entity 池化后泄漏
         }
 
         public void SetActive(bool active)
@@ -196,6 +214,7 @@ namespace MiniGameTemplate.Entity
             // 5. 扣血
             _currentHp -= finalDamage;
             if (_currentHp < 0) _currentHp = 0;
+            NotifyHpChanged();
 
             // 6. 触发无敌帧
             if (_iFrameMax > 0)
@@ -210,7 +229,8 @@ namespace MiniGameTemplate.Entity
             {
                 Damage = finalDamage,
                 RemainingHp = _currentHp,
-                Source = context.AttackerId
+                Source = context.AttackerId,
+                SourceId = context.SourceId
             });
 
             // 9. HP ≤ 0 → 触发死亡
@@ -240,7 +260,10 @@ namespace MiniGameTemplate.Entity
             int before = _currentHp;
             _currentHp += amount;
             if (_currentHp > _maxHp) _currentHp = _maxHp;
-            return _currentHp - before;
+            int healed = _currentHp - before;
+            if (healed > 0)
+                NotifyHpChanged();
+            return healed;
         }
 
         /// <summary>
@@ -249,7 +272,10 @@ namespace MiniGameTemplate.Entity
         public void SetHp(int hp)
         {
             if (!IsActive) return;
+            int oldHp = _currentHp;
             _currentHp = hp > _maxHp ? _maxHp : (hp < 0 ? 0 : hp);
+            if (_currentHp != oldHp)
+                NotifyHpChanged();
         }
 
         // ── 内部方法 ──

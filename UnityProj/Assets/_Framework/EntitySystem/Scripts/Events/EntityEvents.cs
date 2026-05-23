@@ -67,6 +67,13 @@ namespace MiniGameTemplate.Entity
         public bool HasSourcePosition;
 
         /// <summary>
+        /// 伤害来源标记（Sprint 4 伤害统计用）。
+        /// 0=基础攻击，1~6=技能槽位 sourceTag，7=反击弹幕，100+=DOT（DotId）。
+        /// BattleController._damageStats[SourceId] 累加 FinalDamage。
+        /// </summary>
+        public int SourceId;
+
+        /// <summary>
         /// 经 IDamageModifier 链修正后的最终伤害。
         /// HealthComponent 实际扣血使用此值（而非 BaseDamage）。
         /// 未经修正时默认 = 0，HealthComponent 内部 fallback 到 BaseDamage。
@@ -90,6 +97,8 @@ namespace MiniGameTemplate.Entity
         public int Damage;
         public int RemainingHp;
         public EntityId Source;
+        /// <summary>伤害来源标记（Sprint 4 伤害统计：0=基础攻击, 1~6=技能, 100+=DOT）</summary>
+        public int SourceId;
     }
 
     /// <summary>死亡事件</summary>

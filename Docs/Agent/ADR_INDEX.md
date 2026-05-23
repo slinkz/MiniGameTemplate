@@ -1,7 +1,7 @@
 # 架构决策记录（ADR）索引
 
 > **起始日期**：2026-04-11  
-> **共计**：34 条 ADR（ADR-001 ~ ADR-034）  
+> **共计**：35 条 ADR（ADR-001 ~ ADR-035）  
 > **状态标记**：✅ Accepted / 🔄 Superseded / ❌ Rejected
 
 ---
@@ -15,6 +15,7 @@
 | 3 | [ADR_03_RENDERING.md](ADR_03_RENDERING.md) | 021~028 | 渲染进阶：句柄/容量表/热重载/版本化迁移/RuntimeAtlas | ~510 |
 | 4 | [ADR_04_ATLAS.md](ADR_04_ATLAS.md) | 029~030 | Atlas 精简：Additive移除 + TypeRegistry内化 | ~311 |
 | 5 | [ADR_05_RECENT.md](ADR_05_RECENT.md) | 031~034 | 最新：Atlas深化 + Material踩坑 + Entity框架 + AppFlow导航 | ~320 |
+| 6 | [ADR_06_LIFECYCLE.md](ADR_06_LIFECYCLE.md) | 035 | 战斗退场生命周期统一事件通道 | ~150 |
 
 ---
 
@@ -56,3 +57,4 @@
 | 032 | new Material() shaderKeywords | ✅ | 05 |
 | 033 | Entity-Component 框架 | ✅ | 05 |
 | 034 | AppFlow 栈式导航系统 | ✅ | 05 |
+| 035 | 战斗退场生命周期统一事件通道 | ✅ (待实施) | 06 |

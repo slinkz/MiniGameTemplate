@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint5-tools-ui-polish
-last_verified: 2026-05-18
+last_verified: 2026-05-22
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_04_LEVEL_BALANCE, SG_GDD_04_WORKFLOW, SG_GDD_05_SUPPLEMENT]
 related_code: Assets/Editor/ShooterGame/**, Assets/_Game/Scripts/ShooterGame/UI/**, Assets/_Framework/EntitySystem/**
 ---
@@ -519,7 +519,9 @@ UnlockPopup : IUIPanel
 
 ---
 
-### S5.7 选关界面 V2 升级（PK-R3 UID-011 新增，含在 S5.7 工时内）
+### S5.7 选关界面 V2 升级 + 出战准备 Bottom Sheet（PK-R3 UID-011 新增 + S2.3 延后合入）
+
+> **📌 S2.3 合入说明（2026-05-22）**：原 TDD_02 §S2.3 出战准备 Bottom Sheet（3h）延后至本节一并开发与验收。数据管线已在 S2 打通（`BattleLevelData.EquippedSkills/Passives`），本节负责 UI 实现 + 端到端联调。验收时需同时完成 TDD_02 §S2.3 的 C1~C8 验收项。
 
 #### 实施方案
 

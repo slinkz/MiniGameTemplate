@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-21 10:30 | 文件总数：86
+> 最后更新：2026-05-22 10:40 | 文件总数：87
 
 ---
 
@@ -15,7 +15,7 @@
 | 新建一个 Buff | SO_WORKFLOWS_02_ENTITY §BuffConfigSO | Buff SO + Duration/叠加 |
 | 新增子弹花样 | SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
-| 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT | 追加到最新 ADR 子文件 |
+| 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 |
 | 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V3 云端权威模式（登录+云同步+CloudSaveSystem） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
@@ -33,6 +33,7 @@
 | ShooterGame 编辑器工具 | SG_TOOLS_TDD_INDEX → 01~02 | 工具 TDD：波次编辑器 + Debug + Gizmo |
 | 验收工具/P3/P4 | SG_TOOLS_P0_ACCEPTANCE / SG_P3_ACCEPTANCE_PLAN / SG_P4_TASKLIST | 均已通过 ✅ |
 | 验收 V2 Sprint 3 | SG_V2_S3_ACCEPTANCE | Buff/DOT/被动全链路（⬜ 待天命人验收） |
+| 验收 V2 Sprint 4 | SG_V2_S4_ACCEPTANCE | 关卡平衡+伤害统计+星级（⬜ 待天命人验收） |
 | 执行 SG-P4 集成验收 | SG_P4_TASKLIST | 资产收口 + 波次编排 + 全链路验收 + 发布前检查 |
 | ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
@@ -62,6 +63,7 @@
 | `_Framework/WeChatBridge/**` | WECHAT_INTEGRATION + SG_TDD_06 | 微信集成（广告/云开发/隐私/CDN/登录/同步） |
 | `_Framework/DataSystem/**/Cloud*.cs` + `CloudFunctions/**` | SG_TDD_06 | CloudSaveSystem + 云函数模板 |
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
+| `_Game/Scripts/ShooterGame/Battle/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE | 战斗状态 + 退场生命周期 |
 | `_Game/Scripts/ShooterGame/**/*.cs` | SG_TDD_01~05 + SG_V2_TDD_01~05 + SG_DEV_PLAN | SG 全部逻辑代码 |
 | `_Game/Configs/ShooterGame/**/*.asset` | SG_P4_TASKLIST §P4.1 + SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
@@ -92,6 +94,8 @@
 | SpeedModifierIds | EC_TDD_05 §4.10 | Buff by-ID 移速修正标识 |
 | ISkillEffect | EC_TDD_05 §4.8 | 技能效果接口（FireBullets/AreaDamage/ApplyBuff） |
 | ADR | ADR_INDEX | 架构决策记录（已接受/已废弃） |
+| BattleLifecycleEvent | ADR_06_LIFECYCLE §2 | SO 退场事件通道（统一退场清理触发） |
+| IBattleCleanup | ADR_06_LIFECYCLE §2 | 退场清理接口（OnBattleCleanup + CleanupOrder） |
 | BattleState | SG_TDD_02 §1.1 | 战斗状态枚举（None/Intro/Playing/Victory/Defeat） |
 | BaseLineDetector | SG_TDD_02 §2.2 | 底线检测器（纯 C#，扫描敌机越线扣基地 HP） |
 | SG_Boot | SG_TDD_01 §9 | ShooterGame 静态启动扩展（Progress 访问点） |
@@ -117,7 +121,7 @@
 | 前缀/系统 | INDEX | 子文件数 | 主题 |
 |-----------|-------|---------|------|
 | EC_TDD | EC_TDD_INDEX | 8 | Entity-Component 框架 |
-| ADR | ADR_INDEX | 5 | 架构决策记录 |
+| ADR | ADR_INDEX | 6 | 架构决策记录 |
 | ATLAS_TDD | ATLAS_TDD_INDEX | 3 | RuntimeAtlas 动态图集 |
 | CONV | CONV_INDEX | 4 | 编码/命名/平台/工作流约定 |
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
@@ -148,3 +152,4 @@
 | SG_V2_S1_ACCEPTANCE | — | — | V2 Sprint 1 验收手册（✅ 验收通过 2026-05-19） |
 | SG_V2_S2_ACCEPTANCE | — | — | V2 Sprint 2 验收手册（⬜ 待验收） |
 | SG_V2_S3_ACCEPTANCE | — | — | V2 Sprint 3 验收手册（⬜ 待天命人验收） |
+| SG_V2_S4_ACCEPTANCE | — | — | V2 Sprint 4 验收手册（⬜ 待天命人验收） |
