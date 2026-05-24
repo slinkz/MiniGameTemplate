@@ -28,6 +28,12 @@ namespace MiniGameTemplate.Entity
         private bool _attackInput;
         private Vector2 _aimInput;
 
+        /// <summary>
+        /// 抑制移动转发。设为 true 时，Tick 不再将 _moveInput 写入 MovementComponent。
+        /// 用于 1:1 跟手模式——外部直接调 SetPosition，避免速度系统干扰。
+        /// </summary>
+        public bool SuppressMovement { get; set; }
+
         // ──────────────── 内部状态 ────────────────
         private Entity _owner;
         private DecisionCommand _lastCommand;
@@ -52,6 +58,7 @@ namespace MiniGameTemplate.Entity
             _lastCommand = DecisionCommand.Idle;
             _owner = null;
             IsActive = false;
+            SuppressMovement = false;
         }
 
         // ──────────────── 外部输入 API ────────────────
@@ -88,11 +95,14 @@ namespace MiniGameTemplate.Entity
                 AimDirection = _aimInput
             };
 
-            // 将决策应用到 MovementComponent
-            var movement = _owner.GetComponent(ComponentType.Movement) as MovementComponent;
-            if (movement != null)
+            // 将决策应用到 MovementComponent（SuppressMovement 时跳过，避免与直接位置模式冲突）
+            if (!SuppressMovement)
             {
-                movement.SetMoveDirection(_lastCommand.MoveDirection);
+                var movement = _owner.GetComponent(ComponentType.Movement) as MovementComponent;
+                if (movement != null)
+                {
+                    movement.SetMoveDirection(_lastCommand.MoveDirection);
+                }
             }
         }
 

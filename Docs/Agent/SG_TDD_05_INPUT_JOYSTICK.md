@@ -118,148 +118,32 @@ namespace Game.ShooterGame
 - ❌ ~~全屏 MonoBehaviour + Input.GetTouch()~~（微信 WebGL 不可靠）
 - 暂停按钮 z 高于 GGraph → 事件分发自然解决冲突
 
-### 3.2 类设计
+### 3.2 1:1 跟手模式（v2 迭代）
+
+**设计决策**：绕过速度系统，手指移多少飞机就移多少。
+
+- `OnTouchMove` 输出**原始像素帧间 delta**（`currentPos - lastTouchPos`），不做归一化
+- 抖动过滤：`frameDelta.sqrMagnitude < 1f` 时忽略（死区 1px²）
+- 摇杆视觉保持独立逻辑（显示偏移量 clamp 到 MaxRadius）
+- 松手 / 不动 → delta 恒为 `Vector2.zero`
 
 ```csharp
-namespace Game.ShooterGame.UI
+// 核心逻辑（简化）
+private void OnTouchMove(EventContext context)
 {
-    /// <summary>
-    /// 虚拟摇杆控制器——基于 FairyGUI 触摸事件。
-    /// 每帧将方向向量写入 SG_InputDirection Vector2Variable。
-    /// </summary>
-    public class JoystickController : MonoBehaviour
+    Vector2 currentPos = new Vector2(touch.x, touch.y);
+    Vector2 frameDelta = currentPos - _lastTouchPos;
+    _lastTouchPos = currentPos;
+
+    // 抖动过滤
+    if (frameDelta.sqrMagnitude < 1f)
     {
-        [SerializeField] private JoystickConfigSO _config;
-        [SerializeField] private Vector2Variable _inputDirection;
-        
-        // FairyGUI 元素
-        private GGraph _touchArea;       // 全屏触摸区
-        private GComponent _joystickBase; // 底座
-        private GComponent _joystickStick; // 摇杆头
-        
-        // 状态
-        private bool _isActive;
-        private Vector2 _touchOrigin;    // 按下时的位置（摇杆中心）
-        private bool _inputEnabled = true;
-        
-        public void Init(GComponent battleHUD)
-        {
-            // 创建全屏 GGraph 作为触摸区
-            _touchArea = new GGraph();
-            _touchArea.SetSize(GRoot.inst.width, GRoot.inst.height);
-            _touchArea.touchable = true;
-            _touchArea.sortingOrder = 50;  // 低于 HUD
-            battleHUD.AddChild(_touchArea);
-            
-            // 创建底座和摇杆头
-            _joystickBase = UIPackage.CreateObject("Battle", "Joystick").asCom;
-            _joystickBase.visible = false;
-            battleHUD.AddChild(_joystickBase);
-            
-            _joystickStick = _joystickBase.GetChild("stick").asCom;
-            
-            // 绑定事件
-            _touchArea.onTouchBegin.Add(OnTouchBegin);
-            _touchArea.onTouchMove.Add(OnTouchMove);
-            _touchArea.onTouchEnd.Add(OnTouchEnd);
-        }
-        
-        public void SetEnabled(bool enabled)
-        {
-            _inputEnabled = enabled;
-            if (!enabled && _isActive)
-            {
-                Deactivate();
-            }
-        }
-        
-        // ── 触摸处理 ──
-        
-        private void OnTouchBegin(EventContext context)
-        {
-            if (!_inputEnabled) return;
-            
-            var touch = context.inputEvent;
-            _touchOrigin = new Vector2(touch.x, touch.y);
-            _isActive = true;
-            
-            // 显示摇杆（在按下位置）
-            ShowJoystick(_touchOrigin);
-        }
-        
-        private void OnTouchMove(EventContext context)
-        {
-            if (!_isActive) return;
-            
-            var touch = context.inputEvent;
-            Vector2 currentPos = new Vector2(touch.x, touch.y);
-            Vector2 delta = currentPos - _touchOrigin;
-            float distance = delta.magnitude;
-            
-            // 死区检测
-            if (distance < _config.DeadZone)
-            {
-                _inputDirection.SetValue(Vector2.zero);
-                UpdateStickVisual(Vector2.zero);
-                return;
-            }
-            
-            // 方向归一化
-            Vector2 direction = delta.normalized;
-            
-            // 钳制摇杆头在最大半径内
-            float clampedDistance = Mathf.Min(distance, _config.MaxRadius);
-            Vector2 stickOffset = direction * clampedDistance;
-            
-            // 写入 SO
-            _inputDirection.SetValue(direction);
-            
-            // 更新视觉
-            UpdateStickVisual(stickOffset);
-        }
-        
-        private void OnTouchEnd(EventContext context)
-        {
-            if (!_isActive) return;
-            Deactivate();
-        }
-        
-        private void Deactivate()
-        {
-            _isActive = false;
-            _inputDirection.SetValue(Vector2.zero);
-            HideJoystick();
-        }
-        
-        // ── 视觉更新 ──
-        
-        private void ShowJoystick(Vector2 center)
-        {
-            _joystickBase.SetPosition(
-                center.x - _config.BaseDiameter * 0.5f,
-                center.y - _config.BaseDiameter * 0.5f, 0);
-            _joystickBase.alpha = _config.Alpha_Base;
-            _joystickBase.visible = true;
-            _joystickBase.TweenScale(new Vector2(1, 1), _config.AppearDuration)
-                         .SetValue(new Vector2(0, 0));
-        }
-        
-        private void HideJoystick()
-        {
-            _joystickBase.TweenFade(0f, _config.DisappearDuration)
-                         .OnComplete(() => { _joystickBase.visible = false; });
-        }
-        
-        private void UpdateStickVisual(Vector2 offset)
-        {
-            // 摇杆头相对底座中心的偏移
-            float centerX = _config.BaseDiameter * 0.5f;
-            float centerY = _config.BaseDiameter * 0.5f;
-            _joystickStick.SetPosition(
-                centerX + offset.x - _config.StickDiameter * 0.5f,
-                centerY + offset.y - _config.StickDiameter * 0.5f, 0);
-        }
+        _inputDirection.SetValue(Vector2.zero);
+        return;
     }
+
+    // 输出原始像素 delta（Bridge 消费后清零）
+    _inputDirection.SetValue(frameDelta);
 }
 ```
 
@@ -269,103 +153,117 @@ namespace Game.ShooterGame.UI
 
 ### 4.1 职责
 
-读取 `SG_InputDirection` SO → 写入玩家 Entity 的 `MovementComponent`。
-桥接 UI 层（摇杆）和 Entity 层（移动），保持双方解耦。
+读取 `SG_InputDirection`（像素 delta）→ 换算为世界坐标偏移 → 直接设置玩家 Entity 位置。
+同时常驻 `ControlComponent.SetAttackInput(true)` + `SetAimInput(Vector2.up)`（全自动射击）。
+桥接 UI 层（摇杆）和 Entity 层（位置），保持双方解耦。
 
-### 4.2 类设计
+### 4.2 1:1 跟手模式
+
+**设计决策**：绕过 `MovementComponent` 的速度系统，直接做位置偏移。
 
 ```csharp
 namespace Game.ShooterGame
 {
-    /// <summary>
-    /// 摇杆→Entity 移动桥接。
-    /// 每帧读取 SG_InputDirection，写入玩家 Entity 的 MovementComponent。
-    /// 挂载在 Battle 场景中。
-    /// </summary>
     public class SG_PlayerInputBridge : MonoBehaviour
     {
         [SerializeField] private Vector2Variable _inputDirection;
-        
+        [SerializeField] private DanmakuWorldConfig _worldConfig;
+
         private Entity _playerEntity;
         private MovementComponent _movement;
-        
-        /// <summary>由 BattleController 调用，传入玩家 Entity</summary>
+        private ControlComponent _control;
+
+        // 屏幕像素→世界坐标换算系数（运行时计算一次）
+        private float _pixelToWorldX;
+        private float _pixelToWorldY;
+
         public void Init(Entity playerEntity)
         {
             _playerEntity = playerEntity;
             _movement = playerEntity.GetComponent(ComponentType.Movement) as MovementComponent;
-            
-            if (_movement == null)
-                Debug.LogError("[SG_PlayerInputBridge] Player Entity 缺少 MovementComponent!");
+            _control = playerEntity.GetComponent(ComponentType.Control) as ControlComponent;
+
+            // 全自动射击 + 禁止速度系统移动转发
+            if (_control != null)
+            {
+                _control.SetAttackInput(true);
+                _control.SetAimInput(Vector2.up);
+                _control.SuppressMovement = true; // 位置由 Bridge 直接设置
+            }
+
+            // 像素→世界换算系数
+            float screenW = GRoot.inst.width;
+            float screenH = GRoot.inst.height;
+            float worldW = _worldConfig != null ? _worldConfig.WorldBounds.width : 12f;
+            float worldH = _worldConfig != null ? _worldConfig.WorldBounds.height : 20f;
+            _pixelToWorldX = worldW / screenW;
+            _pixelToWorldY = worldH / screenH;
         }
-        
+
         private void Update()
         {
-            if (_movement == null) return;
-            
-            // 读取 SO 值，写入 MovementComponent
-            // 注意：摇杆输出的是 UI 坐标方向（x 右正，y 下正）
-            // Entity 世界坐标 y 轴向上，需要翻转 y
             Vector2 input = _inputDirection.Value;
-            
-            // FairyGUI 触摸坐标 y 轴向下，需翻转为世界坐标
-            Vector2 worldDir = new Vector2(input.x, -input.y);
-            
-            _movement.SetMoveDirection(worldDir);
-        }
-        
-        /// <summary>禁用输入（Intro/结算状态调用）</summary>
-        public void SetEnabled(bool enabled)
-        {
-            this.enabled = enabled;
-            if (!enabled)
-                _movement?.SetMoveDirection(Vector2.zero);
+            if (input.sqrMagnitude < 0.01f) return;
+
+            _inputDirection.SetValue(Vector2.zero); // 消费后立即清零
+
+            if (_movement == null) return;
+
+            // 像素 delta → 世界坐标偏移（FairyGUI y↓ → 世界 y↑，翻转 y）
+            float worldDx = input.x * _pixelToWorldX;
+            float worldDy = -input.y * _pixelToWorldY;
+
+            Vector2 newPos = _playerEntity.Position + new Vector2(worldDx, worldDy);
+
+            // 边界钳制
+            if (_worldConfig != null)
+            {
+                Rect bounds = _worldConfig.WorldBounds;
+                newPos.x = Mathf.Clamp(newPos.x, bounds.xMin, bounds.xMax);
+                newPos.y = Mathf.Clamp(newPos.y, bounds.yMin, bounds.yMax);
+            }
+
+            _movement.SetPosition(newPos); // 直接设位置（触发 OnPositionChanged）
         }
     }
 }
 ```
 
-### 4.3 Y 轴翻转结论
+### 4.3 关键设计要点
 
-| 坐标系 | X 正方向 | Y 正方向 |
-|--------|---------|---------|
-| FairyGUI 触摸 (`inputEvent.x/y`) | 右 | **下**（左上角为原点） |
-| Unity 世界坐标 | 右 | **上** |
-
-**确定结论**：FairyGUI 的 `inputEvent.x/y` 使用屏幕坐标系（左上角原点，Y 向下），
-与 Unity 世界坐标 Y 轴方向相反。因此**必须翻转 Y 轴**：
-
-```csharp
-// 摇杆向上拖 → delta.y < 0（FairyGUI Y 减小 = 屏幕向上）
-// 翻转后 worldDir.y > 0 → 飞机向上移动 ✅
-Vector2 worldDir = new Vector2(input.x, -input.y);
-```
-
-> **依据**：FairyGUI 官方文档明确 `Stage.touchPosition` 和 `InputEvent.x/y` 使用
-> 左上角原点坐标系（与 Unity ScreenToWorldPoint 的左下角原点不同）。
+| 要点 | 说明 |
+|------|------|
+| 消费后清零 | `_inputDirection.SetValue(Vector2.zero)` 防止残留 delta 下帧重复生效 |
+| SuppressMovement | 告诉 ControlComponent 不要每帧写 SetMoveDirection(0,0)，避免架构冲突 |
+| SetPosition 发事件 | v2 修复后，`SetPosition()` 会发布 `OnPositionChanged`，与 Tick 路径一致 |
+| 边界钳制 | 用 `DanmakuWorldConfig.WorldBounds`，不需要额外 Clamp 系统 |
+| null fallback | `_worldConfig == null` 时用硬编码 12×20，不崩溃（仅 Editor 漏配时） |
 
 ---
 
-## 5. 输入管线时序
+## 5. 输入管线时序（1:1 跟手模式）
 
 ```
 每帧时序：
 
 1. FairyGUI Input → JoystickController.OnTouchMove
-   → SG_InputDirection.SetValue(direction)
+   → 计算帧间像素 delta（currentPos - lastTouchPos）
+   → SG_InputDirection.SetValue(pixelDelta)
 
 2. SG_PlayerInputBridge.Update()
-   → 读取 SG_InputDirection.Value
-   → MovementComponent.SetMoveDirection(worldDir)
+   → 读取 SG_InputDirection.Value（像素 delta）
+   → 消费后清零 SetValue(Vector2.zero)
+   → 像素 delta × (worldSize / screenSize) → 世界坐标偏移
+   → newPos = Entity.Position + worldOffset
+   → 边界钳制（WorldBounds）
+   → MovementComponent.SetPosition(newPos) → 触发 OnPositionChanged
 
-3. EntitySystemBootstrap.Update()
-   → EntityManager.Tick(dt)
-     → MovementComponent.Tick(dt)
-       → Entity.Position += direction * speed * dt
+3. ControlComponent.Tick()（TickOrder=100）
+   → SuppressMovement=true → 跳过 SetMoveDirection（不干扰直接位置模式）
+   → 仍然传递 WantsAttack=true + AimDirection=up
 
-4. EntitySystemBootstrap.Update() (续)
-   → ClampPlayerPositions()
-     → 确保飞机在可视区域内
+4. EntityViewBridge.SyncAll()
+   → 从 Entity.Position 读取新位置 → 同步到 Transform
 ```
 
 ---
@@ -385,8 +283,10 @@ Vector2 worldDir = new Vector2(input.x, -input.y);
 
 | ID | 契约 | 验证方式 |
 |----|------|---------|
-| SG-BC-10 | 摇杆输出方向始终归一化或零向量 | JoystickController 内 normalize |
-| SG-BC-11 | 松手后 SG_InputDirection 立即归零 | OnTouchEnd → SetValue(Zero) |
+| SG-BC-10 | 摇杆输出原始像素 delta（不归一化），松手后恒为零 | JoystickController.OnTouchEnd → SetValue(Zero) |
+| SG-BC-11 | Bridge 消费后立即清零 SO，避免残留 | Update 开头 SetValue(Vector2.zero) |
 | SG-BC-12 | BattleState != Playing 时输入被禁用 | BattleController 状态转换时调用 SetEnabled |
 | SG-BC-13 | Vector2Variable 值变化才触发事件 | == 比较避免重复通知 |
 | SG-BC-14 | 摇杆视觉不遮挡 HUD 信息 | z=50 < HUD 元素 z |
+| SG-BC-15 | SetPosition 触发 OnPositionChanged 事件 | MovementComponent.SetPosition 内部发布 |
+| SG-BC-16 | SuppressMovement=true 时速度系统不干扰位置 | ControlComponent.Tick 跳过 SetMoveDirection |

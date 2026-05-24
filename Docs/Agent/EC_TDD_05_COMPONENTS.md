@@ -161,20 +161,20 @@ healthComponent.RemoveModifier(mod);
 
 **v2.4 新增（GD-R4-004）**：击退（Knockback）支持
 ```csharp
-/// <summary>
-/// 施加击退效果。被调用后在 duration 时间内沿 direction 位移 distance 距离。
-/// 击退期间正常移速叠加（击退是额外位移，不替代原始运动）。
-/// </summary>
-public void ApplyKnockback(Vector2 direction, float distance, float duration)
-{
-    _knockbackDir = direction.normalized;
-    _knockbackSpeed = distance / duration;
-    _knockbackRemaining = duration;
-}
+public void ApplyKnockback(Vector2 direction, float distance, float duration, AnimationCurve curve = null)
 ```
 - 从 `EntityConfigSO.KnockbackDistance` 读取默认击退距离
 - `HealthComponent` 收到 `OnCollisionHit` 后调用 `MovementComponent.ApplyKnockback()`
-- 击退曲线（AnimationCurve）Phase 2 扩展
+- 击退曲线（AnimationCurve）支持（curve != null 时按曲线衰减）
+
+**v2.5 新增**：`SetPosition()` 发布 `OnPositionChanged` 事件
+```csharp
+/// 直接设置位置（碰撞分离 / 1:1 跟手移动，绕过速度系统）。
+/// 会发布 OnPositionChanged 事件，保持与 Tick 路径一致。
+public void SetPosition(Vector2 pos)
+```
+- 用于摇杆 1:1 跟手模式（SG_PlayerInputBridge 直接设置位置）
+- 位移阈值 `sqrMagnitude > 0.00001f` 时才发事件（避免零位移噪声）
 
 ### 4.5 CollisionComponent
 
@@ -201,6 +201,16 @@ public void ApplyKnockback(Vector2 direction, float distance, float duration)
 **v2.0 变更**：无实质变更，设计保持。
 
 **v2.4 新增（GD-R4-002/010）**：AIBehaviorSO 配置资产化 + IAIAction 有状态 Action 接口。
+
+**v2.5 新增**：`SuppressMovement` 属性
+```csharp
+/// 抑制移动转发。设为 true 时，Tick 不再将 _moveInput 写入 MovementComponent。
+/// 用于 1:1 跟手模式——外部直接调 SetPosition，避免速度系统干扰。
+public bool SuppressMovement { get; set; }
+```
+- `SG_PlayerInputBridge.Init()` 设置 `SuppressMovement = true`
+- `Reset()` 时自动复位为 `false`（Entity 回池后恢复正常行为）
+- 攻击/瞄准决策不受影响，只跳过 `movement.SetMoveDirection()`
 
 #### AIBehaviorSO（条件-动作表配置资产）
 

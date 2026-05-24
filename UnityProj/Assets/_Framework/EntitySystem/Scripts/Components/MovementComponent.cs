@@ -126,12 +126,23 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
-        /// 直接设置位置（P2.2 碰撞分离用，绕过速度系统）。
+        /// 直接设置位置（P2.2 碰撞分离 / 1:1 跟手移动，绕过速度系统）。
+        /// 会发布 OnPositionChanged 事件，保持与 Tick 路径一致。
         /// </summary>
         public void SetPosition(Vector2 pos)
         {
-            if (_owner != null)
-                _owner.Position = pos;
+            if (_owner == null) return;
+            Vector2 oldPos = _owner.Position;
+            _owner.Position = pos;
+
+            if ((pos - oldPos).sqrMagnitude > 0.00001f)
+            {
+                _owner.EventBus.Publish(new OnPositionChanged
+                {
+                    OldPos = oldPos,
+                    NewPos = pos
+                });
+            }
         }
 
         /// <summary>

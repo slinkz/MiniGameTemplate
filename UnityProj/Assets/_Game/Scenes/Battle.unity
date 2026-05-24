@@ -615,7 +615,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _enabled: 1
   _debugLevelIndex: 0
-  _overrideSkills: 1
+  _overrideSkills: 0
   _debugSkills:
   - {fileID: 11400000, guid: 8f6e891c4f5fa464fb0355da7a613eac, type: 2}
   - {fileID: 11400000, guid: a301d0699718735419bb7a1358dc76f3, type: 2}
@@ -623,7 +623,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d7f6dbc0f3f51a4449b9b9f2ad8b7c67, type: 2}
   - {fileID: 11400000, guid: ffc54240b088aad4bb5adee0e407d28a, type: 2}
   - {fileID: 11400000, guid: 1ceae7c4a22d75c46b157b45d9666700, type: 2}
-  _overridePassives: 1
+  _overridePassives: 0
   _debugPassives:
   - {fileID: 11400000, guid: f977e00aa81891a438d927d2c6d5a397, type: 2}
   - {fileID: 11400000, guid: 0ae22207935ded54bb9788b42b89a269, type: 2}
@@ -661,6 +661,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputDirection: {fileID: 11400000, guid: 79a82c9247a02ec46802b11b864d1ec6, type: 2}
+  _worldConfig: {fileID: 11400000, guid: 62dc325cc4dd4414b9357ade196622ef, type: 2}
 --- !u!4 &1740805479
 Transform:
   m_ObjectHideFlags: 0
@@ -689,6 +690,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputDirection: {fileID: 11400000, guid: 79a82c9247a02ec46802b11b864d1ec6, type: 2}
+  _pixelsPerFrame: 8
 --- !u!1 &1955540014
 GameObject:
   m_ObjectHideFlags: 0
@@ -859,5 +861,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f15745ad3923114291a4c689486cbbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _killCount: {fileID: 11400000, guid: 72ef00e272f0faf4a8eefc963fec20ca, type: 2}
-  _baseHP: {fileID: 11400000, guid: 6bff7144902bdfe4fb3ea95cd5e13424, type: 2}

@@ -5,12 +5,16 @@ namespace Game.ShooterGame
 {
     /// <summary>
     /// 编辑器键盘输入驱动——将 WASD/方向键映射到 SG_InputDirection。
+    /// 输出模拟的像素 delta（与 JoystickController 1:1 跟手模式对齐）。
     /// 与 FairyGUI 摇杆并存，用于 Editor 快速测试（不依赖鼠标拖拽摇杆）。
     /// 微信小游戏真机发布时此组件不生效（无物理键盘），不需要移除。
     /// </summary>
     public class SG_DebugKeyboardInput : MonoBehaviour
     {
         [SerializeField] private Vector2Variable _inputDirection;
+
+        /// <summary>键盘模拟的像素移动速度（像素/秒），帧率无关</summary>
+        [SerializeField] private float _pixelsPerSecond = 480f;
 
         private bool _hadInputLastFrame;
 
@@ -42,10 +46,10 @@ namespace Game.ShooterGame
             if (dir.sqrMagnitude > 1f)
                 dir.Normalize();
 
-            // SG_PlayerInputBridge 会翻转 Y 轴（FairyGUI 坐标系），
-            // 键盘 Y 轴已经是世界方向（上=正），
-            // 写入时取反 Y，让 Bridge 翻转后恢复正确方向。
-            _inputDirection.SetValue(new Vector2(dir.x, -dir.y));
+            // 输出模拟的像素 delta（Bridge 会翻转 Y 轴）
+            // 键盘 Y 轴是世界方向（上=正），取反 Y 让 Bridge 翻转后恢复正确
+            Vector2 pixelDelta = new Vector2(dir.x, -dir.y) * (_pixelsPerSecond * Time.deltaTime);
+            _inputDirection.SetValue(pixelDelta);
         }
 
         private void OnDisable()

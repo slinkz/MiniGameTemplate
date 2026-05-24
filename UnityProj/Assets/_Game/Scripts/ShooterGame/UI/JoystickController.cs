@@ -24,7 +24,8 @@ namespace Game.ShooterGame.UI
 
         // 状态
         private bool _isActive;
-        private Vector2 _touchOrigin;
+        private Vector2 _touchOrigin;   // 按下瞬间的初始触摸位置（用于摇杆视觉定位）
+        private Vector2 _lastTouchPos;  // 上一帧触摸位置（用于计算 delta）
         private bool _inputEnabled = true;
 
         public void Init(GComponent battleHUD)
@@ -72,8 +73,11 @@ namespace Game.ShooterGame.UI
 
             var touch = context.inputEvent;
             _touchOrigin = new Vector2(touch.x, touch.y);
+            _lastTouchPos = _touchOrigin;
             _isActive = true;
 
+            // 按下瞬间不产生移动输入，等待手指开始滑动
+            _inputDirection.SetValue(Vector2.zero);
             ShowJoystick(_touchOrigin);
         }
 
@@ -83,28 +87,28 @@ namespace Game.ShooterGame.UI
 
             var touch = context.inputEvent;
             Vector2 currentPos = new Vector2(touch.x, touch.y);
-            Vector2 delta = currentPos - _touchOrigin;
-            float distance = delta.magnitude;
 
-            // 死区检测
-            if (distance < _config.DeadZone)
+            // ── 1:1 跟手模式：直接输出原始像素 delta ──
+            Vector2 frameDelta = currentPos - _lastTouchPos;
+            _lastTouchPos = currentPos;
+
+            // 极小抖动过滤（1px 以内视为静止）
+            if (frameDelta.sqrMagnitude < 1f)
             {
                 _inputDirection.SetValue(Vector2.zero);
-                UpdateStickVisual(Vector2.zero);
-                return;
+            }
+            else
+            {
+                // 直接输出像素级 delta，由 InputBridge 层做坐标换算
+                _inputDirection.SetValue(frameDelta);
             }
 
-            // 方向归一化
-            Vector2 direction = delta.normalized;
-
-            // 钳制摇杆头在最大半径内
-            float clampedDistance = Mathf.Min(distance, _config.MaxRadius);
-            Vector2 stickOffset = direction * clampedDistance;
-
-            // 写入 SO
-            _inputDirection.SetValue(direction);
-
-            // 更新视觉
+            // ── 摇杆视觉：仍然按相对于触摸原点的偏移来显示 ──
+            Vector2 visualDelta = currentPos - _touchOrigin;
+            float clampedDistance = Mathf.Min(visualDelta.magnitude, _config.MaxRadius);
+            Vector2 stickOffset = visualDelta.magnitude > 0.001f
+                ? visualDelta.normalized * clampedDistance
+                : Vector2.zero;
             UpdateStickVisual(stickOffset);
         }
 

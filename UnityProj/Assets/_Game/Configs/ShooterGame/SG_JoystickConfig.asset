@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SG_JoystickConfig
   m_EditorClassIdentifier: 
   DeadZone: 8
-  MaxRadius: 60
+  MaxRadius: 120
   Alpha_Base: 0.3
   Alpha_Stick: 0.6
   BaseDiameter: 120
