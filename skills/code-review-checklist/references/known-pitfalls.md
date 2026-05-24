@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：25 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-040）
+> **当前条目数**：26 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-041）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -321,6 +321,23 @@
 - **修复**: 每次外部修改 .cs 后，必须先 `unity_execute_code("AssetDatabase.Refresh()")` 等编译完成，再查 `unity_get_compilation_errors`
 - **验证方法**: 任何"MCP 说 0 错误"的结果，检查时间戳是否在文件修改之后；若不确定，一律先 Refresh 再查
 - **严重度**: 🔴 工作流假阳性，会导致带编译错误的代码被标记为"审查通过"
+
+---
+
+## PIT-041: 云函数未同步客户端数据结构 — 新字段静默丢弃 `[经典]`
+- **分类**: CL-9 架构一致性
+- **日期**: 2026-05-24
+- **现象**: 关卡通关后星级（`levelStars`）在本地存档正常，但云端始终为空。换设备/清缓存后星级数据丢失
+- **根因**: `CloudFunctions/saveProgress/index.js` 是 V1/V2 时期写的，只解构了 `clearedLevels` + `version`。客户端 V3 新增的 `levelStars`、`unlockedSkillIds`、`unlockedPassiveIds`、成就计数器被 JavaScript 解构语法**静默丢弃**——无任何报错
+- **修复**: 在云函数中完整解构所有 `SharedProgressData` 字段并写入数据库；或更好的做法是直接存储整个 event 对象（透传式存储）
+- **验证方法**:
+  1. 每次客户端持久化数据结构（`SharedProgressData` 等）增删字段时，全局搜索所有相关云函数（`saveProgress`、`getProgress`）
+  2. 确认云函数解构/写入了所有新字段
+  3. 确认 `getProgress` 返回不会过滤新字段
+  4. 部署后真机验证：写入 → 清缓存 → 重新拉取，确认新字段完整
+- **为什么危险**: 客户端 `JSON.stringify` 自动包含所有字段 → 上传"成功"；云函数解构 `const { a, b } = event` 丢弃未列出字段 → JavaScript 不报错；`getProgress` 读回来的就是写进去的 → 看不出差异。唯一暴露时机是换设备/清缓存
+- **严重度**: 🔴 数据丢失，用户无感知直到换设备
+- **标记 [经典] 原因**: 客户端与云端数据结构版本漂移是长期维护中的高频陷阱；JavaScript 解构的静默丢弃特性让问题极难发现
 
 ---
 

@@ -7,13 +7,35 @@ const db = cloud.database();
 
 exports.main = async (event, context) => {
     const { OPENID } = cloud.getWXContext();
-    const { clearedLevels, version, clientVersion } = event;
+
+    // V3: Client sends the complete SharedProgressData JSON.
+    // Store it as-is (cloud-authoritative, direct overwrite).
+    // Expected fields: version, clearedLevels, levelStars,
+    //   unlockedSkillIds, unlockedPassiveIds, totalDeaths,
+    //   maxKillsInOneLevel, totalHitsTaken, clientVersion.
+    const {
+        version,
+        clearedLevels,
+        levelStars,
+        unlockedSkillIds,
+        unlockedPassiveIds,
+        totalDeaths,
+        maxKillsInOneLevel,
+        totalHitsTaken,
+        clientVersion,
+    } = event;
 
     const data = {
-        version: version || 2,
+        version: version || 3,
         clearedLevels: clearedLevels || [],
+        levelStars: levelStars || [],
+        unlockedSkillIds: unlockedSkillIds || [],
+        unlockedPassiveIds: unlockedPassiveIds || [],
+        totalDeaths: totalDeaths || 0,
+        maxKillsInOneLevel: maxKillsInOneLevel || 0,
+        totalHitsTaken: totalHitsTaken || 0,
+        clientVersion: clientVersion || 'unknown',
         lastSyncTime: Date.now(),
-        clientVersion: clientVersion || "unknown"
     };
 
     try {

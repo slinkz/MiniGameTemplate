@@ -982,7 +982,7 @@ namespace Game.ShooterGame
                 }
 
                 // 尝试获取 CloudSyncService（仅微信环境有）
-                // 存档已在 PersistVictoryProgress 中写入本地并触发 EnqueueUpload，
+                // V4: 存档在 PersistVictoryProgress 中写入内存并触发 EnqueueUpload，
                 // 这里只需等待云端上传完成。
                 if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
                 {

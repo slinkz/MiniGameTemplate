@@ -125,7 +125,21 @@ namespace Game
                 }
             }
 
-            // --- Phase 3: Complete loading and show main menu ---
+            // --- Phase 3: Complete loading and wait for cloud data ---
+            loadingPanel.SetHintText("正在获取游戏数据...");
+            loadingPanel.UpdateProgress(0.95f);
+
+            // V4: MUST have cloud data before proceeding. Block here until IsCloudReady.
+            // If pull fails and user retries via NetworkRetryService, we keep waiting.
+            if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave2)
+            {
+                while (!cloudSave2.IsCloudReady)
+                {
+                    await Task.Yield();
+                }
+                GameLog.Log("[StartupFlow] Cloud data ready — proceeding to main menu.");
+            }
+
             loadingPanel.SetHintText("加载完成！");
             loadingPanel.UpdateProgress(1f);
 
@@ -289,6 +303,7 @@ namespace Game
 
         /// <summary>
         /// Wire CloudSyncService.OnUploadFailedNeedRetry → NetworkRetryService.
+        /// Also wires CloudSaveSystem.OnStartupPullFailedNeedRetry for startup blocking retry.
         /// Safe to call even if SaveSystem is not CloudSaveSystem (simply does nothing).
         /// This is the single bridge point — any future cloud operations can follow
         /// the same pattern: fail after retries → fire event → NetworkRetryService handles UI.
@@ -297,11 +312,22 @@ namespace Game
         {
             if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
             {
+                // Upload failure (during gameplay) → blocking retry dialog
                 cloudSave.SyncService.OnUploadFailedNeedRetry += (retryAction) =>
                 {
                     NetworkRetryService.ShowBlockingRetry(retryAction);
                 };
-                GameLog.Log("[StartupFlow] Cloud retry handler registered via NetworkRetryService.");
+
+                // Startup pull failure → blocking retry dialog (game cannot proceed without cloud data)
+                cloudSave.OnStartupPullFailedNeedRetry += (retryAction) =>
+                {
+                    NetworkRetryService.ShowBlockingRetry(
+                        retryAction,
+                        "网络连接失败",
+                        "无法获取游戏数据，请检查网络连接后重试。");
+                };
+
+                GameLog.Log("[StartupFlow] Cloud retry handlers registered (upload + startup pull).");
             }
         }
     }

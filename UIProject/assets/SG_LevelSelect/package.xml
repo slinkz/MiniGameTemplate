@@ -4,6 +4,7 @@
     <component id="gen_01" name="LevelSelectScreen.xml" path="/" exported="true"/>
     <component id="gen_02" name="LevelNode.xml" path="/components/" exported="true"/>
     <component id="gen_03" name="BackButton.xml" path="/components/" exported="true"/>
+    <component id="gen_10" name="StarDisplay.xml" path="/components/" exported="true"/>
   </resources>
   <publish name="SG_LevelSelect" genCode="true">
     <atlas name="Default" index="0"/>

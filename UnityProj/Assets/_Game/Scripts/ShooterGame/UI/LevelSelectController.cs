@@ -67,11 +67,19 @@ namespace Game.ShooterGame.UI
                 var node = _levelNodes[i];
 
                 if (_progressManager.IsLevelCleared(levelIndex))
+                {
                     SetNodeState(node, LevelNodeState.Cleared);
+                    int stars = _progressManager.GetLevelStars(levelIndex);
+                    SetNodeStars(node, stars);
+                }
                 else if (_progressManager.IsLevelUnlocked(levelIndex))
+                {
                     SetNodeState(node, LevelNodeState.Available);
+                }
                 else
+                {
                     SetNodeState(node, LevelNodeState.Locked);
+                }
             }
         }
 
@@ -94,6 +102,16 @@ namespace Game.ShooterGame.UI
                         break;
                 }
             }
+        }
+
+        private void SetNodeStars(GComponent node, int stars)
+        {
+            var starGroup = node.GetChild("star_group")?.asCom;
+            if (starGroup == null) return;
+
+            var ctrl = starGroup.GetController("stars");
+            if (ctrl != null)
+                ctrl.selectedIndex = Mathf.Clamp(stars, 0, 3);
         }
 
         private void OnLevelClicked(int levelIndex)

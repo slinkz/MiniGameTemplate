@@ -8,13 +8,14 @@ using MiniGameTemplate.Utils;
 namespace MiniGameTemplate.Platform
 {
     /// <summary>
-    /// Cloud progress sync service (V3 — cloud-authoritative).
-    /// Design: cloud is the single source of truth.
-    ///   - Startup: pull cloud → overwrite local (no merge).
-    ///   - Save: upload to cloud; on failure retry 3×, then block player
+    /// Cloud progress sync service (V4 — cloud-authoritative, memory-only).
+    /// Design: cloud is the single source of truth. Local storage is NEVER used.
+    ///   - Startup: pull cloud → load into memory.
+    ///   - Save: upload to cloud from memory; on failure retry 3×, then block player
     ///     with a modal dialog until they tap "Retry" or kill the process.
     ///   - If player kills the process, the failed write is lost.
     ///     Next launch reads the last successful cloud state.
+    ///   - Local data is untrusted and never read/written.
     /// </summary>
     public class CloudSyncService
     {
@@ -50,10 +51,10 @@ namespace MiniGameTemplate.Platform
         // ═══════════════════════════════════════════════════
 
         /// <summary>
-        /// Pull cloud progress on startup. Cloud data overwrites local.
+        /// Pull cloud progress on startup. Cloud data goes straight to memory.
         /// If cloud has no data, returns empty string (new player / admin-reset).
         /// </summary>
-        /// <param name="localData">Unused (kept for API compat). Cloud is authoritative — empty cloud = new player.</param>
+        /// <param name="localData">Unused (kept for API compat). Cloud is the only source of truth.</param>
         /// <param name="onComplete">(success, cloudJson). Empty string when cloud has no data.</param>
         public void PullCloudProgress(string localData, Action<bool, string> onComplete)
         {

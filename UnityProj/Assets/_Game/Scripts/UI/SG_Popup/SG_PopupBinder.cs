@@ -13,6 +13,7 @@ namespace SG_Popup
             UIObjectFactory.SetPackageItemExtension(DefeatPanel.URL, typeof(DefeatPanel));
             UIObjectFactory.SetPackageItemExtension(SG_PopupButton.URL, typeof(SG_PopupButton));
             UIObjectFactory.SetPackageItemExtension(SG_SecondaryButton.URL, typeof(SG_SecondaryButton));
+            UIObjectFactory.SetPackageItemExtension(StarDisplayLarge.URL, typeof(StarDisplayLarge));
         }
     }
 }

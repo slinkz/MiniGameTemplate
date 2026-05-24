@@ -143,24 +143,18 @@ namespace SG_LevelSelect
                 }
             }
 
-            // 星级显示（仅已通关关卡显示星级）
-            if (node.text_star != null)
+            // 星级显示（通过 graph 组件的 controller 控制亮暗）
+            if (node.star_group != null)
             {
                 if (state == LevelNodeState.Cleared && _progressManager != null)
                 {
                     int stars = _progressManager.GetLevelStars(levelIndex);
-                    node.text_star.text = stars switch
-                    {
-                        3 => "★★★",
-                        2 => "★★☆",
-                        1 => "★☆☆",
-                        _ => "☆☆☆",
-                    };
-                    node.text_star.visible = true;
+                    if (node.star_group.stars != null)
+                        node.star_group.stars.selectedIndex = Mathf.Clamp(stars, 0, 3);
                 }
                 else
                 {
-                    node.text_star.visible = false;
+                    // 未通关时 star_group 由 gearDisplay 自动隐藏（controller state != cleared）
                 }
             }
         }

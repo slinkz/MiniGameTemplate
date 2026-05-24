@@ -211,9 +211,16 @@ Assets/_Example/ClickGame/
    - 还是只在症状层面打了补丁（"数据到不了 → 那我另找一条路塞进去"）？
    - 如果是后者 → 🔴 **阻塞**，必须重新用正确路径修复
 
+4. **客户端-云端数据结构同步**（2026-05-24 新增）：
+   - 持久化数据类（`SharedProgressData` 等）增删字段时，是否同步更新了所有相关云函数？
+   - `saveProgress` 云函数是否解构并写入了所有新字段？
+   - JavaScript `const { a, b } = event` 解构会**静默丢弃**未列出的字段——不报错、不 warning
+   - 云函数部署后是否做了端到端验证？（写入 → 清缓存 → 重新拉取）
+
 **典型错误**：
 - 选关→Battle 场景传参，框架已有 `PushAsync(node, data) → IFlowHandler.OnFlowEnter(data)` 路径，但修复时绕过导航直接 `Resources.Load<SO>()` 读配置当通信手段
 - 修复"数据没传到"时不追数据流链路，直接在终点处 `AssetDatabase.LoadAssetAtPath` 读 SO（Editor-only，真机崩）
+- `SharedProgressData` V3 新增 `levelStars` 等字段，客户端上传正确，但 `saveProgress` 云函数只解构了 V1 字段，新字段被静默丢弃（2026-05-24 实际踩坑）
 
 **红线**：如果代码审查中发现方案绕过了框架，标记为 🔴 阻塞，要求按框架正确路径重写。
 

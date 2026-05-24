@@ -11,8 +11,8 @@ namespace SG_LevelSelect
         public GGraph bg_cleared;
         public GGraph bg_available;
         public GGraph bg_locked;
-        public GTextField text_star;
-        public GTextField text_lock;
+        public StarDisplay star_group;
+        public GGraph icon_lock;
         public GTextField text_play;
         public const string URL = "ui://sg02ls03gen_02";
 
@@ -29,8 +29,8 @@ namespace SG_LevelSelect
             bg_cleared = (GGraph)GetChild("bg_cleared");
             bg_available = (GGraph)GetChild("bg_available");
             bg_locked = (GGraph)GetChild("bg_locked");
-            text_star = (GTextField)GetChild("text_star");
-            text_lock = (GTextField)GetChild("text_lock");
+            star_group = (StarDisplay)GetChild("star_group");
+            icon_lock = (GGraph)GetChild("icon_lock");
             text_play = (GTextField)GetChild("text_play");
         }
     }

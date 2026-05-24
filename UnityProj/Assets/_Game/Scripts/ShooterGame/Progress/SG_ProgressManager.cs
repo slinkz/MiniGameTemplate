@@ -237,6 +237,7 @@ namespace Game.ShooterGame
 
         private void Save()
         {
+            _data.clientVersion = UnityEngine.Application.version;
             string json = JsonUtility.ToJson(_data);
 #if ENABLE_SG_LOGS
             Debug.Log($"[SG_ProgressManager] Save: {json}");

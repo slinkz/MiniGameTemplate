@@ -1,7 +1,7 @@
-# SG_TDD_06: 微信登录与云存储系统（V3 云端权威）
+# SG_TDD_06: 微信登录与云存储系统（V4 云端权威 + 纯内存）
 
 > 父文档：[SG_TDD_INDEX.md](SG_TDD_INDEX.md)  
-> **版本**：v0.7 | **日期**：2026-05-24 | **状态**：✅ 实施完成（编译零错误，真机验证通过）  
+> **版本**：v0.8 | **日期**：2026-05-24 | **状态**：✅ 实施完成（编译零错误，真机验证通过）  
 > **前置依赖**：SG_TDD_03（V1 本地存储）已落地并验收通过
 
 ---
@@ -21,7 +21,7 @@
 
 1. **零感知升级**：V1 老用户不需要任何操作，首次静默登录自动迁移
 2. **离线优先**：网络不可用时游戏照常运行，联网后自动同步
-3. **云端权威 + progressive merge**（v0.7 改）：启动时拉取云端数据与本地做 progressive merge（stars=max, levels=union, counters=max）；merge 结果 ≠ 云端则自动 re-upload。云端为空+本地为空 = 新玩家
+3. **云端权威 + 纯内存**（v0.8 改）：微信环境永远只信任云端数据。启动时 Pull 云端→内存，写入时内存→Upload 云端。永不读写本地存储。网络断开时数据留内存反复重试，进程被杀则丢失（可接受代价 vs 被篡改风险）。编辑器环境走 PlayerPrefsSaveSystem 完全隔离
 4. **最小服务端**：使用微信云开发（TCB），零运维
 5. **ISaveSystem 接口不变**：上层 `SG_ProgressManager` 代码零修改
 
@@ -1104,3 +1104,4 @@ public void Reload()
 | v0.5 | 2026-05-07 | 实施完成：jslib CallCloudFunction(5s超时) + IWeChatBridge.CallCloudFunction + WxAuthService + CloudSyncService(PullMerge+Upload+Retry) + CloudSaveSystem(ISaveSystem工厂) + SG_ProgressManager.Reload + 云函数模板×3 |
 | v0.6 | 2026-05-17 | **V3 云端权威模式**：①删除 seed 机制（cloud empty 不再回传本地数据）②启动时无条件用云端覆盖本地（含空值）③saveProgress 云函数直接 set 覆写（不做 union merge）④修正过时 XML 文档注释 |
 | v0.7 | 2026-05-24 | **V3.1 progressive merge**：①CloudSaveSystem.MergeProgressData 以云端为基线，合入本地增量（stars=max, levels=union, counters=max, unlockIds=union）②merge 结果≠云端则 re-upload 让云端追上③解决上传竞态窗口导致星级回退的问题④SG_ProgressManager 诊断日志改为 `#if ENABLE_SG_LOGS` 条件编译 |
+| v0.8 | 2026-05-24 | **V4 云端权威+纯内存**：①删除 merge 和本地存储逻辑，CloudSaveSystem 改为纯内存+云端模型②启动阻塞重试（3×指数退避+UI阻塞弹框）③DeleteAll 后重置 IsCloudReady④SharedProgressData 恢复 clientVersion 字段（运维追踪）⑤saveProgress 云函数保留 clientVersion |

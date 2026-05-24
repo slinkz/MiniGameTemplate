@@ -11,6 +11,7 @@ namespace SG_LevelSelect
             UIObjectFactory.SetPackageItemExtension(LevelSelectScreen.URL, typeof(LevelSelectScreen));
             UIObjectFactory.SetPackageItemExtension(LevelNode.URL, typeof(LevelNode));
             UIObjectFactory.SetPackageItemExtension(BackButton.URL, typeof(BackButton));
+            UIObjectFactory.SetPackageItemExtension(StarDisplay.URL, typeof(StarDisplay));
         }
     }
 }

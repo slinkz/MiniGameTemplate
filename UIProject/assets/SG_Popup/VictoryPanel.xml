@@ -16,9 +16,8 @@
     <text id="gen_24" name="text_hp" xy="150,530" size="450,30"
           fontSize="22" color="#ffffff" align="center" autoSize="none"
           text="剩余血量：72%"/>
-    <text id="gen_25" name="text_stars" xy="150,590" size="450,40"
-          fontSize="32" color="#ffffc107" align="center" autoSize="shrink"
-          text="★ ★ ★"/>
+    <component id="gen_25" name="star_group" src="gen_06"
+               fileName="components/StarDisplayLarge.xml" xy="275,590" size="200,40"/>
     <graph id="gen_26" name="divider2" xy="150,650" size="450,1"
            type="rect" fillColor="#ff555555"/>
     <component id="gen_27" name="btn_confirm" src="gen_04"

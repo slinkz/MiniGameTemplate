@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-24 11:10 | 文件总数：88
+> 最后更新：2026-05-24 16:55 | 文件总数：88
 
 ---
 
@@ -17,7 +17,7 @@
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 |
-| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V3.1 云端权威+progressive merge（登录+云同步+CloudSaveSystem） |
+| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V4 云端权威+纯内存（登录+云同步+CloudSaveSystem+启动阻塞重试） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
@@ -105,7 +105,7 @@
 | IPanelSuspendable | APPFLOW_TDD_01_CORE_DESIGN §3.5 | 面板 Suspend/Resume 可选接口（OnSuspend + OnResume） |
 | OwnedPanelTypes | APPFLOW_TDD_01_CORE_DESIGN §3.2 | StackEntry 跟踪每栈层面板类型列表（Suspend/Resume 用） |
 | IUIControllers | SG_TDD_04 §1 | Core↔UI 解耦接口（5 个接口） |
-| CloudSaveSystem / WxAuth / CloudSync | SG_TDD_06 §2~4 | V3.1 云端权威 + progressive merge：登录+同步+merge（stars=max, levels=union, counters=max） |
+| CloudSaveSystem / WxAuth / CloudSync | SG_TDD_06 §2~4 | V4 云端权威+纯内存：启动 Pull→内存，写入 内存→Upload，永不读写本地，启动阻塞重试 |
 | SharedProgressData | SG_TDD_06 §3.3 + SG_V2_TDD_02 §S2.5 | V3 共享进度 DTO（version + clearedLevels + 解锁/成就/星级） |
 | CDN 单一数据源 / WXDataCDNHelper | WECHAT_INTEGRATION §CDN | CDN 只在微信转换面板配一处，运行时 JS 层读取 |
 | CodeGraph / codegraph_context | CODEGRAPH_INTEGRATION | 预索引代码知识图谱，Agent 代码检索首选工具 |

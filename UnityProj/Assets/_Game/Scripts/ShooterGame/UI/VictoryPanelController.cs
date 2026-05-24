@@ -36,15 +36,14 @@ namespace Game.ShooterGame.UI
                 : 0;
             _view.GetChild("text_hp").asTextField.text = $"剩余血量：{hpPercent}%";
 
-            // 星级显示
-            string starText = result.Stars switch
+            // 星级显示（通过 graph 组件的 controller 控制亮暗）
+            var starGroup = _view.GetChild("star_group")?.asCom;
+            if (starGroup != null)
             {
-                3 => "★ ★ ★",
-                2 => "★ ★ ☆",
-                1 => "★ ☆ ☆",
-                _ => "☆ ☆ ☆",
-            };
-            _view.GetChild("text_stars").asTextField.text = starText;
+                var ctrl = starGroup.GetController("stars");
+                if (ctrl != null)
+                    ctrl.selectedIndex = Mathf.Clamp(result.Stars, 0, 3);
+            }
 
             _view.visible = true;
         }

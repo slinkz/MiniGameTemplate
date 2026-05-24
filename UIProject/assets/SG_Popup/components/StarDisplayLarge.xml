@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="200,40">
+  <controller name="stars" pages="0,s0,1,s1,2,s2,3,s3" selected="0"/>
+  <displayList>
+    <graph id="gen_30" name="star1_off" xy="20,5" size="30,30" type="eclipse" fillColor="#ff555555">
+      <gearDisplay controller="stars" pages="0"/>
+    </graph>
+    <graph id="gen_31" name="star1_on" xy="20,5" size="30,30" type="eclipse" fillColor="#ffffc107">
+      <gearDisplay controller="stars" pages="1,2,3"/>
+    </graph>
+    <graph id="gen_32" name="star2_off" xy="85,5" size="30,30" type="eclipse" fillColor="#ff555555">
+      <gearDisplay controller="stars" pages="0,1"/>
+    </graph>
+    <graph id="gen_33" name="star2_on" xy="85,5" size="30,30" type="eclipse" fillColor="#ffffc107">
+      <gearDisplay controller="stars" pages="2,3"/>
+    </graph>
+    <graph id="gen_34" name="star3_off" xy="150,5" size="30,30" type="eclipse" fillColor="#ff555555">
+      <gearDisplay controller="stars" pages="0,1,2"/>
+    </graph>
+    <graph id="gen_35" name="star3_on" xy="150,5" size="30,30" type="eclipse" fillColor="#ffffc107">
+      <gearDisplay controller="stars" pages="3"/>
+    </graph>
+  </displayList>
+</component>

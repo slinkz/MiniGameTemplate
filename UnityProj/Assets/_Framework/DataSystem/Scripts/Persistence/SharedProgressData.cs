@@ -17,6 +17,9 @@ namespace MiniGameTemplate.Data
         public int version = 1;
         public List<int> clearedLevels = new List<int>();
 
+        /// <summary>客户端版本号（运维用，服务端存储，客户端不读取）</summary>
+        public string clientVersion = "";
+
         // ── V2 Sprint 2 新增 ──
 
         /// <summary>已解锁的技能 ID 列表（SkillConfigSO 的 asset name）</summary>

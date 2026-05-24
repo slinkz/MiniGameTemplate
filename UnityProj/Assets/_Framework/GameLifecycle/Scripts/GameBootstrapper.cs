@@ -328,8 +328,9 @@ namespace MiniGameTemplate.Core
 
         /// <summary>
         /// Factory: create the appropriate ISaveSystem based on platform.
-        /// WeChat environment → CloudSaveSystem (V2); otherwise → PlayerPrefsSaveSystem (V1).
-        /// (SG_TDD_06 §4.3)
+        /// WeChat environment → CloudSaveSystem V4 (memory + cloud only, no local storage).
+        /// Non-WeChat (Editor) → PlayerPrefsSaveSystem (debug/local only).
+        /// (SG_TDD_06 §4.3, redesigned 2026-05-24)
         /// </summary>
         private ISaveSystem CreateSaveSystem()
         {
@@ -341,11 +342,11 @@ namespace MiniGameTemplate.Core
                 var cloudSave = new CloudSaveSystem(auth, _weChatBridge);
                 cloudSave.InitCloudSync(); // Async, non-blocking
 
-                GameLog.Log("[Bootstrapper] CloudSaveSystem (V3 cloud-authoritative) initialized.");
+                GameLog.Log("[Bootstrapper] CloudSaveSystem V4 (memory + cloud, no local) initialized.");
                 return cloudSave;
             }
 
-            GameLog.Log("[Bootstrapper] PlayerPrefsSaveSystem (V1) initialized — NOT WeChat platform, cloud login skipped.");
+            GameLog.Log("[Bootstrapper] PlayerPrefsSaveSystem initialized — NOT WeChat platform, cloud login skipped.");
             return new PlayerPrefsSaveSystem();
         }
 

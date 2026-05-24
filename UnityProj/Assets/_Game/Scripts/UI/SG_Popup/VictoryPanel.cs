@@ -13,7 +13,7 @@ namespace SG_Popup
         public GGraph divider1;
         public GTextField text_kills;
         public GTextField text_hp;
-        public GTextField text_stars;
+        public StarDisplayLarge star_group;
         public GGraph divider2;
         public SG_PopupButton btn_confirm;
         public const string URL = "ui://sg04pp05gen_02";
@@ -33,7 +33,7 @@ namespace SG_Popup
             divider1 = (GGraph)GetChild("divider1");
             text_kills = (GTextField)GetChild("text_kills");
             text_hp = (GTextField)GetChild("text_hp");
-            text_stars = (GTextField)GetChild("text_stars");
+            star_group = (StarDisplayLarge)GetChild("star_group");
             divider2 = (GGraph)GetChild("divider2");
             btn_confirm = (SG_PopupButton)GetChild("btn_confirm");
         }

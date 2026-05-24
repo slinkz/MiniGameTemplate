@@ -6,7 +6,7 @@ namespace Game.ShooterGame
 {
     /// <summary>
     /// ShooterGame 启动扩展——提供 ProgressManager 静态访问点。
-    /// 基于 TDD_01 §9 / V3 cloud-authoritative 设计。
+    /// 基于 TDD_01 §9 / V4 cloud-authoritative (memory + cloud, no local) 设计。
     ///
     /// 在 Boot 场景中由 GameBootstrapper 初始化流程完成后调用 InitProgress()。
     /// Battle 场景通过 SG_Boot.Progress 访问进度管理器。
@@ -41,8 +41,10 @@ namespace Game.ShooterGame
             {
                 Progress = new SG_ProgressManager(saveSystem);
 
-                // V3 (cloud-authoritative): after startup cloud pull completes,
+                // V4 (cloud-authoritative, memory-only): after startup cloud pull completes,
                 // reload progress manager so it reflects cloud state.
+                // Between construction and this callback, memory is empty → _data is fresh.
+                // Once cloud data arrives → Reload() reads the populated memory store.
                 if (saveSystem is CloudSaveSystem cloudSave)
                 {
                     cloudSave.OnCloudPullCompleted += _ => Progress.Reload();
