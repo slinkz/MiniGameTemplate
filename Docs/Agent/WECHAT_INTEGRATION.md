@@ -1,7 +1,7 @@
 ---
 system: wechat
 scope: sdk-integration
-last_verified: 2026-05-17
+last_verified: 2026-05-24
 related_code: Assets/_Framework/WeChatBridge/**, Assets/_Framework/AssetSystem/WechatFileSystem/**, Assets/_Framework/Editor/LocalHttpServerWindow.cs
 ---
 
@@ -32,6 +32,8 @@ MiniGameTemplate 提供了 `IWeChatBridge` 抽象接口层。模板内置了桩�
 - ✅ 启动时隐私授权检查（PrivacyDialog → ConfirmDialog 二次确认）
 - ✅ 云开发 Cloud Init 自动化（jslib 自包含，导出后零操作）
 - ✅ Cloud Function 全链路（InitCloud → CallCloudFunction → 5s 超时回调）
+- ✅ CDN 域名白名单文档化（request + downloadFile 双域名必配，真机强制校验）
+- ✅ CDN 元数据 Cache-Buster（RemoteServices 对 .version/.hash/.bytes/.json 追加 `?t={ticks}`）
 
 ## 接入步骤
 
@@ -233,6 +235,30 @@ https://cdn.example.com/webgl/{package_name}/
 
 `MiniGameConfig.ProjectConf.CDN` 只需配到 `https://cdn.example.com` 级别。
 运行时自动派生完整路径：`{DATA_CDN}/StreamingAssets/yoo/{PackageName}`。
+
+#### 6. CDN 域名白名单（⚠️ 必做，否则真机报错）
+
+CDN 域名必须在**微信公众平台**后台加入合法域名白名单，否则真机 `wx.downloadFile` 会报 `url not in domain list` 错误。
+
+**操作路径**：`mp.weixin.qq.com` → 开发管理 → 开发设置 → 服务器域名 → 修改
+
+**必须同时添加到两个位置**：
+
+| 域名类型 | 填写内容 |
+|---------|---------|
+| **request 合法域名** | CDN 域名（如 `https://cloud1-xxx.tcloudbaseapp.com`） |
+| **downloadFile 合法域名** | 同上 |
+
+**踩坑经验（2026-05-24）**：
+- 开发者工具中 `urlCheck: false` **只对模拟器生效**，真机不会绕过白名单检查
+- 云开发静态托管域名（`cloud1-xxx.tcloudbaseapp.com`）不会自动加入白名单，必须手动配置
+- 每月只能修改 5 次服务器域名配置，确认无误再提交
+- 如果使用了多个子域名（如 CDN + 云函数），需要逐个添加
+
+#### 7. CDN 元数据 Cache-Buster
+
+`AssetService.RemoteServices` 对元数据文件（`.version` / `.hash` / `.bytes` / `.json`）自动追加 `?t={ticks}` 查询参数，
+强制绕过 CDN 边缘节点缓存，确保客户端始终拉取最新版本文件。`.bundle` 文件不加——它们靠 content-hash 文件名天然防缓存。
 
 ### 缓存空间管理
 

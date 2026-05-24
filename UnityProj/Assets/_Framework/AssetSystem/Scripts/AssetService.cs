@@ -410,6 +410,9 @@ namespace MiniGameTemplate.Asset
     /// <summary>
     /// Remote server URL provider for YooAsset Host mode.
     /// Includes URL normalization to prevent WeChat silent-failure bugs.
+    /// Appends cache-busting query param to metadata files (.version/.hash/.bytes/.json)
+    /// to prevent CDN/browser caching stale manifests on mobile devices.
+    /// Bundle files (.bundle) rely on content-hash filenames and are NOT cache-busted.
     /// </summary>
     internal class RemoteServices : IRemoteServices
     {
@@ -424,12 +427,25 @@ namespace MiniGameTemplate.Asset
 
         public string GetRemoteMainURL(string fileName)
         {
-            return NormalizeUrl($"{_hostServer}/{fileName}");
+            return AppendCacheBuster(NormalizeUrl($"{_hostServer}/{fileName}"), fileName);
         }
 
         public string GetRemoteFallbackURL(string fileName)
         {
-            return NormalizeUrl($"{_fallbackServer}/{fileName}");
+            return AppendCacheBuster(NormalizeUrl($"{_fallbackServer}/{fileName}"), fileName);
+        }
+
+        /// <summary>
+        /// Append time-ticks query param to metadata files to bust CDN cache.
+        /// Bundle files use content-hash names so they don't need this.
+        /// </summary>
+        private static string AppendCacheBuster(string url, string fileName)
+        {
+            // Only bust cache for metadata files (version/hash/manifest)
+            if (fileName.EndsWith(".bundle"))
+                return url;
+
+            return $"{url}?t={System.DateTime.UtcNow.Ticks}";
         }
 
         /// <summary>

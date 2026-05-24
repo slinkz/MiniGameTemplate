@@ -27,7 +27,7 @@ Shader "MiniGameTemplate/Danmaku/Laser"
 
         Cull Off
         ZWrite Off
-        ZTest Always
+        ZTest LEqual
         Blend SrcAlpha One
 
         Pass

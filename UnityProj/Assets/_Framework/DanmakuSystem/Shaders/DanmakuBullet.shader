@@ -28,7 +28,7 @@ Shader "MiniGameTemplate/Danmaku/Bullet"
 
         Cull Off
         ZWrite Off
-        ZTest Always
+        ZTest LEqual
         Blend SrcAlpha OneMinusSrcAlpha
 
         Pass
@@ -36,7 +36,9 @@ Shader "MiniGameTemplate/Danmaku/Bullet"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile_instancing
+            // multi_compile_instancing 已移除：实际使用 Graphics.DrawMesh（非 Instancing），
+            // 保留此 pragma 会导致微信小游戏真机 WebGL 打包时变体被错误剥离，
+            // 表现为弹丸完全不可见。
 
             #include "UnityCG.cginc"
 
