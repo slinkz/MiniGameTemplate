@@ -116,17 +116,28 @@ description: "FairyGUI 全链路 UI 开发：解析 FairyGUI 工程、根据 UI 
 
 ### 核心规则
 
-#### 规则 1：统一使用 graph 替代 image
+#### 规则 1：统一使用 graph 替代 image（含非描述性图形）
 
 所有视觉元素用 `<graph>` 构建白模，**绝不使用 `<image>`**。
+
+**同样重要**：对于**非描述性的、偏图形化的 UI 表达**（星星★、锁🔒、等级徽章、评分指示器等），**禁止用 text + Unicode 特殊字符**，必须用 GGraph 做占位图形。原因：
+- 微信小游戏 WebGL Canvas 离屏文本渲染中，Unicode 特殊符号（★☆🔒⭐等）可能因字体缺字显示为空白
+- GGraph 占位后续可直接替换为美术 image/loader，无需改层级结构
 
 ```xml
 <!-- ✅ 正确：用 graph 做按钮背景 -->
 <graph id="bg" name="bg" xy="0,0" size="200,50" type="rect"
        fillColor="#ff4a90d9" corner="8"/>
 
+<!-- ✅ 正确：用 graph eclipse 做星星/图标占位 -->
+<graph id="star1" name="star1_on" xy="0,0" size="12,12" type="eclipse"
+       fillColor="#ffffc107"/>
+
 <!-- ❌ 错误：不要用 image -->
 <image id="bg" name="bg" src="xxx" .../>
+
+<!-- ❌ 错误：不要用文本 + Unicode 特殊字符做图形化表达 -->
+<text id="stars" name="text_star" text="★★★"/>
 ```
 
 **颜色约定（白模风格）：**
@@ -141,6 +152,8 @@ description: "FairyGUI 全链路 UI 开发：解析 FairyGUI 工程、根据 UI 
 | 进度条填充 | `#ff4a90d9` |
 | 分隔线 | `#ff555555` |
 | 高亮/选中 | `#ffffc107` |
+| 星星/徽章（亮） | `#ffffc107`（金色，圆形 `type="eclipse"`） |
+| 星星/徽章（暗） | `#ff555555`（灰色，同形状叠放） |
 | 危险/删除 | `#ffe74c3c` |
 | 成功/确认 | `#ff2ecc71` |
 
@@ -192,6 +205,7 @@ description: "FairyGUI 全链路 UI 开发：解析 FairyGUI 工程、根据 UI 
 - ❌ `<transition>` 出现在 `<displayList>` 之前
 - ❌ 遗漏被引用子组件的 XML 文件
 - ❌ **在 displayList 中直接使用 `<progressBar>`/`<button>`/`<slider>` 等扩展标签**（displayList 合法子元素只有：`image`/`graph`/`text`/`loader`/`component`/`list`/`group`/`richtext`/`tree`。所有扩展类型必须作为独立组件文件，通过 `<component src="ID">` 引用）
+- ❌ **用 `<text>` + Unicode 特殊字符（★☆🔒⭐💎等）做图形化 UI 表达**（WebGL Canvas 渲染中字体缺字→空白）
 
 #### 规则 5：扩展机制命名约定
 
@@ -246,6 +260,42 @@ FairyGUI 的扩展（Button/Label/ProgressBar 等）通过**名称约定**工作
 - `<ProgressBar value="..." max="..."/>` 实例化参数放在引用处（displayList 中的 component 内）
 - `name="bar"` 是 ProgressBar 识别填充元素的**强制命名约定**，不可改名
 - 独立组件内部自带背景 graph，无需在父组件额外放一层背景
+
+#### 规则 7：GGraph 不支持 gearColor — 变色方案
+
+`gearColor` **仅支持** `image`、`text`、`richtext`、`loader` 四种类型，**不支持 `graph`**。
+
+对 graph 需要根据 controller 状态切换颜色时，使用**双层叠放 + gearDisplay 显隐**方案：
+
+```xml
+<controller name="state" pages="0,off,1,on" selected="0"/>
+<displayList>
+  <!-- 暗色层（state=off 时显示） -->
+  <graph id="g1" name="star_off" xy="0,0" size="12,12" type="eclipse"
+         fillColor="#ff555555">
+    <gearDisplay controller="state" pages="0"/>
+  </graph>
+  <!-- 亮色层（state=on 时显示） -->
+  <graph id="g2" name="star_on" xy="0,0" size="12,12" type="eclipse"
+         fillColor="#ffffc107">
+    <gearDisplay controller="state" pages="1"/>
+  </graph>
+</displayList>
+```
+
+**替代方案**：如果后续替换成图片（image/loader），则可直接使用 `gearColor` 简化为单节点。
+
+#### 规则 8：FairyGUI 导出后必须同步检查 Logic.cs
+
+FairyGUI 编辑器重新导出 C# 代码后，**自动生成的 Extension 类**（如 `LevelNode.cs`）中的属性名和类型会随 XML 变化而变化。**手写的 Logic.cs 不会自动更新**。
+
+**必须执行的检查**：
+1. 对比 Extension 类中的**属性名变化**（如 `text_star` → `star_group`）
+2. 在 Logic.cs 中搜索所有对旧属性名的引用并替换
+3. 注意属性**类型变化**（如 `GTextField` → `StarDisplay`），API 调用方式可能完全不同
+4. 编译验证，确保零错误
+
+**典型踩坑**：XML 中把 `<text name="text_star">` 改成 `<component name="star_group">`，Extension 类自动更新了，但 Logic.cs 中 `node.text_star.text = "★★★"` 编译报错——因为 `text_star` 属性已不存在。
 
 ### 生成示例
 
@@ -604,5 +654,34 @@ python scripts/validate_fui.py <输出目录或文件>
 - FairyGUI 官方设计文档（24 篇）
 - FairyGUI 官方示例工程（16 个包，176 个 XML 文件）
 - FairyGUI 编辑器源码分析
+
+---
+
+## 踩坑经验（实战积累）
+
+### 案例 1：星星 UI 在微信小游戏 WebGL 中空白（2026-05-24）
+
+**场景**：选关界面和胜利面板用 `<text>` 显示 `★★★` / `★☆☆` 表示星级。
+
+**现象**：云端数据确认 3 星通关，但模拟器中星星区域完全空白。
+
+**根因**：
+1. Unicode 特殊字符 `★☆` 在微信小游戏 WebGL Canvas 离屏文本渲染中，因字体缺字显示为空白
+2. 这不是代码逻辑问题，而是渲染层面的平台限制
+
+**解决方案**：
+- 将 `<text name="text_star" text="★★★"/>` 替换为 `<component name="star_group">`
+- `StarDisplay` 组件内用 3 对 GGraph eclipse（金色亮 + 灰色暗）叠放
+- 通过 controller `stars`（pages 0-3）+ `gearDisplay` 控制不同星级下的显隐
+- C# 代码通过 `star_group.stars.selectedIndex` 设置星级
+
+**二次踩坑**：
+- GGraph **不支持 gearColor**（只有 image/text/richtext/loader 支持），最初尝试用 gearColor 切换颜色失败
+- FairyGUI 导出后 Extension 类属性名从 `text_star` → `star_group`，但手写的 **Logic.cs 没有同步更新**，导致编译报错 CS1061
+
+**教训**：
+- 非描述性图形化 UI → 优先 GGraph，禁止 Unicode 特殊字符
+- GGraph 变色 → 双层叠放 + gearDisplay，不要尝试 gearColor
+- FairyGUI XML 改名后 → 必须检查 Logic.cs 中所有旧属性引用
 
 
