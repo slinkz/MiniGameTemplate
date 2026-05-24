@@ -10,9 +10,6 @@ namespace Game.ShooterGame.UI
     /// </summary>
     public class VictoryPanelController : MonoBehaviour, IVictoryPanelController
     {
-        [SerializeField] private IntVariable _killCount;
-        [SerializeField] private FloatVariable _baseHP;
-
         private GComponent _view;
         private Action _onConfirm;
 
@@ -21,7 +18,7 @@ namespace Game.ShooterGame.UI
             _onConfirm = onConfirm;
         }
 
-        public void Show()
+        public void Show(BattleResultData result)
         {
             if (_view == null)
             {
@@ -31,9 +28,23 @@ namespace Game.ShooterGame.UI
                 _view.GetChild("btn_confirm").asButton.onClick.Add(OnConfirmClicked);
             }
 
-            // 填充数据
-            _view.GetChild("text_kills").asTextField.text = $"击杀数：{_killCount.Value}";
-            _view.GetChild("text_hp").asTextField.text = $"剩余血量：{Mathf.RoundToInt(_baseHP.Value * 100)}%";
+            // 填充数据（从 BattleResultData 快照读取，不依赖 SO 变量）
+            _view.GetChild("text_kills").asTextField.text = $"击杀数：{result.TotalKills}";
+
+            int hpPercent = result.BaseHpMax > 0
+                ? Mathf.RoundToInt((float)result.BaseHpRemaining / result.BaseHpMax * 100)
+                : 0;
+            _view.GetChild("text_hp").asTextField.text = $"剩余血量：{hpPercent}%";
+
+            // 星级显示
+            string starText = result.Stars switch
+            {
+                3 => "★ ★ ★",
+                2 => "★ ★ ☆",
+                1 => "★ ☆ ☆",
+                _ => "☆ ☆ ☆",
+            };
+            _view.GetChild("text_stars").asTextField.text = starText;
 
             _view.visible = true;
         }

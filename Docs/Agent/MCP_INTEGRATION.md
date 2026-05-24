@@ -1,7 +1,7 @@
 ---
 system: architecture
 scope: mcp-integration
-last_verified: 2026-05-02
+last_verified: 2026-05-24
 depends_on: [ARCHITECTURE]
 related_code: Packages/com.anklebreaker.unity-mcp/**
 ---
@@ -121,3 +121,10 @@ curl.exe -s --max-time 5  http://127.0.0.1:<端口>/api/ping
 2. **仅本地访问**：Bridge 绑定 `127.0.0.1`，不暴露到网络
 3. **Undo 支持**：所有编辑操作支持 Unity Undo 系统
 4. **多 Agent 安全**：多个 Agent 同时连接时，请求会排队执行
+
+## 相关 MCP 工具
+
+| MCP Server | 用途 | 配置文档 |
+|------------|------|---------|
+| `unity` | 操作 Unity Editor（编译/截图/执行代码/场景） | 本文档 |
+| `codegraph` | 代码知识图谱（符号搜索/调用链/上下文构建） | [CODEGRAPH_INTEGRATION](CODEGRAPH_INTEGRATION.md) |

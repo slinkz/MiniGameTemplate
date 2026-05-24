@@ -17,7 +17,7 @@
           fontSize="22" color="#ffffff" align="center" autoSize="none"
           text="剩余血量：72%"/>
     <text id="gen_25" name="text_stars" xy="150,590" size="450,40"
-          fontSize="32" color="#ffffc107" align="center" autoSize="none"
+          fontSize="32" color="#ffffc107" align="center" autoSize="shrink"
           text="★ ★ ★"/>
     <graph id="gen_26" name="divider2" xy="150,650" size="450,1"
            type="rect" fillColor="#ff555555"/>

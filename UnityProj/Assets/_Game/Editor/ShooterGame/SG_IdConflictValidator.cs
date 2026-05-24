@@ -21,7 +21,7 @@ namespace Game.ShooterGame.Editor
         private const int PASSIVE_ID_MIN = 5000;
         private const int PASSIVE_ID_MAX = 5999;
 
-        [MenuItem("ShooterGame/Validate/Check ID Conflicts")]
+        [MenuItem("Tools/ShooterGame/校验/Check ID Conflicts")]
         public static void CheckIdConflicts()
         {
             bool passed = RunValidation();

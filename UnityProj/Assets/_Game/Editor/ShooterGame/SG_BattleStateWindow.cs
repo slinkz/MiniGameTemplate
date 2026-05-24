@@ -13,7 +13,7 @@ namespace Game.ShooterGame.Editor
     /// </summary>
     public class SG_BattleStateWindow : EditorWindow
     {
-        [MenuItem("Tools/SG/战斗状态面板")]
+        [MenuItem("Tools/ShooterGame/面板/战斗状态面板")]
         public static void ShowWindow()
         {
             GetWindow<SG_BattleStateWindow>("SG 战斗状态");

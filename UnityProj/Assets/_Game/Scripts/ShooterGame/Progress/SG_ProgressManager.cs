@@ -142,19 +142,32 @@ namespace Game.ShooterGame
             {
                 if (_data.levelStars[i].levelIndex == levelIndex)
                 {
-                    if (stars > _data.levelStars[i].stars)
+                    int oldStars = _data.levelStars[i].stars;
+                    if (stars > oldStars)
                     {
                         _data.levelStars[i] = new LevelStarEntry
                         {
                             levelIndex = levelIndex,
                             stars = stars,
                         };
+#if ENABLE_SG_LOGS
+                        Debug.Log($"[SG_ProgressManager] UpdateLevelStars: L{levelIndex} {oldStars}★→{stars}★ (升级，写盘)");
+#endif
                         Save();
                     }
+#if ENABLE_SG_LOGS
+                    else
+                    {
+                        Debug.Log($"[SG_ProgressManager] UpdateLevelStars: L{levelIndex} 已有{oldStars}★≥新{stars}★ (跳过)");
+                    }
+#endif
                     return;
                 }
             }
             // 新关卡
+#if ENABLE_SG_LOGS
+            Debug.Log($"[SG_ProgressManager] UpdateLevelStars: L{levelIndex} 新增{stars}★ (写盘)");
+#endif
             _data.levelStars.Add(new LevelStarEntry { levelIndex = levelIndex, stars = stars });
             Save();
         }
@@ -177,6 +190,9 @@ namespace Game.ShooterGame
             string json = _saveSystem.LoadString(SAVE_KEY, "");
             if (string.IsNullOrEmpty(json))
             {
+#if ENABLE_SG_LOGS
+                Debug.Log("[SG_ProgressManager] Load: 存档为空，创建新数据");
+#endif
                 _data = new SharedProgressData { version = CURRENT_VERSION };
                 return;
             }
@@ -186,12 +202,31 @@ namespace Game.ShooterGame
                 _data = JsonUtility.FromJson<SharedProgressData>(json);
                 if (_data == null)
                 {
+                    Debug.LogWarning("[SG_ProgressManager] Load: 反序列化为 null，重置");
                     _data = new SharedProgressData { version = CURRENT_VERSION };
                 }
                 else if (_data.version < CURRENT_VERSION)
                 {
                     MigrateData(_data);
                 }
+
+#if ENABLE_SG_LOGS
+                // 诊断：输出读取到的星级数据
+                if (_data.levelStars != null && _data.levelStars.Count > 0)
+                {
+                    var sb = new System.Text.StringBuilder("[SG_ProgressManager] Load stars: ");
+                    for (int i = 0; i < _data.levelStars.Count; i++)
+                    {
+                        var entry = _data.levelStars[i];
+                        sb.Append($"L{entry.levelIndex}={entry.stars}★ ");
+                    }
+                    Debug.Log(sb.ToString());
+                }
+                else
+                {
+                    Debug.Log("[SG_ProgressManager] Load: 无星级记录");
+                }
+#endif
             }
             catch
             {
@@ -203,6 +238,9 @@ namespace Game.ShooterGame
         private void Save()
         {
             string json = JsonUtility.ToJson(_data);
+#if ENABLE_SG_LOGS
+            Debug.Log($"[SG_ProgressManager] Save: {json}");
+#endif
             _saveSystem.SaveString(SAVE_KEY, json);
             _saveSystem.FlushIfDirty();
         }

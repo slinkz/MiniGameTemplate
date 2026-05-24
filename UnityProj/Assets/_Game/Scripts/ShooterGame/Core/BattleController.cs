@@ -575,6 +575,8 @@ namespace Game.ShooterGame
                     SetInputEnabled(false);
                     SetBattleTimePaused(true);
                     FreezeBattleResult(true);
+                    // 立即存档（通关瞬间持久化，不等确认按钮）
+                    PersistVictoryProgress();
                     StartCoroutine(ShowVictoryAfterDelay(_victoryDelay));
                     break;
 
@@ -923,14 +925,39 @@ namespace Game.ShooterGame
         private IEnumerator ShowVictoryAfterDelay(float delay)
         {
             yield return new WaitForSecondsRealtime(delay);
-            _victoryPanel?.Show();
+            _victoryPanel?.Show(_lastBattleResult);
+        }
+
+        /// <summary>
+        /// 胜利时立即持久化通关数据。
+        /// 确保即使玩家在结算面板关闭游戏，进度也已保存。
+        /// 云端上传（异步）在确认按钮回调中等待完成。
+        /// </summary>
+        private void PersistVictoryProgress()
+        {
+            // 直跑场景 = 测试模式，不写存档
+            if (!_launchLevelIndex.HasValue) return;
+
+            int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
+
+            // 星级存档（只升不降）
+            if (_lastBattleResult != null && _lastBattleResult.Stars > 0)
+            {
+                _progressManager?.UpdateLevelStars(clearedLevelIndex, _lastBattleResult.Stars);
+            }
+
+            // 成就计数器
+            _progressManager?.UpdateMaxKills(_killCount.Value);
+            _progressManager?.FlushCounters();
+
+            // 标记关卡通关（本地写入 + 触发 EnqueueUpload）
+            _progressManager?.MarkLevelCleared(clearedLevelIndex);
         }
 
         /// <summary>
         /// 胜利确认流程（async 版）。
-        /// 存档 + 等云端确认 → Pop 回选关。
-        /// 云端重试由全局 OnUploadFailedNeedRetry → NetworkRetryService 弹框处理，
-        /// 本方法只需 await 直到上传成功。
+        /// 存档已在 EnterState(Victory) 时立即完成（PersistVictoryProgress）。
+        /// 此处只需等云端上传完成 → Pop 回选关。
         /// </summary>
         private async void HandleVictoryConfirmAsync()
         {
@@ -954,32 +981,17 @@ namespace Game.ShooterGame
                     return;
                 }
 
-                int clearedLevelIndex = _launchLevelIndex.Value + 1; // 0-based → 1-based
-
-                // V2 Sprint 4: 存档星级（只升不降）
-                if (_lastBattleResult != null && _lastBattleResult.Stars > 0)
-                {
-                    _progressManager?.UpdateLevelStars(clearedLevelIndex, _lastBattleResult.Stars);
-                }
-
-                // V2 Sprint 2: 更新成就计数器
-                _progressManager?.UpdateMaxKills(_killCount.Value);
-                _progressManager?.FlushCounters();
-
-                // 本地写入 + 触发 EnqueueUpload
-                _progressManager?.MarkLevelCleared(clearedLevelIndex);
-
                 // 尝试获取 CloudSyncService（仅微信环境有）
+                // 存档已在 PersistVictoryProgress 中写入本地并触发 EnqueueUpload，
+                // 这里只需等待云端上传完成。
                 if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
                 {
                     var syncService = cloudSave.SyncService;
 
                     // 显示遮罩：屏蔽输入 + 视觉反馈"正在保存"
-                    // 如果上传失败弹重试框，NetworkRetryService 会自动 Hide 遮罩再弹框
                     LoadingMaskService.Show("正在保存进度...");
 
-                    // 等待上传完成。如果失败，全局 NetworkRetryService 弹框会自动处理重试，
-                    // WaitForIdleAsync 会一直等到最终成功才 complete。
+                    // 等待上传完成。如果失败，全局 NetworkRetryService 弹框自动处理重试。
                     await syncService.WaitForIdleAsync();
 
                     LoadingMaskService.Hide();
@@ -991,7 +1003,7 @@ namespace Game.ShooterGame
             catch (System.Exception ex)
             {
                 Debug.LogException(ex);
-                LoadingMaskService.Hide(); // 兜底清理遮罩（Hide 在未 Show 时是 no-op）
+                LoadingMaskService.Hide(); // 兜底清理遮罩
                 // 兜底：即使出异常也尝试 Pop，避免玩家卡死在胜利面板
                 try { AppFlowNavigator.Instance.Pop(); } catch { }
             }

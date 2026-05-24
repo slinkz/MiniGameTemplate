@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-22 10:40 | 文件总数：87
+> 最后更新：2026-05-24 11:10 | 文件总数：88
 
 ---
 
@@ -17,7 +17,7 @@
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 |
-| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V3 云端权威模式（登录+云同步+CloudSaveSystem） |
+| 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V3.1 云端权威+progressive merge（登录+云同步+CloudSaveSystem） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
@@ -26,6 +26,7 @@
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
+| AI 代码检索（知识图谱） | CODEGRAPH_INTEGRATION | CodeGraph MCP 安装/配置/工具优先级 |
 | 开发 ShooterGame | SG_GAME_DESIGN + SG_UI_DESIGN | 飞行弹幕射击游戏设计 + UI/交互设计 |
 | ShooterGame V2 技能系统 | SG_GDD_INDEX → 01~06 | 技能系统 GDD v2.4（主动/被动/Buff/DOT/道具/工作流/路线图） |
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
@@ -63,6 +64,7 @@
 | `_Framework/WeChatBridge/**` | WECHAT_INTEGRATION + SG_TDD_06 | 微信集成（广告/云开发/隐私/CDN/登录/同步） |
 | `_Framework/DataSystem/**/Cloud*.cs` + `CloudFunctions/**` | SG_TDD_06 | CloudSaveSystem + 云函数模板 |
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
+| `.codegraph/**` + `~/.workbuddy/mcp.json` (codegraph) | CODEGRAPH_INTEGRATION | CodeGraph 知识图谱索引 |
 | `_Game/Scripts/ShooterGame/Battle/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE | 战斗状态 + 退场生命周期 |
 | `_Game/Scripts/ShooterGame/**/*.cs` | SG_TDD_01~05 + SG_V2_TDD_01~05 + SG_DEV_PLAN | SG 全部逻辑代码 |
 | `_Game/Configs/ShooterGame/**/*.asset` | SG_P4_TASKLIST §P4.1 + SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
@@ -103,9 +105,10 @@
 | IPanelSuspendable | APPFLOW_TDD_01_CORE_DESIGN §3.5 | 面板 Suspend/Resume 可选接口（OnSuspend + OnResume） |
 | OwnedPanelTypes | APPFLOW_TDD_01_CORE_DESIGN §3.2 | StackEntry 跟踪每栈层面板类型列表（Suspend/Resume 用） |
 | IUIControllers | SG_TDD_04 §1 | Core↔UI 解耦接口（5 个接口） |
-| CloudSaveSystem / WxAuth / CloudSync | SG_TDD_06 §2~4 | V3 云端权威：登录+同步+覆盖（不 merge/seed） |
+| CloudSaveSystem / WxAuth / CloudSync | SG_TDD_06 §2~4 | V3.1 云端权威 + progressive merge：登录+同步+merge（stars=max, levels=union, counters=max） |
 | SharedProgressData | SG_TDD_06 §3.3 + SG_V2_TDD_02 §S2.5 | V3 共享进度 DTO（version + clearedLevels + 解锁/成就/星级） |
 | CDN 单一数据源 / WXDataCDNHelper | WECHAT_INTEGRATION §CDN | CDN 只在微信转换面板配一处，运行时 JS 层读取 |
+| CodeGraph / codegraph_context | CODEGRAPH_INTEGRATION | 预索引代码知识图谱，Agent 代码检索首选工具 |
 | 主动技能/被动/Buff/DOT/道具 | SG_GDD_01~03 | 6 主动+4 被动+7 Buff+3 DOT+4 道具 |
 | 技能系统路线图 | SG_GDD_06 §优先级 | 5 Sprint ~67.5h 实施路线 |
 | EnemyShootComponent / InvincibilityModifier / DamageRedirectModifier | SG_V2_TDD_01 §S1.2~S1.3 | Sprint 1：敌机射击+无敌帧+伤害转发 |
@@ -131,6 +134,7 @@
 | SO_WORKFLOWS | SO_WORKFLOWS_INDEX | 5 | SO 配置流程指南 |
 | EDITOR_TOOLS_MANUAL | EDITOR_TOOLS_MANUAL_INDEX | 4 | 编辑器工具使用手册 |
 | — | MCP_INTEGRATION | — | Unity MCP 集成（Agent 操作 Unity） |
+| — | CODEGRAPH_INTEGRATION | — | CodeGraph 代码知识图谱（Agent 代码检索加速） |
 | — | DEBUG_PLAYBOOK | — | 调试手册 |
 | — | NEWGAME_GUIDE | — | 新项目指南 |
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |

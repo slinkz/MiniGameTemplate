@@ -13,7 +13,7 @@ namespace Game.ShooterGame.Editor
     /// </summary>
     public static class SG_DebugMenuItems
     {
-        private const string MENU_ROOT = "Tools/SG/Debug/";
+        private const string MENU_ROOT = "Tools/ShooterGame/调试/";
 
         private const string MENU_RETRY = MENU_ROOT + "重试当前关卡 %&R";
         private const string MENU_VICTORY = MENU_ROOT + "直接胜利";

@@ -26,7 +26,7 @@ namespace Game.ShooterGame
     /// <summary>胜利面板 Controller 接口</summary>
     public interface IVictoryPanelController
     {
-        void Show();
+        void Show(BattleResultData result);
         void BindEvents(Action onConfirm);
     }
 

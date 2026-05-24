@@ -8,7 +8,7 @@ namespace Game.ShooterGame.Editor
 {
     /// <summary>
     /// T4 DPS 计算面板 — 裸 DPS + 被动期望 DPS + HP 预算对比。
-    /// 菜单路径：ShooterGame/Tools/DPS Calculator
+    /// 菜单路径：Tools/ShooterGame/面板/DPS Calculator
     /// </summary>
     public class SG_DPSCalculatorWindow : EditorWindow
     {
@@ -36,7 +36,7 @@ namespace Game.ShooterGame.Editor
         private float _totalRawDPS;
         private float _totalExpectedDPS;
 
-        [MenuItem("ShooterGame/Tools/DPS Calculator")]
+        [MenuItem("Tools/ShooterGame/面板/DPS Calculator")]
         public static void ShowWindow()
         {
             var window = GetWindow<SG_DPSCalculatorWindow>("DPS Calculator");

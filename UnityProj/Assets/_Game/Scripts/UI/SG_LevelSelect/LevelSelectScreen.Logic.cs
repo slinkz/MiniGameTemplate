@@ -18,7 +18,7 @@ namespace SG_LevelSelect
     /// 取代原 LevelSelectController（MonoBehaviour），改为纯 FairyGUI Panel 架构，
     /// 通过 UIManager 管理生命周期。
     /// </summary>
-    public partial class LevelSelectScreen : IUIPanel
+    public partial class LevelSelectScreen : IUIPanel, IPanelSuspendable
     {
         /// <summary>面板注册表 Key。</summary>
         public const string PanelKey = "LevelSelectScreen";
@@ -83,6 +83,20 @@ namespace SG_LevelSelect
             RefreshAllNodes();
         }
 
+        // ── IPanelSuspendable ──
+
+        public void OnSuspend()
+        {
+            // 被 Push 遮盖时无需特殊处理
+        }
+
+        public void OnResume(object data)
+        {
+            // 从战斗/子流程 Pop 回来时，重新读取进度数据刷新星级和解锁状态
+            _progressManager = SG_Boot.Progress;
+            RefreshAllNodes();
+        }
+
         private void RefreshAllNodes()
         {
             if (_progressManager == null)
@@ -126,6 +140,27 @@ namespace SG_LevelSelect
                     case LevelNodeState.Locked:
                         node.state.selectedIndex = 2;
                         break;
+                }
+            }
+
+            // 星级显示（仅已通关关卡显示星级）
+            if (node.text_star != null)
+            {
+                if (state == LevelNodeState.Cleared && _progressManager != null)
+                {
+                    int stars = _progressManager.GetLevelStars(levelIndex);
+                    node.text_star.text = stars switch
+                    {
+                        3 => "★★★",
+                        2 => "★★☆",
+                        1 => "★☆☆",
+                        _ => "☆☆☆",
+                    };
+                    node.text_star.visible = true;
+                }
+                else
+                {
+                    node.text_star.visible = false;
                 }
             }
         }

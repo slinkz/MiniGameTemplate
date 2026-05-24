@@ -14,7 +14,7 @@
     <text id="gen_06" name="title" xy="0,0" size="80,80" fontSize="28" color="#ffffff" align="center" vAlign="middle" autoSize="none" bold="true" text="1">
       <relation target="" sidePair="width-width,height-height"/>
     </text>
-    <text id="gen_07" name="text_star" xy="20,58" size="40,20" fontSize="16" color="#ffc107" align="center" autoSize="none" text="★">
+    <text id="gen_07" name="text_star" xy="5,58" size="70,20" fontSize="14" color="#ffc107" align="center" autoSize="shrink" text="★★★">
       <gearDisplay controller="state" pages="0"/>
     </text>
     <text id="gen_08" name="text_lock" xy="55,5" size="20,20" fontSize="14" color="#ffffff" align="center" autoSize="none" text="🔒">
