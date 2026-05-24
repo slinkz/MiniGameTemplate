@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：26 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-041）
+> **当前条目数**：34 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-049）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -338,6 +338,97 @@
 - **为什么危险**: 客户端 `JSON.stringify` 自动包含所有字段 → 上传"成功"；云函数解构 `const { a, b } = event` 丢弃未列出字段 → JavaScript 不报错；`getProgress` 读回来的就是写进去的 → 看不出差异。唯一暴露时机是换设备/清缓存
 - **严重度**: 🔴 数据丢失，用户无感知直到换设备
 - **标记 [经典] 原因**: 客户端与云端数据结构版本漂移是长期维护中的高频陷阱；JavaScript 解构的静默丢弃特性让问题极难发现
+
+---
+
+## PIT-042: DamageRedirect 转发基地时必须清除暴击
+- **分类**: CL-6 渲染管线与 Mesh API / 战斗系统
+- **日期**: 2026-05-23
+- **现象**: 伤害转发到基地后基地扣血异常放大
+- **根因**: DamageRedirect 转发伤害时携带了原始暴击标记，基地不应承受暴击
+- **修复**: 转发时 `IsCritical=false, CritMultiplier=1f`
+- **验证方法**: 伤害转发链路中检查暴击标记是否被正确清除
+- **严重度**: 🔴 数值 bug
+
+---
+
+## PIT-043: HealthComponent 无敌帧必须在 modifier 链之前
+- **分类**: CL-5 生命周期与时序 / 战斗系统
+- **日期**: 2026-05-23
+- **现象**: 无敌状态下仍受到伤害
+- **根因**: `_iFrameRemaining > 0` 判断放在 modifier 链之后执行，modifier 已经修改了 HP
+- **修复**: 无敌帧检查在 modifier 链之前执行，命中则直接 return
+- **验证方法**: HealthComponent 的伤害处理流程中，无敌判断是否为最先执行
+- **严重度**: 🔴 逻辑 bug
+
+---
+
+## PIT-044: HealthComponent.OnHpChanged 必须是 HP 同步的单一数据源
+- **分类**: CL-9 架构一致性 / 战斗系统
+- **日期**: 2026-05-23
+- **现象**: HP 显示与实际不一致，某些地方没有更新
+- **根因**: 散落的 `floatVariable.SetValue()` 手动同步，遗漏某些路径
+- **修复**: 所有 HP 同步统一走 `OnHpChanged` 事件自动推送到 FloatVariable SO
+- **验证方法**: 全局搜索 HP 相关的 FloatVariable.SetValue，确认只存在于 OnHpChanged 订阅者中
+- **严重度**: 🔴 数据不一致
+
+---
+
+## PIT-045: LaserTypeSO 必须设置 LaserTexture
+- **分类**: CL-6 渲染管线与 Mesh API
+- **日期**: 2026-05-20
+- **现象**: 激光配置完成但运行时完全不显示
+- **根因**: `LaserRenderer.Rebuild()` 在 `LaserTexture==null` 时静默跳过渲染，无 Error 日志
+- **修复**: 确保所有 LaserTypeSO 的 LaserTexture 字段已赋值；或在 Rebuild 中加 null 检查 Warning
+- **验证方法**: 新建 LaserTypeSO 后检查 Inspector 中 LaserTexture 是否已赋值
+- **严重度**: 🟡 静默失败无报错
+
+---
+
+## PIT-046: AttachSourceRegistry localOffset 是 Transform 局部坐标
+- **分类**: CL-6 渲染管线与 Mesh API / 战斗系统
+- **日期**: 2026-05-20
+- **现象**: 子弹/特效生成位置偏移到错误方向（如向下而非向前）
+- **根因**: Spawner 统一设 `entity.Rotation=270°`，世界空间偏移（如 FireOffset）直传到 localOffset 会被旋转 270°。localOffset 是 Transform 局部坐标
+- **修复**: 世界空间偏移需先 `InverseTransformVector` 转换为局部坐标后再赋值
+- **验证方法**: 使用 AttachSource 时，确认偏移量是局部坐标还是世界坐标；如果是世界坐标需转换
+- **严重度**: 🟡 位置偏移 bug
+
+---
+
+## PIT-047: 纯视觉效果必须用 unscaledDeltaTime `[经典]`
+- **分类**: CL-5 生命周期与时序
+- **日期**: 2026-05-22
+- **现象**: 暂停时飘字/粒子/UI 动效冻住，取消暂停后残留在屏幕上
+- **根因**: 视觉效果生命周期用了 `Time.deltaTime`，暂停时 `timeScale=0` 导致 dt=0，效果永远不会结束
+- **修复**: 飘字/粒子/UI 动效等不受游戏逻辑控制的纯表现，生命周期必须走 `Time.unscaledDeltaTime`
+- **验证方法**: 暂停游戏，观察所有视觉效果是否正常消散/完成动画
+- **严重度**: 🔴 视觉残留 bug
+- **标记 [经典] 原因**: 凡是"看起来"效果和游戏逻辑无关的 Tick，都容易误用 deltaTime
+
+---
+
+## PIT-048: DontDestroyOnLoad 退场清理三件套 `[经典]`
+- **分类**: CL-5 生命周期与时序
+- **日期**: 2026-05-22
+- **现象**: 切场景后旧场景的子弹/碰撞/对象池残留，导致空引用或僵尸碰撞
+- **根因**: DontDestroyOnLoad 对象跨场景存活，但其管理的运行时数据（池、碰撞注册、子弹）未清理
+- **修复**: 三件套缺一不可 ①`PoolManager.ClearAll` 回收借出对象 ②`EntitySystemBootstrap.OnDestroy→DespawnAll` 注销 CollisionComponent ③`DanmakuSystem.ClearAll` 立即清子弹
+- **验证方法**: 切场景前后检查：对象池借出数归零、碰撞系统无残留注册、弹幕系统无活跃子弹
+- **严重度**: 🔴 跨场景泄漏
+- **标记 [经典] 原因**: 多系统耦合的清理时序，缺任一步就泄漏，且表现不确定（有时不崩只是静默异常）
+
+---
+
+## PIT-049: 定长数组 swap-remove 必须 default 清尾 `[经典]`
+- **分类**: CL-5 生命周期与时序 / 内存管理
+- **日期**: 2026-05-22
+- **现象**: 对象池释放后 GC 不回收，内存持续增长
+- **根因**: `array[i] = array[--count]` 后尾部 `array[count]` 仍持有旧引用，阻止 GC
+- **修复**: swap-remove 后必须 `array[count] = default`
+- **验证方法**: 所有使用 swap-remove 模式的数组/列表，检查 remove 后是否清尾
+- **严重度**: 🟡 内存泄漏
+- **标记 [经典] 原因**: 手写数据结构中极易遗漏的一步，编译器和 IDE 均无法检测
 
 ---
 

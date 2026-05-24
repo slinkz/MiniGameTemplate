@@ -111,3 +111,4 @@ description: >
 | `references/cross-scene-data.md` | §9 详细代码示例 + 禁止方式表格 |
 | `references/bug-fix-sop.md` | §10 Bug 修复 SOP 完整步骤 |
 | `references/cloud-sync-pitfall.md` | §12 云函数同步 checklist + 原理 |
+| `references/platform-rules.md` | 平台与框架编码铁律（Material/jslib/CDN/云存档/微信诊断等） |

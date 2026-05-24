@@ -38,6 +38,11 @@ description: "FairyGUI 全链路 UI 开发：解析 FairyGUI 工程、根据 UI 
 - 包 ID：8 字符随机（小写字母+数字），如 `ab12cd34`
 - 资源 ID：`gen_01`, `gen_02`, ... 递增，包内不重复
 
+### R3b：四统一命名
+
+- **包名 = publish name = 导出文件前缀 = 代码 packageName**
+- 任一不一致 → 运行时找不到包/组件（静默失败无报错）
+
 ### R3.5：默认开启代码导出
 
 `<publish name="PackageName" genCode="true">` — 每个包必须开启
