@@ -51,6 +51,8 @@ namespace MiniGameTemplate.Entity
         public float AttackIntervalModifier { get; private set; } = 1f;
         /// <summary>受伤修正倍率（不 Clamp，允许无敌/脆弱）</summary>
         public float DamageTakenModifier { get; private set; } = 1f;
+        /// <summary>子弹数修正倍率（乘法叠加，无 Clamp）【CR-003 新增缓存属性】</summary>
+        public float BulletCountModifier { get; private set; } = 1f;
 
         // ── V2 聚合查询 ──
         /// <summary>是否有穿透 Buff 生效（被动 PA-01）</summary>
@@ -283,17 +285,12 @@ namespace MiniGameTemplate.Entity
         public int ActiveDotCount => _activeDotCount;
 
         /// <summary>
-        /// 获取子弹数修正倍率（AttackComponent 查询用）。
-        /// 遍历活跃 BuffSlot，乘法累积 BulletCountModifier。
+        /// 获取子弹数修正倍率（已废弃——改用 BulletCountModifier 属性）。
         /// </summary>
+        [System.Obsolete("Use BulletCountModifier property instead")]
         public float GetBulletCountModifier()
         {
-            float mod = 1f;
-            for (int i = 0; i < _activeBuffCount; i++)
-            {
-                mod *= _buffSlots[i].BulletCountMod;
-            }
-            return mod;
+            return BulletCountModifier;
         }
 
         /// <summary>查询指定 BuffId 是否存在</summary>
@@ -381,7 +378,7 @@ namespace MiniGameTemplate.Entity
 
         private void RecalcModifiers()
         {
-            float move = 1f, attack = 1f, damage = 1f;
+            float move = 1f, attack = 1f, damage = 1f, bulletCount = 1f;
             bool hasPierce = false;
             float critBonus = 0f;
             float critMultOverride = 0f;
@@ -398,15 +395,18 @@ namespace MiniGameTemplate.Entity
                     float moveMod = Mathf.Pow(slot.MoveSpeedMod, stacks);
                     float attackMod = Mathf.Pow(slot.AttackIntervalMod, stacks);
                     float damageMod = Mathf.Pow(slot.DamageTakenMod, stacks);
+                    float bulletMod = Mathf.Pow(slot.BulletCountMod, stacks); // 【CR-003】
                     move *= moveMod;
                     attack *= attackMod;
                     damage *= damageMod;
+                    bulletCount *= bulletMod;
                 }
                 else
                 {
                     move *= slot.MoveSpeedMod;
                     attack *= slot.AttackIntervalMod;
                     damage *= slot.DamageTakenMod;
+                    bulletCount *= slot.BulletCountMod; // 【CR-003】
                 }
 
                 // 被动效果聚合
@@ -420,6 +420,7 @@ namespace MiniGameTemplate.Entity
             MoveSpeedModifier = Mathf.Clamp(move, MIN_MOVE_SPEED_RATIO, MAX_MOVE_SPEED_RATIO);
             AttackIntervalModifier = Mathf.Clamp(attack, MIN_ATTACK_INTERVAL_RATIO, MAX_ATTACK_INTERVAL_RATIO);
             DamageTakenModifier = damage; // 不 Clamp——允许无敌(0)和脆弱(×5)
+            BulletCountModifier = bulletCount; // 【CR-003】无 Clamp
 
             HasActivePierce = hasPierce;
             CritRateBonus = critBonus;

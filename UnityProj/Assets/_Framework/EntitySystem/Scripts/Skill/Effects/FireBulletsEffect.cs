@@ -33,7 +33,16 @@ namespace MiniGameTemplate.Entity
                 : ctx.AimDirection;
             float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
-            ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value, ctx.SourceTagId);
+            // 【PK-UA-001 + CR-005】Buff 弹幕数修正
+            int? countOverride = null;
+            var buffComp = ctx.Caster.GetComponent(ComponentType.Buff) as BuffComponent;
+            if (buffComp != null && buffComp.BulletCountModifier != 1f)
+            {
+                int baseCount = Pattern.Count;
+                countOverride = Mathf.Max(1, Mathf.RoundToInt(baseCount * buffComp.BulletCountModifier));
+            }
+
+            ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value, ctx.SourceTagId, countOverride);
             return true;
         }
     }

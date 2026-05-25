@@ -14,6 +14,7 @@ namespace MiniGameTemplate.Danmaku
         /// 发射一组弹丸（单次，不含 Burst 连射）。
         /// PatternScheduler 的 Burst 连射通过多次调用本方法实现。
         /// ownerEntityId = 发射者 Entity ID（0=无 Owner）。
+        /// countOverride = Buff 修正后的弹丸数（null=使用 Pattern.Count）【CR-005】。
         /// </summary>
         internal static void Fire(
             BulletPatternSO pattern,
@@ -24,12 +25,14 @@ namespace MiniGameTemplate.Danmaku
             DifficultyProfileSO difficulty = null,
             TrailPool trailPool = null,
             uint ownerEntityId = 0,
-            int sourceTag = 0)
+            int sourceTag = 0,
+            int? countOverride = null)
         {
             var type = pattern.BulletType;
             if (type == null) return;
 
-            int count = pattern.Count;
+            // 【CR-005】countOverride 覆盖基础弹丸数
+            int count = countOverride ?? pattern.Count;
             float speed = pattern.Speed;
 
             // 难度乘数

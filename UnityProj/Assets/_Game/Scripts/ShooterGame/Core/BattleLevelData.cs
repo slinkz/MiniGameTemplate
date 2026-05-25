@@ -32,6 +32,14 @@ namespace Game.ShooterGame
         /// </summary>
         [NonSerialized] public PassiveAbilitySO[] EquippedPassives;
 
+        // ── V2 TDD-06：普攻配置覆盖 ──
+
+        /// <summary>
+        /// 普攻配置覆盖（可选）。null = 从 EntityConfigSO.NormalAttackSkill 读取。
+        /// 用于调试或特殊关卡使用不同的普攻配置。
+        /// </summary>
+        [NonSerialized] public SkillConfigSO NormalAttackConfig;
+
         public override string ToString()
         {
             int skillCount = EquippedSkills?.Length ?? 0;

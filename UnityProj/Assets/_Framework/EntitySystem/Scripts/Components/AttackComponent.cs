@@ -4,17 +4,10 @@ using MiniGameTemplate.Danmaku;
 namespace MiniGameTemplate.Entity
 {
     /// <summary>
-    /// Phase 1 最小攻击组件——定时发射弹幕。
-    /// v2.4 新增（GD-R4-003/009）。
-    /// 
-    /// 使用 ComponentType.Attack 槽位（独立于 Phase 3 SkillComponent）。
-    /// 攻击决策来自 IDecisionMaker（Control/AI），当 WantsAttack=true 且 CD 就绪时发射。
-    /// 
-    /// Tick 时序：TickOrder=150（Attack 阶段，AutoAim=120 之后执行，已有锁定目标）。
-    /// 
-    /// 近战攻击说明（GD-R4-009）：
-    /// Phase 1 所有攻击统一走弹幕系统。近战=射程极短的瞬发弹幕。
+    /// [OBSOLETE] 已被 SkillComponent Slot[0] 替代（TDD-06）。
+    /// 保留文件用于迁移参考。新代码请使用 SkillComponent + SkillConfigSO(IsNormalAttack=true)。
     /// </summary>
+    [System.Obsolete("Use SkillComponent Slot[0] with IsNormalAttack=true. See TDD-06.")]
     public sealed class AttackComponent : IEntityComponent, ITickable
     {
         // ──────────────── IEntityComponent ────────────────

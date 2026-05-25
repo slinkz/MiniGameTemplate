@@ -320,12 +320,8 @@ namespace Game.ShooterGame
             if (baseHealthForSync != null)
                 baseHealthForSync.OnHpChanged += OnBaseHpChanged;
 
-            // 6d. V2 Sprint 2: 技能多槽位初始化（从 BattleLevelData 读取装备）
-            if (_battleLevelData?.EquippedSkills != null && _battleLevelData.EquippedSkills.Length > 0)
-            {
-                var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
-                skillComp?.InitWithEquipment(_battleLevelData.EquippedSkills);
-            }
+            // 6d. V2 TDD-06: 普攻收编为 Slot[0] + 技能多槽位初始化
+            SetupPlayerSkills();
 
             // 6e. V2 Sprint 3: 被动技能 CD 驱动（升级 Sprint 2 的开局 ApplyBuff 方案）
             if (_battleLevelData?.EquippedPassives != null && _battleLevelData.EquippedPassives.Length > 0)
@@ -1056,12 +1052,8 @@ namespace Game.ShooterGame
             // 3c3. Kick 初始值（SetHp 在订阅前已执行）
             _baseHP.SetValue(retryBaseHealth != null ? retryBaseHealth.HpRatio : 1.0f);
 
-            // 3d. V2 Sprint 2: 重新注入技能多槽位
-            if (_battleLevelData?.EquippedSkills != null && _battleLevelData.EquippedSkills.Length > 0)
-            {
-                var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
-                skillComp?.InitWithEquipment(_battleLevelData.EquippedSkills);
-            }
+            // 3d. V2 TDD-06: 普攻收编为 Slot[0] + 技能多槽位重新初始化
+            SetupPlayerSkills();
 
             // 3e. V2 Sprint 3: 重新初始化被动组件
             if (_battleLevelData?.EquippedPassives != null && _battleLevelData.EquippedPassives.Length > 0)
@@ -1091,6 +1083,53 @@ namespace Game.ShooterGame
 
             // 8. 重新走 Intro
             EnterState(BattleState.Intro);
+        }
+
+        /// <summary>
+        /// 抽取公共方法：初始化/Retry 均调用。
+        /// 三层兜底获取普攻配置 + 组装技能数组 + 首发延迟。
+        /// 【CR-004 统一版本】
+        /// </summary>
+        private void SetupPlayerSkills()
+        {
+            var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
+            if (skillComp == null) return;
+
+            // 三层兜底获取普攻配置（PK-ET-002/003 + CR-004 统一）
+            SkillConfigSO normalAttack = null;
+
+            // 1. BattleLevelData 覆盖（调试/特殊关卡）
+            if (_battleLevelData != null && _battleLevelData.NormalAttackConfig != null)
+                normalAttack = _battleLevelData.NormalAttackConfig;
+
+            // 2. EntityConfigSO 自带（正式流程主数据源）
+            if (normalAttack == null && _playerEntityConfig.NormalAttackSkill != null)
+                normalAttack = _playerEntityConfig.NormalAttackSkill;
+
+            // 3. Resources 兜底（直跑模式）
+            if (normalAttack == null)
+                normalAttack = Resources.Load<SkillConfigSO>("ShooterGame/SK_NormalAttack");
+
+            if (normalAttack == null)
+            {
+                Debug.LogError("[BattleController] 无普攻配置！检查 EntityConfigSO.NormalAttackSkill 或 Resources/ShooterGame/SK_NormalAttack");
+                return;
+            }
+
+            // 组装技能数组：[普攻, 技能1, ..., 技能N]
+            var equipped = _battleLevelData != null ? _battleLevelData.EquippedSkills : null;
+            int equipCount = equipped != null ? equipped.Length : 0;
+            int totalSlots = Mathf.Min(1 + equipCount, SkillComponent.MAX_SLOTS);
+            var allSkills = new SkillConfigSO[totalSlots];
+            allSkills[0] = normalAttack; // Slot[0] = 普攻
+            for (int i = 0; i < equipCount && i + 1 < totalSlots; i++)
+                allSkills[i + 1] = equipped[i];
+
+            // 初始化 + 首发延迟 + 运行时 CD 覆盖
+            float attackInterval = _playerEntityConfig.AttackInterval;
+            skillComp.InitWithEquipment(allSkills, staggerOffsetPerSlot: 0.5f,
+                                        firstSlotInitialCD: attackInterval);
+            skillComp.OverrideSlotCooldown(0, attackInterval);
         }
 
         private void OnResumeFromPause()

@@ -3,14 +3,13 @@ using UnityEngine;
 namespace MiniGameTemplate.Entity
 {
     /// <summary>
-    /// 技能组件——6 槽位 CD 管理的全自动技能释放循环（V2 Sprint 2 改造）。
+    /// 技能组件——6 槽位 CD 管理的全自动技能释放循环。
     /// 
     /// ComponentType.Skill = 6
-    /// TickOrder = 160（Attack 之后）
+    /// TickOrder = 160
     /// 
-    /// 与 AttackComponent 的关系：共存不替代。
-    /// - AttackComponent = 持续自动射击（定时器 + BulletPattern）
-    /// - SkillComponent = 6 技能槽各自独立 CD 全自动释放
+    /// TDD-06 改造：普攻收编为 Slot[0]（AimMode=FixedForward, IsNormalAttack=true）。
+    /// AttackComponent 已废弃——所有攻击行为统一走 SkillComponent。
     /// 
     /// 初始化模式：
     /// - 外部注入（V2）：BattleController 调用 InitWithEquipment(skills[])
@@ -44,8 +43,35 @@ namespace MiniGameTemplate.Entity
         // v0.4（ATK-005/ATK-010）：Init 后固定，不支持运行时切换控制源。
         private IDecisionMaker _cachedDecisionMaker;
 
+        /// <summary>
+        /// 运行时 CD 覆盖值（TDD-06 §2.7）。
+        /// 用于普攻从 EntityConfigSO.AttackInterval 读取实际 CD，而非 SO 默认值。
+        /// </summary>
+        private readonly float[] _runtimeCooldownOverrides = new float[MAX_SLOTS];
+
         /// <summary>获取指定槽位状态（UI 显示 CD 用）</summary>
         public ref readonly SkillSlot GetSlot(int index) => ref _slots[index];
+
+        /// <summary>
+        /// 运行时覆盖指定槽位的 CooldownTime（TDD-06 §2.7）。
+        /// 用于普攻从 EntityConfigSO.AttackInterval 读取实际 CD。
+        /// 注意：不修改 SO 资产——只读 Config.CooldownTime 作为 fallback。
+        /// </summary>
+        public void OverrideSlotCooldown(int slotIndex, float cooldownTime)
+        {
+            if (slotIndex < 0 || slotIndex >= MAX_SLOTS) return;
+            if (_slots[slotIndex].Config == null) return;
+            _runtimeCooldownOverrides[slotIndex] = cooldownTime;
+        }
+
+        /// <summary>
+        /// 获取有效 CD（优先运行时覆盖值，否则读 Config.CooldownTime）。
+        /// </summary>
+        private float GetEffectiveCooldown(int slotIndex)
+        {
+            float over = _runtimeCooldownOverrides[slotIndex];
+            return over > 0f ? over : _slots[slotIndex].Config.CooldownTime;
+        }
 
         public void Init(Entity owner)
         {
@@ -79,8 +105,17 @@ namespace MiniGameTemplate.Entity
         /// 初始 CD 错开间隔（秒）。避免 6 技能同时释放造成视觉爆炸。
         /// TDD 建议 0.5f。
         /// </param>
-        public void InitWithEquipment(SkillConfigSO[] equippedSkills, float staggerOffsetPerSlot = 0.5f)
+        /// <param name="firstSlotInitialCD">Slot[0] 首发延迟（秒）。
+        ///   >0 = Slot[0] 初始进入 Cooldown 状态等待此时间后首发。
+        ///   通常等于 OverrideSlotCooldown(0, x) 的同一个 x 值（如 attackInterval）。
+        ///   不做内部 Clamp——调用者负责确保值合理。【CR-010】
+        ///   ≤0 = 立即可用（无首发延迟）。</param>
+        public void InitWithEquipment(SkillConfigSO[] equippedSkills, float staggerOffsetPerSlot = 0.5f,
+                                      float firstSlotInitialCD = 0f)
         {
+            // 清零运行时覆盖（对象池复用安全）
+            System.Array.Clear(_runtimeCooldownOverrides, 0, MAX_SLOTS);
+
             // 先清空所有槽位
             for (int i = 0; i < MAX_SLOTS; i++)
             {
@@ -103,6 +138,13 @@ namespace MiniGameTemplate.Entity
                 _slots[i].CooldownTimer = staggerOffsetPerSlot * i; // 错开释放
             }
 
+            // 【PK-ET-009】Slot[0] 首发延迟
+            if (firstSlotInitialCD > 0f && _slots[0].Config != null)
+            {
+                _slots[0].CooldownTimer = firstSlotInitialCD;
+                _slots[0].State = SkillState.Cooldown;
+            }
+
             ActiveSlotCount = count;
             IsActive = true;
         }
@@ -111,6 +153,7 @@ namespace MiniGameTemplate.Entity
         {
             _owner = null;
             _cachedDecisionMaker = null;
+            System.Array.Clear(_runtimeCooldownOverrides, 0, MAX_SLOTS);
             for (int i = 0; i < MAX_SLOTS; i++)
             {
                 _slots[i] = default;
@@ -141,12 +184,17 @@ namespace MiniGameTemplate.Entity
             for (int i = 0; i < MAX_SLOTS; i++)
             {
                 if (_slots[i].Config == null) continue;
-                TickSlot(ref _slots[i], dt);
+                TickSlot(i, dt); // 【CR-001】传 index，不传 ref
             }
         }
 
-        private void TickSlot(ref SkillSlot slot, float dt)
+        /// <summary>
+        /// 单槽位 Tick（TDD-06 §2.7 CR-001 改造）。
+        /// 传 slotIndex 以便内部访问 _runtimeCooldownOverrides。
+        /// </summary>
+        private void TickSlot(int slotIndex, float dt)
         {
+            ref var slot = ref _slots[slotIndex];
             switch (slot.State)
             {
                 case SkillState.Idle:
@@ -161,7 +209,7 @@ namespace MiniGameTemplate.Entity
                         {
                             // 效果执行失败（如无目标）→ 留在 Idle，下帧重试，不进 CD
                             if (ExecuteEffects(slot.Config, dt))
-                                EnterRecovery(ref slot);
+                                EnterRecovery(slotIndex); // 【CR-001】传 index
                         }
                     }
                     break;
@@ -172,7 +220,7 @@ namespace MiniGameTemplate.Entity
                     {
                         // 前摇结束但效果失败 → 退回 Idle 重试（不浪费 CD）
                         if (ExecuteEffects(slot.Config, dt))
-                            EnterRecovery(ref slot);
+                            EnterRecovery(slotIndex); // 【CR-001】传 index
                         else
                             slot.State = SkillState.Idle;
                     }
@@ -182,13 +230,30 @@ namespace MiniGameTemplate.Entity
                     slot.CastTimer -= dt;
                     if (slot.CastTimer <= 0)
                     {
-                        slot.CooldownTimer = slot.Config.CooldownTime;
+                        // 【CR-002 核心修正】使用 GetEffectiveCooldown 替代 Config.CooldownTime
+                        slot.CooldownTimer = GetEffectiveCooldown(slotIndex);
                         slot.State = SkillState.Cooldown;
                     }
                     break;
 
                 case SkillState.Cooldown:
-                    slot.CooldownTimer -= dt;
+                    float cdDt = dt;
+                    // 普攻槽：Buff 攻速修正影响 CD 消耗速率
+                    // AttackIntervalModifier < 1 → 攻速更快 → CD 消耗更快
+                    if (slot.Config.IsNormalAttack)
+                    {
+                        // 【CR-006】不缓存 BuffComponent 的原因：
+                        //   1. Entity.GetComponent(ComponentType.Buff) = _components[10]，O(1) 数组索引，零 GC
+                        //   2. ComponentType.Buff=10 > Skill=6，Init 时 Buff 可能还未创建
+                        //   3. 每帧仅 Slot[0] 执行此分支（≤1 次/帧），性能可忽略
+                        var buff = _owner.GetComponent(ComponentType.Buff) as BuffComponent;
+                        if (buff != null && buff.AttackIntervalModifier != 1f)
+                        {
+                            // 修正值 = 1/modifier（modifier=0.5 → cd消耗2倍速）
+                            cdDt = dt / buff.AttackIntervalModifier;
+                        }
+                    }
+                    slot.CooldownTimer -= cdDt;
                     if (slot.CooldownTimer <= 0)
                     {
                         slot.CooldownTimer = 0;
@@ -228,7 +293,7 @@ namespace MiniGameTemplate.Entity
             {
                 Caster = _owner,
                 CastPosition = _owner.Position,
-                AimDirection = GetAimDirection(autoAim),
+                AimDirection = GetAimDirection(config, autoAim),
                 DeltaTime = dt,
                 SkillConfig = config,
                 CasterTransform = casterTransform,
@@ -245,50 +310,71 @@ namespace MiniGameTemplate.Entity
             return anySuccess;
         }
 
-        private void EnterRecovery(ref SkillSlot slot)
+        /// <summary>
+        /// 进入 Recovery 或直接进入 Cooldown（TDD-06 §2.7 CR-001/002）。
+        /// 使用 GetEffectiveCooldown 读取运行时覆盖的 CD 值。
+        /// </summary>
+        private void EnterRecovery(int slotIndex)
         {
+            ref var slot = ref _slots[slotIndex];
             if (slot.Config.RecoveryTime > 0)
             {
                 slot.State = SkillState.Recovery;
                 slot.CastTimer = slot.Config.RecoveryTime;
             }
-            else if (slot.Config.CooldownTime > 0)
-            {
-                slot.CooldownTimer = slot.Config.CooldownTime;
-                slot.State = SkillState.Cooldown;
-            }
             else
             {
-                // 安全网：CD=0 + Recovery=0 → 强制最短 Cooldown（下帧再触发）
-                slot.CooldownTimer = 0.001f;
-                slot.State = SkillState.Cooldown;
-                Debug.LogWarning($"[SkillComponent] {slot.Config.DisplayName} CD=0 + Recovery=0，已强制最小间隔。");
+                float cd = GetEffectiveCooldown(slotIndex); // 使用运行时覆盖
+                if (cd > 0)
+                {
+                    slot.CooldownTimer = cd;
+                    slot.State = SkillState.Cooldown;
+                }
+                else
+                {
+                    // 安全网：CD=0 + Recovery=0 → 强制最短 Cooldown（下帧再触发）
+                    slot.CooldownTimer = 0.001f;
+                    slot.State = SkillState.Cooldown;
+                    Debug.LogWarning($"[SkillComponent] {slot.Config.DisplayName} CD=0，已强制最小间隔。");
+                }
             }
         }
 
         /// <summary>
-        /// 瞄准方向优先级链（与 AttackComponent.GetFireAngle 对齐）：
-        /// 1. AutoAim 锁定目标 → 目标方向
-        /// 2. DecisionCommand.AimDirection → 玩家输入/默认朝上
-        /// 3. Entity.Rotation → 角度转向量（兜底）
+        /// 根据 SkillConfigSO.AimMode 决定施法方向。
+        /// - FixedForward：纵版射击固定向上（当前普攻行为等价）
+        /// - AutoAim：有锁定目标→跟踪，无目标→Decision→Rotation
+        /// - CommandDir：纯 Decision 方向（预留手动操控）
         /// </summary>
-        private Vector2 GetAimDirection(ITargetProvider autoAim)
+        private Vector2 GetAimDirection(SkillConfigSO config, ITargetProvider autoAim)
         {
-            // 优先级 1：AutoAim 有目标
-            if (autoAim != null && autoAim.HasTarget)
-                return (autoAim.TargetPosition - _owner.Position).normalized;
-
-            // 优先级 2：Decision 瞄准方向（ControlComponent 或 AI 提供）
-            if (_cachedDecisionMaker != null)
+            switch (config.AimMode)
             {
-                Vector2 aimDir = _cachedDecisionMaker.GetDecision().AimDirection;
-                if (aimDir.sqrMagnitude > 0.01f)
-                    return aimDir.normalized;
-            }
+                case AimMode.FixedForward:
+                    // 【PK-UA-009/013】纵版射击固定向上。
+                    // 未来支持非纵版时可从 SkillConfigSO 新增 FixedDirection 字段扩展。
+                    return Vector2.up;
 
-            // 优先级 3：Entity 朝向角度
-            float rad = _owner.Rotation * Mathf.Deg2Rad;
-            return new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+                case AimMode.AutoAim:
+                    // 有目标→跟踪，无目标→Decision→Rotation（原有逻辑）
+                    if (autoAim != null && autoAim.HasTarget)
+                        return (autoAim.TargetPosition - _owner.Position).normalized;
+                    goto case AimMode.CommandDir;
+
+                case AimMode.CommandDir:
+                    if (_cachedDecisionMaker != null)
+                    {
+                        Vector2 aimDir = _cachedDecisionMaker.GetDecision().AimDirection;
+                        if (aimDir.sqrMagnitude > 0.01f)
+                            return aimDir.normalized;
+                    }
+                    // 兜底：Entity 朝向
+                    float fallbackRad = _owner.Rotation * Mathf.Deg2Rad;
+                    return new Vector2(Mathf.Cos(fallbackRad), Mathf.Sin(fallbackRad));
+
+                default:
+                    return Vector2.up;
+            }
         }
     }
 

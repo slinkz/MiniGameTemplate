@@ -109,11 +109,15 @@ namespace MiniGameTemplate.Danmaku
             _scheduler.Schedule(group, origin, baseAngle, playerPos);
         }
 
-        /// <summary>发射单个弹幕。ownerEntityId = 发射者 Entity ID（0=无 Owner）。sourceTag = 伤害来源标记（0=基础攻击）。</summary>
+        /// <summary>
+        /// 发射单个弹幕。ownerEntityId = 发射者 Entity ID（0=无 Owner）。
+        /// sourceTag = 伤害来源标记（0=基础攻击）。
+        /// countOverride = Buff 修正后的弹丸数，null=使用 Pattern.Count【CR-005】。
+        /// </summary>
         public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle,
-            uint ownerEntityId = 0, int sourceTag = 0)
+            uint ownerEntityId = 0, int sourceTag = 0, int? countOverride = null)
         {
-            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId, sourceTag);
+            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId, sourceTag, countOverride);
         }
 
         /// <summary>

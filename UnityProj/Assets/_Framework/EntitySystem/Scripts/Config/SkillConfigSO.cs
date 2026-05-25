@@ -15,6 +15,14 @@ namespace MiniGameTemplate.Entity
         [Tooltip("触发模式")]
         public SkillTriggerMode TriggerMode = SkillTriggerMode.Auto;
 
+        [Header("瞄准")]
+        [Tooltip("瞄准策略：决定技能释放方向")]
+        public AimMode AimMode = AimMode.AutoAim;
+
+        [Header("普攻标记")]
+        [Tooltip("标记此技能为普攻（Slot[0]）。影响：Buff 攻速修正作用于此技能的 CD")]
+        public bool IsNormalAttack;
+
         [Header("时间轴")]
         [Tooltip("冷却时间（秒，0=无冷却，受 Recovery 限制最小间隔）")]
         [Min(0f)]
@@ -43,10 +51,15 @@ namespace MiniGameTemplate.Entity
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            // Effects 为空时提示（预期 Sprint 3+ 才实装 ISkillEffect）
             if (Effects == null || Effects.Length == 0)
-            {
                 Debug.LogWarning($"[SkillConfigSO] '{name}' Effects 为空——技能无实际效果", this);
+
+            if (IsNormalAttack)
+            {
+                if (TriggerMode != SkillTriggerMode.Auto)
+                    Debug.LogWarning($"[SkillConfigSO] '{name}' IsNormalAttack=true 但 TriggerMode!=Auto", this);
+                if (AimMode != AimMode.FixedForward)
+                    Debug.LogWarning($"[SkillConfigSO] '{name}' IsNormalAttack=true 建议 AimMode=FixedForward", this);
             }
         }
 #endif

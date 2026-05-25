@@ -38,6 +38,10 @@ namespace Game.ShooterGame
         [Tooltip("直跑场景时使用的关卡索引（0-based）。-1 = 使用 BattleController 默认值")]
         [SerializeField] private int _debugLevelIndex = 0;
 
+        [Header("═══ 普攻配置（TDD-06）═══")]
+        [Tooltip("普攻 SkillConfigSO 覆盖。null = 从 EntityConfigSO.NormalAttackSkill 兜底")]
+        [SerializeField] private SkillConfigSO _debugNormalAttack;
+
         [Header("═══ 技能装备 ═══")]
         [Tooltip("勾选后使用下方技能列表覆盖默认装备")]
         [SerializeField] private bool _overrideSkills = true;
@@ -124,8 +128,14 @@ namespace Game.ShooterGame
                     data.EquippedPassives = validPassives;
             }
 
-            int skillCount = data.EquippedSkills?.Length ?? 0;
-            int passiveCount = data.EquippedPassives?.Length ?? 0;
+            // 普攻（TDD-06 §2.12 PK-ET-002）
+            if (_debugNormalAttack != null)
+                data.NormalAttackConfig = _debugNormalAttack;
+            else
+                Debug.LogWarning("[BattleDebugLauncher] _debugNormalAttack 未配置，将从 EntityConfigSO 兜底");
+
+            int skillCount = data.EquippedSkills != null ? data.EquippedSkills.Length : 0;
+            int passiveCount = data.EquippedPassives != null ? data.EquippedPassives.Length : 0;
             _status = $"Injected: Level={data.LevelIndex}, Skills={skillCount}, Passives={passiveCount}";
             Debug.Log($"[BattleDebugLauncher] {_status}");
 

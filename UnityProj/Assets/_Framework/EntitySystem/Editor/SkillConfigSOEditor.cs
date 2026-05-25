@@ -6,23 +6,24 @@ using UnityEngine;
 namespace MiniGameTemplate.Entity.Editor
 {
     /// <summary>
-    /// SkillConfigSO 自定义编辑器（v0.4 ATK-001）。
+    /// SkillConfigSO 自定义编辑器（v0.4 ATK-001 + TDD-06 PK-ET-001 混合绘制）。
     /// 使用 TypeCache.GetTypesDerivedFrom&lt;ISkillEffect&gt;() 实现类型发现。
     /// 提供"+"添加、"-"删除 ISkillEffect。
     /// 不依赖 Odin——零第三方 Editor 依赖。
-    /// 
-    /// 搜索所有已加载程序集（包含 _Game/ 下的 Assembly Definition），
-    /// 框架外扩展的 ISkillEffect 实现会自动出现在下拉菜单中。
     /// </summary>
     [CustomEditor(typeof(SkillConfigSO))]
     public class SkillConfigSOEditor : UnityEditor.Editor
     {
         private SerializedProperty _displayName;
         private SerializedProperty _triggerMode;
+        private SerializedProperty _aimMode;
+        private SerializedProperty _isNormalAttack;
         private SerializedProperty _cooldownTime;
         private SerializedProperty _castTime;
         private SerializedProperty _recoveryTime;
         private SerializedProperty _effects;
+        private SerializedProperty _attachedDotConfig;
+        private SerializedProperty _sourceTagId;
 
         private static Type[] _cachedEffectTypes;
         private static string[] _cachedEffectNames;
@@ -31,10 +32,14 @@ namespace MiniGameTemplate.Entity.Editor
         {
             _displayName = serializedObject.FindProperty("DisplayName");
             _triggerMode = serializedObject.FindProperty("TriggerMode");
+            _aimMode = serializedObject.FindProperty("AimMode");
+            _isNormalAttack = serializedObject.FindProperty("IsNormalAttack");
             _cooldownTime = serializedObject.FindProperty("CooldownTime");
             _castTime = serializedObject.FindProperty("CastTime");
             _recoveryTime = serializedObject.FindProperty("RecoveryTime");
             _effects = serializedObject.FindProperty("Effects");
+            _attachedDotConfig = serializedObject.FindProperty("AttachedDotConfig");
+            _sourceTagId = serializedObject.FindProperty("SourceTagId");
 
             RefreshEffectTypes();
         }
@@ -50,9 +55,43 @@ namespace MiniGameTemplate.Entity.Editor
 
             EditorGUILayout.Space(4);
 
+            // ── 瞄准（TDD-06 §2.2）──
+            EditorGUILayout.LabelField("瞄准", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_aimMode);
+
+            EditorGUILayout.Space(4);
+
+            // ── 普攻标记（TDD-06 §2.2）──
+            EditorGUILayout.LabelField("普攻标记", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_isNormalAttack);
+
+            bool isNormal = _isNormalAttack.boolValue;
+            if (isNormal)
+            {
+                EditorGUILayout.HelpBox(
+                    "此技能标记为普攻（Slot[0]）。\n" +
+                    "• CooldownTime 运行时由 EntityConfigSO.AttackInterval 覆盖\n" +
+                    "• Buff 攻速修正将影响此技能的 CD 消耗速率\n" +
+                    "• 建议 AimMode=FixedForward, TriggerMode=Auto",
+                    MessageType.Info);
+
+                // CooldownTime 置灰（仅显示，运行时覆盖）
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.PropertyField(_cooldownTime,
+                        new GUIContent("CooldownTime (运行时覆盖)"));
+                }
+            }
+
+            EditorGUILayout.Space(4);
+
             // ── 时间轴 ──
             EditorGUILayout.LabelField("时间轴", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(_cooldownTime);
+            if (!isNormal)
+            {
+                // 非普攻：CooldownTime 可编辑
+                EditorGUILayout.PropertyField(_cooldownTime);
+            }
             EditorGUILayout.PropertyField(_castTime);
             EditorGUILayout.PropertyField(_recoveryTime);
 
@@ -61,6 +100,15 @@ namespace MiniGameTemplate.Entity.Editor
             // ── 效果列表 ──
             EditorGUILayout.LabelField("效果列表", EditorStyles.boldLabel);
             DrawEffectsList();
+
+            EditorGUILayout.Space(8);
+
+            // ── 扩展字段（TDD-06 PK-ET-001 混合绘制）──
+            EditorGUILayout.LabelField("扩展", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_attachedDotConfig,
+                new GUIContent("Attached DOT", "技能命中时附带施加的 DOT（null=不施加）"));
+            EditorGUILayout.PropertyField(_sourceTagId,
+                new GUIContent("Source Tag ID", "伤害来源标记 ID（0=基础攻击，1~6=技能，7=反击弹幕）"));
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -171,7 +219,7 @@ namespace MiniGameTemplate.Entity.Editor
         }
 
         /// <summary>
-        /// 使用 TypeCache 发现所有 ISkillEffect 实现类型（ATK-001）。
+        /// 使用 TypeCache 发现所有 ISkillEffect 实现类型。
         /// 搜索所有已加载程序集（包含 _Game/ 下的 Assembly Definition），
         /// 框架外扩展的 ISkillEffect 实现会自动出现在下拉菜单中。
         /// </summary>

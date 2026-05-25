@@ -9,6 +9,9 @@ namespace Game.ShooterGame.UI
     /// 2行×3列，48×48pt 圆形。
     /// 四态：Cooldown(扇形遮罩) → Ready(全亮) → Casting(金色边框) → Release(闪白)。
     /// 未装备=灰色空圈(α0.3)。
+    /// 
+    /// TDD-06 改动：Slot[0] 是普攻（不显示 CD），UI 从 Slot[1] 开始映射。
+    /// 调用方应使用 SKILL_SLOT_START_INDEX 作为 SkillComponent 的起始读取索引。
     /// </summary>
     public class SkillCDPanel
     {
@@ -16,6 +19,13 @@ namespace Game.ShooterGame.UI
         private const int COLUMNS = 3;
         private const float SLOT_SIZE = 48f;
         private const float GAP = 4f;
+
+        /// <summary>
+        /// SkillComponent 槽位到 UI 槽位的起始偏移（TDD-06）。
+        /// UI Panel index 0 对应 SkillComponent.GetSlot(SKILL_SLOT_START_INDEX)。
+        /// Slot[0] = 普攻（不在 CD 面板显示）。
+        /// </summary>
+        public const int SKILL_SLOT_START_INDEX = 1;
 
         private readonly GComponent _container;
         private readonly GComponent[] _slots = new GComponent[MAX_SKILLS];
