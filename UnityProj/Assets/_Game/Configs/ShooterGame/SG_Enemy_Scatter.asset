@@ -45,6 +45,7 @@ MonoBehaviour:
   FirstAttackDelay: 1.5
   AttackBulletPattern: {fileID: 11400000, guid: 274f9638dc1a72949b58e831a45d17b1, type: 2}
   AttackFireOffset: {x: 0, y: -0.3}
+  NormalAttackSkill: {fileID: 0}
   SkillConfig: {fileID: 0}
   AIBehavior: {fileID: 11400000, guid: 7a9c477a00daf5c49919f6e6a1065feb, type: 2}
   ViewPrefab: {fileID: 0}

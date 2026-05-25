@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4054456887634494681113d9c4aa7d25, type: 3}
+  m_Name: SK_NormalAttack
+  m_EditorClassIdentifier: 
+  DisplayName: "\u57FA\u7840\u5C04\u51FB"
+  TriggerMode: 1
+  AimMode: 0
+  IsNormalAttack: 1
+  CooldownTime: 0.25
+  CastTime: 0
+  RecoveryTime: 0
+  Effects:
+  - rid: 4957693009800200192
+  AttachedDotConfig: {fileID: 0}
+  SourceTagId: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 4957693009800200192
+      type: {class: FireBulletsEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
+      data:
+        Pattern: {fileID: 11400000, guid: 85c434b47651ddb4f9e7c9333de12c57, type: 2}
+        FireOffset: {x: 0, y: 0.5}
+        UseForwardDirection: 0

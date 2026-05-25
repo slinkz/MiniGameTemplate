@@ -50,7 +50,7 @@ namespace MiniGameTemplate.Editor.Entity
                 ComponentType.Movement,
                 ComponentType.Collision,
                 ComponentType.Control,
-                ComponentType.Attack,
+                ComponentType.Skill,
             };
             so.PoolMax = 1;
             so.MaxHp = 500;
@@ -86,7 +86,6 @@ namespace MiniGameTemplate.Editor.Entity
                 ComponentType.Movement,
                 ComponentType.Collision,
                 ComponentType.AI,
-                ComponentType.Attack,
             };
             so.PoolMax = 16;
             so.MaxHp = 30;

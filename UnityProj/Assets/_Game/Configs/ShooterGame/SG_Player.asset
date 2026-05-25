@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Player
   Camp: 1
-  Components: 010304050607090a0c
+  Components: 0103040506070a0c
   PoolMax: 128
   MaxHp: 1
   MoveSpeed: 5
@@ -45,6 +45,7 @@ MonoBehaviour:
   FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 11400000, guid: 85c434b47651ddb4f9e7c9333de12c57, type: 2}
   AttackFireOffset: {x: 0, y: 0.5}
+  NormalAttackSkill: {fileID: 11400000, guid: d264331448c162f40b213ca8f1744674, type: 2}
   SkillConfig: {fileID: 11400000, guid: 62ce2d4cb5816344bbd697853c26c667, type: 2}
   AIBehavior: {fileID: 0}
   ViewPrefab: {fileID: 0}

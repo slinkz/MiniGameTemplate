@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: Player
   Camp: 1
-  Components: 00010304050607090a
+  Components: 000103040506070a
   PoolMax: 1
   MaxHp: 500
   MoveSpeed: 5
@@ -35,14 +35,17 @@ MonoBehaviour:
   CollisionLayer: 0
   ContactDamage: 0
   ContactDamageInterval: 0.5
+  BaseLineBreachDamage: 0
   AttackPower: 10
   CritRate: 1
   CritDamageMultiplier: 2
   AutoAimRadius: 8
   AutoAimSearchInterval: 0.15
   AttackInterval: 0.15
+  FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 11400000, guid: 85c434b47651ddb4f9e7c9333de12c57, type: 2}
   AttackFireOffset: {x: 0, y: 0.5}
+  NormalAttackSkill: {fileID: 0}
   SkillConfig: {fileID: 11400000, guid: 98e646a2776b565489bc59cf8953bcdc, type: 2}
   AIBehavior: {fileID: 0}
   ViewPrefab: {fileID: 0}

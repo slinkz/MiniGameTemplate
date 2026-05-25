@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-24 16:55 | 文件总数：88
+> 最后更新：2026-05-25 22:40 | 文件总数：89
 
 ---
 
@@ -32,9 +32,10 @@
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
 | 实施 V2 技能系统 | SG_V2_TDD_INDEX → 01~05 | V2 TDD：敌方射击 + 技能装备 + Buff/DOT + 关卡平衡 + 工具UI |
 | ShooterGame 编辑器工具 | SG_TOOLS_TDD_INDEX → 01~02 | 工具 TDD：波次编辑器 + Debug + Gizmo |
-| 验收工具/P3/P4 | SG_TOOLS_P0_ACCEPTANCE / SG_P3_ACCEPTANCE_PLAN / SG_P4_TASKLIST | 均已通过 ✅ |
+| 验收工具/P3/P4 | SG_TOOLS_P0_ACCEPTANCE / SG_P3_ACCEPTANCE_PLAN / SG_P4_TASKLIST | 均已通过 ✅ → P0/P3 已归档 `Archive/` |
 | 验收 V2 Sprint 3 | SG_V2_S3_ACCEPTANCE | Buff/DOT/被动全链路（⬜ 待天命人验收） |
 | 验收 V2 Sprint 4 | SG_V2_S4_ACCEPTANCE | 关卡平衡+伤害统计+星级（⬜ 待天命人验收） |
+| 验收 TDD-06 普攻升格 | TDD06_ACCEPTANCE_GUIDE | 普攻→技能系统迁移验收（✅ 通过 2026-05-25） |
 | 执行 SG-P4 集成验收 | SG_P4_TASKLIST | 资产收口 + 波次编排 + 全链路验收 + 发布前检查 |
 | ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
@@ -48,7 +49,7 @@
 | 代码路径/模式 | 对应文档 | 说明 |
 |--------------|---------|------|
 | `EntitySystem/Scripts/Components/*.cs` | EC_TDD_05_COMPONENTS | 组件设计 |
-| `EntitySystem/Scripts/Components/Skill*` | EC_TDD_05_COMPONENTS §4.8 | 技能子系统 |
+| `EntitySystem/Scripts/Components/Skill*` | EC_TDD_05_COMPONENTS §4.8 + SG_V2_TDD_06 | 技能子系统（含普攻升格 AimMode） |
 | `EntitySystem/Scripts/Components/Buff*` | EC_TDD_05_COMPONENTS §4.10 | Buff 子系统 |
 | `EntitySystem/Scripts/Core/*.cs` | EC_TDD_02_CORE_ARCH | Entity/Pool/EventBus |
 | `EntitySystem/Scripts/Systems/*.cs` | EC_TDD_04_SYSTEMS | EntityManager/Spawner |
@@ -132,7 +133,7 @@
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
 | APPFLOW | APPFLOW_TDD_INDEX | 5 | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 3 轮 PK + 面板 Suspend/Resume + 冷启动清栈 v1.8） |
-| APPFLOW_TDD_PK* | — | 3 | AppFlow TDD PK 评审记录（3 轮 × 已收敛） |
+| APPFLOW_TDD_PK* | — | 3 | AppFlow TDD PK 评审记录 → **已归档** `Archive/AppFlow/` |
 | SO_WORKFLOWS | SO_WORKFLOWS_INDEX | 5 | SO 配置流程指南 |
 | EDITOR_TOOLS_MANUAL | EDITOR_TOOLS_MANUAL_INDEX | 4 | 编辑器工具使用手册 |
 | — | MCP_INTEGRATION | — | Unity MCP 集成（Agent 操作 Unity） |
@@ -144,18 +145,19 @@
 | SG | SG_UI_DESIGN | — | ShooterGame UI/交互设计文档 v1.0 |
 | SG_GDD | SG_GDD_INDEX | 6 | ShooterGame V2 技能系统 GDD v2.4 |
 | SG_TDD | SG_TDD_INDEX | 6 | ShooterGame 核心技术设计文档 |
-| SG_V2_TDD | SG_V2_TDD_INDEX | 5 | ShooterGame V2 技能系统 TDD（敌方射击+技能装备+Buff/DOT+关卡平衡+工具UI） |
+| SG_V2_TDD | SG_V2_TDD_INDEX | 6 | ShooterGame V2 技能系统 TDD（敌方射击+技能装备+Buff/DOT+关卡平衡+工具UI+普攻升格） |
 | SG_TOOLS_TDD | SG_TOOLS_TDD_INDEX | 2 | ShooterGame 编辑器工具 TDD |
-| SG_TDD_PK* | — | 6 | SG_TDD PK 评审记录（6 轮 × 已收敛，含架构师/工具/PM/微信真机） |
-| SG_V2_TDD_PK* | — | 2 | V2 TDD PK 评审记录（R1 架构师 + R2 编辑器工具，已收敛） |
+| SG_TDD_PK* | — | 6 | SG_TDD PK 评审记录 → **已归档** `Archive/ShooterGame/TDD_PK/` + `Design_PK/` |
+| SG_V2_TDD_PK* | — | 4 | V2 TDD PK 评审记录（R1~R4）→ **已归档** `Archive/ShooterGame/V2_TDD_PK/` |
+| TDD06_ACCEPTANCE_GUIDE | — | — | TDD-06 普攻升格验收指南（✅ 通过 2026-05-25） |
 | SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
 | SG_NEXT_PHASE_GUIDE | — | — | ShooterGame 下一阶段行动指导（P0验收后→工具P0→P3→P4） |
-| SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收（✅ 通过） |
-| SG_TOOLS_P0_ACCEPTANCE | — | — | 工具 P0 验收（✅ 通过） |
-| SG_P3_ACCEPTANCE_PLAN | — | — | SG-P3 FairyGUI 验收（✅ 通过 2026-05-06） |
+| SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
+| SG_TOOLS_P0_ACCEPTANCE | — | — | 工具 P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
+| SG_P3_ACCEPTANCE_PLAN | — | — | SG-P3 FairyGUI 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
 | SG_P4_TASKLIST | — | — | SG-P4 集成验收（✅ 通过 2026-05-17） |
 | APPFLOW_ACCEPTANCE_PLAN | — | — | AppFlow 导航系统验收计划（⬜ 待天命人验收） |
-| SG_V2_S1_ACCEPTANCE | — | — | V2 Sprint 1 验收手册（✅ 验收通过 2026-05-19） |
+| SG_V2_S1_ACCEPTANCE | — | — | V2 Sprint 1 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
 | SG_V2_S2_ACCEPTANCE | — | — | V2 Sprint 2 验收手册（⬜ 待验收） |
 | SG_V2_S3_ACCEPTANCE | — | — | V2 Sprint 3 验收手册（⬜ 待天命人验收） |
 | SG_V2_S4_ACCEPTANCE | — | — | V2 Sprint 4 验收手册（⬜ 待天命人验收） |

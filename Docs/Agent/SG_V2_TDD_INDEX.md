@@ -1,6 +1,6 @@
 # ShooterGame V2 技能系统 TDD · 索引
 
-> **版本**：v1.5  
+> **版本**：v1.6  
 > **日期**：2026-05-25  
 > **GDD 版本**：v2.4（SG_GDD_INDEX）  
 > **定位**：V2 技能系统逐 Sprint 实施方案 + 验收方案 + 架构升级
@@ -71,9 +71,9 @@ Sprint 5（策划工具+UI+打磨）
 | [SG_V2_TDD_03](SG_V2_TDD_03_BUFF_DOT_PASSIVE.md) | Sprint 3 | Buff 扩展 + DOT + 被动技能 | ~15h | ✅ 编码+逻辑验收通过 |
 | [SG_V2_TDD_04](SG_V2_TDD_04_LEVEL_BALANCE.md) | Sprint 4 | 关卡编排 + 数值平衡 | ~8h | ✅ 编码+逻辑验收通过 |
 | [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h | ✅ 全部验收通过 |
-| [SG_V2_TDD_06](SG_V2_TDD_06_ATTACK_SKILL.md) | 架构升级 | 普攻升格为技能系统（AimMode 数据驱动） | ~20.5h | 🔨 编码中（P1~P10✅ 待验收） |
+| [SG_V2_TDD_06](SG_V2_TDD_06_ATTACK_SKILL.md) | 架构升级 | 普攻升格为技能系统（AimMode 数据驱动） | ~20.5h | ✅ 验收通过 2026-05-25 |
 
-**总计**：~86h（Sprint 1~5: 65.5h + 架构升级: 20.5h）
+**总计**：~86h（Sprint 1~5: 65.5h + 架构升级: 20.5h）— **全部验收通过** 🎉
 
 ---
 

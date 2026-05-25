@@ -35,6 +35,7 @@ MonoBehaviour:
   CollisionLayer: 0
   ContactDamage: 0
   ContactDamageInterval: 0.5
+  BaseLineBreachDamage: 0
   AttackPower: 0
   CritRate: 0
   CritDamageMultiplier: 2
@@ -44,6 +45,7 @@ MonoBehaviour:
   FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 0}
   AttackFireOffset: {x: 0, y: 0}
+  NormalAttackSkill: {fileID: 0}
   SkillConfig: {fileID: 0}
   AIBehavior: {fileID: 0}
   ViewPrefab: {fileID: 0}

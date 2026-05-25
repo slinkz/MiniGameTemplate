@@ -615,6 +615,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _enabled: 1
   _debugLevelIndex: 0
+  _debugNormalAttack: {fileID: 11400000, guid: d264331448c162f40b213ca8f1744674, type: 2}
   _overrideSkills: 0
   _debugSkills:
   - {fileID: 11400000, guid: 8f6e891c4f5fa464fb0355da7a613eac, type: 2}
@@ -690,7 +691,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _inputDirection: {fileID: 11400000, guid: 79a82c9247a02ec46802b11b864d1ec6, type: 2}
-  _pixelsPerFrame: 8
+  _pixelsPerSecond: 480
 --- !u!1 &1955540014
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using MiniGameTemplate.Data;
 
 namespace Game.ShooterGame
@@ -14,6 +15,7 @@ namespace Game.ShooterGame
         [SerializeField] private Vector2Variable _inputDirection;
 
         /// <summary>键盘模拟的像素移动速度（像素/秒），帧率无关</summary>
+        [FormerlySerializedAs("_pixelsPerFrame")]
         [SerializeField] private float _pixelsPerSecond = 480f;
 
         private bool _hadInputLastFrame;
