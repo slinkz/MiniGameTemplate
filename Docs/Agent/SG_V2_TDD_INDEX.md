@@ -70,7 +70,7 @@ Sprint 5（策划工具+UI+打磨）
 | [SG_V2_TDD_02](SG_V2_TDD_02_SKILL_EQUIP_ITEM.md) | Sprint 2 | 技能解锁 + 战前装备 + 道具系统 | ~14h | ✅ 编码+逻辑验收通过 |
 | [SG_V2_TDD_03](SG_V2_TDD_03_BUFF_DOT_PASSIVE.md) | Sprint 3 | Buff 扩展 + DOT + 被动技能 | ~15h | ✅ 编码+逻辑验收通过 |
 | [SG_V2_TDD_04](SG_V2_TDD_04_LEVEL_BALANCE.md) | Sprint 4 | 关卡编排 + 数值平衡 | ~8h | ✅ 编码+逻辑验收通过 |
-| [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h | ✅ 编码全部完成（待 PlayTest） |
+| [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h | ✅ 全部验收通过 |
 
 **总计**：~65.5h（单人 ~13~16 天）
 

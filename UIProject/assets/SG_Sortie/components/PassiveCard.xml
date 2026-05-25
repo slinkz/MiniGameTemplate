@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component size="160,90">
-  <controller name="selected" pages="0,未选中,1,已选中" selectedIndex="0"/>
+  <controller name="selected" pages="0,未选中,1,已选中" selected="0"/>
   <displayList>
     <graph id="pc_01" name="card_bg" xy="0,0" size="160,90" type="rect" fillColor="#ff2a2a3a" corner="10">
       <gearDisplay controller="selected" pages="0,1"/>
     </graph>
-    <graph id="pc_02" name="border_selected" xy="0,0" size="160,90" type="rect" lineColor="#ff4fc3f7" lineSize="3" corner="10">
+    <graph id="pc_02" name="border_selected" xy="0,0" size="160,90" type="rect" lineSize="3" lineColor="#ff4fc3f7" fillColor="#ff2a2a3a" corner="10">
       <gearDisplay controller="selected" pages="1"/>
     </graph>
     <text id="pc_03" name="text_name" xy="8,35" size="144,24" fontSize="14" color="#ffffff" align="center" autoSize="shrink" text="被动名"/>
-    <text id="pc_04" name="icon_check" xy="130,4" size="24,24" fontSize="16" color="#ff4fc3f7" align="center" autoSize="none" text="OK">
+    <text id="pc_04" name="icon_check" xy="130,4" size="24,24" fontSize="16" color="#4fc3f7" align="center" autoSize="none" text="OK">
       <gearDisplay controller="selected" pages="1"/>
     </text>
   </displayList>
