@@ -555,7 +555,7 @@ LevelSelectScreen V2 升级：
 
 ---
 
-### S5.8 最终整合测试 + 打磨（2h）
+### S5.8 最终整合测试 + 打磨（2h）✅ 自动化验证通过（待 PlayTest）
 
 #### 实施方案
 
@@ -572,7 +572,7 @@ LevelSelectScreen V2 升级：
 
 ---
 
-### S5.8 BuffConfigSO CustomEditor（1h）（PK-R2 ET-005 新增）
+### S5.8 BuffConfigSO CustomEditor（1h）（PK-R2 ET-005 新增）✅ 编码完成
 
 #### 实施方案
 
@@ -634,22 +634,22 @@ BuffConfigEditor : Editor
 
 | # | 场景 | 预期 | 状态 |
 |---|------|------|------|
-| G1 | T1 技能预览 | Editor 模式预览弹幕形态 | ⬜ |
-| G2 | T2 Buff 速览 | 一览所有 Buff 属性 | ⬜ |
-| G3 | T5 ID 检测 | 无冲突通过/有冲突报错 | ⬜ |
-| G4 | T8 构建卡口 | 非法 SO 阻断构建 | ⬜ |
-| G5 | 技能 CD HUD | 6 个 CD 指示器四态正确 | ⬜ |
-| G6 | 被动栏 HUD | 3 个被动三态正确 | ⬜ |
-| G7 | 波次动效 | 弹跳+FINAL WAVE | ⬜ |
-| G8 | 通知条 | 拾取弹出+队列限 2 | ⬜ |
-| G9 | 暂停菜单 | Build+Buff+统计正确 | ⬜ |
-| G10 | 胜利面板 | 星级+技能贡献+解锁触发 | ⬜ |
-| G11 | 失败面板 | 火力提示+付费入口 | ⬜ |
-| G12 | 解锁弹窗 | 正确时序+立即装备 | ⬜ |
-| G13 | 受伤视觉反馈 | 红闪+震动+反击时序 | ⬜ |
-| G14 | 完整流程 | 5 关通关无崩溃 | ⬜ |
-| G15 | BuffConfigEditor | Tag 显隐+HelpBox+预览 | ⬜ PK-R2 |
-| G16 | EditMode Test | SOValidationRulesTests 全绿 | ⬜ PK-R2 |
+| G1 | T1 技能预览 | Editor 模式预览弹幕形态 | ✅ 编译通过+脚本就位 |
+| G2 | T2 Buff 速览 | 一览所有 Buff 属性 | ✅ 编译通过+脚本就位 |
+| G3 | T5 ID 检测 | 无冲突通过/有冲突报错 | ✅ MCP 验证 0 冲突 |
+| G4 | T8 构建卡口 | 非法 SO 阻断构建 | ✅ RunFullValidation=True |
+| G5 | 技能 CD HUD | 6 个 CD 指示器四态正确 | 🔲 待 PlayTest |
+| G6 | 被动栏 HUD | 3 个被动三态正确 | 🔲 待 PlayTest |
+| G7 | 波次动效 | 弹跳+FINAL WAVE | 🔲 待 PlayTest |
+| G8 | 通知条 | 拾取弹出+队列限 2 | 🔲 待 PlayTest |
+| G9 | 暂停菜单 | Build+Buff+统计正确 | 🔲 待 PlayTest |
+| G10 | 胜利面板 | 星级+技能贡献+解锁触发 | 🔲 待 PlayTest |
+| G11 | 失败面板 | 火力提示+付费入口 | 🔲 待 PlayTest |
+| G12 | 解锁弹窗 | 正确时序+立即装备 | 🔲 待 PlayTest |
+| G13 | 受伤视觉反馈 | 红闪+震动+反击时序 | 🔲 待 PlayTest |
+| G14 | 完整流程 | 5 关通关无崩溃 | 🟡 1 关已验证（MCP Console） |
+| G15 | BuffConfigEditor | Tag 显隐+HelpBox+预览 | ✅ MCP 验证（12个SO+模板排除） |
+| G16 | EditMode Test | SOValidationRulesTests 全绿 | 🔲 待运行 |
 
 ### 性能 + 真机验收
 
