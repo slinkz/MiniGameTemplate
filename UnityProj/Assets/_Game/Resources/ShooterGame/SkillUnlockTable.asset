@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e1a9daee0930984a8c087ffabe540c4, type: 3}
-  m_Name: SG_SkillUnlockTable
+  m_Name: SkillUnlockTable
   m_EditorClassIdentifier: 
   _entries:
   - Skill: {fileID: 11400000, guid: d7f6dbc0f3f51a4449b9b9f2ad8b7c67, type: 2}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<packageDescription id="sg06st01">
+  <resources>
+    <component id="main_01" name="SortieBottomSheet.xml" path="/" exported="true"/>
+    <component id="comp_01" name="SkillCard.xml" path="/components/" exported="true"/>
+    <component id="comp_02" name="PassiveCard.xml" path="/components/" exported="true"/>
+    <component id="comp_03" name="BtnSortie.xml" path="/components/" exported="false"/>
+  </resources>
+  <publish name="SG_Sortie" genCode="true">
+    <atlas name="Default" index="0"/>
+  </publish>
+</packageDescription>

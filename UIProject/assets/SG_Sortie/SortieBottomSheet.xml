@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="750,1334">
+  <displayList>
+    <graph id="m_01" name="mask" xy="0,0" size="750,1334" type="rect" fillColor="#80000000" touchable="true"/>
+
+    <graph id="m_02" name="panel_bg" xy="0,467" size="750,867" type="rect" fillColor="#ff1e1e2e" corner="20"/>
+
+    <graph id="m_03" name="drag_bar" xy="345,480" size="60,6" type="rect" fillColor="#ff666666" corner="3"/>
+
+    <text id="m_04" name="text_level" xy="40,505" size="300,36" fontSize="24" color="#ffffff" bold="true" autoSize="none" text="第 1 关"/>
+
+    <text id="m_05" name="label_skills" xy="40,560" size="200,28" fontSize="16" color="#ff8899aa" autoSize="none" text="主动技能（最多6个）"/>
+
+    <list id="m_06" name="list_skills" xy="30,596" size="690,280" layout="flow_hz" lineGap="8" colGap="10" defaultItem="ui://sg06st01comp_01" selectionMode="none" overflow="scroll" margin="0,0,0,0"/>
+
+    <text id="m_07" name="label_passives" xy="40,890" size="200,28" fontSize="16" color="#ff8899aa" autoSize="none" text="被动技能（最多3个）"/>
+
+    <list id="m_08" name="list_passives" xy="30,926" size="690,130" layout="flow_hz" lineGap="8" colGap="10" defaultItem="ui://sg06st01comp_02" selectionMode="none" overflow="scroll" margin="0,0,0,0"/>
+
+    <component id="m_09" name="btn_sortie" src="comp_03" xy="175,1100" size="400,64"/>
+  </displayList>
+</component>

@@ -6,6 +6,7 @@ using MiniGameTemplate.Navigation;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Utils;
 using Game.ShooterGame;
+using SG_Sortie;
 
 namespace SG_LevelSelect
 
@@ -175,23 +176,11 @@ namespace SG_LevelSelect
                 return;
             }
 
-            GameLog.Log($"[LevelSelectScreen] Level {levelIndex} selected, transitioning to Battle.");
+            GameLog.Log($"[LevelSelectScreen] Level {levelIndex} selected, opening Sortie panel.");
 
-            // 通过 Navigator Push 到 Battle 节点（携带关卡数据）
-
-
-            var battleNode = SG_FlowNodes.NodeBattle;
-            if (battleNode != null)
-            {
-                var data = new BattleLevelData { LevelIndex = levelIndex - 1 }; // 1-based → 0-based
-                await AppFlowNavigator.Instance.PushAsync(battleNode, data);
-            }
-            else
-            {
-                Debug.LogError("[LevelSelectScreen] Node_Battle SO is null! " +
-                    "Ensure SG_FlowNodes.NodeBattle is placed in Resources/Navigation/. " +
-                    "Cannot navigate to Battle without a valid NavigationNodeSO.");
-            }
+            // V2 Sprint 5：弹出出战准备面板（半屏 Bottom Sheet）
+            var sortieData = new SortieData { LevelIndex = levelIndex };
+            await UIManager.Instance.OpenPanelAsync<SortieBottomSheet>(sortieData);
         }
 
         private void ShakeLevelNode(int levelIndex)

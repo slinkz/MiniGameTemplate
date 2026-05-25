@@ -116,6 +116,7 @@
 | SkillComponent / PickupSystem / DropTableSO / SkillUnlockManager | SG_V2_TDD_02 §S2.4~S2.7 | Sprint 2：技能槽+道具+掉落+解锁 |
 | PassiveComponent / BuffDamageModifier | SG_V2_TDD_03 §S3.2/S3.5 | Sprint 3：被动系统+Buff 伤害修正 |
 | BattleResultData / BattleResultCalculator / damageSourceTag | SG_V2_TDD_04 §S4.3~S4.4 | Sprint 4：战果+星级+伤害统计 |
+| SortieBottomSheet / SG_SortieBinder / BtnSortie | SG_V2_TDD_05 §S5.7 | Sprint 5：出战准备面板 |
 | EditorBulletSimulator / SOConsistencyValidator / DPSCalculatorWindow | SG_V2_TDD_05 §S5.1~S5.3 | Sprint 5：弹幕模拟+SO 校验+DPS 面板 |
 
 ---

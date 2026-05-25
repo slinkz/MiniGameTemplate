@@ -151,6 +151,47 @@ namespace Game.ShooterGame.Editor
             return errorCount == 0;
         }
 
+        // ──────────────────── Validate Selected（PK-R2 ET-002）────────────────────
+
+        [MenuItem("Tools/ShooterGame/校验/Validate Selected SOs")]
+        public static void ValidateSelected()
+        {
+            var selected = Selection.objects;
+            if (selected == null || selected.Length == 0)
+            {
+                Debug.LogWarning("[T5 Validator] 请先选中要验证的 SO 资产");
+                return;
+            }
+
+            int total = 0;
+            int errors = 0;
+
+            foreach (var obj in selected)
+            {
+                if (obj is ScriptableObject so)
+                {
+                    total++;
+                    if (!SOValidationRules.ValidateAny(so))
+                    {
+                        errors++;
+                    }
+                }
+            }
+
+            if (total == 0)
+            {
+                Debug.LogWarning("[T5 Validator] 选中的对象中没有 ScriptableObject");
+            }
+            else if (errors == 0)
+            {
+                Debug.Log($"[T5 Validator] ✅ 验证通过：{total} 个 SO 全部合规。");
+            }
+            else
+            {
+                Debug.LogError($"[T5 Validator] ❌ {errors}/{total} 个 SO 验证失败，请查看上方错误日志。");
+            }
+        }
+
         /// <summary>
         /// 判断是否为模板资产（_Template 目录下），跳过校验。
         /// </summary>

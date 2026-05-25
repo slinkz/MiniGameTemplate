@@ -61,6 +61,7 @@ namespace Game
             UIManager.RegisterBinder("Common", Common.CommonBinder.BindAll);
             UIManager.RegisterBinder("MainMenu", MainMenu.MainMenuBinder.BindAll);
             UIManager.RegisterBinder("SG_LevelSelect", SG_LevelSelect.SG_LevelSelectBinder.BindAll);
+            UIManager.RegisterBinder("SG_Sortie", SG_Sortie.SG_SortieBinder.BindAll);
             UIManager.RegisterBinder("SG_Battle", SG_Battle.SG_BattleBinder.BindAll);
             UIManager.RegisterBinder("SG_Popup", SG_Popup.SG_PopupBinder.BindAll);
             UIManager.RegisterBinder("SG_Loading", SG_Loading.SG_LoadingBinder.BindAll);

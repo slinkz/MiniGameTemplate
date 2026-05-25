@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="200,120">
+  <controller name="selected" pages="0,未选中,1,已选中" selectedIndex="0"/>
+  <displayList>
+    <graph id="sc_01" name="card_bg" xy="0,0" size="200,120" type="rect" fillColor="#ff2a2a3a" corner="12">
+      <gearDisplay controller="selected" pages="0,1"/>
+    </graph>
+    <graph id="sc_02" name="border_selected" xy="0,0" size="200,120" type="rect" lineColor="#ff4fc3f7" lineSize="3" corner="12">
+      <gearDisplay controller="selected" pages="1"/>
+    </graph>
+    <text id="sc_03" name="text_name" xy="10,50" size="180,30" fontSize="16" color="#ffffff" align="center" autoSize="shrink" text="技能名"/>
+    <text id="sc_04" name="icon_check" xy="168,6" size="24,24" fontSize="18" color="#ff4fc3f7" align="center" autoSize="none" text="OK">
+      <gearDisplay controller="selected" pages="1"/>
+    </text>
+  </displayList>
+</component>
