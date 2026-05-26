@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-25 22:40 | 文件总数：89
+> 最后更新：2026-05-26 00:52 | 文件总数：90
 
 ---
 
@@ -16,6 +16,7 @@
 | 新增子弹花样 | SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
+| 实施退场生命周期改造 | SG_V2_TDD_07_LIFECYCLE | ADR-035 实施——SO 事件通道 + IBattleCleanup |
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 + 域名白名单 |
 | 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V4 云端权威+纯内存（登录+云同步+CloudSaveSystem+启动阻塞重试） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
@@ -36,6 +37,7 @@
 | 验收 V2 Sprint 3 | SG_V2_S3_ACCEPTANCE | Buff/DOT/被动全链路（⬜ 待天命人验收） |
 | 验收 V2 Sprint 4 | SG_V2_S4_ACCEPTANCE | 关卡平衡+伤害统计+星级（⬜ 待天命人验收） |
 | 验收 TDD-06 普攻升格 | TDD06_ACCEPTANCE_GUIDE | 普攻→技能系统迁移验收（✅ 通过 2026-05-25） |
+| 验收 TDD-07 退场生命周期 | TDD07_ACCEPTANCE_GUIDE | 退场生命周期验收（自动✅ + PlayMode 待天命人验收） |
 | 执行 SG-P4 集成验收 | SG_P4_TASKLIST | 资产收口 + 波次编排 + 全链路验收 + 发布前检查 |
 | ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
@@ -55,7 +57,8 @@
 | `EntitySystem/Scripts/Systems/*.cs` | EC_TDD_04_SYSTEMS | EntityManager/Spawner |
 | `EntitySystem/Scripts/Config/*SO.cs` | EC_TDD_06_CONFIG + SO_WORKFLOWS_02_ENTITY | SO 配置 |
 | `EntitySystem/Editor/*.cs` | EDITOR_TOOLS_MANUAL_04_INSPECTORS §SkillConfigSOEditor | 自定义编辑器 |
-| `EntitySystemBootstrap.cs` | EC_TDD_04_SYSTEMS §Bootstrap | 胶水层入口 |
+| `EntitySystemBootstrap.cs` | EC_TDD_04_SYSTEMS §Bootstrap + SG_V2_TDD_07 | 胶水层入口 + IBattleCleanup |
+| `_Framework/BattleLifecycle/*.cs` | SG_V2_TDD_07 §3.1 | IBattleCleanup 接口 + BattleLifecycleEvent SO |
 | `Danmaku/**/*.cs` | ATLAS_TDD_INDEX + SO_WORKFLOWS_03_DANMAKU | 弹幕+渲染 |
 | `RuntimeAtlas/**/*.cs` | ATLAS_TDD_INDEX | 动态图集 |
 | `OBB/**/*.cs` | OBB_TDD_INDEX | OBB 碰撞 |
@@ -66,7 +69,7 @@
 | `_Framework/DataSystem/**/Cloud*.cs` + `CloudFunctions/**` | SG_TDD_06 | CloudSaveSystem + 云函数模板 |
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
 | `.codegraph/**` + `~/.workbuddy/mcp.json` (codegraph) | CODEGRAPH_INTEGRATION | CodeGraph 知识图谱索引 |
-| `_Game/Scripts/ShooterGame/Battle/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE | 战斗状态 + 退场生命周期 |
+| `_Game/Scripts/ShooterGame/Battle/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE + SG_V2_TDD_07 | 战斗状态 + 退场生命周期 |
 | `_Game/Scripts/ShooterGame/**/*.cs` | SG_TDD_01~05 + SG_V2_TDD_01~05 + SG_DEV_PLAN | SG 全部逻辑代码 |
 | `_Game/Configs/ShooterGame/**/*.asset` | SG_P4_TASKLIST §P4.1 + SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
@@ -97,8 +100,8 @@
 | SpeedModifierIds | EC_TDD_05 §4.10 | Buff by-ID 移速修正标识 |
 | ISkillEffect | EC_TDD_05 §4.8 | 技能效果接口（FireBullets/AreaDamage/ApplyBuff） |
 | ADR | ADR_INDEX | 架构决策记录（已接受/已废弃） |
-| BattleLifecycleEvent | ADR_06_LIFECYCLE §2 | SO 退场事件通道（统一退场清理触发） |
-| IBattleCleanup | ADR_06_LIFECYCLE §2 | 退场清理接口（OnBattleCleanup + CleanupOrder） |
+| BattleLifecycleEvent | ADR_06_LIFECYCLE §2 + SG_V2_TDD_07 | SO 退场事件通道（统一退场清理触发） |
+| IBattleCleanup | ADR_06_LIFECYCLE §2 + SG_V2_TDD_07 | 退场清理接口（OnBattleCleanup + CleanupOrder） |
 | BattleState | SG_TDD_02 §1.1 | 战斗状态枚举（None/Intro/Playing/Victory/Defeat） |
 | BaseLineDetector | SG_TDD_02 §2.2 | 底线检测器（纯 C#，扫描敌机越线扣基地 HP） |
 | SG_Boot | SG_TDD_01 §9 | ShooterGame 静态启动扩展（Progress 访问点） |
@@ -145,11 +148,12 @@
 | SG | SG_UI_DESIGN | — | ShooterGame UI/交互设计文档 v1.0 |
 | SG_GDD | SG_GDD_INDEX | 6 | ShooterGame V2 技能系统 GDD v2.4 |
 | SG_TDD | SG_TDD_INDEX | 6 | ShooterGame 核心技术设计文档 |
-| SG_V2_TDD | SG_V2_TDD_INDEX | 6 | ShooterGame V2 技能系统 TDD（敌方射击+技能装备+Buff/DOT+关卡平衡+工具UI+普攻升格） |
+| SG_V2_TDD | SG_V2_TDD_INDEX | 7 | ShooterGame V2 技能系统 TDD（敌方射击+技能装备+Buff/DOT+关卡平衡+工具UI+普攻升格+退场生命周期） |
 | SG_TOOLS_TDD | SG_TOOLS_TDD_INDEX | 2 | ShooterGame 编辑器工具 TDD |
 | SG_TDD_PK* | — | 6 | SG_TDD PK 评审记录 → **已归档** `Archive/ShooterGame/TDD_PK/` + `Design_PK/` |
 | SG_V2_TDD_PK* | — | 4 | V2 TDD PK 评审记录（R1~R4）→ **已归档** `Archive/ShooterGame/V2_TDD_PK/` |
 | TDD06_ACCEPTANCE_GUIDE | — | — | TDD-06 普攻升格验收指南（✅ 通过 2026-05-25） |
+| TDD07_ACCEPTANCE_GUIDE | — | — | TDD-07 退场生命周期验收指南（自动 ✅ + PlayMode ⬜ 待天命人验收） |
 | SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
 | SG_NEXT_PHASE_GUIDE | — | — | ShooterGame 下一阶段行动指导（P0验收后→工具P0→P3→P4） |
 | SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |

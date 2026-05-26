@@ -203,6 +203,7 @@ MonoBehaviour:
   _difficulty: {fileID: 11400000, guid: a5cc13e81e3ef0747ad04eb5a7089d21, type: 2}
   _onPlayerHit: {fileID: 11400000, guid: c1a2b3d4e5f60001a1b2c3d4e5f60001, type: 2}
   _onDamageDealt: {fileID: 0}
+  _onBattleEnd: {fileID: 11400000, guid: f976f01685b5bd7438e35784e6b783e7, type: 2}
 --- !u!4 &376764455
 Transform:
   m_ObjectHideFlags: 0
@@ -311,6 +312,7 @@ MonoBehaviour:
   _baseHP: {fileID: 11400000, guid: 6bff7144902bdfe4fb3ea95cd5e13424, type: 2}
   _currentWaveIndex: {fileID: 11400000, guid: 4bbcea22fe5f293409818d62bcc294f5, type: 2}
   _totalWaveCount: {fileID: 11400000, guid: 6358ca9909ca01547b96dfac915e668e, type: 2}
+  _onBattleEnd: {fileID: 11400000, guid: f976f01685b5bd7438e35784e6b783e7, type: 2}
   _hpGreen: {r: 0.3, g: 0.85, b: 0.3, a: 1}
   _hpYellow: {r: 0.9, g: 0.85, b: 0.2, a: 1}
   _hpRed: {r: 0.9, g: 0.2, b: 0.2, a: 1}
@@ -349,6 +351,7 @@ MonoBehaviour:
   DebugViewPool: {fileID: 11400000, guid: cce39101747307743a0e7aac2adafad1, type: 2}
   DamageNumberPool: {fileID: 11400000, guid: ede90f04beb15df489f0018f72958145, type: 2}
   EnableEntityCollision: 1
+  _onBattleEnd: {fileID: 11400000, guid: f976f01685b5bd7438e35784e6b783e7, type: 2}
   EnablePlayerMoveBounds: 1
   PlayerBoundsCenter: {x: 0, y: -1}
   PlayerBoundsSize: {x: 8, y: 14}
@@ -405,6 +408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 895b5d9fa17467246b95d5ac31250a0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _onBattleEnd: {fileID: 11400000, guid: f976f01685b5bd7438e35784e6b783e7, type: 2}
 --- !u!20 &986411207
 Camera:
   m_ObjectHideFlags: 0
@@ -558,6 +562,7 @@ MonoBehaviour:
   _totalEnemyCount: {fileID: 11400000, guid: 1f86f5d5920cca94a9a7ac1adcaee5b1, type: 2}
   _cameraShaker: {fileID: 986411206}
   _shakeConfig: {fileID: 11400000, guid: 09d1b6b4f12e7a34394635e82d1fcf9c, type: 2}
+  _onBattleEnd: {fileID: 11400000, guid: f976f01685b5bd7438e35784e6b783e7, type: 2}
   _introDuration: 1.5
   _victoryDelay: 0.5
   _baseLineY: -7

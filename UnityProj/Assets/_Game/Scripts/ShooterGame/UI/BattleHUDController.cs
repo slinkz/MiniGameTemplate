@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using UnityEngine;
 using FairyGUI;
+using MiniGameTemplate.Battle;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.UI;
 
@@ -9,8 +10,9 @@ namespace Game.ShooterGame.UI
     /// <summary>
     /// BattleHUD Controller——血条 + 波次指示 + 暂停按钮 + 飘字 + 受伤红闪。
     /// TDD_04 §4
+    /// TDD-07 B4：实现 IBattleCleanup（退场时回收飘字）。
     /// </summary>
-    public class BattleHUDController : MonoBehaviour, IBattleHUDController
+    public class BattleHUDController : MonoBehaviour, IBattleHUDController, IBattleCleanup
     {
         private const string FGUI_PKG = "SG_Battle";
         private const string FGUI_BATTLE_HUD = "BattleHUD";
@@ -20,6 +22,9 @@ namespace Game.ShooterGame.UI
         [SerializeField] private FloatVariable _baseHP;
         [SerializeField] private IntVariable _currentWaveIndex;
         [SerializeField] private IntVariable _totalWaveCount;
+
+        [Header("TDD-07: 退场事件通道")]
+        [SerializeField] private BattleLifecycleEvent _onBattleEnd;
 
         [Header("血条颜色")]
         [SerializeField] private Color _hpGreen = new Color(0.3f, 0.85f, 0.3f);
@@ -95,6 +100,10 @@ namespace Game.ShooterGame.UI
             _baseHP.OnValueChanged += OnBaseHPChanged;
             _currentWaveIndex.OnValueChanged += OnWaveChanged;
             _totalWaveCount.OnValueChanged += OnTotalWaveCountChanged;
+
+            // TDD-07 B4: 注册退场清理
+            if (_onBattleEnd != null)
+                _onBattleEnd.Register(this);
         }
 
         private void OnDisable()
@@ -102,6 +111,10 @@ namespace Game.ShooterGame.UI
             _baseHP.OnValueChanged -= OnBaseHPChanged;
             _currentWaveIndex.OnValueChanged -= OnWaveChanged;
             _totalWaveCount.OnValueChanged -= OnTotalWaveCountChanged;
+
+            // TDD-07 B4: 注销退场清理
+            if (_onBattleEnd != null)
+                _onBattleEnd.Unregister(this);
         }
 
         private void OnDestroy()
@@ -254,6 +267,14 @@ namespace Game.ShooterGame.UI
             }
             _floatingTextHead = 0;
         }
+
+        // ── TDD-07: IBattleCleanup 实现 ──
+
+        /// <summary>UI 飘字清理——弹幕和受击表现清完后再清 UI。</summary>
+        public int CleanupOrder => 20;
+
+        /// <summary>退场清理回调。</summary>
+        public void OnBattleCleanup() => RecycleAllFloatingTexts();
 
 #if UNITY_EDITOR
         private int CountActiveFloatingTexts()

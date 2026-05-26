@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using MiniGameTemplate.Battle;
 using MiniGameTemplate.Pool;
 
 namespace MiniGameTemplate.Entity
@@ -15,8 +16,10 @@ namespace MiniGameTemplate.Entity
     ///   EntityCollisionSolver.Solve(mgr, dt)  ← Entity vs Entity 碰撞检测+分离+接触伤害（P2.2）
     ///   EntityViewBridge.SyncAll(mgr)         ← 视觉层位置同步（碰撞分离后的修正位置）
     ///   HitReactionHandler.Tick(dt, mgr)      ← 受击表现管线（闪白淡出/伤害数字漂浮/死亡延迟）
+    /// 
+    /// TDD-07 B8：实现 IBattleCleanup（统一代理框架层子系统清理）。
     /// </summary>
-    public class EntitySystemBootstrap : MonoBehaviour
+    public class EntitySystemBootstrap : MonoBehaviour, IBattleCleanup
     {
         [Header("调试视觉")]
         [Tooltip("Debug View 的 PoolDefinition（Phase 1 必填）")]
@@ -29,6 +32,9 @@ namespace MiniGameTemplate.Entity
         [Header("Entity 碰撞（P2.2）")]
         [Tooltip("是否启用 Entity vs Entity 碰撞检测")]
         public bool EnableEntityCollision = true;
+
+        [Header("TDD-07: 退场事件通道")]
+        [SerializeField] private BattleLifecycleEvent _onBattleEnd;
 
         [Header("玩家移动边界（P3.0）")]
         [Tooltip("启用玩家移动边界约束")]
@@ -131,6 +137,42 @@ namespace MiniGameTemplate.Entity
                     _spawner.StartWave(point);
                 }
             }
+        }
+
+        private void OnEnable()
+        {
+            // TDD-07 B8: 注册退场清理
+            if (_onBattleEnd != null)
+                _onBattleEnd.Register(this);
+        }
+
+        private void OnDisable()
+        {
+            // TDD-07 B8: 注销退场清理
+            if (_onBattleEnd != null)
+                _onBattleEnd.Unregister(this);
+        }
+
+        // ──── TDD-07: IBattleCleanup 实现 ────
+
+        /// <summary>最后执行——先清弹幕/UI/碰撞，最后回收所有 Entity。</summary>
+        public int CleanupOrder => 100;
+
+        /// <summary>
+        /// 退场清理回调——代理框架层子系统（B2/B3/B7 + DespawnAll）。
+        /// UT-002: DespawnAll 只操作 EntityManager.ActiveEntities，Bootstrap 不在管理列表中。
+        /// </summary>
+        public void OnBattleCleanup()
+        {
+            Debug.Assert(isActiveAndEnabled,
+                "[EntitySystemBootstrap] OnBattleCleanup 被调用时 Bootstrap 应处于活跃状态");
+
+            _entityManager?.DespawnAll();
+            _hitHandler?.ClearAll();
+            _viewBridge?.ClearAllViews();
+            _collisionSolver?.ClearCooldowns();
+            _spawner?.StopAll();
+            EntityConfigRegistry.Clear();
         }
 
         private void Update()

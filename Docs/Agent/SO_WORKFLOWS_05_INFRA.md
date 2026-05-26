@@ -103,6 +103,22 @@ AssetDatabase.SaveAssets();
 2. 触发方：代码中 `onPlayerDeathEvent.Raise()`
 3. 响应方：GameObject 挂 `GameEventListener`，Inspector 绑定 UnityEvent
 
+### BattleLifecycleEvent（TDD-07）
+
+**菜单路径**：`Create → ShooterGame/Events/Battle Lifecycle Event`
+**命名空间**：`MiniGameTemplate.Battle`
+**源码**：`Assets/_Framework/BattleLifecycle/BattleLifecycleEvent.cs`
+**实例**：`Assets/_Game/Configs/ShooterGame/Events/SG_OnBattleEnd.asset`
+
+| API | 说明 |
+|-----|------|
+| `Register(IBattleCleanup)` | 注册退场监听者（按 CleanupOrder 排序） |
+| `Unregister(IBattleCleanup)` | 注销（广播期间延迟移除） |
+| `Raise()` | 广播退场事件（按 CleanupOrder 顺序） |
+| `ListenerCount` | 当前注册数（调试用） |
+
+**详细设计**：见 `SG_V2_TDD_07_LIFECYCLE.md`
+
 ---
 
 ## TransformRuntimeSet

@@ -9,6 +9,7 @@ using MiniGameTemplate.Navigation;
 using MiniGameTemplate.Core;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.UI;
+using MiniGameTemplate.Battle;
 using EntityClass = MiniGameTemplate.Entity.Entity;
 #if UNITY_EDITOR
 using Unity.Profiling;
@@ -58,6 +59,9 @@ namespace Game.ShooterGame
         [Header("子系统引用")]
         [SerializeField] private CameraShaker _cameraShaker;
         [SerializeField] private ScreenShakeConfigSO _shakeConfig;
+
+        [Header("TDD-07: 退场事件通道")]
+        [SerializeField] private BattleLifecycleEvent _onBattleEnd;
         [SerializeField] private float _introDuration = 1.5f;
         [SerializeField] private float _victoryDelay = 0.5f;
         [SerializeField] private float _baseLineY = -7f;
@@ -239,13 +243,20 @@ namespace Game.ShooterGame
             if (btnPause != null)
                 btnPause.onClick.Remove(OnPauseButtonClicked);
 
-            // 清理弹幕系统（DontDestroyOnLoad，不随场景销毁）
+            // TDD-07 C5: 退场清理走事件通道
+            if (_onBattleEnd != null)
+                _onBattleEnd.Raise();
+
+            // WX-003: DDOL 兜底——用 Unity 重载 != 而非 ?.（避免已销毁对象语义陷阱）
             if (DanmakuSystem.Instance != null)
                 DanmakuSystem.Instance.ClearAll();
 
-            // 清理道具渲染器
-            _pickupRenderer?.Dispose();
-            _pickupRenderer = null;
+            // 清理道具渲染器（BC 局部工具，不走事件通道）
+            if (_pickupRenderer != null)
+            {
+                _pickupRenderer.Dispose();
+                _pickupRenderer = null;
+            }
         }
 
         // ── 初始化 ──
@@ -885,30 +896,19 @@ namespace Game.ShooterGame
         /// </summary>
         private void ResetBattleRuntimeState()
         {
-            // 1. 回收所有 Entity
-            EntityManagerAccessor.Instance.DespawnAll();
+            // TDD-07 C4: 统一清理走事件通道
+            // ⚠️ WX-006 约束：OnBattleCleanup 实现中不应依赖 SO 变量状态。
+            // Retry 路径中 Raise() 先于 SO 变量重置执行，此时 SO 变量仍为旧值。
+            if (_onBattleEnd != null)
+                _onBattleEnd.Raise();
 
-            // 2. 清理所有子系统运行时残留状态
-            _entityBootstrap?.HitReactionHandler?.ClearAll();
-            _entityBootstrap?.CollisionSolver?.ClearCooldowns();
-            if (DanmakuSystem.Instance != null)
-                DanmakuSystem.Instance.ClearAll();
-
-            // 3. 重置刷怪驱动（StopAll 彻底清空注册状态，避免重复注册导致怪物翻倍）
-            EntityManagerAccessor.Spawner.StopAll();
+            // Retry 专属重置（非清理语义，不放入 IBattleCleanup）
             _spawnerStarted = false;
-
-            // 4. 复位相机震动
-            _cameraShaker.StopShake();
-
-            // 5. 重置 SO 变量
-            // 注：_baseHP 不再手动 SetValue(1.0f)——由 HandleRetry 中
-            //     SpawnBase() → SetHp() → OnHpChanged → OnBaseHpChanged 自动推送真实值。
             _currentWaveIndex.SetValue(1);
             _killCount.SetValue(0);
             _displayWaveIndex = 1;
 
-            // 5b. V2 Sprint 4: 重置伤害统计
+            // V2 Sprint 4: 重置伤害统计
             _damageStats?.Clear();
             _battleTimer = 0f;
             _damageStatsFrozen = false;
@@ -964,10 +964,9 @@ namespace Game.ShooterGame
             {
                 SetBattleTimePaused(false);
 
-                // 退场前清理战斗残留（飘字等池对象位于 DontDestroyOnLoad，不随场景卸载）
-                _entityBootstrap?.HitReactionHandler?.ClearAll();
-                if (DanmakuSystem.Instance != null)
-                    DanmakuSystem.Instance.ClearAll();
+                // TDD-07 C1: 退场清理走事件通道
+                if (_onBattleEnd != null)
+                    _onBattleEnd.Raise();
 
                 // 直跑场景属于测试模式，不写存档，直接 Pop
                 if (!_launchLevelIndex.HasValue)
@@ -1008,10 +1007,9 @@ namespace Game.ShooterGame
         private IEnumerator HandleDefeatQuit()
         {
             SetBattleTimePaused(false);
-            // 退场前清理战斗残留（飘字等池对象位于 DontDestroyOnLoad，不随场景卸载）
-            _entityBootstrap?.HitReactionHandler?.ClearAll();
-            if (DanmakuSystem.Instance != null)
-                DanmakuSystem.Instance.ClearAll();
+            // TDD-07 C2: 退场清理走事件通道
+            if (_onBattleEnd != null)
+                _onBattleEnd.Raise();
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }
@@ -1140,10 +1138,9 @@ namespace Game.ShooterGame
         private IEnumerator HandlePauseQuit()
         {
             SetBattleTimePaused(false);
-            // 退场前清理战斗残留（飘字等池对象位于 DontDestroyOnLoad，不随场景卸载）
-            _entityBootstrap?.HitReactionHandler?.ClearAll();
-            if (DanmakuSystem.Instance != null)
-                DanmakuSystem.Instance.ClearAll();
+            // TDD-07 C3: 退场清理走事件通道
+            if (_onBattleEnd != null)
+                _onBattleEnd.Raise();
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }

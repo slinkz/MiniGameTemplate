@@ -1,3 +1,4 @@
+using MiniGameTemplate.Battle;
 using MiniGameTemplate.Events;
 using UnityEngine;
 
@@ -14,8 +15,9 @@ namespace MiniGameTemplate.Danmaku
     /// - DanmakuSystem.UpdatePipeline.cs：Update 内的逐步驱动逻辑
     /// 
     /// DEV-002：VFX 序列化字段已迁移到 DanmakuEffectsBridgeConfig 组件。
+    /// TDD-07 B1：实现 IBattleCleanup（DDOL 永久监听者，Awake Register 不注销）。
     /// </summary>
-    public partial class DanmakuSystem : MonoBehaviour
+    public partial class DanmakuSystem : MonoBehaviour, IBattleCleanup
     {
         [Header("配置")]
         [SerializeField] private DanmakuWorldConfig _worldConfig;
@@ -31,6 +33,9 @@ namespace MiniGameTemplate.Danmaku
 
         [Tooltip("造成伤害时触发（传递伤害值）")]
         [SerializeField] private IntGameEvent _onDamageDealt;
+
+        [Header("TDD-07: 退场事件通道")]
+        [SerializeField] private BattleLifecycleEvent _onBattleEnd;
 
         // ──── 单例 ────
         public static DanmakuSystem Instance { get; private set; }
@@ -52,6 +57,13 @@ namespace MiniGameTemplate.Danmaku
             DontDestroyOnLoad(gameObject);
 
             InitializeSubsystems();
+
+            // TDD-07 B1: DDOL 永久监听者——Awake 中 Register，不注销
+            // WX-007: null 防御——SerializeField 漏拖时输出错误日志
+            if (_onBattleEnd != null)
+                _onBattleEnd.Register(this);
+            else
+                Debug.LogError("[DanmakuSystem] _onBattleEnd SO 未赋值！退场时弹丸不会被自动清理。");
         }
 
         private void OnDestroy()
@@ -59,6 +71,14 @@ namespace MiniGameTemplate.Danmaku
             if (Instance == this) Instance = null;
             DisposeSubsystems();
         }
+
+        // ──── TDD-07: IBattleCleanup 实现 ────
+
+        /// <summary>清弹丸+激光+喷雾+飘字——最先执行，阻止新命中事件产生。</summary>
+        public int CleanupOrder => 0;
+
+        /// <summary>退场清理回调。</summary>
+        public void OnBattleCleanup() => ClearAll();
 
         private void Update()
         {
