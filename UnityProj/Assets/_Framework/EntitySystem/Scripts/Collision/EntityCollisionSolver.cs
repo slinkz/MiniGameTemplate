@@ -79,22 +79,28 @@ namespace MiniGameTemplate.Entity
                     if (!LayerCanCollide(a.ConfigSO.CollisionLayer, b.ConfigSO.CollisionLayer))
                         continue;
 
-                    // 圆 vs 圆
+                    // 构造 Hitbox 做形状碰撞检测（支持圆+矩形）
+                    var hitboxA = GetEntityHitbox(a);
+                    var hitboxB = GetEntityHitbox(b);
+
+                    if (!HitboxMath.HitboxVsHitbox(in hitboxA, in hitboxB)) continue;
+
+                    // 碰撞！计算距离用于分离
                     float dx = a.Position.x - b.Position.x;
                     float dy = a.Position.y - b.Position.y;
                     float distSq = dx * dx + dy * dy;
-                    float radiusSum = a.ConfigSO.CollisionRadius + b.ConfigSO.CollisionRadius;
+                    float dist = Mathf.Sqrt(distSq);
+                    // 等效半径和（用于分离计算）
+                    float radiusSum = GetEffectiveRadius(a) + GetEffectiveRadius(b);
 
-                    if (distSq >= radiusSum * radiusSum) continue;
-
-                    // 碰撞！记录碰撞对
+                    // 记录碰撞对
                     if (_pairCount < MAX_PAIRS)
                     {
                         _pairs[_pairCount++] = new EntityCollisionPair
                         {
                             EntityA = a,
                             EntityB = b,
-                            Distance = Mathf.Sqrt(distSq),
+                            Distance = dist,
                             RadiusSum = radiusSum,
                             DeltaX = dx,
                             DeltaY = dy
@@ -129,8 +135,41 @@ namespace MiniGameTemplate.Entity
             return e.IsAlive
                 && !e.IsPendingDespawn
                 && e.ConfigSO != null
-                && e.ConfigSO.CollisionRadius > 0f
+                && HasValidCollisionSize(e.ConfigSO)
                 && e.ConfigSO.EnableEntityCollision;
+        }
+
+        /// <summary>是否有有效碰撞尺寸（兼容 Circle 与 Rect 两种形状）</summary>
+        private static bool HasValidCollisionSize(EntityConfigSO cfg)
+        {
+            if (cfg.HitboxType == HitboxShape.Rect)
+                return cfg.CollisionHalfWidth > 0f || cfg.CollisionHalfHeight > 0f;
+            return cfg.CollisionRadius > 0f;
+        }
+
+        /// <summary>从 Entity 配置构造 Hitbox</summary>
+        private static Hitbox GetEntityHitbox(Entity e)
+        {
+            if (e.ConfigSO.HitboxType == HitboxShape.Rect)
+                return new Hitbox(e.Position, e.ConfigSO.CollisionHalfWidth, e.ConfigSO.CollisionHalfHeight);
+            return new Hitbox(e.Position, e.ConfigSO.CollisionRadius);
+        }
+
+        /// <summary>
+        /// 等效半径（用于分离计算——矩形取对角半长）。
+        /// NOTE: 对角线半长作为等效半径会略微过度分离（最坏情况≈√2×实际），
+        /// 但保证不会穿透。未来若有矩形 Entity 参与碰撞且分离手感需精调，
+        /// 可改为按轴分离（SAT）替代此近似。
+        /// </summary>
+        private static float GetEffectiveRadius(Entity e)
+        {
+            if (e.ConfigSO.HitboxType == HitboxShape.Rect)
+            {
+                float hw = e.ConfigSO.CollisionHalfWidth;
+                float hh = e.ConfigSO.CollisionHalfHeight;
+                return Mathf.Sqrt(hw * hw + hh * hh);
+            }
+            return e.ConfigSO.CollisionRadius;
         }
 
         /// <summary>阵营碰撞规则（与弹幕系统一致）</summary>
@@ -219,18 +258,16 @@ namespace MiniGameTemplate.Entity
             if (cooldownIdx >= 0 && _cooldowns[cooldownIdx].RemainingTime > 0f)
                 return; // 冷却中
 
-            // 施加伤害
-            var healthComp = victim.GetComponent(ComponentType.Health) as HealthComponent;
-            if (healthComp != null && !healthComp.IsDead)
+            // 通过 OnCollisionHit 事件统一走伤害管线（闪白/击退/被动触发）
+            var dmgCtx = new DamageContext
             {
-                var dmgCtx = new DamageContext
-                {
-                    BaseDamage = attacker.ConfigSO.ContactDamage,
-                    AttackerId = attacker.Id,
-                    HitType = CollisionEventType.ContactHit
-                };
-                healthComp.TakeDamage(ref dmgCtx);
-            }
+                BaseDamage = attacker.ConfigSO.ContactDamage,
+                AttackerId = attacker.Id,
+                HitType = CollisionEventType.ContactHit,
+                SourcePosition = attacker.Position,
+                HasSourcePosition = true
+            };
+            victim.EventBus.Publish(new OnCollisionHit { Context = dmgCtx });
 
             // 设置冷却
             float interval = attacker.ConfigSO.ContactDamageInterval;

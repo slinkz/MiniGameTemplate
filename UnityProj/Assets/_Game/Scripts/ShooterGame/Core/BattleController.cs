@@ -88,6 +88,13 @@ namespace Game.ShooterGame
         private bool _battleStartedByFlow;
         private BaseLineDetector _baseLineDetector;
 
+        /// <summary>
+        /// 退场清理是否已执行。防止 OnDestroy 重复 Raise。
+        /// HandlePauseQuit/HandleDefeatQuit/HandleVictoryConfirm/Retry 四条路径
+        /// 都会主动 Raise，OnDestroy 只在异常退出（标记未被设置）时兜底。
+        /// </summary>
+        private bool _battleCleanupRaised;
+
 
         private EntitySystemBootstrap _entityBootstrap;
         private EntityClass _baseEntity;
@@ -243,11 +250,15 @@ namespace Game.ShooterGame
             if (btnPause != null)
                 btnPause.onClick.Remove(OnPauseButtonClicked);
 
-            // TDD-07 C5: 退场清理走事件通道
-            if (_onBattleEnd != null)
+            // TDD-07 C5: 退场清理走事件通道（仅异常退出时兜底）
+            // 正常路径（PauseQuit/DefeatQuit/VictoryConfirm/Retry）已主动 Raise 并置位，
+            // 此处只在标记未被设置时才 Raise——防止双重 Raise 对 DDOL 系统（如 DanmakuSystem）
+            // 造成重复清理或在半销毁状态回调 IBattleCleanup。
+            if (!_battleCleanupRaised && _onBattleEnd != null)
                 _onBattleEnd.Raise();
 
-            // WX-003: DDOL 兜底——用 Unity 重载 != 而非 ?.（避免已销毁对象语义陷阱）
+            // 最终安全网：无论 Raise 是否成功执行了 IBattleCleanup 链，确保弹幕被清理。
+            // 防止 IBattleCleanup 注册链遗漏或中途异常导致弹幕残留到下一场景。
             if (DanmakuSystem.Instance != null)
                 DanmakuSystem.Instance.ClearAll();
 
@@ -667,6 +678,11 @@ namespace Game.ShooterGame
 
         private void TickPlaying(float dt)
         {
+            // 防御性检查：退场清理后 EntityManager 可能已空
+            // 主防护在 CurrentState=None，此处为兜底安全网
+            if (EntityManagerAccessor.Instance == null || EntityManagerAccessor.Spawner == null)
+                return;
+
 #if UNITY_EDITOR
             using (s_TickPlayingMarker.Auto())
 #endif
@@ -900,7 +916,12 @@ namespace Game.ShooterGame
             // ⚠️ WX-006 约束：OnBattleCleanup 实现中不应依赖 SO 变量状态。
             // Retry 路径中 Raise() 先于 SO 变量重置执行，此时 SO 变量仍为旧值。
             if (_onBattleEnd != null)
+            {
                 _onBattleEnd.Raise();
+                // Retry 不卸载场景——新一局需要重新允许清理，故此处不置位 _battleCleanupRaised
+            }
+            // §5b 防御性切状态：Raise 后立即切离，防止未来从 Playing 状态直接 Retry 时中间帧误判
+            CurrentState = BattleState.None;
 
             // Retry 专属重置（非清理语义，不放入 IBattleCleanup）
             _spawnerStarted = false;
@@ -966,7 +987,12 @@ namespace Game.ShooterGame
 
                 // TDD-07 C1: 退场清理走事件通道
                 if (_onBattleEnd != null)
+                {
                     _onBattleEnd.Raise();
+                    _battleCleanupRaised = true;
+                }
+                // 切离当前状态：清理完子系统后 Update 不应再执行任何业务逻辑
+                CurrentState = BattleState.None;
 
                 // 直跑场景属于测试模式，不写存档，直接 Pop
                 if (!_launchLevelIndex.HasValue)
@@ -1009,7 +1035,12 @@ namespace Game.ShooterGame
             SetBattleTimePaused(false);
             // TDD-07 C2: 退场清理走事件通道
             if (_onBattleEnd != null)
+            {
                 _onBattleEnd.Raise();
+                _battleCleanupRaised = true;
+            }
+            // 同 HandlePauseQuit：切离当前状态，防止清理后帧内 Update 异常
+            CurrentState = BattleState.None;
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }
@@ -1140,7 +1171,14 @@ namespace Game.ShooterGame
             SetBattleTimePaused(false);
             // TDD-07 C3: 退场清理走事件通道
             if (_onBattleEnd != null)
+            {
                 _onBattleEnd.Raise();
+                _battleCleanupRaised = true;
+            }
+            // ⚠️ 关键：Raise 清理了 Entity/Spawner 等子系统，但 BattleController.Update 仍在运行。
+            // 必须立即切离 Playing，否则下一帧 TickPlaying 会因 ActiveEntities 为空 + IsAllWavesCleared
+            // 误判为通关，触发 EnterState(Victory) → 写假存档 + 弹假面板。
+            CurrentState = BattleState.None;
             yield return null;
             AppFlowNavigator.Instance.Pop();
         }

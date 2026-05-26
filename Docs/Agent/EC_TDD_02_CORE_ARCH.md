@@ -280,7 +280,8 @@ public class CollisionComponent : IEntityComponent, ICollisionTarget
     private int _targetSlot = -1;
 
     // ── ICollisionTarget 实现 ──
-    public CircleHitbox Hitbox => new(_owner.Position, _radius);
+    // v2.6: Hitbox 从 CircleHitbox 升级为 Hitbox（支持 Circle / Rect 两种形状）
+    public Hitbox Hitbox => BuildHitbox();
     public EnumCamp Faction => _owner.Camp;
 
     // v2.4: 构造 DamageContext，携带 AttackerId（从 BulletCore.OwnerEntityId 获取）

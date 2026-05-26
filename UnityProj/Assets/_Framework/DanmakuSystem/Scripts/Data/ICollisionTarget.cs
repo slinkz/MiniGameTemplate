@@ -7,8 +7,8 @@ namespace MiniGameTemplate.Danmaku
     /// </summary>
     public interface ICollisionTarget
     {
-        /// <summary>当前碰撞体（每帧更新位置）</summary>
-        CircleHitbox Hitbox { get; }
+        /// <summary>当前碰撞体（每帧更新位置）。支持圆形和矩形。</summary>
+        Hitbox Hitbox { get; }
 
         /// <summary>
         /// 目标自身阵营。碰撞系统用此做阵营过滤：

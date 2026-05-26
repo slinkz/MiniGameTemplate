@@ -23,6 +23,9 @@ namespace MiniGameTemplate.Entity
 
         private Entity _owner;
         private float _radius;
+        private float _halfWidth;
+        private float _halfHeight;
+        private HitboxShape _hitboxShape;
         private int _targetSlot = -1;
         private bool _isActive = true;
         private bool _isCollisionEnabled = true;
@@ -36,6 +39,9 @@ namespace MiniGameTemplate.Entity
         {
             _owner = owner;
             _radius = owner.ConfigSO.CollisionRadius;
+            _hitboxShape = owner.ConfigSO.HitboxType;
+            _halfWidth = owner.ConfigSO.CollisionHalfWidth;
+            _halfHeight = owner.ConfigSO.CollisionHalfHeight;
             _isActive = true;
             _isCollisionEnabled = true;
 
@@ -85,16 +91,17 @@ namespace MiniGameTemplate.Entity
         // ──────────────── ICollisionTarget 实现 ────────────────
 
         /// <summary>
-        /// 碰撞体：以 Entity 当前逻辑位置为圆心，ConfigSO.CollisionRadius 为半径。
+        /// 碰撞体：根据配置返回圆形或矩形 Hitbox。
         /// CollisionSolver 每帧读取此属性进行碰撞检测（BC-05.5）。
         /// </summary>
-        public CircleHitbox Hitbox
+        public Hitbox Hitbox
         {
             get
             {
-                if (_owner != null)
-                    return new CircleHitbox(_owner.Position, _radius);
-                return default;
+                if (_owner == null) return default;
+                if (_hitboxShape == HitboxShape.Rect)
+                    return new Hitbox(_owner.Position, _halfWidth, _halfHeight);
+                return new Hitbox(_owner.Position, _radius);
             }
         }
 

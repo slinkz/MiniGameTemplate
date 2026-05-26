@@ -182,9 +182,10 @@ public void SetPosition(Vector2 pos)
 
 **v2.0 重大变更（vs v1.0）**：
 - 实现 `ICollisionTarget` 接口，直接桥接现有弹幕碰撞系统
-- 使用 `CircleHitbox`（而非 OBB）作为角色碰撞体——与弹幕系统一致
+- ~~使用 `CircleHitbox`~~ → **v2.6：升级为 `Hitbox`**（支持 Circle / Rect 两种形状，EntityConfigSO.HitboxType 决定）
 - OBB 碰撞体（Entity vs 障碍物）通过 `ObstaclePool.AddRect()` 注册，Entity vs 弹幕走 `TargetRegistry`
 - 动态注册策略：不是所有 Entity 都常驻 TargetRegistry
+- **v2.6 新增**：`EntityCollisionSolver.IsCollidable()` 兼容 Rect 形状（走 `HasValidCollisionSize`）
 
 ### 4.6 AutoAimComponent
 

@@ -9,7 +9,7 @@ namespace Game.ShooterGame
     /// <summary>
     /// 底线检测——每帧扫描敌方 Entity，穿过底线则扣基地 HP。
     /// 纯 C# 类（无 MonoBehaviour），由 BattleController 驱动 Tick。
-    /// 只负责检测+扣血，不触发视觉反馈（SRP）。
+    /// 伤害走 OnCollisionHit 事件，统一伤害入口（闪白/击退/被动均可触发）。
     /// HP 同步由 HealthComponent.OnHpChanged → BattleController.OnBaseHpChanged 自动推送。
     /// TDD_02 §2.2
     /// </summary>
@@ -60,7 +60,7 @@ namespace Game.ShooterGame
                     BreachCountThisFrame++;
                     _breachedEnemies.Add(entity);
 
-                    // 对基地造成伤害（优先 BaseLineBreachDamage，fallback ContactDamage）
+                    // 对基地造成伤害——走 OnCollisionHit 事件统一管线
                     int damage = 15;
                     if (entity.ConfigSO != null)
                     {
@@ -72,8 +72,11 @@ namespace Game.ShooterGame
                     {
                         BaseDamage = damage,
                         AttackerId = entity.Id,
+                        HitType = MiniGameTemplate.Entity.CollisionEventType.ContactHit,
+                        SourcePosition = entity.Position,
+                        HasSourcePosition = true
                     };
-                    _baseHealth.TakeDamage(ref ctx);
+                    _baseEntity.EventBus.Publish(new OnCollisionHit { Context = ctx });
                 }
             }
 

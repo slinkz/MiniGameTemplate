@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-26 00:52 | 文件总数：90
+> 最后更新：2026-05-26 23:05 | 文件总数：90
 
 ---
 
@@ -51,6 +51,8 @@
 | 代码路径/模式 | 对应文档 | 说明 |
 |--------------|---------|------|
 | `EntitySystem/Scripts/Components/*.cs` | EC_TDD_05_COMPONENTS | 组件设计 |
+| `EntitySystem/Scripts/Collision/*.cs` | EC_TDD_02 §3.5 + EC_TDD_05 §4.5 | Entity 碰撞桥接 + IsCollidable/GetEffectiveRadius |
+| `DanmakuSystem/Scripts/Data/HitboxMath.cs` | OBB_TDD_INDEX | Hitbox 数学工具（含 SectorVsAABB） |
 | `EntitySystem/Scripts/Components/Skill*` | EC_TDD_05_COMPONENTS §4.8 + SG_V2_TDD_06 | 技能子系统（含普攻升格 AimMode） |
 | `EntitySystem/Scripts/Components/Buff*` | EC_TDD_05_COMPONENTS §4.10 | Buff 子系统 |
 | `EntitySystem/Scripts/Core/*.cs` | EC_TDD_02_CORE_ARCH | Entity/Pool/EventBus |

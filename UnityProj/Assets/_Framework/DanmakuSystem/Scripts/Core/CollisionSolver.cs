@@ -135,14 +135,9 @@ namespace MiniGameTemplate.Danmaku
                         && (c.PierceHitMask & targetBit) != 0)
                         continue;
 
-                    // 圆 vs 圆
+                    // 形状碰撞检测（支持圆形+矩形目标）
                     var hitbox = target.Hitbox;
-                    float dx = c.Position.x - hitbox.Center.x;
-                    float dy = c.Position.y - hitbox.Center.y;
-                    float distSq = dx * dx + dy * dy;
-                    float radiusSum = c.Radius + hitbox.Radius;
-
-                    if (distSq >= radiusSum * radiusSum) continue;
+                    if (!HitboxMath.CircleVsHitbox(c.Position, c.Radius, in hitbox)) continue;
 
                     // 命中
                     result.HasAnyHit = true;
@@ -203,11 +198,7 @@ namespace MiniGameTemplate.Danmaku
                         if (target != null)
                         {
                             var hitbox = target.Hitbox;
-                            float dx = c.Position.x - hitbox.Center.x;
-                            float dy = c.Position.y - hitbox.Center.y;
-                            float distSq = dx * dx + dy * dy;
-                            float radiusSum = c.Radius + hitbox.Radius;
-                            stillOverlapping = distSq < radiusSum * radiusSum;
+                            stillOverlapping = HitboxMath.CircleVsHitbox(c.Position, c.Radius, in hitbox);
                         }
 
                         if (!stillOverlapping)
@@ -336,16 +327,14 @@ namespace MiniGameTemplate.Danmaku
                     if (!ShouldCollide((EnumCamp)laser.Faction, target.Faction)) continue;
 
                     var hitbox = target.Hitbox;
-                    float totalRadius = laser.Width * 0.5f + hitbox.Radius;
+                    float laserHalfWidth = laser.Width * 0.5f;
                     bool hit = false;
 
                     // 遍历所有折射线段
                     for (int s = 0; s < laser.SegmentCount; s++)
                     {
                         ref var seg = ref laser.Segments[s];
-                        float totalRadiusSq = totalRadius * totalRadius;
-                        float distSq = PointToSegmentDistanceSq(hitbox.Center, seg.Start, seg.End);
-                        if (distSq < totalRadiusSq)
+                        if (HitboxMath.SegmentVsHitbox(seg.Start, seg.End, laserHalfWidth, in hitbox))
                         {
                             hit = true;
                             break; // 一条激光每个目标只命中一次
@@ -426,17 +415,9 @@ namespace MiniGameTemplate.Danmaku
 
                     var hitbox = target.Hitbox;
 
-                    // 距离检查
-                    Vector2 diff = hitbox.Center - spray.Origin;
-                    float dist = diff.magnitude;
-                    if (dist > spray.Range + hitbox.Radius) continue;
-
-                    // 扇形角度检查
-                    float angle = Mathf.Atan2(diff.y, diff.x);
-                    float angleDiff = Mathf.Abs(Mathf.DeltaAngle(
-                        angle * Mathf.Rad2Deg,
-                        spray.Direction * Mathf.Rad2Deg));
-                    if (angleDiff > spray.ConeAngle * Mathf.Rad2Deg) continue;
+                    // 扇形 vs 目标（支持圆形+矩形）
+                    if (!HitboxMath.SectorVsHitbox(spray.Origin, spray.Range, spray.Direction,
+                        spray.ConeAngle, in hitbox)) continue;
 
                     result.HasAnyHit = true;
                     int damage = (int)spray.DamagePerTick;
@@ -685,18 +666,5 @@ namespace MiniGameTemplate.Danmaku
             return Vector2.down;
         }
 
-        /// <summary>点到线段的最短距离平方</summary>
-        private static float PointToSegmentDistanceSq(Vector2 point, Vector2 a, Vector2 b)
-        {
-            Vector2 ab = b - a;
-            float abLenSq = Vector2.Dot(ab, ab);
-            if (abLenSq <= 1e-6f)
-                return (point - a).sqrMagnitude;
-
-            Vector2 ap = point - a;
-            float t = Mathf.Clamp01(Vector2.Dot(ap, ab) / abLenSq);
-            Vector2 closest = a + ab * t;
-            return (point - closest).sqrMagnitude;
-        }
     }
 }

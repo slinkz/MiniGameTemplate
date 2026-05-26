@@ -41,6 +41,17 @@ namespace MiniGameTemplate.Entity
         public float TurnSpeed = 360f;
         public float CollisionRadius = 0.5f;
 
+        [Tooltip("碰撞体形状（Circle=圆形，Rect=轴对齐矩形）")]
+        public HitboxShape HitboxType = HitboxShape.Circle;
+
+        [Tooltip("矩形碰撞体半宽（仅 HitboxType=Rect 时有效）")]
+        [Min(0f)]
+        public float CollisionHalfWidth = 0.5f;
+
+        [Tooltip("矩形碰撞体半高（仅 HitboxType=Rect 时有效）")]
+        [Min(0f)]
+        public float CollisionHalfHeight = 0.5f;
+
         [Tooltip("击退距离（v2.4 GD-R4-004）")]
         public float KnockbackDistance = 0.5f;
 

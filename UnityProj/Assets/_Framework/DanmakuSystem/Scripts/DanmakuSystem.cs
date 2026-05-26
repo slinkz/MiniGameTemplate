@@ -143,12 +143,12 @@ namespace MiniGameTemplate.Danmaku
             _onDamageDealt = onDamageDealt;
         }
 
-        public CircleHitbox Hitbox
+        public Hitbox Hitbox
         {
             get
             {
-                if (_transform == null) return new CircleHitbox(Vector2.zero, 0f);
-                return new CircleHitbox(_transform.position, _radius);
+                if (_transform == null) return new Hitbox(Vector2.zero, 0f);
+                return new Hitbox(_transform.position, _radius);
             }
         }
         public EnumCamp Faction => EnumCamp.Player;
