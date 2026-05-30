@@ -147,11 +147,16 @@ namespace MiniGameTemplate.Entity
                         if (ownerConfig.AttackPower > 0)
                             ctx.BaseDamage = ownerConfig.AttackPower;
 
-                        // 暴击 Roll
-                        if (ownerConfig.CritRate > 0f && Random.value < ownerConfig.CritRate)
+                        // 暴击 Roll（合并 Config 基础暴击 + Buff 加成）
+                        var ownerBuff = ownerEntity.GetComponent(ComponentType.Buff) as BuffComponent;
+                        float effectiveCritRate = ownerConfig.CritRate + (ownerBuff?.CritRateBonus ?? 0f);
+                        if (effectiveCritRate > 0f && Random.value < effectiveCritRate)
                         {
                             ctx.IsCritical = true;
-                            ctx.CritMultiplier = ownerConfig.CritDamageMultiplier;
+                            float buffCritMult = ownerBuff?.CritMultiplierOverride ?? 0f;
+                            ctx.CritMultiplier = buffCritMult > 0f
+                                ? buffCritMult
+                                : ownerConfig.CritDamageMultiplier;
                         }
                     }
                 }

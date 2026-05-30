@@ -23,6 +23,7 @@ description: >
 
 ### CL-1: 跨文件引用完整性
 A 文件引用 B 的成员 → grep 确认 B 中确实存在。新增/重命名字段后全局搜索旧名。
+重构删除系统时 → 对**每个公开字段**做 Find All References，不只看类引用（PIT-051）。
 
 ### CL-2: 命名空间安全
 自定义命名空间不得与 Unity/System 内置类重名。跨命名空间引用考虑 `global::` 前缀。
@@ -37,6 +38,10 @@ A 文件引用 B 的成员 → grep 确认 B 中确实存在。新增/重命名�
 - `OnOpen` 绑事件 → `OnClose` 必须解绑
 - `OnRefresh` **禁止调 `OnOpen`**（事件双绑定 P0）
 - ClosePanel 后闭包引用检查
+- **退场清理三检查**（PIT-050）：
+  1. `Raise()` / 清理子系统后、下一个 `yield` / `await` 之前，是否立即切离当前状态（`CurrentState = None`）？
+  2. `OnDestroy` 是否有 `_battleCleanupRaised` 守卫防止双重 Raise？
+  3. 所有退场路径（Quit/Defeat/Victory/Retry）是否统一走事件通道，不存在绕过的硬引用清理？
 
 ### CL-6: 渲染管线与 Mesh API
 - 顶点结构字段顺序 = `VertexAttributeDescriptor[]` 声明顺序（Position→Color→UV）
@@ -57,6 +62,7 @@ grep 第三方源码实际 `namespace` 声明，不要想当然。wrapper/fork �
 - 跨场景传参走 `AppFlowNavigator + IFlowData`，禁止 SO/static/Resources/PlayerPrefs hack
 - 修复在框架机制内，不另起炉灶；框架不支持→先提方案等天命人确认
 - 持久化数据增删字段 → 云函数 `saveProgress`/`getProgress` 必须同步（JS 解构静默丢弃）
+- 系统退役 → 被替代系统的代码+配置字段在同一改动中物理删除，`[Obsolete]` 不算完成（PIT-051 / §13）
 
 ### CL-10: 方法重载安全（🔴 阻塞级）
 新增重载后全局搜索所有调用点。重点检查 `null`/`default`/`0` 是否匹配多个重载（CS0121 歧义）。

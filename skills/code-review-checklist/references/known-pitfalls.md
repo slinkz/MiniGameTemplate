@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：34 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-049）
+> **当前条目数**：36 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-051）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -429,6 +429,38 @@
 - **验证方法**: 所有使用 swap-remove 模式的数组/列表，检查 remove 后是否清尾
 - **严重度**: 🟡 内存泄漏
 - **标记 [经典] 原因**: 手写数据结构中极易遗漏的一步，编译器和 IDE 均无法检测
+
+---
+
+## PIT-050: 退场 Raise 后 yield 前必须切离 Playing 状态 `[经典]`
+- **分类**: CL-5 生命周期与时序 / 战斗系统
+- **日期**: 2026-05-26
+- **现象**: 暂停退出→重入后无法控制玩家、没有普攻、怪物不出现
+- **根因**: `HandlePauseQuit` 在 `_onBattleEnd.Raise()` 后 `yield return null` 等一帧，但 `CurrentState` 仍为 `Playing`。这一帧内 `TickPlaying()` 检测到 `IsAllWavesCleared=true`（StopAll 把 _activeCount=0）+ `ActiveEntities` 为空（DespawnAll 了），误判通关 → `EnterState(Victory)` → 写假存档 + `Time.timeScale=0` + 弹假面板。后续 Pop 和重入的整个状态被污染。
+- **修复**: `_onBattleEnd.Raise()` 之后立即 `CurrentState = BattleState.None`，阻断 TickPlaying。同时用 `_battleCleanupRaised` 标记防止 OnDestroy 双重 Raise。
+- **验证方法**: 所有退场路径（PauseQuit/DefeatQuit/VictoryConfirm）的 Raise 之后、下一个 yield/await 之前，必须切离 Playing 状态
+- **严重度**: 🔴 状态污染 + 假存档
+- **标记 [经典] 原因**: Coroutine/async 中清理子系统后"等一帧再 Pop"的模式极易忽略中间帧的 Update 仍在运行。凡是 Raise 后有 yield/await 的退场路径必须逐一检查。
+
+---
+
+## PIT-051: 被替代系统未物理删除，旧字段隐性覆盖新系统 `[经典]`
+- **分类**: CL-9 架构一致性 / CL-1 跨文件引用完整性
+- **日期**: 2026-05-29
+- **现象**: 策划改 `SK_NormalAttack.CooldownTime` 不影响攻速——实际攻速由 `EntityConfigSO.AttackInterval` 通过 `OverrideSlotCooldown` 控制，但该关系在 Inspector 中不可见
+- **根因**: `AttackComponent` 被标 `[Obsolete]` 但未物理删除，配置字段 `AttackInterval` 语义不清——看起来是废弃字段，实际仍参与运行时逻辑。策划不知道该改哪个值
+- **修复**（最终方案 — 模板+实例覆盖）:
+  1. 明确设计：`SkillConfigSO.CooldownTime` = 技能默认 CD（模板），`EntityConfigSO.AttackInterval` = 角色级射速覆盖（实例）
+  2. Inspector 显式展示 `NormalAttackSkill` 引用 + HelpBox 提示覆盖关系
+  3. `BattleController.InitializeSkills()` 中用 `OverrideSlotCooldown(0, AttackInterval)` 正式生效
+  4. 彻底删除 `AttackComponent.cs` + `ComponentType.Attack` 枚举值，消除"废弃"歧义
+- **验证方法**:
+  1. 重构替代系统时，对被替代系统的**每个公开字段**执行 Find All References
+  2. 不只看类引用——**字段引用**更隐蔽（数据流 > 调用链）
+  3. 废弃系统必须在同一 PR 内物理删除。`[Obsolete]` ≠ 删除
+  4. 验收时确认新系统的配置字段是唯一生效源（改它就变、改别的不变）
+- **严重度**: 🔴 隐性逻辑覆盖，策划改配置不生效
+- **标记 [经典] 原因**: "先标 Obsolete 以后再删"是最常见的技术债借口。编译不报错 = 旧代码仍在执行。AI 重构时倾向于"保守保留"，但保留 = 定时炸弹
 
 ---
 

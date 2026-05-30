@@ -118,8 +118,6 @@ namespace MiniGameTemplate.Entity
                 case ComponentType.Collision: return new CollisionComponent();
                 case ComponentType.Control:   return new ControlComponent();
                 case ComponentType.AI:        return new AIComponent();
-                case ComponentType.Attack:
-                    return null; // 已退役（TDD-06），枚举值保留用于序列化兼容
                 case ComponentType.Animation: return new AnimationComponent();
                 case ComponentType.AutoAim:   return new AutoAimComponent();
                 case ComponentType.Skill:     return new SkillComponent();

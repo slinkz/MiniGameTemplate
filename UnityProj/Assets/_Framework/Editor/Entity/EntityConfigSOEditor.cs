@@ -46,6 +46,8 @@ namespace MiniGameTemplate.EditorTools
         private SerializedProperty _firstAttackDelay;
         private SerializedProperty _attackBulletPattern;
         private SerializedProperty _attackFireOffset;
+        // 普攻技能（TDD-06）
+        private SerializedProperty _normalAttackSkill;
         // 技能（P3.3）
         private SerializedProperty _skillConfig;
         private SerializedProperty _aiBehavior;
@@ -98,6 +100,8 @@ namespace MiniGameTemplate.EditorTools
             _firstAttackDelay = serializedObject.FindProperty("FirstAttackDelay");
             _attackBulletPattern = serializedObject.FindProperty("AttackBulletPattern");
             _attackFireOffset = serializedObject.FindProperty("AttackFireOffset");
+            // 普攻技能（TDD-06）
+            _normalAttackSkill = serializedObject.FindProperty("NormalAttackSkill");
             // 技能（P3.3）
             _skillConfig = serializedObject.FindProperty("SkillConfig");
             _aiBehavior = serializedObject.FindProperty("AIBehavior");
@@ -149,6 +153,28 @@ namespace MiniGameTemplate.EditorTools
             EditorGUILayout.PropertyField(_moveSpeed);
             EditorGUILayout.PropertyField(_turnSpeed);
 
+            // ──── 战斗属性（独立显示）────
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("战斗属性", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(_attackPower);
+            EditorGUILayout.PropertyField(_critRate);
+            EditorGUILayout.PropertyField(_critDamageMultiplier);
+            EditorGUILayout.Space(4);
+            EditorGUILayout.PropertyField(_attackInterval);
+            EditorGUILayout.PropertyField(_firstAttackDelay);
+            EditorGUILayout.PropertyField(_attackBulletPattern);
+            EditorGUILayout.PropertyField(_attackFireOffset);
+
+            // ──── 普攻技能配置（TDD-06）────
+            EditorGUILayout.Space(4);
+            EditorGUILayout.PropertyField(_normalAttackSkill);
+            if (_normalAttackSkill.objectReferenceValue != null && _attackInterval.floatValue > 0)
+            {
+                EditorGUILayout.HelpBox(
+                    $"AttackInterval={_attackInterval.floatValue:F2}s 将在运行时覆盖 SkillConfigSO.CooldownTime",
+                    MessageType.Info);
+            }
+
             // 碰撞组件配置（条件显示）
             if (HasComponent(ComponentType.Collision))
             {
@@ -188,28 +214,13 @@ namespace MiniGameTemplate.EditorTools
                 }
             }
 
-            // ──── 攻击组件配置（条件显示）────
-            if (HasComponent(ComponentType.Attack))
+            // ──── 自动瞄准 ────
+            EditorGUILayout.Space(4);
+            DrawSectionTitle("自动瞄准（AutoAim）");
+            EditorGUILayout.PropertyField(_autoAimRadius);
+            if (_autoAimRadius.floatValue > 0)
             {
-                EditorGUILayout.Space(8);
-                DrawSectionTitle("攻击组件配置（因勾选了 Attack 而显示）");
-                EditorGUILayout.PropertyField(_attackPower);
-                EditorGUILayout.PropertyField(_critRate);
-                EditorGUILayout.PropertyField(_critDamageMultiplier);
-                EditorGUILayout.Space(4);
-                EditorGUILayout.PropertyField(_attackInterval);
-                EditorGUILayout.PropertyField(_firstAttackDelay);
-                EditorGUILayout.PropertyField(_attackBulletPattern);
-                EditorGUILayout.PropertyField(_attackFireOffset);
-
-                // 自动瞄准
-                EditorGUILayout.Space(4);
-                DrawSectionTitle("自动瞄准（AutoAim）");
-                EditorGUILayout.PropertyField(_autoAimRadius);
-                if (_autoAimRadius.floatValue > 0)
-                {
-                    EditorGUILayout.PropertyField(_autoAimSearchInterval);
-                }
+                EditorGUILayout.PropertyField(_autoAimSearchInterval);
             }
 
             // ──── 技能组件配置（条件显示）────
@@ -290,22 +301,22 @@ namespace MiniGameTemplate.EditorTools
                     MessageType.Warning);
             }
 
-            // 有 Attack 但无 BulletPattern
-            if (HasComponent(ComponentType.Attack) &&
-                _attackBulletPattern.objectReferenceValue == null &&
-                _attackInterval.floatValue > 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "Components 含 Attack 但 AttackBulletPattern 未填且 AttackInterval > 0——Entity 不会发射弹幕。",
-                    MessageType.Warning);
-            }
-
             // Control/AI 互斥
             if (HasComponent(ComponentType.Control) && HasComponent(ComponentType.AI))
             {
                 EditorGUILayout.HelpBox(
                     "⚠️ Control 和 AI 不应同时勾选！运行时 DecisionMaker 会冲突。",
                     MessageType.Error);
+            }
+
+            // 有攻击间隔但无弹幕配置也无普攻技能——不会发射
+            if (_attackInterval.floatValue > 0 &&
+                _attackBulletPattern.objectReferenceValue == null &&
+                _normalAttackSkill.objectReferenceValue == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "AttackInterval > 0 但 BulletPattern 和 NormalAttackSkill 均未填——Entity 不会发射弹幕。",
+                    MessageType.Warning);
             }
 
             // 依赖建议
@@ -316,6 +327,7 @@ namespace MiniGameTemplate.EditorTools
                     MessageType.Info);
             }
 
+            // 有 Collision 但无 Health（伤害无法结算）
             if (HasComponent(ComponentType.Collision) && !HasComponent(ComponentType.Health))
             {
                 EditorGUILayout.HelpBox(
@@ -339,6 +351,10 @@ namespace MiniGameTemplate.EditorTools
             bool changed = false;
             foreach (var type in AllTypes)
             {
+                // 跳过内部枚举
+                if (type == ComponentType.MAX)
+                    continue;
+
                 bool wasOn = active.Contains(type);
 
                 // Control/AI 互斥灰化
@@ -393,7 +409,6 @@ namespace MiniGameTemplate.EditorTools
                 ComponentType.Skill => "Skill（技能，Phase 3）",
                 ComponentType.Control => "Control（玩家输入）",
                 ComponentType.AI => "AI（自动决策）",
-                ComponentType.Attack => "Attack（定时攻击）",
                 _ => type.ToString()
             };
         }

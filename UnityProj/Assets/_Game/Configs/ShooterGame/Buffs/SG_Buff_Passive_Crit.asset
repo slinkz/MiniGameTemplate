@@ -23,7 +23,7 @@ MonoBehaviour:
   DamageTakenModifier: 1
   BulletCountModifier: 1
   GrantsPierce: 0
-  CritRateBonus: 0.2
+  CritRateBonus: 0.8
   CritMultiplierOverride: 2.5
   PickupRadiusModifier: 1
   VfxPrefab: {fileID: 0}

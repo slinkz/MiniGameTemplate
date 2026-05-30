@@ -74,15 +74,6 @@ namespace MiniGameTemplate.EditorTools
                         warningCount++;
                     }
 
-                    // 有 Attack 时 BulletPattern 不为空
-                    if (seen.Contains(ComponentType.Attack) &&
-                        config.AttackBulletPattern == null &&
-                        config.AttackInterval > 0)
-                    {
-                        LogWarning(prefix, "含 Attack 组件但 AttackBulletPattern 未填且 AttackInterval > 0。", config);
-                        warningCount++;
-                    }
-
                     // Collision 半径
                     if (seen.Contains(ComponentType.Collision) && config.CollisionRadius <= 0)
                     {

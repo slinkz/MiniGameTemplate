@@ -15,7 +15,7 @@ namespace MiniGameTemplate.Entity
         Skill = 6,
         Control = 7,
         AI = 8,
-        Attack = 9,    // [已退役] 保留数值兼容序列化。运行时 EntityPool 返回 null
+        // 9 已删除（原 Attack）
         Buff = 10,     // Phase 3A (P3.4)
         EnemyShoot = 11, // V2 Sprint 1: 敌机射击组件
         Passive = 12,   // V2 Sprint 3: 被动技能组件

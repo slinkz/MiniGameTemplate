@@ -1159,9 +1159,14 @@ namespace Game.ShooterGame
             for (int i = 0; i < equipCount && i + 1 < totalSlots; i++)
                 allSkills[i + 1] = equipped[i];
 
-            // 初始化 + 首发延迟（普攻 CD 由 SkillConfigSO.CooldownTime 控制，不再覆盖）
+            // 初始化 + 首发延迟
+            float attackInterval = _playerEntityConfig.AttackInterval;
             skillComp.InitWithEquipment(allSkills, staggerOffsetPerSlot: 0.5f,
-                                        firstSlotInitialCD: normalAttack.CooldownTime);
+                                        firstSlotInitialCD: attackInterval > 0 ? attackInterval : normalAttack.CooldownTime);
+
+            // EntityConfigSO.AttackInterval 覆盖普攻 CD（策划在 EntityConfig 统一调射速）
+            if (attackInterval > 0)
+                skillComp.OverrideSlotCooldown(0, attackInterval);
         }
 
         private void OnResumeFromPause()
