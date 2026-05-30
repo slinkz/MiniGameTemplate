@@ -119,8 +119,7 @@ namespace MiniGameTemplate.Entity
                 case ComponentType.Control:   return new ControlComponent();
                 case ComponentType.AI:        return new AIComponent();
                 case ComponentType.Attack:
-                    Debug.LogWarning("[Migration] Attack component skipped — use SkillComponent Slot[0]. See TDD-06.");
-                    return null;
+                    return null; // 已退役（TDD-06），枚举值保留用于序列化兼容
                 case ComponentType.Animation: return new AnimationComponent();
                 case ComponentType.AutoAim:   return new AutoAimComponent();
                 case ComponentType.Skill:     return new SkillComponent();

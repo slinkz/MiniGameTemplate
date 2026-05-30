@@ -304,7 +304,7 @@ namespace MiniGameTemplate.EditorTools
             if (HasComponent(ComponentType.Control) && HasComponent(ComponentType.AI))
             {
                 EditorGUILayout.HelpBox(
-                    "⚠️ Control 和 AI 不应同时勾选！运行时 AttackComponent 将优先使用 Control 的决策。",
+                    "⚠️ Control 和 AI 不应同时勾选！运行时 DecisionMaker 会冲突。",
                     MessageType.Error);
             }
 

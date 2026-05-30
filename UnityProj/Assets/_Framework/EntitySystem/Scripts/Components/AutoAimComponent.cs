@@ -4,10 +4,10 @@ namespace MiniGameTemplate.Entity
 {
     /// <summary>
     /// 自动瞄准组件——定频搜索敌对阵营最近 Entity，暴露锁定目标信息。
-    /// 实现 ITargetProvider 接口，供 AI Action / AttackComponent 读取。
+    /// 实现 ITargetProvider 接口，供 AI Action / SkillComponent 读取。
     ///
     /// ComponentType.AutoAim = 5
-    /// TickOrder = 120（Attack 之前，Decision 之后）
+    /// TickOrder = 120（Skill 之前，Decision 之后）
     ///
     /// 设计决策：
     /// - 定频搜索（默认 0.2s [占位符]），不是每帧——省 CPU
@@ -35,7 +35,7 @@ namespace MiniGameTemplate.Entity
             : float.MaxValue;
 
         // ── 公开状态 ──
-        /// <summary>当前瞄准方向（归一化），AttackComponent 读取此值</summary>
+        /// <summary>当前瞄准方向（归一化），SkillComponent 读取此值</summary>
         public Vector2 AimDirection { get; private set; }
 
         /// <summary>当前锁定目标 Entity（可能为 null / 已死亡），外部读取前应检查 HasTarget</summary>

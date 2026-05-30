@@ -10,6 +10,7 @@ namespace Game.ShooterGame
     /// 职责：
     /// - 管理场景中活跃的道具实例
     /// - 检测玩家距离 → 自动拾取
+    /// - 磁吸范围内掉落物飞向玩家（视觉反馈）
     /// - 生命周期：超时/底线消失
     /// - 拾取效果：Buff/修复/弹药/金币
     /// </summary>
@@ -21,11 +22,21 @@ namespace Game.ShooterGame
         /// <summary>底线 Y 坐标（到此处消失）</summary>
         private const float BOTTOM_LINE_Y = -6.0f;
 
-        /// <summary>拾取半径</summary>
-        private const float PICKUP_RADIUS = 1.0f;
-
         /// <summary>闪烁开始前的剩余时间（最后 2s 闪烁）</summary>
         private const float BLINK_THRESHOLD = 2.0f;
+
+        /// <summary>磁吸飞行基础速度（单位/秒）</summary>
+        private const float ATTRACT_BASE_SPEED = 8f;
+
+        /// <summary>磁吸飞行最大速度（单位/秒）</summary>
+        private const float ATTRACT_MAX_SPEED = 25f;
+
+        /// <summary>磁吸加速度（每秒增加的速度）</summary>
+        private const float ATTRACT_ACCEL = 20f;
+
+        /// <summary>飞到此距离内即拾取（世界单位）</summary>
+        private const float COLLECT_DIST = 0.3f;
+        private const float COLLECT_DIST_SQR = COLLECT_DIST * COLLECT_DIST;
 
         private readonly PickupInstance[] _pickups = new PickupInstance[MAX_PICKUPS];
         private int _activeCount;
@@ -34,17 +45,22 @@ namespace Game.ShooterGame
         private Entity _baseEntity;
         private SG_ProgressManager _progress;
 
+        /// <summary>基础拾取半径（策划可通过 BattleController Inspector 调整）</summary>
+        private float _basePickupRadius = 1.0f;
+
         /// <summary>当前活跃道具数量</summary>
         public int ActiveCount => _activeCount;
 
         /// <summary>
         /// 初始化系统引用。
         /// </summary>
-        public void Init(Entity playerEntity, Entity baseEntity, SG_ProgressManager progress)
+        /// <param name="basePickupRadius">基础拾取半径（被动 Buff 会在此基础上乘以倍率）</param>
+        public void Init(Entity playerEntity, Entity baseEntity, SG_ProgressManager progress, float basePickupRadius = 1.0f)
         {
             _playerEntity = playerEntity;
             _baseEntity = baseEntity;
             _progress = progress;
+            _basePickupRadius = basePickupRadius;
             _activeCount = 0;
         }
 
@@ -71,6 +87,8 @@ namespace Game.ShooterGame
             pickup.Position = position;
             pickup.RemainingTime = config.Lifetime;
             pickup.IsActive = true;
+            pickup.IsAttracting = false;
+            pickup.AttractSpeed = 0f;
             _activeCount++;
             return true;
         }
@@ -84,10 +102,58 @@ namespace Game.ShooterGame
 
             Vector2 playerPos = _playerEntity.Position;
 
+            // 查询当前拾取半径（基础半径 × 被动 Buff 倍率）
+            float radiusMod = 1f;
+            var buffComp = _playerEntity.GetComponent(ComponentType.Buff) as BuffComponent;
+            if (buffComp != null)
+                radiusMod = buffComp.PickupRadiusModifier;
+            float effectiveRadius = _basePickupRadius * radiusMod;
+            float effectiveRadiusSqr = effectiveRadius * effectiveRadius;
+            bool hasMagnet = radiusMod > 1.01f;
+
             for (int i = _activeCount - 1; i >= 0; i--)
             {
                 ref var pickup = ref _pickups[i];
                 if (!pickup.IsActive) continue;
+
+                float dx = pickup.Position.x - playerPos.x;
+                float dy = pickup.Position.y - playerPos.y;
+                float distSqr = dx * dx + dy * dy;
+
+                // ── 磁吸飞行状态 ──
+                if (pickup.IsAttracting)
+                {
+                    // 已到达 → 拾取
+                    if (distSqr < COLLECT_DIST_SQR)
+                    {
+                        CollectPickup(ref pickup);
+                        RemoveAt(i);
+                        continue;
+                    }
+
+                    // 加速飞向玩家
+                    pickup.AttractSpeed += ATTRACT_ACCEL * dt;
+                    if (pickup.AttractSpeed > ATTRACT_MAX_SPEED)
+                        pickup.AttractSpeed = ATTRACT_MAX_SPEED;
+
+                    float dist = Mathf.Sqrt(distSqr);
+                    float step = pickup.AttractSpeed * dt;
+                    if (step >= dist)
+                    {
+                        // 本帧直接到达
+                        CollectPickup(ref pickup);
+                        RemoveAt(i);
+                        continue;
+                    }
+
+                    // 归一化方向 × 步长（飞向玩家）
+                    float invDist = 1f / dist;
+                    pickup.Position.x -= dx * invDist * step;
+                    pickup.Position.y -= dy * invDist * step;
+                    continue;
+                }
+
+                // ── 正常漂浮状态 ──
 
                 // 向下漂浮
                 pickup.Position.y -= pickup.Config.FloatSpeed * dt;
@@ -100,15 +166,20 @@ namespace Game.ShooterGame
                     continue;
                 }
 
-                // 距离检测 → 自动拾取
-                float dx = pickup.Position.x - playerPos.x;
-                float dy = pickup.Position.y - playerPos.y;
-                float distSqr = dx * dx + dy * dy;
-
-                if (distSqr < PICKUP_RADIUS * PICKUP_RADIUS)
+                // 无磁吸时的普通拾取（基础半径判定）
+                float baseRadiusSqr = _basePickupRadius * _basePickupRadius;
+                if (distSqr < baseRadiusSqr)
                 {
                     CollectPickup(ref pickup);
                     RemoveAt(i);
+                    continue;
+                }
+
+                // 磁吸范围判定 → 进入飞行状态
+                if (hasMagnet && distSqr < effectiveRadiusSqr)
+                {
+                    pickup.IsAttracting = true;
+                    pickup.AttractSpeed = ATTRACT_BASE_SPEED;
                 }
             }
         }
@@ -197,5 +268,11 @@ namespace Game.ShooterGame
         public Vector2 Position;
         public float RemainingTime;
         public bool IsActive;
+
+        /// <summary>是否正在被磁吸飞向玩家</summary>
+        public bool IsAttracting;
+
+        /// <summary>当前磁吸飞行速度（加速曲线）</summary>
+        public float AttractSpeed;
     }
 }

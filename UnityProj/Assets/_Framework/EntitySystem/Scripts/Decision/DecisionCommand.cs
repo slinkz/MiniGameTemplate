@@ -4,7 +4,7 @@ namespace MiniGameTemplate.Entity
 {
     /// <summary>
     /// AI/Control 决策输出——每帧由 IDecisionMaker 产生，
-    /// 驱动 MovementComponent（方向）和 AttackComponent（攻击意图）。
+    /// 驱动 MovementComponent（方向）和 SkillComponent（攻击意图）。
     /// 纯值类型，零 GC。
     /// </summary>
     public struct DecisionCommand
@@ -15,7 +15,7 @@ namespace MiniGameTemplate.Entity
         /// <summary>是否请求攻击</summary>
         public bool WantsAttack;
 
-        /// <summary>瞄准方向（用于 AttackComponent 发射方向）</summary>
+        /// <summary>瞄准方向（用于 SkillComponent 发射方向）</summary>
         public Vector2 AimDirection;
 
         /// <summary>静止不动的默认指令</summary>

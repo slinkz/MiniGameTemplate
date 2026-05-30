@@ -16,7 +16,7 @@ MonoBehaviour:
   TriggerMode: 1
   AimMode: 0
   IsNormalAttack: 1
-  CooldownTime: 0.25
+  CooldownTime: 0.2
   CastTime: 0
   RecoveryTime: 0
   Effects:

@@ -3,8 +3,8 @@ using UnityEngine;
 namespace MiniGameTemplate.Entity
 {
     /// <summary>
-    /// AI Action: 触发 AttackComponent 的攻击逻辑。无状态。
-    /// 返回 WantsAttack=true 的 DecisionCommand，由 AttackComponent 消费。
+    /// AI Action: 触发攻击意图。无状态。
+    /// 返回 WantsAttack=true 的 DecisionCommand，由 SkillComponent 消费。
     /// </summary>
     public sealed class AttackAction : IAIAction
     {

@@ -9,7 +9,7 @@ namespace MiniGameTemplate.Entity
     /// TickOrder = 160
     /// 
     /// TDD-06 改造：普攻收编为 Slot[0]（AimMode=FixedForward, IsNormalAttack=true）。
-    /// AttackComponent 已废弃——所有攻击行为统一走 SkillComponent。
+    /// 所有攻击行为统一走 SkillComponent。
     /// 
     /// 初始化模式：
     /// - 外部注入（V2）：BattleController 调用 InitWithEquipment(skills[])
@@ -45,7 +45,7 @@ namespace MiniGameTemplate.Entity
 
         /// <summary>
         /// 运行时 CD 覆盖值（TDD-06 §2.7）。
-        /// 用于普攻从 EntityConfigSO.AttackInterval 读取实际 CD，而非 SO 默认值。
+        /// 外部可通过 OverrideSlotCooldown 注入，运行时优先于 SO 默认值。
         /// </summary>
         private readonly float[] _runtimeCooldownOverrides = new float[MAX_SLOTS];
 
@@ -54,7 +54,6 @@ namespace MiniGameTemplate.Entity
 
         /// <summary>
         /// 运行时覆盖指定槽位的 CooldownTime（TDD-06 §2.7）。
-        /// 用于普攻从 EntityConfigSO.AttackInterval 读取实际 CD。
         /// 注意：不修改 SO 资产——只读 Config.CooldownTime 作为 fallback。
         /// </summary>
         public void OverrideSlotCooldown(int slotIndex, float cooldownTime)
@@ -107,7 +106,6 @@ namespace MiniGameTemplate.Entity
         /// </param>
         /// <param name="firstSlotInitialCD">Slot[0] 首发延迟（秒）。
         ///   >0 = Slot[0] 初始进入 Cooldown 状态等待此时间后首发。
-        ///   通常等于 OverrideSlotCooldown(0, x) 的同一个 x 值（如 attackInterval）。
         ///   不做内部 Clamp——调用者负责确保值合理。【CR-010】
         ///   ≤0 = 立即可用（无首发延迟）。</param>
         public void InitWithEquipment(SkillConfigSO[] equippedSkills, float staggerOffsetPerSlot = 0.5f,

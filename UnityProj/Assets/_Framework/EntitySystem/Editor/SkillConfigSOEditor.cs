@@ -70,28 +70,17 @@ namespace MiniGameTemplate.Entity.Editor
             {
                 EditorGUILayout.HelpBox(
                     "此技能标记为普攻（Slot[0]）。\n" +
-                    "• CooldownTime 运行时由 EntityConfigSO.AttackInterval 覆盖\n" +
+                    "• CooldownTime = 射击间隔（秒）\n" +
                     "• Buff 攻速修正将影响此技能的 CD 消耗速率\n" +
                     "• 建议 AimMode=FixedForward, TriggerMode=Auto",
                     MessageType.Info);
-
-                // CooldownTime 置灰（仅显示，运行时覆盖）
-                using (new EditorGUI.DisabledScope(true))
-                {
-                    EditorGUILayout.PropertyField(_cooldownTime,
-                        new GUIContent("CooldownTime (运行时覆盖)"));
-                }
             }
 
             EditorGUILayout.Space(4);
 
             // ── 时间轴 ──
             EditorGUILayout.LabelField("时间轴", EditorStyles.boldLabel);
-            if (!isNormal)
-            {
-                // 非普攻：CooldownTime 可编辑
-                EditorGUILayout.PropertyField(_cooldownTime);
-            }
+            EditorGUILayout.PropertyField(_cooldownTime);
             EditorGUILayout.PropertyField(_castTime);
             EditorGUILayout.PropertyField(_recoveryTime);
 

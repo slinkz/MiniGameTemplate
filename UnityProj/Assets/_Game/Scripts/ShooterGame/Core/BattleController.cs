@@ -114,6 +114,8 @@ namespace Game.ShooterGame
         [SerializeField] private DropTableSO _normalDropTable;
         [SerializeField] private DropTableSO _eliteDropTable;
         [SerializeField] private Material _pickupMaterial;
+        [Tooltip("基础拾取半径（磁吸被动会乘以 BuffConfig.PickupRadiusModifier 倍率）")]
+        [SerializeField] private float _basePickupRadius = 1.0f;
 
         private PickupSystem _pickupSystem;
         private ItemDropSystem _itemDropSystem;
@@ -183,7 +185,10 @@ namespace Game.ShooterGame
                 await System.Threading.Tasks.Task.Yield();
 
                 // 如果 FlowHandler 已经触发了 StartBattle()，则不重复初始化
-                if (_battleStartedByFlow) return;
+                if (_battleStartedByFlow)
+                {
+                    return;
+                }
 
                 // 直跑 Battle 场景：注入 DebugLauncher 配置（仅编辑器）
 #if UNITY_EDITOR
@@ -354,7 +359,7 @@ namespace Game.ShooterGame
 
             // 6f. V2 Sprint 2: 初始化道具系统
             _pickupSystem = new PickupSystem();
-            _pickupSystem.Init(_playerEntity, _baseEntity, _progressManager);
+            _pickupSystem.Init(_playerEntity, _baseEntity, _progressManager, _basePickupRadius);
 
             _itemDropSystem = new ItemDropSystem();
             _itemDropSystem.Init(_normalDropTable, _eliteDropTable, _pickupSystem);
@@ -1094,7 +1099,7 @@ namespace Game.ShooterGame
             // 3f. V2 Sprint 2: 重置道具系统
             _pickupSystem?.Clear();
             _itemDropSystem?.Reset();
-            _pickupSystem?.Init(_playerEntity, _baseEntity, _progressManager);
+            _pickupSystem?.Init(_playerEntity, _baseEntity, _progressManager, _basePickupRadius);
 
             // 4. 重新初始化底线检测器
             float effectiveBaseLineY = _currentLevel.BaseLineYOverride >= 0
@@ -1154,11 +1159,9 @@ namespace Game.ShooterGame
             for (int i = 0; i < equipCount && i + 1 < totalSlots; i++)
                 allSkills[i + 1] = equipped[i];
 
-            // 初始化 + 首发延迟 + 运行时 CD 覆盖
-            float attackInterval = _playerEntityConfig.AttackInterval;
+            // 初始化 + 首发延迟（普攻 CD 由 SkillConfigSO.CooldownTime 控制，不再覆盖）
             skillComp.InitWithEquipment(allSkills, staggerOffsetPerSlot: 0.5f,
-                                        firstSlotInitialCD: attackInterval);
-            skillComp.OverrideSlotCooldown(0, attackInterval);
+                                        firstSlotInitialCD: normalAttack.CooldownTime);
         }
 
         private void OnResumeFromPause()

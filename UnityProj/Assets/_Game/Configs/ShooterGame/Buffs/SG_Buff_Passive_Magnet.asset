@@ -25,5 +25,5 @@ MonoBehaviour:
   GrantsPierce: 0
   CritRateBonus: 0
   CritMultiplierOverride: 0
-  PickupRadiusModifier: 2
+  PickupRadiusModifier: 20
   VfxPrefab: {fileID: 0}

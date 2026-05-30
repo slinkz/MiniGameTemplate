@@ -38,6 +38,7 @@
 | 验收 V2 Sprint 4 | SG_V2_S4_ACCEPTANCE | 关卡平衡+伤害统计+星级（⬜ 待天命人验收） |
 | 验收 TDD-06 普攻升格 | TDD06_ACCEPTANCE_GUIDE | 普攻→技能系统迁移验收（✅ 通过 2026-05-25） |
 | 验收 TDD-07 退场生命周期 | TDD07_ACCEPTANCE_GUIDE | 退场生命周期验收（自动✅ + PlayMode 待天命人验收） |
+| **统一设备验收（SG-V2-DEVICE）** | **SG_V2_DEVICE_ACCEPTANCE** | **65 项统一验收手册 v2.0（整合全部 Sprint + TDD + AppFlow）** |
 | 执行 SG-P4 集成验收 | SG_P4_TASKLIST | 资产收口 + 波次编排 + 全链路验收 + 发布前检查 |
 | ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
@@ -167,3 +168,4 @@
 | SG_V2_S2_ACCEPTANCE | — | — | V2 Sprint 2 验收手册（⬜ 待验收） |
 | SG_V2_S3_ACCEPTANCE | — | — | V2 Sprint 3 验收手册（⬜ 待天命人验收） |
 | SG_V2_S4_ACCEPTANCE | — | — | V2 Sprint 4 验收手册（⬜ 待天命人验收） |
+| **SG_V2_DEVICE_ACCEPTANCE** | — | — | **V2 统一验收手册 v2.0（65 项，⬜ 待天命人验收）— 整合 S2~S5+TDD-06/07+碰撞+PIT-050+AppFlow** |

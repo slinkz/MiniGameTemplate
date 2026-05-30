@@ -107,18 +107,18 @@ namespace MiniGameTemplate.Entity
         [Min(0.05f)]
         public float AutoAimSearchInterval = 0.2f;
 
-        [Header("攻击（v2.4 新增）")]
-        [Tooltip("攻击间隔（秒）。运行时覆盖 NormalAttackSkill Slot[0] 的 CooldownTime。0 = 不攻击")]
+        [Header("射击参数")]
+        [Tooltip("射击间隔（秒）。EnemyShootComponent 的循环 CD。0 = 不攻击")]
         public float AttackInterval = 1f;
 
         [Tooltip("首次开火延迟（秒）。每只敌机独立计时，从 Spawn 时刻开始。V2 Sprint 1 新增。")]
         [Min(0f)]
         public float FirstAttackDelay = 1.0f;
 
-        [Tooltip("⚠ Legacy —— 以下字段已被 NormalAttackSkill.FireBulletsEffect.Pattern 取代")]
+        [Tooltip("射击弹幕配置。EnemyShootComponent 使用此字段；玩家走 NormalAttackSkill.FireBulletsEffect.Pattern")]
         public Danmaku.BulletPatternSO AttackBulletPattern;
 
-        [Tooltip("⚠ Legacy —— 已被 NormalAttackSkill.FireBulletsEffect.FireOffset 取代")]
+        [Tooltip("射击偏移。EnemyShootComponent 使用此字段；玩家走 NormalAttackSkill.FireBulletsEffect.FireOffset")]
         public Vector2 AttackFireOffset;
 
         [Header("V2 TDD-06: 普攻技能")]

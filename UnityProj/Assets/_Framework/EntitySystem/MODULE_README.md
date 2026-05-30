@@ -71,7 +71,7 @@ Scripts/
 │   ├── CollisionComponent.cs     — ICollisionTarget 桥接弹幕系统
 │   ├── ControlComponent.cs       — 玩家输入 → DecisionCommand
 │   ├── AIComponent.cs            — AI 策略 → DecisionCommand
-│   └── AttackComponent.cs        — 定时发射弹幕
+│   └── EnemyShootComponent.cs    — 敌机无条件射击（V2）
 ├── Decision/
 │   ├── IDecisionMaker.cs         — 统一决策接口
 │   ├── DecisionCommand.cs        — 决策输出结构体

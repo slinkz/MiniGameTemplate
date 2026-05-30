@@ -6,16 +6,16 @@ namespace MiniGameTemplate.Entity
     /// <summary>
     /// 敌机射击组件——V2 Sprint 1 新增。
     /// 
-    /// 与 AttackComponent 的区别：
+    /// 特点：
     /// - 不依赖 IDecisionMaker（敌机无条件射击）
     /// - 内置 FirstAttackDelay（每只敌机独立计时器，从 Spawn 时刻开始）
     /// - 固定向下射击（baseAngle = 270°）
-    /// - TickOrder = 155（在 AttackComponent=150 之后，避免冲突）
+    /// - TickOrder = 155
     /// 
     /// 数据来源（TDD S1.2）：
-    /// - _pattern = EntityConfigSO.AttackBulletPattern（复用已有字段）
-    /// - _cooldown = EntityConfigSO.AttackInterval（复用已有字段）
-    /// - _firstFireDelay = EntityConfigSO.FirstAttackDelay（V2 新增）
+    /// - _pattern = EntityConfigSO.AttackBulletPattern
+    /// - _cooldown = EntityConfigSO.AttackInterval
+    /// - _firstFireDelay = EntityConfigSO.FirstAttackDelay
     /// </summary>
     public sealed class EnemyShootComponent : IEntityComponent, ITickable
     {
@@ -25,7 +25,7 @@ namespace MiniGameTemplate.Entity
         public void SetActive(bool active) => IsActive = active;
 
         // ──────────────── ITickable ────────────────
-        public int TickOrder => 155; // 在 Attack(150) 之后
+        public int TickOrder => 155;
 
         // ──────────────── 配置 ────────────────
         private Entity _owner;

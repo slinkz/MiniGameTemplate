@@ -1,21 +1,20 @@
 using NUnit.Framework;
-using MiniGameTemplate.Entity;
 using MiniGameTemplate.Danmaku;
+using MiniGameTemplate.Entity;
 using UnityEngine;
 
 /// <summary>
-/// P1.7 测试：ControlComponent + AIComponent + AttackComponent + Decision 层
+/// P1.7 测试：ControlComponent + AIComponent + Decision 层
 /// 
 /// 验收条件：
 /// - AC-1: 编译通过
 /// - AC-2: 同 Entity 互斥挂载校验（Control 和 AI 不能同时存在——由 EntityPool 创建时校验）
 /// - AC-3: AI 条件-动作表（AIBehaviorSO）驱动行为切换
 /// - AC-4: IAIAction 有状态 Action（Patrol 多帧上下文保持）
-/// - AC-5: AttackComponent 定时发射弹幕（依赖 DecisionCommand.WantsAttack）
 /// - AC-6: ControlComponent 正确转化外部输入为 DecisionCommand
 /// </summary>
 [TestFixture]
-public class ControlAIAttackComponentTests
+public class ControlAIDecisionTests
 {
     private Entity _entity;
     private EntityConfigSO _config;
@@ -355,122 +354,6 @@ public class ControlAIAttackComponentTests
     }
 
     // ════════════════════════════════════════════════════════
-    // AttackComponent 测试
-    // ════════════════════════════════════════════════════════
-
-    [Test]
-    public void Attack_Init_IsActive()
-    {
-        var attack = new AttackComponent();
-        _entity.RegisterComponent(attack);
-        attack.Init(_entity);
-
-        Assert.IsTrue(attack.IsActive);
-        Assert.AreEqual(ComponentType.Attack, attack.Type);
-    }
-
-    [Test]
-    public void Attack_NoPattern_NoFire()
-    {
-        _config.AttackBulletPattern = null;
-        var attack = new AttackComponent();
-        _entity.RegisterComponent(attack);
-        attack.Init(_entity);
-
-        // Tick 不应 crash
-        attack.Tick(2f);
-        Assert.IsFalse(attack.HasAttackConfig);
-    }
-
-    [Test]
-    public void Attack_TimerAccumulates()
-    {
-        var pattern = ScriptableObject.CreateInstance<BulletPatternSO>();
-        _config.AttackBulletPattern = pattern;
-        _config.AttackInterval = 2f;
-
-        var attack = new AttackComponent();
-        _entity.RegisterComponent(attack);
-        attack.Init(_entity);
-
-        attack.Tick(0.5f);
-        Assert.AreEqual(0.5f, attack.Timer, 0.001f);
-
-        attack.Tick(0.5f);
-        Assert.AreEqual(1f, attack.Timer, 0.001f);
-
-        Object.DestroyImmediate(pattern);
-    }
-
-    [Test]
-    public void Attack_RequiresWantsAttack_ToFire()
-    {
-        // 无 DecisionMaker 时不发射（即使 CD 就绪）
-        var pattern = ScriptableObject.CreateInstance<BulletPatternSO>();
-        _config.AttackBulletPattern = pattern;
-        _config.AttackInterval = 0.5f;
-
-        var attack = new AttackComponent();
-        _entity.RegisterComponent(attack);
-        attack.Init(_entity);
-
-        // Tick 超过 interval，但无 DecisionMaker → 不发射（不 crash）
-        attack.Tick(1f);
-        // 没有 DanmakuSystem.Instance 也不会 crash
-        Assert.Pass("Attack without DecisionMaker does not crash");
-
-        Object.DestroyImmediate(pattern);
-    }
-
-    [Test]
-    public void Attack_WithControl_WantsAttack_CDReady_AttemptsFire()
-    {
-        // 有 ControlComponent + WantsAttack + CD 就绪 → 尝试发射
-        // DanmakuSystem.Instance 为 null 时会安全退出
-        var pattern = ScriptableObject.CreateInstance<BulletPatternSO>();
-        _config.AttackBulletPattern = pattern;
-        _config.AttackInterval = 0.5f;
-
-        var ctrl = new ControlComponent();
-        var attack = new AttackComponent();
-        _entity.RegisterComponent(ctrl);
-        _entity.RegisterComponent(attack);
-        ctrl.Init(_entity);
-        attack.Init(_entity);
-
-        ctrl.SetAttackInput(true);
-        ctrl.SetAimInput(Vector2.right);
-        ctrl.Tick(0.016f); // 产生 DecisionCommand
-
-        // CD 超过 interval
-        attack.Tick(0.6f);
-        // DanmakuSystem.Instance 为 null → 安全退出，不 crash
-        Assert.Pass("Attack with WantsAttack=true and CD ready does not crash (no DanmakuSystem)");
-
-        Object.DestroyImmediate(pattern);
-    }
-
-    [Test]
-    public void Attack_Reset_ClearsTimer()
-    {
-        var pattern = ScriptableObject.CreateInstance<BulletPatternSO>();
-        _config.AttackBulletPattern = pattern;
-        _config.AttackInterval = 1f;
-
-        var attack = new AttackComponent();
-        _entity.RegisterComponent(attack);
-        attack.Init(_entity);
-
-        attack.Tick(0.8f);
-        Assert.AreEqual(0.8f, attack.Timer, 0.001f);
-
-        attack.Reset();
-        Assert.AreEqual(0f, attack.Timer);
-
-        Object.DestroyImmediate(pattern);
-    }
-
-    // ════════════════════════════════════════════════════════
     // DecisionCommand 测试
     // ════════════════════════════════════════════════════════
 
@@ -506,31 +389,25 @@ public class ControlAIAttackComponentTests
     // ════════════════════════════════════════════════════════
 
     [Test]
-    public void MutualExclusion_BothRegistered_AttackUsesFirst()
+    public void MutualExclusion_BothRegistered_NoException()
     {
         // Phase 1 互斥校验在 EntityPool 创建时执行（配置层面）
-        // 如果运行时同时有两个（异常情况），AttackComponent 优先用 Control
+        // 运行时同时有两个 DecisionMaker 不应 crash
         var ctrl = new ControlComponent();
         var ai = new AIComponent();
-        var attack = new AttackComponent();
 
         _entity.RegisterComponent(ctrl);
         _entity.RegisterComponent(ai);
-        _entity.RegisterComponent(attack);
 
         ctrl.Init(_entity);
         ai.Init(_entity);
-        attack.Init(_entity);
 
         // Control 设置攻击
         ctrl.SetAttackInput(true);
         ctrl.SetAimInput(Vector2.right);
         ctrl.Tick(0.016f);
 
-        // Attack 检查 DecisionMaker 应该优先找到 Control
-        // 不 crash 即可
-        attack.Tick(2f);
-        Assert.Pass("AttackComponent handles dual DecisionMaker without crash");
+        Assert.Pass("Dual DecisionMaker registration does not crash");
     }
 
     // ════════════════════════════════════════════════════════
