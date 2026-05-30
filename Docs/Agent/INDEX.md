@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-26 23:05 | 文件总数：90
+> 最后更新：2026-05-30 22:55 | 文件总数：90
 
 ---
 
@@ -54,6 +54,8 @@
 | `EntitySystem/Scripts/Components/*.cs` | EC_TDD_05_COMPONENTS | 组件设计 |
 | `EntitySystem/Scripts/Collision/*.cs` | EC_TDD_02 §3.5 + EC_TDD_05 §4.5 | Entity 碰撞桥接 + IsCollidable/GetEffectiveRadius |
 | `DanmakuSystem/Scripts/Data/HitboxMath.cs` | OBB_TDD_INDEX | Hitbox 数学工具（含 SectorVsAABB） |
+| `EntitySystem/Scripts/View/EntityViewBridge.cs` | EC_TDD_06_CONFIG §P1.9 + EC_TDD_05 §View | View 层桥接（Debug View + 正式 View 双路径） |
+| `_Game/Scripts/View/SimpleEntityView.cs` | EC_TDD_06_CONFIG §P2.1 | IEntityView 实装：受击闪白 + Scale-to-Hitbox |
 | `EntitySystem/Scripts/Components/Skill*` | EC_TDD_05_COMPONENTS §4.8 + SG_V2_TDD_06 | 技能子系统（含普攻升格 AimMode） |
 | `EntitySystem/Scripts/Components/Buff*` | EC_TDD_05_COMPONENTS §4.10 | Buff 子系统 |
 | `EntitySystem/Scripts/Core/*.cs` | EC_TDD_02_CORE_ARCH | Entity/Pool/EventBus |
@@ -120,6 +122,9 @@
 | 主动技能/被动/Buff/DOT/道具 | SG_GDD_01~03 | 6 主动+4 被动+7 Buff+3 DOT+4 道具 |
 | 技能系统路线图 | SG_GDD_06 §优先级 | 5 Sprint ~67.5h 实施路线 |
 | EnemyShootComponent / InvincibilityModifier / DamageRedirectModifier | SG_V2_TDD_01 §S1.2~S1.3 | Sprint 1：敌机射击+无敌帧+伤害转发 |
+| PickupSystem 磁吸飞行 / IsAttracting | SG_V2_TDD_02 §S2.5 磁吸飞行行为 | 道具进入磁吸半径→加速飞向玩家→拾取 |
+| SimpleEntityView / IEntityView | EC_TDD_06 §P2.1 | 正式 View：受击闪白 + Scale-to-Hitbox + 池复用 |
+| AttackComponent（已退役） | EC_TDD_05 §4.9 | v2.8 删除，普攻统一走 SkillComponent Slot[0] |
 | SkillComponent / PickupSystem / DropTableSO / SkillUnlockManager | SG_V2_TDD_02 §S2.4~S2.7 | Sprint 2：技能槽+道具+掉落+解锁 |
 | PassiveComponent / BuffDamageModifier | SG_V2_TDD_03 §S3.2/S3.5 | Sprint 3：被动系统+Buff 伤害修正 |
 | BattleResultData / BattleResultCalculator / damageSourceTag | SG_V2_TDD_04 §S4.3~S4.4 | Sprint 4：战果+星级+伤害统计 |

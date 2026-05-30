@@ -1,9 +1,9 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint2-skill-equip-item
-last_verified: 2026-05-22
+last_verified: 2026-05-30
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_01_ENEMY_SHOOTING, SG_GDD_01_ACTIVE_SKILLS, SG_GDD_03_ITEMS_CONFIG]
-version: v1.5
+version: v1.6
 related_code: Assets/_Framework/EntitySystem/Components/Skill*, Assets/_Game/Scripts/ShooterGame/**
 ---
 
@@ -270,32 +270,33 @@ SortieBottomSheet
 **新增 `PickupSystem`**：
 
 ```
-PickupSystem（MonoBehaviour 或纯 C# 服务）
-├── List<PickupEntity> _activePickups  // 活跃道具列表
-├── Entity _playerEntity               // 玩家飞机引用
-├── float _pickupRadius                // → playerEntity.PickupRadius
+PickupSystem（纯 C# 服务，struct 数组零 GC）
+├── PickupInstance[MAX_PICKUPS] _pickups  // 固定数组
+├── int _activeCount                      // 活跃道具数
+├── Entity _playerEntity                  // 玩家飞机引用
+├── float _basePickupRadius               // 基础拾取半径
+├── const ATTRACT_BASE_SPEED = 3f         // 磁吸初始速度
+├── const ATTRACT_ACCEL = 12f             // 磁吸加速度
+├── const ATTRACT_MAX_SPEED = 20f         // 磁吸最大速度
+├── const COLLECT_DIST_SQR = 0.04f        // 拾取判定距离²
 ├── Tick(float dt):
-│   → for (int i = _activePickups.Count - 1; i >= 0; i--)
-│       var pickup = _activePickups[i]
-│       // 生命周期检查
-│       pickup.Lifetime -= dt
-│       if (pickup.Lifetime <= 0)
-│           DespawnPickup(pickup); continue
-│       // 距离检测
-│       float dist = Vector2.Distance(pickup.Position, _playerEntity.Position)
-│       if (dist < _playerEntity.PickupRadius)
-│           CollectPickup(pickup)
-│           DespawnPickup(pickup)
-├── CollectPickup(PickupEntity pickup):
-│   → switch (pickup.Config.Type):
-│       Buff → _playerEntity.BuffComponent.ApplyBuff(pickup.Config.BuffConfig)
-│       Repair → baseEntity.HealthComponent.Heal(pickup.Config.RepairAmount)
-│       Ammo → _playerEntity.BuffComponent.ApplyBuff(pickup.Config.AmmoBuffConfig)
-│       Coin → _progress.AddCoins(pickup.Config.CoinAmount)
-│   → 播放拾取 VFX + SFX
-│   → 发送通知条事件
+│   → effectiveRadius = _basePickupRadius × BuffComponent.PickupRadiusModifier
+│   → hasMagnet = (radiusMod > 1.01f)
+│   → for each active pickup (reverse iterate):
+│       ┌─ 磁吸飞行状态（IsAttracting=true）：
+│       │   → distSqr < COLLECT_DIST_SQR → CollectPickup + Remove
+│       │   → 加速飞向玩家：AttractSpeed += ACCEL×dt（cap MAX）
+│       │   → 归一化方向 × 步长更新 Position
+│       └─ 正常漂浮状态：
+│           → Position.y -= FloatSpeed × dt（向下漂浮）
+│           → RemainingTime 倒计时 → 超时/越底线 → Remove
+│           → distSqr < baseRadiusSqr → CollectPickup（普通拾取）
+│           → hasMagnet && distSqr < effectiveRadiusSqr → 进入磁吸状态
+├── CollectPickup(ref PickupInstance):
+│   → switch Type: Buff/Repair/Ammo/Coin → 对应效果
+│   → 播放 VFX + SFX + 通知条
 ├── SpawnPickup(Vector2 position, PickupConfigSO config):
-│   → 创建道具 Entity → 加入 _activePickups
+│   → 填充 _pickups[_activeCount++]
 ```
 
 **新增 `ItemDropSystem`**：
@@ -320,6 +321,13 @@ ItemDropSystem（敌机死亡时触发掉落）
 - **闪烁规格**：alpha 在 [0.3, 1.0] sin 波动；前 1s = 2Hz，后 1s = 4Hz（加速暗示即将消失）
 - **消失动效**：缩小 scale 1.0→0 + 淡出 alpha→0，持续 0.15s
 - 到达底线：直接消失（无缩小），不扣基地血
+
+**磁吸飞行行为**（v1.6 实装，2026-05-29）：
+- 触发条件：`BuffComponent.PickupRadiusModifier > 1.01f`（被动磁吸 Buff 激活时）
+- 进入磁吸：道具进入放大后的拾取半径 → `IsAttracting = true`
+- 飞行物理：初速 3 → 加速 12/s → 上限 20（加速度 EaseIn 效果，手感好）
+- 拾取判定：`distSqr < 0.04`（0.2 单位）→ 立即拾取
+- 设计意图：磁吸被动让道具"飞来"而非"扩大判定圈"，视觉反馈更强烈
 
 #### 验收方案
 
@@ -437,3 +445,5 @@ _创建于 2026-05-18 | Sprint 2 TDD v1.4_
 - v1.2（2026-05-18）：PK-R2 Unity 编辑器工具开发者回写（ET-003 解锁表 OnValidate）
 - v1.3（2026-05-18）：PK-R3 UI 设计师回写（UID-001 安全区适配+布局，UID-008 道具闪烁规格）
 - v1.4（2026-05-19）：PK-R4 技术文档工程师回写（DE-006 Buff 道具命名 AttackUp→Zephyr）
+- v1.5（2026-05-22）：S2.3 延后说明
+- v1.6（2026-05-30）：PickupSystem 实装磁吸飞行行为（IsAttracting 两阶段状态机 + 加速飞向玩家）

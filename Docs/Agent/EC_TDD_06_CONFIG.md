@@ -1,7 +1,7 @@
 ﻿---
 system: entity-component
 scope: config-planning
-last_verified: 2026-05-02
+last_verified: 2026-05-30
 depends_on: [EC_TDD_05_COMPONENTS]
 related_code: Assets/_Framework/EntitySystem/Config/EntityConfigSO.cs
 ---
@@ -31,14 +31,6 @@ public class EntityConfigSO : ScriptableObject
     [Header("组件列表")]
     [Tooltip("该 Entity 挂载的组件类型。EntityPool 根据此列表预创建组件。")]
     public ComponentType[] Components;                    // 枚举数组
-    // ── v2.5 填写说明（ET-002）──
-    // Inspector 中通过 EntityConfigSOEditor 渲染为 Checkbox Grid（非裸数组）。
-    // 关键规则：
-    //   - 勾选 "Skill" = 启用 AttackComponent（Phase 1 复用 Skill 槽位）
-    //     Inspector 标签显示为 "☑ Skill (Attack)"
-    //   - Control / AI 互斥：只能选其一，另一个自动灰化
-    //   - 依赖建议（Warning）：AI→建议搭配 Movement；Collision→建议搭配 Health
-    // Phase 3 SkillComponent 上线后标签改为 "Skill (Attack | Skill)"
 
     [Header("属性")]
     public int MaxHp = 100;
@@ -46,10 +38,26 @@ public class EntityConfigSO : ScriptableObject
     public float TurnSpeed = 360f;
     public float CollisionRadius = 0.5f;
 
-    [Header("攻击（v2.4 新增，GD-R4-003 / v2.6 修正 WF-003）")]
-    public float AttackInterval = 1f;                     // 攻击间隔（秒），0 = 不攻击
-    public BulletTypeSO AttackBulletType;                 // v2.6 修正（WF-003）：发射的弹幕类型（null = 不攻击）
+    [Header("碰撞体形状（v2.6 新增）")]
+    [Tooltip("碰撞体形状（Circle=圆形，Rect=轴对齐矩形）")]
+    public HitboxShape HitboxType = HitboxShape.Circle;
+    [Tooltip("矩形碰撞体半宽（仅 HitboxType=Rect 时有效）")]
+    [Min(0f)]
+    public float CollisionHalfWidth = 0.5f;
+    [Tooltip("矩形碰撞体半高（仅 HitboxType=Rect 时有效）")]
+    [Min(0f)]
+    public float CollisionHalfHeight = 0.5f;
+
+    [Header("攻击（v2.8 修订：AttackComponent 已退役）")]
+    public float AttackInterval = 1f;                     // 敌机攻击间隔（秒），0 = 不攻击
+    public float FirstAttackDelay = 1.0f;                 // 首次攻击延迟（s）
+    [Tooltip("射击弹幕配置。EnemyShootComponent 使用此字段；玩家走 NormalAttackSkill")]
+    public BulletPatternSO AttackBulletPattern;
     public Vector2 AttackFireOffset;                      // 发射点偏移（相对 Entity 位置）
+
+    [Header("V2 TDD-06: 普攻技能（v2.8 新增）")]
+    [Tooltip("此实体的普攻配置。运行时注入 SkillComponent Slot[0]。")]
+    public SkillConfigSO NormalAttackSkill;
 
     [Header("AI 行为（v2.4 新增，GD-R4-002）")]
     public AIBehaviorSO AIBehavior;                       // AI 条件-动作表配置（null = 无 AI）
@@ -66,11 +74,6 @@ public class EntityConfigSO : ScriptableObject
     public PoolDefinition HitEffect;                      // v2.4：受击特效（走 PoolManager，可选）（GD-R4-008）
     public PoolDefinition DeathEffect;                    // 死亡特效（走 PoolManager，可选）
     public float DeathDelay = 0.3f;                       // 死亡延迟（播完表现再回收）
-
-    [Header("受击反馈（Phase 2+ 扩展，暂不实现）")]
-    // public int HitStopFrames;                          // v2.4 预留（GD-R4-011）：顿帧
-    // public int IFrameCount;                            // 无敌帧
-    // public AnimationCurve KnockbackCurve;              // 击退曲线
 
     [Header("视觉表现")]
     public Color DebugColor = Color.red;                  // Phase 1 Debug View 的颜色

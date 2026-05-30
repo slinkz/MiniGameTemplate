@@ -1,7 +1,7 @@
 ---
 system: entity-component
 scope: so-entity-configs
-last_verified: 2026-05-21
+last_verified: 2026-05-30
 related_code: Assets/_Framework/EntitySystem/Scripts/Config/*.cs, Assets/_Framework/EntitySystem/Scripts/View/SpriteAnimDataSO.cs, Assets/_Framework/EntitySystem/Scripts/Components/PassiveComponent.cs
 ---
 
@@ -40,15 +40,21 @@ related_code: Assets/_Framework/EntitySystem/Scripts/Config/*.cs, Assets/_Framew
 | `CollisionLayer` | `int` | 0 | 碰撞层（0=全层） |
 | `ContactDamage` | `int` | 0 | 接触伤害（0=不造成） |
 | `ContactDamageInterval` | `float` | 0.5 | 接触伤害间隔（秒） |
+| **碰撞体形状（v2.6）** | | | |
+| `HitboxType` | `HitboxShape` | Circle | 碰撞体形状：Circle / Rect |
+| `CollisionHalfWidth` | `float` | 0.5 | 矩形半宽（Rect 时有效） [Min(0)] |
+| `CollisionHalfHeight` | `float` | 0.5 | 矩形半高（Rect 时有效） [Min(0)] |
 | **战斗** | | | |
 | `AttackPower` | `int` | 0 | 攻击力（0=用弹幕固定伤害） |
 | `CritRate` | `float` | 0 | 暴击率 [0,1] |
 | `CritDamageMultiplier` | `float` | 2.0 | 暴击倍率 [Min(1)] |
 | `AutoAimRadius` | `float` | 0 | 自动瞄准搜索半径（0=不启用） |
 | `AutoAimSearchInterval` | `float` | 0.2 | 搜索间隔 [Min(0.05)] |
-| `AttackInterval` | `float` | 1.0 | 攻击间隔（0=不攻击） |
-| `AttackBulletPattern` | `BulletPatternSO` | null | 攻击弹幕 |
+| `AttackInterval` | `float` | 1.0 | 敌机攻击间隔（0=不攻击） |
+| `FirstAttackDelay` | `float` | 1.0 | 敌机首次攻击延迟（秒） |
+| `AttackBulletPattern` | `BulletPatternSO` | null | 敌机射击弹幕（EnemyShootComponent 用） |
 | `AttackFireOffset` | `Vector2` | (0,0) | 发射偏移 |
+| `NormalAttackSkill` | `SkillConfigSO` | null | **v2.8 新增**：普攻技能（注入 SkillComponent Slot[0]） |
 | `SkillConfig` | `SkillConfigSO` | null | 技能配置（null=不启用） |
 | `AIBehavior` | `AIBehaviorSO` | null | AI 行为（null=不启用） |
 | **视觉** | | | |

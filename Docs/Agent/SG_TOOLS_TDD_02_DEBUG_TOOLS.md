@@ -567,6 +567,30 @@ namespace Game.ShooterGame.Editor
 
 ---
 
+## 7.5 EntityGizmoDrawer 矩形碰撞体可视化（v2.8 新增，2026-05-30）
+
+### 7.5.1 需求
+
+Entity 碰撞体新增 `HitboxShape.Rect` 类型后，Scene View 中的 Gizmo 需支持矩形 AABB 线框绘制，而非仅圆形。
+
+### 7.5.2 实现位置
+
+`Assets/_Framework/Editor/Entity/EntityGizmoDrawer.cs`（`[InitializeOnLoad]` 静态类，编辑器 Gizmo 回调）。
+
+**关键实现**：
+- 根据 `EntityConfigSO.HitboxType` 分支绘制：`Circle` → `Handles.DrawWireDisc()`；`Rect` → `Handles.DrawPolyLine(corners[])`
+- 矩形顶点数组 `_rectCorners` 缓存为 `static readonly Vector3[5]`，避免每帧每实体 GC 分配
+- `labelOffsetY` 根据碰撞体形状动态计算（圆=Radius+0.2f，矩形=HalfHeight+0.2f）
+
+### 7.5.3 性能考量
+
+| 项 | 优化前 | 优化后 |
+|---|--------|--------|
+| 矩形顶点分配 | 每帧每实体 `new Vector3[5]`（120B GC） | 静态数组填充，0 GC |
+| 圆形绘制 | 无变化 | 无变化 |
+
+---
+
 ## 8. 验收标准汇总
 
 | # | 工具 | 验收项 |
@@ -582,6 +606,7 @@ namespace Game.ShooterGame.Editor
 | 9 | BaseLineY Gizmo | Scene View 中显示红色横线 + Y 坐标标注 |
 | 10 | 战斗状态面板 | Play Mode 中实时显示所有 SO 值 + Entity 统计（敌方/友方/子弹分开） |
 | 11 | FairyGUI 校验 | P2 backlog——V1 不验收 |
+| 12 | Rect Gizmo | Scene View 中 HitboxType=Rect 的 Entity 显示矩形 AABB 线框（非圆圈），静态缓存 corners 零 GC |
 
 ---
 

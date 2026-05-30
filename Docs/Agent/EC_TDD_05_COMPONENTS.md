@@ -1,7 +1,7 @@
 ﻿---
 system: entity-component
 scope: components-detail
-last_verified: 2026-05-24
+last_verified: 2026-05-30
 depends_on: [EC_TDD_01_OVERVIEW, EC_TDD_02_CORE_ARCH]
 related_code: Assets/_Framework/EntitySystem/Components/*.cs
 ---
@@ -186,6 +186,7 @@ public void SetPosition(Vector2 pos)
 - OBB 碰撞体（Entity vs 障碍物）通过 `ObstaclePool.AddRect()` 注册，Entity vs 弹幕走 `TargetRegistry`
 - 动态注册策略：不是所有 Entity 都常驻 TargetRegistry
 - **v2.6 新增**：`EntityCollisionSolver.IsCollidable()` 兼容 Rect 形状（走 `HasValidCollisionSize`）
+- **v2.8 修正**（2026-05-29）：`CollisionComponent` 暴击判定从 `DamageContext.IsCritical`（来源暴击）改为读取**被命中实体自身**的 `CritRate + CritRateBonus`，修复了暴击始终为 false 的 bug
 
 ### 4.6 AutoAimComponent
 
@@ -323,31 +324,20 @@ public interface IAIAction
 
 **效果执行**：遍历 `_config.Effects[]`（`ISkillEffect`），传入 `SkillContext{Caster, CastPosition, AimDirection, DeltaTime, SkillConfig, CasterTransform, HasTarget, SourceTagId}`。
 
-### 4.9 AttackComponent（v2.4 → v2.6 更新）
+### 4.9 ~~AttackComponent~~（已退役 2026-05-29）
 
-> Phase 1 最小攻击组件——定时发射弹幕。与 SkillComponent **共存**（各占独立槽位）。
-
-**BC 引用**：BC-02.2（Tickable） | **TickOrder**：150（AutoAim=120 之后）
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| `Type` | `ComponentType.Attack` | **独立槽位**（不再复用 Skill） |
-| `_bulletPattern` | `BulletPatternSO` | 来自 `owner.ConfigSO.AttackBulletPattern` |
-| `_attackInterval` | `float` | 基础攻击间隔 |
-
-**Buff 攻速修正（P3.4 pull 模式）**：
-```csharp
-float effectiveInterval = _attackInterval;
-var buff = _owner.GetComponent(ComponentType.Buff) as BuffComponent;
-if (buff != null)
-    effectiveInterval *= buff.AttackIntervalModifier;
-```
-
-**发射决策链**：DecisionMaker.WantsAttack → CD就绪 → `DanmakuSystem.FireBullets(pattern, pos, angle, ownerId)`
-
-**瞄准优先级**：DecisionCommand.AimDirection > Entity.Rotation（普攻永远朝实体正前方，不跟随 AutoAim 目标——AutoAim 仅供 SkillComponent 使用）
-
-**近战攻击（GD-R4-009）**：统一走弹幕系统（射程≈0.5、速度=0、存活≈0.1s）。
+> ⚠️ **已删除**：AttackComponent 已于 v2.8 退役（commit `d2f9590`）。
+> 普攻功能统一由 **SkillComponent**（§4.8）承载——`EntityConfigSO.NormalAttackSkill` 注入 Slot[0]。
+> 敌机射击由独立的 **EnemyShootComponent**（§SG_V2_TDD_01）处理。
+>
+> **删除原因**：AttackComponent 与 SkillComponent 职责重叠，维护两套 CD/发射逻辑增加复杂度且无收益。
+> 迁移完成后 `ComponentType.Attack` 枚举值保留但不再创建实例。
+>
+> **历史参考**（v2.4~v2.6 设计）：
+> - 定时发射弹幕，TickOrder=150
+> - Buff 攻速修正（pull 模式：`AttackIntervalModifier`）
+> - 发射决策链：DecisionMaker.WantsAttack → CD就绪 → FireBullets
+> - 近战攻击走弹幕系统（射程≈0.5、速度=0、存活≈0.1s）
 
 ### 4.10 BuffComponent（V2 扩展 — Sprint 3）
 
