@@ -21,6 +21,9 @@ MonoBehaviour:
   MoveSpeed: 1.5
   TurnSpeed: 0
   CollisionRadius: 0.5
+  HitboxType: 0
+  CollisionHalfWidth: 0.5
+  CollisionHalfHeight: 0.5
   KnockbackDistance: 0
   KnockbackDuration: 0
   IFrameCount: 0
@@ -48,8 +51,8 @@ MonoBehaviour:
   NormalAttackSkill: {fileID: 0}
   SkillConfig: {fileID: 0}
   AIBehavior: {fileID: 11400000, guid: 7a9c477a00daf5c49919f6e6a1065feb, type: 2}
-  ViewPrefab: {fileID: 0}
-  ViewPoolDef: {fileID: 0}
+  ViewPrefab: {fileID: 1238631579474352107, guid: ac7de14412849c04fa5a80517bc67007, type: 3}
+  ViewPoolDef: {fileID: 11400000, guid: e7b2da53d90092a4faef77954b98dce7, type: 2}
   SpriteAnimData: {fileID: 0}
   DebugColor: {r: 0.8, g: 0.2, b: 0.1, a: 1}
   HitFlashDuration: 0.1

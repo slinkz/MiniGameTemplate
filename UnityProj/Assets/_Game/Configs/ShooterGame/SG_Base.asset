@@ -51,8 +51,8 @@ MonoBehaviour:
   NormalAttackSkill: {fileID: 0}
   SkillConfig: {fileID: 0}
   AIBehavior: {fileID: 0}
-  ViewPrefab: {fileID: 0}
-  ViewPoolDef: {fileID: 0}
+  ViewPrefab: {fileID: 4659591278635193507, guid: 555d4455cf8984b4fa8626b8a6c74eab, type: 3}
+  ViewPoolDef: {fileID: 11400000, guid: 4cc70f2c41fa98943bf45a4c196260b6, type: 2}
   SpriteAnimData: {fileID: 0}
   DebugColor: {r: 0.2, g: 1, b: 0.4, a: 1}
   HitFlashDuration: 0.1

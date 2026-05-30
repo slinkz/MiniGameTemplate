@@ -423,7 +423,7 @@ namespace Game.ShooterGame
             _baseEntity = mgr.Spawn(
                 _baseEntityConfig,
                 new Vector2(0, _baseLineY),
-                0f);
+                90f); // 90° 经 ViewBridge -90 偏移后视觉 Z=0°，横条保持水平（基地无射击，此值仅影响视觉）
             // Camp 由 EntityConfigSO.Camp 自动设置，SG_Base 配置为 Player 阵营
 
             var health = _baseEntity.GetComponent(ComponentType.Health) as HealthComponent;
@@ -441,7 +441,7 @@ namespace Game.ShooterGame
             _playerEntity = mgr.Spawn(
                 _playerEntityConfig,
                 new Vector2(0, -5f),
-                270f); // 朝上（竖版飞机默认朝上）
+                90f); // 极坐标 90°=朝上（射击方向+视觉方向）
             // Camp 由 EntityConfigSO.Camp 自动设置，SG_Player 配置为 Player 阵营
 
             // GDD v1.6: 全自动射击——Spawn 后立即设置 ControlComponent（不等 InputBridge.Init，

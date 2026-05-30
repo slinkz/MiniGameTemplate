@@ -108,15 +108,33 @@ namespace MiniGameTemplate.Entity
             {
                 // Debug View：设置颜色和初始 HP 文本
                 if (_cachedSRs[idx] != null)
+                {
                     _cachedSRs[idx].color = config.DebugColor;
+
+                    // 矩形碰撞体：拉伸 Sprite 匹配实际受击面积
+                    if (config.HitboxType == Danmaku.HitboxShape.Rect)
+                    {
+                        float scaleX = config.CollisionHalfWidth * 2f;
+                        float scaleY = config.CollisionHalfHeight * 2f;
+                        _cachedSRs[idx].transform.localScale = new Vector3(scaleX, scaleY, 1f);
+                    }
+                }
 
                 if (_cachedTMs[idx] != null)
                 {
-                    var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
-                    if (health != null)
-                        _cachedTMs[idx].text = health.CurrentHp + "/" + health.MaxHp;
+                    // 矩形碰撞体（如基地）已有 FairyGUI HUD 血条，隐藏 Debug HP 文本
+                    if (config.HitboxType == Danmaku.HitboxShape.Rect)
+                    {
+                        _cachedTMs[idx].gameObject.SetActive(false);
+                    }
                     else
-                        _cachedTMs[idx].text = config.DisplayName;
+                    {
+                        var health = entity.GetComponent(ComponentType.Health) as HealthComponent;
+                        if (health != null)
+                            _cachedTMs[idx].text = health.CurrentHp + "/" + health.MaxHp;
+                        else
+                            _cachedTMs[idx].text = config.DisplayName;
+                    }
                 }
             }
         }
@@ -144,8 +162,9 @@ namespace MiniGameTemplate.Entity
                 }
 
                 // 同步位置和朝向
+                // Sprite 约定头朝上（Y+），极坐标 0°=右 → 视觉偏移 -90° 使朝向一致
                 go.transform.position = new Vector3(entity.Position.x, entity.Position.y, 0f);
-                go.transform.rotation = Quaternion.Euler(0f, 0f, entity.Rotation);
+                go.transform.rotation = Quaternion.Euler(0f, 0f, entity.Rotation - 90f);
 
                 if (_isOfficialView[i])
                 {
@@ -236,6 +255,9 @@ namespace MiniGameTemplate.Entity
                     if (_entityViews[i] != null)
                         _entityViews[i].OnViewReset();
 
+                    // Debug View 池复用重置：恢复 Sprite Scale + TextMesh 激活
+                    ResetDebugViewSlot(i);
+
                     // 归还 GO 到池
                     PoolDefinition pool = config.ViewPrefab != null
                         ? config.ViewPoolDef
@@ -274,9 +296,13 @@ namespace MiniGameTemplate.Entity
         {
             for (int i = 0; i < _activeCount; i++)
             {
-                // 通知 IEntityView 重置
-                if (_entityViews[i] != null)
+                // 通知 IEntityView 重置（接口引用需转为 Object 判空，防止场景卸载后访问已销毁对象）
+                var view = _entityViews[i] as Object;
+                if (view != null)
                     _entityViews[i].OnViewReset();
+
+                // Debug View 池复用重置
+                ResetDebugViewSlot(i);
 
                 if (_viewGOs[i] != null)
                 {
@@ -294,6 +320,18 @@ namespace MiniGameTemplate.Entity
                 _cachedTMs[i] = null;
             }
             _activeCount = 0;
+        }
+
+        /// <summary>
+        /// 重置 Debug View 槽位状态（池复用时恢复 Sprite Scale + TextMesh 激活）。
+        /// </summary>
+        private void ResetDebugViewSlot(int i)
+        {
+            if (_isOfficialView[i]) return;
+            if (_cachedSRs[i] != null)
+                _cachedSRs[i].transform.localScale = Vector3.one;
+            if (_cachedTMs[i] != null)
+                _cachedTMs[i].gameObject.SetActive(true);
         }
 
         // ──────────── 公开查询 ────────────
