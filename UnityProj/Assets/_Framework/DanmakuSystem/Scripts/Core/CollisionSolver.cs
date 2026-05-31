@@ -209,7 +209,7 @@ namespace MiniGameTemplate.Danmaku
 
                     // 如果所有冷却都清除了，移除 FLAG
                     if (c.PierceHitMask == 0)
-                        c.Flags &= unchecked((byte)~BulletCore.FLAG_PIERCE_COOLDOWN);
+                        c.Flags &= unchecked((ushort)~BulletCore.FLAG_PIERCE_COOLDOWN);
                 }
             }
         }
@@ -570,6 +570,14 @@ namespace MiniGameTemplate.Danmaku
                     break;
                 default:
                     return;
+            }
+
+            // Pierce Override：被动穿透 Buff（PA-01）对 Target 碰撞的 Die 覆写为 Pierce
+            if (response == CollisionResponse.Die
+                && target == CollisionTarget.Target
+                && (core.Flags & BulletCore.FLAG_PIERCE_OVERRIDE) != 0)
+            {
+                response = CollisionResponse.Pierce;
             }
 
             switch (response)

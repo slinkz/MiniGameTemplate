@@ -87,9 +87,11 @@ namespace MiniGameTemplate.Danmaku
         /// 调度单个弹幕（无 PatternGroup，直接发射含 Burst）。
         /// ownerEntityId = 发射者 Entity ID（0=无 Owner）。
         /// countOverride = Buff 修正后的弹丸数，null=使用 Pattern.Count【CR-005】。
+        /// pierceOverride = true 时弹丸标记 FLAG_PIERCE_OVERRIDE（PA-01 被动穿透）。
         /// </summary>
         public void ScheduleSingle(BulletPatternSO pattern, Vector2 origin, float baseAngle,
-            uint ownerEntityId = 0, int sourceTag = 0, int? countOverride = null)
+            uint ownerEntityId = 0, int sourceTag = 0, int? countOverride = null,
+            bool pierceOverride = false)
         {
             if (pattern == null) return;
 
@@ -115,6 +117,7 @@ namespace MiniGameTemplate.Danmaku
                 task.OwnerEntityId = ownerEntityId;
                 task.SourceTag = sourceTag;
                 task.CountOverride = countOverride; // 【CR-005】
+                task.PierceOverride = pierceOverride;
                 _activeTasks++;
                 _totalScheduled++;
                 if (_activeTasks > _peakTasks) _peakTasks = _activeTasks;
@@ -137,7 +140,8 @@ namespace MiniGameTemplate.Danmaku
 
                 // 到期——执行发射
                 BulletSpawner.Fire(task.Pattern, task.Origin, task.Angle, world, registry,
-                    difficulty, trailPool, task.OwnerEntityId, task.SourceTag, task.CountOverride);
+                    difficulty, trailPool, task.OwnerEntityId, task.SourceTag, task.CountOverride,
+                    task.PierceOverride);
 
                 // 任务完成，释放槽位
                 task.Active = false;
@@ -183,6 +187,8 @@ namespace MiniGameTemplate.Danmaku
             public int SourceTag;
             /// <summary>Buff 修正后的弹丸数，null=使用 Pattern.Count【CR-005】</summary>
             public int? CountOverride;
+            /// <summary>PA-01 被动穿透覆盖</summary>
+            public bool PierceOverride;
         }
     }
 }

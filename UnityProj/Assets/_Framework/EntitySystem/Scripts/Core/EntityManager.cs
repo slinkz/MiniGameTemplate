@@ -182,6 +182,21 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
+        /// 通过 EntityId 值线性查找活跃 Entity。
+        /// O(N) 线性扫描，Entity 数量≤256 时开销可接受。
+        /// 返回 null = 未找到（Entity 已销毁或 ID 无效）。
+        /// </summary>
+        public Entity FindEntityById(uint entityIdValue)
+        {
+            for (int i = 0; i < _activeEntities.Count; i++)
+            {
+                if (_activeEntities[i].Id.Value == entityIdValue)
+                    return _activeEntities[i];
+            }
+            return null;
+        }
+
+        /// <summary>
         /// 按半径搜索指定阵营的 Entity（零 GC，使用调用方预分配 buffer）。
         /// 线性扫描 O(N)，20 Entity 下 &lt; 0.01ms。
         /// </summary>

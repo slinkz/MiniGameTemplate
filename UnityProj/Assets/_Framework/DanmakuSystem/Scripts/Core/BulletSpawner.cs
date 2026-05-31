@@ -15,6 +15,7 @@ namespace MiniGameTemplate.Danmaku
         /// PatternScheduler 的 Burst 连射通过多次调用本方法实现。
         /// ownerEntityId = 发射者 Entity ID（0=无 Owner）。
         /// countOverride = Buff 修正后的弹丸数（null=使用 Pattern.Count）【CR-005】。
+        /// pierceOverride = true 时标记 FLAG_PIERCE_OVERRIDE（PA-01 被动穿透，由调用者预计算）。
         /// </summary>
         internal static void Fire(
             BulletPatternSO pattern,
@@ -26,7 +27,8 @@ namespace MiniGameTemplate.Danmaku
             TrailPool trailPool = null,
             uint ownerEntityId = 0,
             int sourceTag = 0,
-            int? countOverride = null)
+            int? countOverride = null,
+            bool pierceOverride = false)
         {
             var type = pattern.BulletType;
             if (type == null) return;
@@ -87,6 +89,8 @@ namespace MiniGameTemplate.Danmaku
                     core.Flags |= BulletCore.FLAG_HEAVY_TRAIL;
                 if (type.ChildPattern != null)
                     core.Flags |= BulletCore.FLAG_HAS_CHILD;
+                if (pierceOverride)
+                    core.Flags |= BulletCore.FLAG_PIERCE_OVERRIDE;
 
                 // 写入 BulletTrail（冷数据）
                 ref var trail = ref world.Trails[slot];
@@ -152,5 +156,6 @@ namespace MiniGameTemplate.Danmaku
             if (pattern.FireSFX != null)
                 AudioManager.Instance?.PlaySFX(pattern.FireSFX);
         }
+
     }
 }

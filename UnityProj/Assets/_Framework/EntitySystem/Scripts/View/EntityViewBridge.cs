@@ -145,8 +145,6 @@ namespace MiniGameTemplate.Entity
         /// </summary>
         public void SyncAll(EntityManager manager)
         {
-            var activeEntities = manager.ActiveEntities;
-
             for (int i = 0; i < _activeCount; i++)
             {
                 var go = _viewGOs[i];
@@ -155,7 +153,7 @@ namespace MiniGameTemplate.Entity
                 uint entityId = _viewEntityIds[i];
 
                 // 从 EntityManager 查 Entity 位置
-                Entity entity = FindEntityById(activeEntities, entityId);
+                Entity entity = manager.FindEntityById(entityId);
                 if (entity == null || !entity.IsAlive)
                 {
                     continue;
@@ -352,18 +350,5 @@ namespace MiniGameTemplate.Entity
             return null;
         }
 
-        // ──────────── 内部工具 ────────────
-
-        /// <summary>线性查找 Entity（N≤256，可接受）</summary>
-        private static Entity FindEntityById(System.Collections.Generic.IReadOnlyList<Entity> entities, uint id)
-        {
-            int count = entities.Count;
-            for (int i = 0; i < count; i++)
-            {
-                if (entities[i].Id.Value == id)
-                    return entities[i];
-            }
-            return null;
-        }
     }
 }

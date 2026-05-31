@@ -113,11 +113,14 @@ namespace MiniGameTemplate.Danmaku
         /// 发射单个弹幕。ownerEntityId = 发射者 Entity ID（0=无 Owner）。
         /// sourceTag = 伤害来源标记（0=基础攻击）。
         /// countOverride = Buff 修正后的弹丸数，null=使用 Pattern.Count【CR-005】。
+        /// pierceOverride = true 时弹丸标记 FLAG_PIERCE_OVERRIDE（PA-01 被动穿透）。
         /// </summary>
         public void FireBullets(BulletPatternSO pattern, Vector2 origin, float baseAngle,
-            uint ownerEntityId = 0, int sourceTag = 0, int? countOverride = null)
+            uint ownerEntityId = 0, int sourceTag = 0, int? countOverride = null,
+            bool pierceOverride = false)
         {
-            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId, sourceTag, countOverride);
+            _scheduler.ScheduleSingle(pattern, origin, baseAngle, ownerEntityId, sourceTag,
+                countOverride, pierceOverride);
         }
 
         /// <summary>

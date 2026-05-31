@@ -354,13 +354,7 @@ namespace MiniGameTemplate.Entity
 
         private static Entity FindEntityById(EntityManager mgr, uint id)
         {
-            var entities = mgr.ActiveEntities;
-            for (int i = 0; i < entities.Count; i++)
-            {
-                if (entities[i].Id.Value == id)
-                    return entities[i];
-            }
-            return null;
+            return mgr.FindEntityById(id);
         }
 
         // ──────────── 内部状态结构 ────────────

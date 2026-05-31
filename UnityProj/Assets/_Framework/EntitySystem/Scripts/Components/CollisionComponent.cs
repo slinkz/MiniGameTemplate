@@ -234,20 +234,12 @@ namespace MiniGameTemplate.Entity
         // ──────────────── 内部工具 ────────────────
 
         /// <summary>
-        /// 通过 EntityId 值查找活跃 Entity（线性扫描，碰撞回调频率下可接受）。
+        /// 通过 EntityId 值查找活跃 Entity（委托 EntityManager.FindEntityById）。
         /// </summary>
         private static Entity FindEntityById(uint entityIdValue)
         {
             var mgr = EntityManagerAccessor.Instance;
-            if (mgr == null) return null;
-
-            var entities = mgr.ActiveEntities;
-            for (int i = 0, count = entities.Count; i < count; i++)
-            {
-                if (entities[i].Id.Value == entityIdValue)
-                    return entities[i];
-            }
-            return null;
+            return mgr?.FindEntityById(entityIdValue);
         }
     }
 }

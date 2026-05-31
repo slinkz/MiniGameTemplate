@@ -42,7 +42,11 @@ namespace MiniGameTemplate.Entity
                 countOverride = Mathf.Max(1, Mathf.RoundToInt(baseCount * buffComp.BulletCountModifier));
             }
 
-            ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value, ctx.SourceTagId, countOverride);
+            // PA-01 被动穿透：由调用者预计算，避免 DanmakuSystem 反向依赖 EntitySystem
+            bool pierceOverride = buffComp != null && buffComp.HasActivePierce;
+
+            ds.FireBullets(Pattern, pos, angle, ctx.Caster.Id.Value, ctx.SourceTagId,
+                countOverride, pierceOverride);
             return true;
         }
     }
