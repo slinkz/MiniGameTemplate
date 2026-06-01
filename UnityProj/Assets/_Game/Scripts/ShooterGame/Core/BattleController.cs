@@ -518,13 +518,14 @@ namespace Game.ShooterGame
 
         /// <summary>
         /// EntityManager.OnSpawned 回调——自动为所有新生成的 Entity 注册 BuffDamageModifier。
-        /// V2 Sprint 4: 同时订阅 Enemy OnDamaged 用于伤害统计。
+        /// V2 Sprint 4: 同时订阅 Enemy OnDamaged 用于伤害统计 + 飘字。
         /// </summary>
         private void OnEntitySpawnedRegisterBuff(EntityClass entity, EntityConfigSO config)
         {
             RegisterBuffDamageModifier(entity);
 
-            // Sprint 4: 订阅敌机受伤事件 → damageStats 累加
+            // Sprint 4: 订阅敌机受伤事件 → damageStats 累加 + 飘字
+            // 使用方法组（零 GC）：通过 EventBus.Owner 反查 entity
             if (entity.Camp == EnumCamp.Enemy)
             {
                 entity.EventBus.Subscribe<OnDamaged>(OnEnemyDamaged);
@@ -532,13 +533,26 @@ namespace Game.ShooterGame
         }
 
         /// <summary>
-        /// Sprint 4: 敌机受伤回调——累加 damageStats。
+        /// Sprint 4: 敌机受伤回调——累加 damageStats + 飘字。
         /// 只在战斗进行中（未冻结）时累加。
+        /// 零 GC：方法组订阅 + evt.TargetPosition 代替闭包捕获 entity。
         /// </summary>
+        private static readonly Color DOT_DAMAGE_COLOR = new Color(0.6f, 0.2f, 1f); // 紫色
+
         private void OnEnemyDamaged(OnDamaged evt)
         {
-            if (_damageStatsFrozen || _damageStats == null) return;
             if (evt.Damage <= 0) return;
+
+            // DOT 飘字（SourceId >= 100）：走框架层 TextMesh 对象池，紫色区分
+            // 普攻飘字已由 EntityHitReactionHandler.OnHit → SpawnDamageNumber 处理，此处不重复
+            if (evt.SourceId >= 100 && _entityBootstrap != null)
+            {
+                _entityBootstrap.HitReactionHandler.SpawnDamageNumber(
+                    evt.TargetPosition, evt.Damage, false, DOT_DAMAGE_COLOR);
+            }
+
+            // 伤害统计
+            if (_damageStatsFrozen || _damageStats == null) return;
 
             int key = evt.SourceId;
             if (_damageStats.TryGetValue(key, out int current))

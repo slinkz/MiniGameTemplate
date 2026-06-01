@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：36 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-051）
+> **当前条目数**：37 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-052）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -447,13 +447,12 @@
 ## PIT-051: 被替代系统未物理删除，旧字段隐性覆盖新系统 `[经典]`
 - **分类**: CL-9 架构一致性 / CL-1 跨文件引用完整性
 - **日期**: 2026-05-29
-- **现象**: 策划改 `SK_NormalAttack.CooldownTime` 不影响攻速——实际攻速由 `EntityConfigSO.AttackInterval` 通过 `OverrideSlotCooldown` 控制，但该关系在 Inspector 中不可见
-- **根因**: `AttackComponent` 被标 `[Obsolete]` 但未物理删除，配置字段 `AttackInterval` 语义不清——看起来是废弃字段，实际仍参与运行时逻辑。策划不知道该改哪个值
-- **修复**（最终方案 — 模板+实例覆盖）:
-  1. 明确设计：`SkillConfigSO.CooldownTime` = 技能默认 CD（模板），`EntityConfigSO.AttackInterval` = 角色级射速覆盖（实例）
-  2. Inspector 显式展示 `NormalAttackSkill` 引用 + HelpBox 提示覆盖关系
-  3. `BattleController.InitializeSkills()` 中用 `OverrideSlotCooldown(0, AttackInterval)` 正式生效
-  4. 彻底删除 `AttackComponent.cs` + `ComponentType.Attack` 枚举值，消除"废弃"歧义
+- **现象**: 普攻速度不受 `SK_NormalAttack.CooldownTime` 控制，改了不生效。实际攻速由废弃字段 `EntityConfigSO.AttackInterval` 通过 `OverrideSlotCooldown` 隐性覆盖
+- **根因**: `AttackComponent` 被标 `[Obsolete]` 但未物理删除，其配置字段 `AttackInterval` 仍保留在 `EntityConfigSO` 中。`BattleController` 仍在读取该字段并覆盖新系统的 CD 值。`[Obsolete]` 标记只是 warning，不阻止编译和运行——旧系统以"看不见的方式"继续参与运行时逻辑
+- **修复**: 
+  1. 删除 `BattleController` 中的 `OverrideSlotCooldown(0, attackInterval)` 调用
+  2. 将 `SK_NormalAttack.CooldownTime` 对齐为实际攻速值
+  3. 后续应彻底删除 `AttackComponent.cs` + `EntityConfigSO.AttackInterval` 字段
 - **验证方法**:
   1. 重构替代系统时，对被替代系统的**每个公开字段**执行 Find All References
   2. 不只看类引用——**字段引用**更隐蔽（数据流 > 调用链）
@@ -461,6 +460,44 @@
   4. 验收时确认新系统的配置字段是唯一生效源（改它就变、改别的不变）
 - **严重度**: 🔴 隐性逻辑覆盖，策划改配置不生效
 - **标记 [经典] 原因**: "先标 Obsolete 以后再删"是最常见的技术债借口。编译不报错 = 旧代码仍在执行。AI 重构时倾向于"保守保留"，但保留 = 定时炸弹
+
+---
+
+## PIT-052: 改数据模型未同步自定义 Editor——序列化静默错位 `[经典]`
+- **分类**: CL-11 自定义 Editor 同步检查 / 编辑器代码
+- **日期**: 2026-06-01
+- **现象**: Inspector 里 Buff 勾选框已勾选，但运行时 Entity 没有 BuffComponent。电弧 DOT 无法生效
+- **根因**: `EntityConfigSOEditor.DrawComponentCheckboxGrid()` 中 `enumValueIndex = (int)type` 混淆了 Unity `SerializedProperty.enumValueIndex`（显示列表位置索引）和枚举的 int 值。`ComponentType` 删除了 `Attack = 9`（枚举跳号），导致 `Buff=10` 的真实 `enumValueIndex` 是 9，但代码写入了 10 → Unity 底层将其映射为 `intValue=11`（EnemyShoot）。读取时也用 `(ComponentType)enumValueIndex` 做了反向错误映射 → Inspector 显示自洽（人眼看到的一切"正确"），但磁盘数据错位
+- **通用教训（比枚举更重要）**:
+  - **任何有 `[CustomEditor]` 的类，改了字段/枚举/序列化结构，就必须同步检查并更新 Editor 代码**
+  - 不只枚举——增删字段、改字段类型、重命名字段、调整数组长度假设，都会导致 Editor 代码与数据模型脱节
+  - grep `[CustomEditor(typeof(你改的类))]` 是必做的第一步
+- **修复**: 
+  1. 读取改用 `intValue` + `Enum.IsDefined` 安全转换
+  2. 写入构建 `enum int → enumValueIndex` 查表映射，确保写入正确索引
+  3. `HasComponent()` 也改用 `intValue` 判断
+- **验证方法**:
+  1. 改了数据模型后，grep `[CustomEditor(typeof(改动类))]` 找关联 Editor
+  2. 检查 Editor 中 `FindProperty("字段名")`、绘制逻辑、枚举映射是否仍正确
+  3. 用 SerializedObject 脚本验证磁盘数据是否匹配预期（Inspector 显示正确 ≠ 数据正确）
+  4. 自定义 Editor 的"读写映射自洽"是最隐蔽的 bug 类型——必须跳出 Inspector 用代码验证
+- **严重度**: 🔴 数据序列化静默错误，运行时功能缺失
+- **标记 [经典] 原因**: 这不只是枚举问题——任何有自定义 Editor 的类，只要数据模型变了而 Editor 没跟着变，就可能产生"Inspector 看着对但数据错"的静默 bug。枚举跳号只是最典型的触发场景。通用规则：**改了 Model，必查 Editor**
+
+---
+
+## PIT-053: FairyGUI 飘字在战斗中比 TextMesh 飘字小一个量级 `[经典]`
+- **分类**: CL-6 渲染管线 / §14 伤害飘字
+- **日期**: 2026-06-01
+- **现象**: 电弧 DOT 伤害飘字（紫色）在画面上比普攻飘字（黄色）小得多，几乎看不清
+- **根因**: 项目中同时存在两套飘字系统——框架层 `EntityHitReactionHandler.SpawnDamageNumber()` 用 TextMesh（世界空间，fontSize=48，有弹性缩放动画），而 `BattleHUDController.ShowFloatingText()` 用 FairyGUI GTextField（UI 空间，fontSize=18，无缩放）。TextMesh 在世界空间渲染跟随相机缩放，FairyGUI 在 UI 空间字号固定→视觉大小差一个量级
+- **通用教训**：
+  - **伤害飘字必须用世界空间渲染**（TextMesh/3D Text），不要用 UI 框架（FairyGUI/UGUI）
+  - UI 空间字号固定，不跟相机缩放，在战场上天然比世界空间文字小
+  - 新增飘字前先查框架是否已有实现，禁止重复造轮子
+- **修复**: 删除 FairyGUI 飘字系统，统一走 `EntityHitReactionHandler` 的 TextMesh 对象池，DOT 通过颜色参数区分
+- **严重度**: 🟡 视觉效果不一致，非崩溃但影响验收
+- **标记 [经典] 原因**: UI 空间 vs 世界空间是永恒的坑——任何需要跟战场实体对齐的视觉效果，都不应该在 UI 空间做
 
 ---
 

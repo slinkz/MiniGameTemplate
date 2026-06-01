@@ -70,7 +70,13 @@ namespace MiniGameTemplate.Entity
         // ──────────────── 事件总线 ────────────────
 
         /// <summary>Entity 本地事件总线（组件间解耦通信）</summary>
-        public EntityEventBus EventBus { get; } = new EntityEventBus();
+        public EntityEventBus EventBus { get; }
+
+        // Entity 构造：设置 EventBus.Owner 反向引用（零 GC 订阅者反查）
+        public Entity()
+        {
+            EventBus = new EntityEventBus { Owner = this };
+        }
 
         // ──────────────── 池化管理 ────────────────
 

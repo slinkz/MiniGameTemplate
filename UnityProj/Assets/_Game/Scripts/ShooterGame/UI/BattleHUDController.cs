@@ -1,30 +1,24 @@
 using System.Threading.Tasks;
 using UnityEngine;
 using FairyGUI;
-using MiniGameTemplate.Battle;
 using MiniGameTemplate.Data;
 using MiniGameTemplate.UI;
 
 namespace Game.ShooterGame.UI
 {
     /// <summary>
-    /// BattleHUD Controller——血条 + 波次指示 + 暂停按钮 + 飘字 + 受伤红闪。
+    /// BattleHUD Controller——血条 + 波次指示 + 暂停按钮 + 受伤红闪。
     /// TDD_04 §4
-    /// TDD-07 B4：实现 IBattleCleanup（退场时回收飘字）。
     /// </summary>
-    public class BattleHUDController : MonoBehaviour, IBattleHUDController, IBattleCleanup
+    public class BattleHUDController : MonoBehaviour, IBattleHUDController
     {
         private const string FGUI_PKG = "SG_Battle";
         private const string FGUI_BATTLE_HUD = "BattleHUD";
-        private const string FGUI_FLOATING_TEXT = "FloatingText";
 
         [Header("SO 数据源")]
         [SerializeField] private FloatVariable _baseHP;
         [SerializeField] private IntVariable _currentWaveIndex;
         [SerializeField] private IntVariable _totalWaveCount;
-
-        [Header("TDD-07: 退场事件通道")]
-        [SerializeField] private BattleLifecycleEvent _onBattleEnd;
 
         [Header("血条颜色")]
         [SerializeField] private Color _hpGreen = new Color(0.3f, 0.85f, 0.3f);
@@ -45,16 +39,10 @@ namespace Game.ShooterGame.UI
         private const float PREDAMAGE_DELAY = 0.3f;
         private float _predamageTimer;
 
-        // 飘字池
-        private const int MAX_FLOATING_TEXTS = 8;
-        private readonly GComponent[] _floatingTexts = new GComponent[MAX_FLOATING_TEXTS];
-        private int _floatingTextHead;
-
 #if UNITY_EDITOR
         [Header("Debug (Editor Only)")]
         public float Debug_DisplayHP;
         public float Debug_TargetHP;
-        public int Debug_ActiveFloatingTextCount;
 #endif
 
         // ── IBattleHUDController 实现 ──
@@ -90,7 +78,6 @@ namespace Game.ShooterGame.UI
             UpdateHPBarColor(_targetHP);
             UpdateHPText(_targetHP);
             UpdateWaveText();
-            RecycleAllFloatingTexts();
         }
 
         // ── 生命周期 ──
@@ -100,10 +87,6 @@ namespace Game.ShooterGame.UI
             _baseHP.OnValueChanged += OnBaseHPChanged;
             _currentWaveIndex.OnValueChanged += OnWaveChanged;
             _totalWaveCount.OnValueChanged += OnTotalWaveCountChanged;
-
-            // TDD-07 B4: 注册退场清理
-            if (_onBattleEnd != null)
-                _onBattleEnd.Register(this);
         }
 
         private void OnDisable()
@@ -111,24 +94,10 @@ namespace Game.ShooterGame.UI
             _baseHP.OnValueChanged -= OnBaseHPChanged;
             _currentWaveIndex.OnValueChanged -= OnWaveChanged;
             _totalWaveCount.OnValueChanged -= OnTotalWaveCountChanged;
-
-            // TDD-07 B4: 注销退场清理
-            if (_onBattleEnd != null)
-                _onBattleEnd.Unregister(this);
         }
 
         private void OnDestroy()
         {
-            // 场景卸载时清理 FairyGUI 对象（挂在 DontDestroyOnLoad 的 GRoot 上）
-            for (int i = 0; i < MAX_FLOATING_TEXTS; i++)
-            {
-                if (_floatingTexts[i] != null)
-                {
-                    _floatingTexts[i].Dispose();
-                    _floatingTexts[i] = null;
-                }
-            }
-
             if (_view != null)
             {
                 _view.Dispose();
@@ -219,72 +188,5 @@ namespace Game.ShooterGame.UI
                 _waveText.text = $"Wave {_currentWaveIndex.Value}/{_totalWaveCount.Value}";
         }
 
-        // ── 飘字 ──
-
-        /// <summary>
-        /// 在世界坐标位置显示飘字。
-        /// 环形缓冲 FIFO——超出上限回收最旧的。TDD_04 §4.4
-        /// </summary>
-        public void ShowFloatingText(Vector3 worldPos, string text, Color color)
-        {
-            Vector2 screenPos = Camera.main.WorldToScreenPoint(worldPos);
-            Vector2 uiPos = GRoot.inst.GlobalToLocal(new Vector2(screenPos.x, Screen.height - screenPos.y));
-
-            var ft = _floatingTexts[_floatingTextHead];
-            if (ft == null)
-            {
-                ft = UIPackage.CreateObject(FGUI_PKG, FGUI_FLOATING_TEXT).asCom;
-                GRoot.inst.AddChild(ft);
-                _floatingTexts[_floatingTextHead] = ft;
-            }
-            else
-            {
-                GTween.Kill(ft);
-            }
-
-            ft.visible = true;
-            ft.SetPosition(uiPos.x, uiPos.y, 0);
-            ft.alpha = 1f;
-            ft.GetChild("text").asTextField.text = text;
-            ft.GetChild("text").asTextField.color = color;
-
-            ft.TweenMoveY(uiPos.y - 60f, 0.8f).SetEase(EaseType.QuadOut);
-            ft.TweenFade(0f, 0.8f).OnComplete(() => { ft.visible = false; });
-
-            _floatingTextHead = (_floatingTextHead + 1) % MAX_FLOATING_TEXTS;
-
-#if UNITY_EDITOR
-            Debug_ActiveFloatingTextCount = CountActiveFloatingTexts();
-#endif
-        }
-
-        public void RecycleAllFloatingTexts()
-        {
-            for (int i = 0; i < MAX_FLOATING_TEXTS; i++)
-            {
-                if (_floatingTexts[i] != null)
-                    _floatingTexts[i].visible = false;
-            }
-            _floatingTextHead = 0;
-        }
-
-        // ── TDD-07: IBattleCleanup 实现 ──
-
-        /// <summary>UI 飘字清理——弹幕和受击表现清完后再清 UI。</summary>
-        public int CleanupOrder => 20;
-
-        /// <summary>退场清理回调。</summary>
-        public void OnBattleCleanup() => RecycleAllFloatingTexts();
-
-#if UNITY_EDITOR
-        private int CountActiveFloatingTexts()
-        {
-            int count = 0;
-            for (int i = 0; i < MAX_FLOATING_TEXTS; i++)
-                if (_floatingTexts[i] != null && _floatingTexts[i].visible)
-                    count++;
-            return count;
-        }
-#endif
     }
 }

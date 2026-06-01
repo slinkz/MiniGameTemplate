@@ -15,7 +15,7 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Enemy_Scatter
   Camp: 0
-  Components: 0001030402080b
+  Components: 0001020304080a0b
   PoolMax: 32
   MaxHp: 60
   MoveSpeed: 1.2

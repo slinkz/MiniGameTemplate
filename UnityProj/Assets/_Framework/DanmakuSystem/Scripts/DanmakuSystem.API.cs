@@ -125,11 +125,13 @@ namespace MiniGameTemplate.Danmaku
 
         /// <summary>
         /// 发射激光（Detached 模式——发射后固定不动）。
+        /// attachedData = 附带数据（如 DOT 配置），碰撞时通过 LaserPool.AttachedData 取出。
         /// </summary>
         public int FireLaser(LaserTypeSO type, Vector2 origin, float angle,
-            float length, float lifetime = 0f, int sourceTag = 0)
+            float length, float lifetime = 0f, int sourceTag = 0,
+            object attachedData = null)
         {
-            return FireLaserInternal(type, origin, angle, length, lifetime, 0, sourceTag);
+            return FireLaserInternal(type, origin, angle, length, lifetime, 0, sourceTag, attachedData);
         }
 
         /// <summary>
@@ -137,18 +139,20 @@ namespace MiniGameTemplate.Danmaku
         /// </summary>
         public int FireLaser(LaserTypeSO type, Transform source, float length,
             float lifetime = 0f, Vector2 localOffset = default, float angleOffset = 0f,
-            int sourceTag = 0)
+            int sourceTag = 0, object attachedData = null)
         {
-            return FireLaser(type, source, length, lifetime, localOffset, angleOffset, sourceTag, null);
+            return FireLaser(type, source, length, lifetime, localOffset, angleOffset, sourceTag, null, attachedData);
         }
 
         /// <summary>
         /// 发射激光（Attached 模式 + 目标追踪——激光每帧朝向目标）。
         /// targetResolver 每帧被调用，返回最新目标 Transform；支持目标死亡后自动切换新目标。
+        /// attachedData = 附带数据（如 DOT 配置），碰撞时通过 LaserPool.AttachedData 取出。
         /// </summary>
         public int FireLaser(LaserTypeSO type, Transform source, float length,
             float lifetime, Vector2 localOffset, float angleOffset,
-            int sourceTag, System.Func<Transform> targetResolver)
+            int sourceTag, System.Func<Transform> targetResolver,
+            object attachedData = null)
         {
             if (type == null || source == null)
                 return -1;
@@ -163,7 +167,7 @@ namespace MiniGameTemplate.Danmaku
             Vector2 origin = _attachRegistry.GetWorldPosition(attachId, (Vector2)source.position);
             float angle = _attachRegistry.GetWorldAngle(attachId, source.eulerAngles.z * Mathf.Deg2Rad);
 
-            return FireLaserInternal(type, origin, angle, length, lifetime, attachId, sourceTag);
+            return FireLaserInternal(type, origin, angle, length, lifetime, attachId, sourceTag, attachedData);
         }
 
         /// <summary>
@@ -262,7 +266,8 @@ namespace MiniGameTemplate.Danmaku
         }
 
         private int FireLaserInternal(LaserTypeSO type, Vector2 origin, float angle,
-            float length, float lifetime, byte attachId, int sourceTag = 0)
+            float length, float lifetime, byte attachId, int sourceTag = 0,
+            object attachedData = null)
         {
             if (type == null)
             {
@@ -297,6 +302,7 @@ namespace MiniGameTemplate.Danmaku
             laser.SegmentCount = 0;
             laser.VisualLength = 0f;
             laser.SourceTag = sourceTag;
+            _laserPool.AttachedData[index] = attachedData;
 
             return index;
         }

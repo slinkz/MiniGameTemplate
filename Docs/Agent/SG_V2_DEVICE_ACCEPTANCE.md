@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2
 scope: device-acceptance
-last_verified: 2026-05-27
+last_verified: 2026-05-31
 depends_on: [SG_V2_S2_ACCEPTANCE, SG_V2_S3_ACCEPTANCE, SG_V2_S4_ACCEPTANCE, S5_FINAL_PLAYTEST_GUIDE, TDD07_ACCEPTANCE_GUIDE, APPFLOW_ACCEPTANCE_PLAN]
 related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framework/BattleLifecycle/**
 ---
@@ -44,13 +44,13 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| A1 | 面板弹出 | 点击已解锁关卡 | Bottom Sheet 从底部弹出 + 半透明遮罩 | ☐ |
-| A2 | 标题正确 | 观察 | 显示"第 X 关" | ☐ |
-| A3 | 技能列表 | 观察 | 已解锁技能卡片全部默认选中（蓝色边框） | ☐ |
-| A4 | 被动列表 | 观察 | 已解锁被动卡片全部默认选中 | ☐ |
-| A5 | 出击按钮 | 点击 | 关闭面板 → 进入战斗场景 | ☐ |
-| A6 | 遮罩关闭 | 再次弹出 → 点遮罩 | 面板关闭，回到选关界面 | ☐ |
-| A7 | Console | 检查 | 无 Error，有 `[SortieBottomSheet] 出击!` Log | ☐ |
+| A1 | 面板弹出 | 点击已解锁关卡 | Bottom Sheet 从底部弹出 + 半透明遮罩 | ✅ |
+| A2 | 标题正确 | 观察 | 显示"第 X 关" | ✅ |
+| A3 | 技能列表 | 观察 | 已解锁技能卡片全部默认选中（蓝色边框） | ✅ |
+| A4 | 被动列表 | 观察 | 已解锁被动卡片全部默认选中 | ✅ |
+| A5 | 出击按钮 | 点击 | 关闭面板 → 进入战斗场景 | ✅ |
+| A6 | 遮罩关闭 | 再次弹出 → 点遮罩 | 面板关闭，回到选关界面 | ✅ |
+| A7 | Console | 检查 | 无 Error，有 `[SortieBottomSheet] 出击!` Log | ✅ |
 
 ### B. Buff 道具 + 被动效果（S3 延后项）
 
@@ -58,12 +58,12 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| B1 | Buff 道具拾取 | 击杀敌机 → 拾取加速/护盾/狂暴道具 | 拾取后效果正确生效（攻速加快/免伤/组合加强） | ☐ |
-| B2 | 电弧 DOT | 装备激光技能 → 命中敌机 | 敌机每 0.3s 受伤，持续 1.5s | ☐ |
-| B3 | 穿透被动 | 装备 Pierce 出战 | 每 5s 自动激活 3s 穿透窗口（子弹穿过敌机） | ☐ |
-| B4 | 暴击被动 | 装备 Crit 出战 | 每 8s 自动激活 4s 暴击窗口 | ☐ |
-| B5 | 磁吸被动 | 装备 Magnet 出战 | 每 6s 激活 3s 磁吸半径扩大 | ☐ |
-| B6 | 被动 Buff 桥接 | 等待被动窗口结束 | Buff 到期自动清除，属性恢复原值 | ☐ |
+| B1 | Buff 道具拾取 | 击杀敌机 → 拾取加速/护盾/狂暴道具 | 拾取后效果正确生效（攻速加快/免伤/组合加强） | ✅ |
+| B2 | 电弧 DOT | 装备激光技能 → 命中敌机 → 移开激光 | 激光照射时敌机掉血 + 移开后继续每 0.3s 掉血，持续 1.5s | ✅ |
+| B3 | 穿透被动 | 装备 Pierce 出战 | 每 5s 自动激活 3s 穿透窗口（子弹穿过敌机） | ✅ |
+| B4 | 暴击被动 | 装备 Crit 出战 | 每 8s 自动激活 4s 暴击窗口 | ✅ |
+| B5 | 磁吸被动 | 装备 Magnet 出战 | 每 6s 激活 3s 磁吸半径扩大 | ✅ |
+| B6 | 被动 Buff 桥接 | 等待被动窗口结束 | Buff 到期自动清除，属性恢复原值 | ✅ |
 
 ### C. 尾翼反击（PA-04 OnHit 被动）
 
@@ -228,7 +228,10 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 
 | 日期 | 部分 | 结果 | 备注 |
 |------|------|------|------|
-| | | | |
+| 2026-05-31 | A1~A7 | ✅ PASS | 出战准备面板（S5.7）全部通过 |
+| 2026-05-31 | B1, B3~B6 | ✅ PASS | Buff 道具拾取 + 穿透/暴击/磁吸被动 + Buff 桥接 |
+| 2026-05-31 | B2 | 🔧 FIXED | 电弧 DOT 未接入 → 已修复（LaserPool.AttachedData 传递链） |
+| 2026-06-01 | B2 | ✅ PASS | 电弧 DOT 真机验收通过（飘字统一为 TextMesh 世界空间） |
 
 ---
 

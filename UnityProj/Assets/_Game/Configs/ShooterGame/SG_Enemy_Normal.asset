@@ -15,10 +15,10 @@ MonoBehaviour:
   ConfigId: 0
   DisplayName: SG_Enemy_Normal
   Camp: 0
-  Components: 03040108
+  Components: 010304080a
   PoolMax: 128
   MaxHp: 20
-  MoveSpeed: 2
+  MoveSpeed: 0.5
   TurnSpeed: 360
   CollisionRadius: 0.4
   HitboxType: 0

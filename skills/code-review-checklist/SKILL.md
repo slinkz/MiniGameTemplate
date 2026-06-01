@@ -13,13 +13,13 @@ description: >
 
 1. **读取踩坑经验库**：必读 `references/known-pitfalls.md`（活跃层），按需读 `references/known-pitfalls-archive.md`
 2. **常规四维审查**：正确性 → 安全性 → 可维护性 → 性能
-3. **CL-1~CL-10 逐项过**（见下方）
+3. **CL-1~CL-11 逐项过**（见下方）
 4. **MCP 编译验证**：先 `AssetDatabase.Refresh()` 再 `unity_get_compilation_errors`（不 Refresh = 旧缓存假阳性）
 5. **输出审查报告**（模板见 `references/maintenance-guide.md`）
 
 ---
 
-## 检查清单 CL-1 ~ CL-10
+## 检查清单 CL-1 ~ CL-11
 
 ### CL-1: 跨文件引用完整性
 A 文件引用 B 的成员 → grep 确认 B 中确实存在。新增/重命名字段后全局搜索旧名。
@@ -49,6 +49,7 @@ A 文件引用 B 的成员 → grep 确认 B 中确实存在。新增/重命名�
 - 对象池 `FreeAll()` 与 `Free(i)` 数据清零一致性
 - Registry 白名单未命中 → Error（非 Warning）
 - 配置开关必须被执行层真实消费（禁止假开关）
+- **伤害飘字禁止 FairyGUI**（PIT-053）：战斗伤害数字只走 `EntityHitReactionHandler` TextMesh 对象池
 
 ### CL-7: FairyGUI 改动完整性
 **操作顺序**：①改 FairyGUI XML → ②导出 C# → ③改 Logic.cs。禁止反向操作。
@@ -66,6 +67,14 @@ grep 第三方源码实际 `namespace` 声明，不要想当然。wrapper/fork �
 
 ### CL-10: 方法重载安全（🔴 阻塞级）
 新增重载后全局搜索所有调用点。重点检查 `null`/`default`/`0` 是否匹配多个重载（CS0121 歧义）。
+
+### CL-11: 自定义 Editor 同步检查（🔴 阻塞级）
+**改了一个类的字段/枚举/序列化结构 → 必须检查是否有 `[CustomEditor]` 指向该类，有则同步更新。**
+- grep `[CustomEditor(typeof(你改的类))]` 定位所有关联 Editor
+- 检查项：① `FindProperty("字段名")` 是否匹配 ② 字段遍历/绘制逻辑是否过时 ③ 枚举映射是否正确 ④ 布局假设是否仍成立
+- **枚举子项**：`enumValueIndex` ≠ `(int)enumValue`（跳号必错），读写都用 `intValue`（PIT-052）
+- **隐蔽性**：Editor 读写若用相同错误逻辑 → Inspector 显示自洽但磁盘数据错误，人眼完全无法察觉
+- **验证**：用脚本/MCP 直接读 `SerializedObject` 的 `intValue` 对比预期，不要信 Inspector
 
 ---
 

@@ -230,7 +230,8 @@ namespace MiniGameTemplate.Entity
                 Damage = finalDamage,
                 RemainingHp = _currentHp,
                 Source = context.AttackerId,
-                SourceId = context.SourceId
+                SourceId = context.SourceId,
+                TargetPosition = _owner.Position
             });
 
             // 9. HP ≤ 0 → 触发死亡

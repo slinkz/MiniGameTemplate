@@ -163,7 +163,7 @@ related_code: Assets/_Framework/EntitySystem/Scripts/Components/Buff*, Passive*,
 | G3 | DamageTaken 修正 | 护盾免伤 / 脆弱加伤 | ✅ MCP: Shield(×0)=0 → +Vuln(×2)=0 → -Shield=2.0 → clean=1.0 |
 | G4 | BulletCount 修正 | 火力全开子弹数 ×2（通过 GetBulletCountModifier 查询） | ✅ MCP: 注入 BCM=2 → GetBulletCountModifier()=2.0 |
 | G5 | 攻速钳制 | 极端叠加不突破比率 0.3 | ✅ MCP: ×0.5×0.3×0.1=0.015 → 钳制到 0.3000 |
-| G6 | 电弧 DOT | 激光命中施加持续伤害 | 🔜 延后至全 Sprint 完成后统一真机验收 |
+| G6 | 电弧 DOT | 激光命中施加持续伤害 + TextMesh 飘字颜色区分 | ✅ 真机验收通过 2026-06-01 |
 | G7 | 4 种被动 | 各被动独立 CD + 效果正确 | 🔜 延后至全 Sprint 完成后统一真机验收 |
 | G8 | 被动 Buff 桥接 | 被动通过 Buff 实现，到期自动清除 | 🔜 延后至全 Sprint 完成后统一真机验收 |
 | G9 | PA-04 碰撞触发 | 被命中时反击弹幕 | 🔜 延后至全 Sprint 完成后统一真机验收 |
@@ -338,8 +338,8 @@ var playerType = System.Type.GetType("MiniGameTemplate.Entity.Entity, MiniGameTe
 | G11 | SO OnValidate | ✅ | SetDirty 触发 | 5 个空 Effects SkillConfigSO Warning 全部触发 |
 
 **延后至全 Sprint 完成后统一真机验收**（天命人决策 2026-05-21）：
-- G1(道具拾取) / G6(DOT) / G7(被动效果) / G8(Buff桥接) / G9(碰撞反击)
+- G1(道具拾取) / G7(被动效果) / G8(Buff桥接) / G9(碰撞反击)
 - E4-E6(OnHit 碰撞被动)
 - P1-P3(性能 Profiler)
 
-_创建于 2026-05-21 | v1.5（Sprint 3 逻辑验收关闭，真机/性能验收延后至统一验收）_
+_创建于 2026-05-21 | v1.6（G6 电弧DOT 真机验收通过 2026-06-01；飘字统一为 TextMesh 世界空间）_

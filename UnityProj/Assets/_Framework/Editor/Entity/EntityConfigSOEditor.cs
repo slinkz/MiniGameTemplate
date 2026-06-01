@@ -340,11 +340,39 @@ namespace MiniGameTemplate.EditorTools
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            // 读取当前 Components 数组为 HashSet
+            // 构建 enumValue → enumValueIndex 的映射表
+            // Unity 的 enumValueIndex 是显示列表中的位置索引，不等于枚举的 int 值（尤其枚举不连续时）
+            var enumIndexLookup = new System.Collections.Generic.Dictionary<int, int>();
+            var reverseIndexLookup = new System.Collections.Generic.Dictionary<int, int>();
+            {
+                // 获取一个临时 prop 来读 enumDisplayNames
+                // enumDisplayNames 按 Unity 内部排列（跳过已删除的值），索引即 enumValueIndex
+                var tempProp = _components.arraySize > 0
+                    ? _components.GetArrayElementAtIndex(0)
+                    : null;
+
+                // 使用 Enum.GetValues 按声明顺序遍历，Unity 对 byte enum 的 enumValueIndex
+                // 等于"排除不存在值后的连续索引"。对我们的 ComponentType：
+                //   State=0→idx0, Health=1→idx1, Animation=2→idx2, Movement=3→idx3,
+                //   Collision=4→idx4, AutoAim=5→idx5, Skill=6→idx6, Control=7→idx7,
+                //   AI=8→idx8, Buff=10→idx9, EnemyShoot=11→idx10, Passive=12→idx11, MAX=16→idx12
+                int displayIdx = 0;
+                foreach (var type in AllTypes)
+                {
+                    int intVal = (int)(byte)type;
+                    enumIndexLookup[intVal] = displayIdx;       // enum int → enumValueIndex
+                    reverseIndexLookup[displayIdx] = intVal;    // enumValueIndex → enum int
+                    displayIdx++;
+                }
+            }
+
+            // 读取当前 Components 数组为 HashSet（正确：用 intValue 而非 enumValueIndex）
             var active = new System.Collections.Generic.HashSet<ComponentType>();
             for (int i = 0; i < _components.arraySize; i++)
             {
-                active.Add((ComponentType)_components.GetArrayElementAtIndex(i).enumValueIndex);
+                int intVal = _components.GetArrayElementAtIndex(i).intValue;
+                if (System.Enum.IsDefined(typeof(ComponentType), (byte)intVal))
+                    active.Add((ComponentType)(byte)intVal);
             }
 
             // 绘制每个 ComponentType 为 checkbox
@@ -380,7 +408,7 @@ namespace MiniGameTemplate.EditorTools
 
             if (changed)
             {
-                // 写回数组
+                // 写回数组——使用正确的 enumValueIndex（通过查表映射）
                 _components.ClearArray();
                 int idx = 0;
                 foreach (var type in AllTypes)
@@ -388,7 +416,11 @@ namespace MiniGameTemplate.EditorTools
                     if (active.Contains(type))
                     {
                         _components.InsertArrayElementAtIndex(idx);
-                        _components.GetArrayElementAtIndex(idx).enumValueIndex = (int)type;
+                        int intVal = (int)(byte)type;
+                        if (enumIndexLookup.TryGetValue(intVal, out int displayIndex))
+                            _components.GetArrayElementAtIndex(idx).enumValueIndex = displayIndex;
+                        else
+                            _components.GetArrayElementAtIndex(idx).enumValueIndex = intVal; // fallback
                         idx++;
                     }
                 }
@@ -415,9 +447,10 @@ namespace MiniGameTemplate.EditorTools
 
         private bool HasComponent(ComponentType type)
         {
+            int targetInt = (int)(byte)type;
             for (int i = 0; i < _components.arraySize; i++)
             {
-                if ((ComponentType)_components.GetArrayElementAtIndex(i).enumValueIndex == type)
+                if (_components.GetArrayElementAtIndex(i).intValue == targetInt)
                     return true;
             }
             return false;

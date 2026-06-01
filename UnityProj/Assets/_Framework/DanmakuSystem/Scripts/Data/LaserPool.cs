@@ -16,6 +16,12 @@ namespace MiniGameTemplate.Danmaku
 
         public readonly LaserData[] Data;
 
+        /// <summary>
+        /// 激光附带数据（与 Data[] 同容量同生命周期）。
+        /// 用于跨系统传递额外信息（如 DOT 配置），类型为 object 避免 Danmaku→Entity 反向依赖。
+        /// </summary>
+        public readonly object[] AttachedData;
+
         /// <summary>精确活跃激光数</summary>
         public int ActiveCount { get; private set; }
 
@@ -26,6 +32,7 @@ namespace MiniGameTemplate.Danmaku
         {
             Capacity = capacity;
             Data = new LaserData[capacity];
+            AttachedData = new object[capacity];
             _freeSlots = new int[capacity];
 
             // 预分配 Segments 数组——所有槽位共享同尺寸数组，避免运行时 GC
@@ -50,6 +57,7 @@ namespace MiniGameTemplate.Danmaku
             var segments = Data[index].Segments; // 保留预分配的数组
             Data[index] = default;
             Data[index].Segments = segments;     // 恢复引用
+            AttachedData[index] = null;
             _freeSlots[_freeTop++] = index;
             ActiveCount--;
         }
@@ -62,6 +70,7 @@ namespace MiniGameTemplate.Danmaku
                 var segments = Data[i].Segments;
                 Data[i] = default;
                 Data[i].Segments = segments;
+                AttachedData[i] = null;
             }
             _freeTop = 0;
             for (int i = Capacity - 1; i >= 0; i--)

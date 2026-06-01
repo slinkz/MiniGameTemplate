@@ -17,8 +17,8 @@ namespace MiniGameTemplate.Entity
     /// 
     /// 无状态（SA-002），所有字段为配置参数。
     /// 
-    /// 激光命中时的 DOT 施加由碰撞系统 + SkillConfigSO.AttachedDotConfig 驱动，
-    /// 不在此处处理。
+    /// 激光命中时的 DOT 施加：SkillConfigSO.AttachedDotConfig 通过 FireLaser attachedData 参数
+    /// 传入 LaserPool，碰撞时由 CollisionComponent.OnLaserHit 取出并施加到目标 BuffComponent。
     /// </summary>
     [System.Serializable]
     public class FireLaserEffect : ISkillEffect
@@ -100,7 +100,8 @@ namespace MiniGameTemplate.Entity
                 }
 
                 int index = ds.FireLaser(LaserType, ctx.CasterTransform, Length,
-                    LifetimeOverride, localOffset, angleOffset, ctx.SourceTagId, targetResolver);
+                    LifetimeOverride, localOffset, angleOffset, ctx.SourceTagId, targetResolver,
+                    ctx.SkillConfig.AttachedDotConfig);
                 return index >= 0;
             }
 
@@ -109,7 +110,7 @@ namespace MiniGameTemplate.Entity
             float angle = Mathf.Atan2(ctx.AimDirection.y, ctx.AimDirection.x);
 
             int detachedIndex = ds.FireLaser(LaserType, pos, angle, Length, LifetimeOverride,
-                ctx.SourceTagId);
+                ctx.SourceTagId, ctx.SkillConfig.AttachedDotConfig);
             return detachedIndex >= 0;
         }
     }

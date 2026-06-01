@@ -249,7 +249,11 @@ namespace MiniGameTemplate.Entity
 
         // ──────────── 伤害数字 ────────────
 
-        private void SpawnDamageNumber(Vector2 position, int damage, bool isCritical = false)
+        /// <summary>
+        /// 在世界坐标生成伤害飘字（TextMesh 对象池）。
+        /// 框架内部 OnHit 调用，游戏层 DOT 等也可直接调用。
+        /// </summary>
+        public void SpawnDamageNumber(Vector2 position, int damage, bool isCritical = false, Color? color = null)
         {
             if (_damageNumberCount >= MAX_DAMAGE_NUMBERS) return;
 
@@ -263,7 +267,11 @@ namespace MiniGameTemplate.Entity
             go.transform.localScale = new Vector3(baseScale, baseScale, 1f);
 
             var tm = go.GetComponentInChildren<TextMesh>();
-            if (tm != null) tm.text = isCritical ? $"{damage}!" : damage.ToString();
+            if (tm != null)
+            {
+                tm.text = isCritical ? $"{damage}!" : damage.ToString();
+                if (color.HasValue) tm.color = color.Value;
+            }
 
             _damageNumbers[_damageNumberCount++] = new DamageNumberState
             {

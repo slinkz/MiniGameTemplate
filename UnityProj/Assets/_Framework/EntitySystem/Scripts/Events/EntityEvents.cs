@@ -99,6 +99,8 @@ namespace MiniGameTemplate.Entity
         public EntityId Source;
         /// <summary>伤害来源标记（Sprint 4 伤害统计：0=基础攻击, 1~6=技能, 100+=DOT）</summary>
         public int SourceId;
+        /// <summary>受伤实体当前位置（飘字/VFX 用，发布时由 HealthComponent 填充）</summary>
+        public UnityEngine.Vector2 TargetPosition;
     }
 
     /// <summary>死亡事件</summary>

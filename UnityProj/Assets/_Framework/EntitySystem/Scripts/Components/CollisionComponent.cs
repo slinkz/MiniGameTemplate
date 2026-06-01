@@ -165,7 +165,10 @@ namespace MiniGameTemplate.Entity
             _owner.EventBus.Publish(new OnCollisionHit { Context = ctx });
         }
 
-        /// <summary>激光命中回调（BC-05.4）。SourcePosition = 激光 Origin。</summary>
+        /// <summary>
+        /// 激光命中回调（BC-05.4）。SourcePosition = 激光 Origin。
+        /// 附带 DOT 施加：从 LaserPool.AttachedData 取出 DotConfigSO，施加到目标 BuffComponent。
+        /// </summary>
         public void OnLaserHit(int damage, int laserIndex)
         {
             if (!_isActive || !_isCollisionEnabled || _owner == null) return;
@@ -183,6 +186,17 @@ namespace MiniGameTemplate.Entity
                 ctx.SourcePosition = ds.LaserPool.Data[laserIndex].Origin;
                 ctx.HasSourcePosition = true;
                 ctx.SourceId = ds.LaserPool.Data[laserIndex].SourceTag;
+
+                // DOT 施加：从 LaserPool.AttachedData 取出 DotConfigSO
+                var attachedDot = ds.LaserPool.AttachedData[laserIndex] as DotConfigSO;
+                if (attachedDot != null)
+                {
+                    var buffComp = _owner.GetComponent(ComponentType.Buff) as BuffComponent;
+                    if (buffComp != null)
+                    {
+                        buffComp.ApplyDot(attachedDot);
+                    }
+                }
             }
 
             _owner.EventBus.Publish(new OnCollisionHit { Context = ctx });

@@ -57,6 +57,15 @@ description: >
 
 - 修改 SO 时调用 `EditorUtility.SetDirty(target)`
 - CustomEditor 用 `SerializedProperty` 遍历字段
+- **⚠️ 自定义 Editor 同步安全（P0）**：
+  - **铁律：修改任何有 `[CustomEditor]` 的类时，必须同步检查其 Editor 代码是否需要更新**
+  - 触发场景：增删字段、改字段类型、重命名字段、修改枚举定义、调整序列化结构
+  - 检查项：① 字段遍历逻辑 ② 硬编码的 `FindProperty("name")` ③ 自定义绘制逻辑 ④ 枚举映射
+  - grep `[CustomEditor(typeof(你改的类))]` 找到所有关联 Editor
+  - **隐蔽性**：Inspector 显示正确 ≠ 数据正确（读写用相同错误映射时自洽假象）
+- **枚举序列化子规则**：
+  - `enumValueIndex` ≠ `(int)enumValue`，跳号枚举必错位
+  - 读用 `prop.intValue` + cast，写用 `prop.intValue = (int)value` 或查表映射
 
 ## §7 防御性编程
 
@@ -105,23 +114,13 @@ description: >
 
 **当系统 B 完整替代系统 A 时，A 的代码 + 配置字段必须在同一个改动中删除。**
 
-核心原则：
-- `[Obsolete]` 标记 ≠ 删除。只要代码还存在，就有人（包括 AI）会读它
-- 编译报错是最好的自检——它会**强制暴露**所有还在引用旧字段的地方
-- 旧字段留着 = 定时炸弹，新系统可能在不知情的情况下被旧字段覆盖
+- `[Obsolete]` 标记 ≠ 删除。只要代码还存在，就有人（包括 AI）会读它。编译报错是最好的自检
+- 执行清单：① 对每个公开字段 `Find All References` ② 确认引用已迁移/删除 ③ 删除旧类+字段+Editor ④ 编译通过=完成
+- ❌ 禁止"先标 Obsolete 以后再删" / "留着兼容" / 只看类引用不看字段引用
 
-**执行清单（重构/替代时必须过）：**
-1. 对被替代系统的**每个公开字段**执行 `Find All References`
-2. 确认所有引用点已迁移到新系统或删除
-3. 删除旧 Component 类 + 相关 SO 字段 + Editor 工具引用
-4. 编译通过 = 退役完成；编译失败 = 仍有漏网引用，逐个处理
+## §14 伤害飘字禁止 FairyGUI（P0）
 
-**禁止**：
-- ❌ "先标 Obsolete 以后再删"——没有"以后"，当场删
-- ❌ "留着兼容万一还有地方用"——Find All References 能告诉你有没有
-- ❌ 只看类引用不看字段引用——数据流比调用链更隐蔽
-
-> 典型案例：AttackComponent 标废弃后 AttackInterval 字段仍被读取，隐性覆盖了 SkillConfigSO.CooldownTime
+**战斗伤害数字必须用框架层 `EntityHitReactionHandler` 的 TextMesh 对象池（世界空间），禁止 FairyGUI（UI 空间不跟相机缩放→飘字小一个量级）。**
 
 ---
 
@@ -137,6 +136,8 @@ description: >
 | PIT-041 | 云函数未同步数据结构，静默丢弃 | P0 | §12 |
 | PIT-050 | 退场 Raise 后 yield 前未切状态→误判通关 | P0 | §5b |
 | PIT-051 | 被替代系统未物理删除，旧字段隐性覆盖新系统 | P0 | §13 |
+| PIT-052 | 改数据模型未同步自定义 Editor（枚举序列化错位为典型表现） | P0 | §6 |
+| PIT-053 | FairyGUI 飘字在 UI 空间不跟相机缩放，比 TextMesh 世界空间飘字小一个量级 | P0 | §14 |
 
 ---
 

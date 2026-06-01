@@ -16,6 +16,9 @@ namespace MiniGameTemplate.Entity
         private const int MAX_EVENT_TYPES = 16;
         private const int MAX_HANDLERS_PER_TYPE = 4;
 
+        /// <summary>所属 Entity（零 GC 反查：订阅者通过 bus.Owner 获取 Entity 引用，无需闭包捕获）</summary>
+        public Entity Owner { get; internal set; }
+
         // 二维预分配数组：[eventTypeId][handlerSlot]
         private readonly Delegate[,] _handlers = new Delegate[MAX_EVENT_TYPES, MAX_HANDLERS_PER_TYPE];
         private readonly int[] _handlerCounts = new int[MAX_EVENT_TYPES];
