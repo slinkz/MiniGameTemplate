@@ -1,7 +1,9 @@
 using System;
 using UnityEngine;
 using MiniGameTemplate.Battle;
+using MiniGameTemplate.Danmaku;
 using MiniGameTemplate.Pool;
+using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.Entity
 {
@@ -24,10 +26,6 @@ namespace MiniGameTemplate.Entity
         [Header("调试视觉")]
         [Tooltip("Debug View 的 PoolDefinition（Phase 1 必填）")]
         public PoolDefinition DebugViewPool;
-
-        [Header("受击表现（P1.11）")]
-        [Tooltip("伤害数字 Prefab 的 PoolDefinition（可选，为空则不显示伤害数字）")]
-        public PoolDefinition DamageNumberPool;
 
         [Header("Entity 碰撞（P2.2）")]
         [Tooltip("是否启用 Entity vs Entity 碰撞检测")]
@@ -76,6 +74,9 @@ namespace MiniGameTemplate.Entity
         /// <summary>受击表现管理器（供外部查询闪白状态等）</summary>
         public EntityHitReactionHandler HitReactionHandler => _hitHandler;
 
+        /// <summary>通用飘字系统引用（FLOATING_TEXT_TDD：供 BattleController DOT 飘字等游戏层调用）</summary>
+        public FloatingTextSystem FloatingText { get; private set; }
+
         /// <summary>Entity 碰撞求解器（P2.2）</summary>
         public EntityCollisionSolver CollisionSolver => _collisionSolver;
 
@@ -87,7 +88,13 @@ namespace MiniGameTemplate.Entity
             _entityManager = new EntityManager();
             _viewBridge = new EntityViewBridge(PoolManager.Instance, DebugViewPool);
             _spawner = new EntitySpawner();
-            _hitHandler = new EntityHitReactionHandler(PoolManager.Instance, DamageNumberPool);
+
+            // FLOATING_TEXT_TDD：获取 FloatingTextSystem 引用（PK-CR CR-004/CR-009：显式 != null，不用 ?.）
+            var danmaku = FindObjectOfType<DanmakuSystem>();
+            var floatingText = (danmaku != null) ? danmaku.FloatingText : null;
+            _hitHandler = new EntityHitReactionHandler(PoolManager.Instance, floatingText);
+            FloatingText = floatingText;
+
             _collisionSolver = new EntityCollisionSolver();
 
             // ViewBridge ↔ HitHandler 关联（闪白颜色查询）

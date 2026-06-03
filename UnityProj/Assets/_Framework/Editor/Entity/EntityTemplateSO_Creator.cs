@@ -27,7 +27,6 @@ namespace MiniGameTemplate.Editor.Entity
             CreateSlimeAIBehaviorTemplate();
             CreateEnemyWaveTemplate();
             CreateDebugViewPoolTemplate();
-            CreateDamageNumberPoolTemplate();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -196,16 +195,6 @@ namespace MiniGameTemplate.Editor.Entity
             var so = ScriptableObject.CreateInstance<MiniGameTemplate.Pool.PoolDefinition>();
             AssetDatabase.CreateAsset(so, path);
             Debug.Log("[Template] Template_DebugViewPool 已创建。请手动指定 Prefab（或运行 CreateDebugViewPrefab）。");
-        }
-
-        private static void CreateDamageNumberPoolTemplate()
-        {
-            string path = $"{TEMPLATE_PATH}/Pool/Template_DamageNumberPool.asset";
-            if (AssetDatabase.LoadAssetAtPath<MiniGameTemplate.Pool.PoolDefinition>(path) != null) return;
-
-            var so = ScriptableObject.CreateInstance<MiniGameTemplate.Pool.PoolDefinition>();
-            AssetDatabase.CreateAsset(so, path);
-            Debug.Log("[Template] Template_DamageNumberPool 已创建。请手动指定 Prefab。");
         }
 
         // ──────────── 工具 ────────────

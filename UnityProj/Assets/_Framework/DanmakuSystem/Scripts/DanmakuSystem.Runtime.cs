@@ -21,7 +21,7 @@ namespace MiniGameTemplate.Danmaku
         private BulletRenderer _bulletRenderer;
         private LaserRenderer _laserRenderer;
         private LaserWarningRenderer _laserWarningRenderer;
-        private DamageNumberSystem _damageNumbers;
+        private FloatingTextSystem _floatingText;
         private TrailPool _trailPool;
 
         // ──── PI-001: 共享 RuntimeAtlasManager ────
@@ -88,9 +88,9 @@ namespace MiniGameTemplate.Danmaku
             _laserWarningRenderer = new LaserWarningRenderer();
             _laserWarningRenderer.Initialize(_renderConfig, _typeRegistry, _worldConfig.MaxLasers, _sharedAtlas);
 
-            // 伤害飘字
-            _damageNumbers = new DamageNumberSystem();
-            _damageNumbers.Initialize(_renderConfig, _sharedAtlas);
+            // 飘字系统（统一飘字 — FLOATING_TEXT_TDD）
+            _floatingText = new FloatingTextSystem();
+            _floatingText.Initialize(_renderConfig, _sharedAtlas);
 
             // 重量拖尾
             _trailPool = new TrailPool(_worldConfig.MaxTrails);
@@ -120,7 +120,7 @@ namespace MiniGameTemplate.Danmaku
             _bulletRenderer?.Dispose();
             _laserRenderer?.Dispose();
             _laserWarningRenderer?.Dispose();
-            _damageNumbers?.Dispose();
+            _floatingText?.Dispose();
             _trailPool?.Dispose();
 
             // PI-001: 共享 Atlas 最后统一 Dispose

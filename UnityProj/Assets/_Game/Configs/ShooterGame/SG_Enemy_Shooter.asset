@@ -18,7 +18,7 @@ MonoBehaviour:
   Components: 0001020304080a0b
   PoolMax: 32
   MaxHp: 40
-  MoveSpeed: 1.5
+  MoveSpeed: 0.5
   TurnSpeed: 0
   CollisionRadius: 0.5
   HitboxType: 0
@@ -39,12 +39,12 @@ MonoBehaviour:
   ContactDamage: 10
   ContactDamageInterval: 0.5
   BaseLineBreachDamage: 15
-  AttackPower: 0
+  AttackPower: 1
   CritRate: 0
   CritDamageMultiplier: 2
   AutoAimRadius: 0
   AutoAimSearchInterval: 0.2
-  AttackInterval: 1.5
+  AttackInterval: 1
   FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 11400000, guid: 0e0ff4377909b744a9cf0448988b4e2b, type: 2}
   AttackFireOffset: {x: 0, y: -0.3}

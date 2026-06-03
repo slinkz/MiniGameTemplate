@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-05-30 22:55 | 文件总数：90
+> 最后更新：2026-06-03 10:30 | 文件总数：93
 
 ---
 
@@ -20,6 +20,7 @@
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 + 域名白名单 |
 | 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V4 云端权威+纯内存（登录+云同步+CloudSaveSystem+启动阻塞重试） |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
+| 统一飘字系统重构 | FLOATING_TEXT_TDD + ADR_06 §ADR-036 | RBM 通用飘字系统（消除双飘字 Bug） |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
 | 了解导航系统 | APPFLOW_TDD_INDEX | 栈式 FlowNode + AppFlowNavigator |
@@ -66,6 +67,7 @@
 | `_Framework/BattleLifecycle/*.cs` | SG_V2_TDD_07 §3.1 | IBattleCleanup 接口 + BattleLifecycleEvent SO |
 | `Danmaku/**/*.cs` | ATLAS_TDD_INDEX + SO_WORKFLOWS_03_DANMAKU | 弹幕+渲染 |
 | `RuntimeAtlas/**/*.cs` | ATLAS_TDD_INDEX | 动态图集 |
+| `_Framework/Rendering/FloatingText*.cs` | FLOATING_TEXT_TDD + ADR_06 §036 | 通用飘字系统（RBM 渲染） |
 | `OBB/**/*.cs` | OBB_TDD_INDEX | OBB 碰撞 |
 | `Editor/**/*.cs` | EDITOR_TOOLS_MANUAL_INDEX → 01~04 + SG_V2_TDD_05 | 编辑器工具 |
 | `_Framework/Editor/LocalHttpServerWindow.cs` | WECHAT_INTEGRATION §Dev Server + EDITOR_TOOLS_MANUAL | Dev Server 一键 CDN 环境切换 |
@@ -99,6 +101,7 @@
 | EntityEventBus | EC_TDD_02 §3.4 | 预分配 Delegate[16,4] 零 GC 事件总线 |
 | EntityPool | EC_TDD_03 | 预分配数组+空闲栈，零 GC 对象池 |
 | RuntimeAtlas | ATLAS_TDD_01 §架构 | 运行时动态纹理合批（DC≤2） |
+| FloatingTextSystem | FLOATING_TEXT_TDD | 通用飘字系统：RBM + 环形缓冲区 128，零 GC 纯 GPU 渲染 |
 | CampUtility | EC_TDD_04 §阵营 | 阵营判定工具类（Player/Enemy/Neutral） |
 | Template_ 前缀 | CONV_01 §SO资产 | 模板 SO 资产命名约定（WF-009） |
 | 变更包 | CONV_04 §归档 | 每次修改的 changes/ 归档记录 |
@@ -152,6 +155,7 @@
 | — | DEBUG_PLAYBOOK | — | 调试手册 |
 | — | NEWGAME_GUIDE | — | 新项目指南 |
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |
+| — | FLOATING_TEXT_TDD | — | 飘字系统统一重构 TDD（ADR-036） |
 | SG | SG_GAME_DESIGN | — | ShooterGame 游戏设计文档 v2.1 |
 | SG | SG_UI_DESIGN | — | ShooterGame UI/交互设计文档 v1.0 |
 | SG_GDD | SG_GDD_INDEX | 6 | ShooterGame V2 技能系统 GDD v2.4 |

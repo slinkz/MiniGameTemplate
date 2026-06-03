@@ -10,6 +10,7 @@ using MiniGameTemplate.Core;
 using MiniGameTemplate.Platform;
 using MiniGameTemplate.UI;
 using MiniGameTemplate.Battle;
+using MiniGameTemplate.Rendering;
 using EntityClass = MiniGameTemplate.Entity.Entity;
 #if UNITY_EDITOR
 using Unity.Profiling;
@@ -537,18 +538,17 @@ namespace Game.ShooterGame
         /// 只在战斗进行中（未冻结）时累加。
         /// 零 GC：方法组订阅 + evt.TargetPosition 代替闭包捕获 entity。
         /// </summary>
-        private static readonly Color DOT_DAMAGE_COLOR = new Color(0.6f, 0.2f, 1f); // 紫色
 
         private void OnEnemyDamaged(OnDamaged evt)
         {
             if (evt.Damage <= 0) return;
 
-            // DOT 飘字（SourceId >= 100）：走框架层 TextMesh 对象池，紫色区分
-            // 普攻飘字已由 EntityHitReactionHandler.OnHit → SpawnDamageNumber 处理，此处不重复
+            // DOT 飘字（SourceId >= 100）：走 FloatingTextSystem（FLOATING_TEXT_TDD）
+            // 普攻飘字已由 EntityHitReactionHandler.OnHit → FloatingText.Spawn 处理，此处不重复
             if (evt.SourceId >= 100 && _entityBootstrap != null)
             {
-                _entityBootstrap.HitReactionHandler.SpawnDamageNumber(
-                    evt.TargetPosition, evt.Damage, false, DOT_DAMAGE_COLOR);
+                _entityBootstrap.FloatingText?.Spawn(
+                    evt.TargetPosition, evt.Damage, FloatingTextColors.Dot, false);
             }
 
             // 伤害统计

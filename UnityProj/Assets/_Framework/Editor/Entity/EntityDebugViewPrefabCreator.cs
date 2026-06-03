@@ -56,36 +56,6 @@ namespace MiniGameTemplate.Editor.Entity
             AssetDatabase.SaveAssets();
         }
 
-        [MenuItem("MiniGameTemplate/Entity/Create Damage Number Prefab", false, 202)]
-        public static void CreateDamageNumberPrefab()
-        {
-            EnsureDirectoryExists(PREFAB_DIR);
-
-            string prefabPath = $"{PREFAB_DIR}/DamageNumber.prefab";
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
-            {
-                Debug.Log($"[Prefab] {prefabPath} 已存在，跳过。");
-                return;
-            }
-
-            var root = new GameObject("DamageNumber");
-            root.transform.localScale = new Vector3(0.12f, 0.12f, 1f);
-
-            var tm = root.AddComponent<TextMesh>();
-            tm.text = "0";
-            tm.fontSize = 48;
-            tm.characterSize = 0.5f;
-            tm.anchor = TextAnchor.MiddleCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = new Color(1f, 0.9f, 0.1f, 1f); // 金色
-
-            PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            Object.DestroyImmediate(root);
-
-            Debug.Log($"[Prefab] Damage Number Prefab 创建完成：{prefabPath}");
-            AssetDatabase.SaveAssets();
-        }
-
         // ──────────── 工具方法 ────────────
 
         /// <summary>创建一个白色圆形 Sprite（代码生成，无外部依赖）</summary>

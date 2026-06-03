@@ -57,7 +57,11 @@ namespace MiniGameTemplate.Danmaku
                 if (result.PlayerDamage > 0 && _onDamageDealt != null)
                     _onDamageDealt.Raise(result.PlayerDamage);
 
-                _damageNumbers.Spawn(result.PlayerHitPosition, result.PlayerDamage, result.PlayerDamage >= 10);
+                var ftColor = result.PlayerDamage >= 10
+                    ? FloatingTextColors.Critical
+                    : FloatingTextColors.Normal;
+                _floatingText.Spawn(result.PlayerHitPosition, result.PlayerDamage,
+                    ftColor, result.PlayerDamage >= 10);
 
                 if (_worldConfig.InvincibleDuration > 0)
                     _invincibleTimer = _worldConfig.InvincibleDuration;
@@ -87,7 +91,7 @@ namespace MiniGameTemplate.Danmaku
             _laserWarningRenderer.Rebuild(_laserPool, _typeRegistry);
             _vfxRuntime?.RenderVFX();   // R4.0：VFX 渲染从独立 LateUpdate 收编到统一管线
             // 飘字是纯视觉反馈，生命周期用真实时间（不受暂停/子弹时间影响）
-            _damageNumbers.Rebuild(Time.unscaledDeltaTime);
+            _floatingText.Rebuild(Time.unscaledDeltaTime);
 
             // 渲染统计帧结束
             RenderBatchManagerRuntimeStats.EndFrame();

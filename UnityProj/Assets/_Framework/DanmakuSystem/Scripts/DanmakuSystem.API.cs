@@ -32,6 +32,10 @@ namespace MiniGameTemplate.Danmaku
         /// <summary>发射器驱动器</summary>
         public SpawnerDriver SpawnerDriver => _spawnerDriver;
 
+        /// <summary>通用飘字系统引用（供 Entity 层等外部系统调用 Spawn）。
+        /// 生命周期由 DanmakuSystem 内部管理，外部只调用 Spawn。</summary>
+        public FloatingTextSystem FloatingText => _floatingText;
+
         /// <summary>类型注册表（框架内部使用）</summary>
         internal DanmakuTypeRegistry TypeRegistry => _typeRegistry;
 
@@ -226,7 +230,7 @@ namespace MiniGameTemplate.Danmaku
             _scheduler.ClearAll();
             _spawnerDriver.ClearAll();
             _trailPool.FreeAll();
-            _damageNumbers.ClearAll();
+            _floatingText.ClearAll();
         }
 
         /// <summary>

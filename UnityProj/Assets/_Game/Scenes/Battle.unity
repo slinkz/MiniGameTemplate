@@ -312,13 +312,11 @@ MonoBehaviour:
   _baseHP: {fileID: 11400000, guid: 6bff7144902bdfe4fb3ea95cd5e13424, type: 2}
   _currentWaveIndex: {fileID: 11400000, guid: 4bbcea22fe5f293409818d62bcc294f5, type: 2}
   _totalWaveCount: {fileID: 11400000, guid: 6358ca9909ca01547b96dfac915e668e, type: 2}
-  _onBattleEnd: {fileID: 11400000, guid: f976f01685b5bd7438e35784e6b783e7, type: 2}
   _hpGreen: {r: 0.3, g: 0.85, b: 0.3, a: 1}
   _hpYellow: {r: 0.9, g: 0.85, b: 0.2, a: 1}
   _hpRed: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   Debug_DisplayHP: 0
   Debug_TargetHP: 0
-  Debug_ActiveFloatingTextCount: 0
 --- !u!1 &788688979
 GameObject:
   m_ObjectHideFlags: 0
@@ -630,11 +628,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d7f6dbc0f3f51a4449b9b9f2ad8b7c67, type: 2}
   - {fileID: 11400000, guid: ffc54240b088aad4bb5adee0e407d28a, type: 2}
   - {fileID: 11400000, guid: 1ceae7c4a22d75c46b157b45d9666700, type: 2}
-  _overridePassives: 0
+  _overridePassives: 1
   _debugPassives:
-  - {fileID: 11400000, guid: f977e00aa81891a438d927d2c6d5a397, type: 2}
-  - {fileID: 11400000, guid: 0ae22207935ded54bb9788b42b89a269, type: 2}
-  - {fileID: 11400000, guid: e8703ed8e5a26e947b309bbb65a71f5b, type: 2}
   - {fileID: 11400000, guid: e9a5022c01763a945a877642f0e44e4e, type: 2}
   _status: Idle
 --- !u!1 &1740805477

@@ -1,5 +1,6 @@
 using UnityEngine;
 using MiniGameTemplate.Pool;
+using MiniGameTemplate.Rendering;
 
 namespace MiniGameTemplate.Entity
 {
@@ -8,8 +9,11 @@ namespace MiniGameTemplate.Entity
     /// P1.11 集成验收的核心交付物。
     /// 
     /// 职责（TDD §3.15 表现层规则）：
-    /// - OnCollisionHit → 受击闪白 + 击退 + 伤害数字 + 受击特效
+    /// - OnCollisionHit → 受击闪白 + 击退 + 伤害飘字 + 受击特效
     /// - OnDeath → 死亡延迟 + 死亡特效 + 延迟回收
+    /// 
+    /// FLOATING_TEXT_TDD：伤害飘字迁移到 FloatingTextSystem（RBM 渲染），
+    /// 删除旧 TextMesh 对象池飘字管线。
     /// 
     /// 由 EntitySystemBootstrap 在 Entity 生成时注册到 EntityEventBus。
     /// 框架级组件——不是游戏层脚本（框架确保事件携带足够信息）。
@@ -22,12 +26,6 @@ namespace MiniGameTemplate.Entity
         private readonly FlashState[] _flashStates = new FlashState[MAX_FLASH];
         private int _flashCount;
 
-        // ──────────── 伤害数字管理 ────────────
-
-        private const int MAX_DAMAGE_NUMBERS = 32;
-        private readonly DamageNumberState[] _damageNumbers = new DamageNumberState[MAX_DAMAGE_NUMBERS];
-        private int _damageNumberCount;
-
         // ──────────── 死亡延迟管理 ────────────
 
         private const int MAX_DEATH_DELAY = 32;
@@ -37,12 +35,12 @@ namespace MiniGameTemplate.Entity
         // ──────────── 依赖 ────────────
 
         private readonly PoolManager _poolManager;
-        private readonly PoolDefinition _damageNumberPool; // 伤害数字 Prefab 池（可选）
+        private readonly FloatingTextSystem _floatingText; // FLOATING_TEXT_TDD：RBM 飘字系统（可 null）
 
-        public EntityHitReactionHandler(PoolManager poolManager, PoolDefinition damageNumberPool)
+        public EntityHitReactionHandler(PoolManager poolManager, FloatingTextSystem floatingText)
         {
             _poolManager = poolManager;
-            _damageNumberPool = damageNumberPool;
+            _floatingText = floatingText;
         }
 
         // ──────────── Entity 生命周期钩子 ────────────
@@ -57,33 +55,22 @@ namespace MiniGameTemplate.Entity
         }
 
         /// <summary>
-        /// 每帧更新表现（闪白淡出 + 伤害数字漂浮 + 死亡延迟倒计时）。
+        /// 每帧更新表现（闪白淡出 + 死亡延迟倒计时）。
         /// 由 Bootstrap 在 ViewBridge.SyncAll() 之后调用。
         /// 
-        /// 注意：伤害数字是纯视觉效果，使用 unscaledDeltaTime 驱动——
-        /// 不受 timeScale 影响，避免暂停时冻住导致泄漏。
-        /// 闪白/死亡延迟属于游戏逻辑，仍用 dt（受 timeScale 影响）。
+        /// FLOATING_TEXT_TDD：飘字更新已迁移到 DanmakuSystem.LateUpdate → Rebuild，
+        /// 此处不再管理飘字生命周期。
         /// </summary>
         public void Tick(float dt, EntityManager entityManager)
         {
             TickFlash(dt);
-            TickDamageNumbers(Time.unscaledDeltaTime);
             TickDeathDelays(dt, entityManager);
         }
 
         /// <summary>清除所有状态（DespawnAll 时调用）</summary>
         public void ClearAll()
         {
-            // 回收伤害数字 GO（遍历数组全量而非仅 count，防止 swap-remove 残留引用泄漏）
-            for (int i = 0; i < MAX_DAMAGE_NUMBERS; i++)
-            {
-                if (_damageNumbers[i].Go != null && _damageNumberPool != null)
-                {
-                    _poolManager.Return(_damageNumberPool, _damageNumbers[i].Go);
-                }
-                _damageNumbers[i] = default;
-            }
-            _damageNumberCount = 0;
+            // FLOATING_TEXT_TDD：RBM 飘字由 DanmakuSystem.ClearAll() 统一清除，无需此处管理
             _flashCount = 0;
             _deathDelayCount = 0;
         }
@@ -151,11 +138,15 @@ namespace MiniGameTemplate.Entity
                 }
             }
 
-            // 5. 伤害数字（P2.4：显示 FinalDamage 而非 BaseDamage）
-            if (config.ShowDamageNumber && _damageNumberPool != null && _poolManager != null)
+            // 5. 伤害飘字（FLOATING_TEXT_TDD：走 FloatingTextSystem RBM 渲染）
+            if (config.ShowDamageNumber && _floatingText != null)
             {
                 int displayDmg = context.FinalDamage > 0 ? context.FinalDamage : context.BaseDamage;
-                SpawnDamageNumber(entity.Position, displayDmg, context.IsCritical);
+                var color = context.IsCritical
+                    ? FloatingTextColors.Critical
+                    : FloatingTextColors.Normal;
+                // PK-R2 UA-009：保持与旧 TextMesh 飘字一致的 +0.5f Y 偏移
+                _floatingText.Spawn(entity.Position + new Vector2(0, 0.5f), displayDmg, color, context.IsCritical);
             }
         }
 
@@ -247,78 +238,6 @@ namespace MiniGameTemplate.Entity
             return 1f;
         }
 
-        // ──────────── 伤害数字 ────────────
-
-        /// <summary>
-        /// 在世界坐标生成伤害飘字（TextMesh 对象池）。
-        /// 框架内部 OnHit 调用，游戏层 DOT 等也可直接调用。
-        /// </summary>
-        public void SpawnDamageNumber(Vector2 position, int damage, bool isCritical = false, Color? color = null)
-        {
-            if (_damageNumberCount >= MAX_DAMAGE_NUMBERS) return;
-
-            var go = _poolManager.Get(_damageNumberPool);
-            if (go == null) return;
-
-            go.transform.position = new Vector3(position.x, position.y + 0.5f, 0f);
-
-            // 暴击时放大 1.5x
-            float baseScale = isCritical ? 1.5f : 1f;
-            go.transform.localScale = new Vector3(baseScale, baseScale, 1f);
-
-            var tm = go.GetComponentInChildren<TextMesh>();
-            if (tm != null)
-            {
-                tm.text = isCritical ? $"{damage}!" : damage.ToString();
-                if (color.HasValue) tm.color = color.Value;
-            }
-
-            _damageNumbers[_damageNumberCount++] = new DamageNumberState
-            {
-                Go = go,
-                Timer = 0f,
-                StartY = position.y + 0.5f,
-                BaseScale = baseScale,
-            };
-        }
-
-        private const float DAMAGE_NUMBER_DURATION = 0.8f;
-        private const float DAMAGE_NUMBER_RISE = 1.0f;
-
-        private void TickDamageNumbers(float dt)
-        {
-            for (int i = _damageNumberCount - 1; i >= 0; i--)
-            {
-                ref var state = ref _damageNumbers[i];
-                state.Timer += dt;
-
-                if (state.Go != null)
-                {
-                    float t = state.Timer / DAMAGE_NUMBER_DURATION;
-                    float y = state.StartY + DAMAGE_NUMBER_RISE * t;
-                    var pos = state.Go.transform.position;
-                    state.Go.transform.position = new Vector3(pos.x, y, pos.z);
-
-                    // 淡出缩放（基于 BaseScale 衰减）
-                    float bs = state.BaseScale > 0f ? state.BaseScale : 1f;
-                    float scale = Mathf.Lerp(bs, 0.3f * bs, t);
-                    state.Go.transform.localScale = new Vector3(scale, scale, 1f);
-                }
-
-                if (state.Timer >= DAMAGE_NUMBER_DURATION)
-                {
-                    // 回收
-                    if (state.Go != null && _damageNumberPool != null)
-                        _poolManager.Return(_damageNumberPool, state.Go);
-
-                    // swap-remove + 清空尾部槽位（防止残留 Go 引用）
-                    _damageNumberCount--;
-                    _damageNumbers[i] = _damageNumbers[_damageNumberCount];
-                    _damageNumbers[_damageNumberCount] = default;
-                }
-            }
-        }
-
         // ──────────── 死亡延迟 ────────────
 
         private void RequestDeathDelay(Entity entity, float delay)
@@ -372,14 +291,6 @@ namespace MiniGameTemplate.Entity
             public EntityId EntityId;
             public float Duration;
             public float Remaining;
-        }
-
-        private struct DamageNumberState
-        {
-            public GameObject Go;
-            public float Timer;
-            public float StartY;
-            public float BaseScale; // 暴击放大（P2.4）
         }
 
         private struct DeathDelayState

@@ -1,11 +1,11 @@
 using UnityEngine;
 
-namespace MiniGameTemplate.Danmaku
+namespace MiniGameTemplate.Rendering
 {
     /// <summary>
-    /// 伤害飘字运行时数据。由 DamageNumberSystem 环形缓冲区管理。
+    /// 飘字运行时数据。由 FloatingTextSystem 环形缓冲区管理。
     /// </summary>
-    public struct DamageNumberData
+    public struct FloatingTextData
     {
         /// <summary>当前位置</summary>
         public Vector2 Position;

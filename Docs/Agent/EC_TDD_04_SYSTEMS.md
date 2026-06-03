@@ -449,7 +449,7 @@ EntityViewBridge **只负责位置/朝向同步**。以下表现由游戏层订�
 |------|--------|--------------|
 | 受击闪白 | `OnCollisionHit` | ViewBridge.SyncAll 中检查闪白状态，设置材质属性 |
 | 击退位移 | `MovementComponent.Knockback` | 自动生效（位置变化 → SyncAll 同步） |
-| 伤害数字 | `OnCollisionHit` | 游戏层订阅事件 → 调用 `DamageNumberSystem.Show(pos, damage)` |
+| 伤害数字 | `OnCollisionHit` | `EntityHitReactionHandler.OnHit` → `FloatingTextSystem.Spawn(pos, damage, color)` |
 | 音效 | `OnCollisionHit` / `OnDeath` | 游戏层订阅事件 → 播放对应 AudioClip |
 | 生成特效 | Entity Spawn | ViewBridge.OnEntitySpawned 中播放 `config.SpawnEffect` |
 | 受击特效 | `OnCollisionHit` | 游戏层订阅事件 → 从 `config.HitEffect` PoolManager.Get() |

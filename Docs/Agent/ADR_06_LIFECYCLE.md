@@ -184,3 +184,34 @@ if (!_battleActive.Value) return; // 战斗已结束，跳过所有逻辑
 - MEMORY.md 铁律：`纯视觉效果用 unscaledDeltaTime`
 - ADR-033：Entity-Component 框架
 - EC_TDD_04：Systems 设计
+
+---
+
+# ADR-036：飘字系统统一到 RBM 渲染管线
+
+- **日期**：2026-06-03
+- **状态**：✅ Accepted（已实施 2026-06-03）
+- **触发**：双飘字 Bug（弹幕层 + Entity 层同时渲染同一命中的飘字）
+- **详细 TDD**：[FLOATING_TEXT_TDD.md](FLOATING_TEXT_TDD.md)
+
+## 上下文
+
+项目存在两套并行飘字系统：弹幕层 `DamageNumberSystem`（RBM 零 GC）和 Entity 层 `EntityHitReactionHandler.SpawnDamageNumber`（TextMesh 对象池）。同一次命中可能同时触发两套飘字，产生重叠的不同数值。排查飘字问题需追踪两条管线，维护成本高。
+
+## 决策
+
+合并两套飘字为一套 `FloatingTextSystem`（`MiniGameTemplate.Rendering` 命名空间），基于 RBM + 环形缓冲区。`Spawn()` 签名新增 `Color32 color` 参数，颜色语义由调用方决定。DanmakuSystem 持有并初始化，通过 `DanmakuSystem.FloatingText` 属性公开给 Entity 层。
+
+## 后果
+
+- ✅ 飘字排查只需一个入口
+- ✅ 删除 ~120 行 Entity 层飘字代码 + DamageNumber Prefab + 对象池
+- ✅ 零 GC（消除 TextMesh ToString / GetComponent 开销）
+- ⚠️ Entity 层新增对 DanmakuSystem 的弱运行时引用
+- ⚠️ 暴击 `!` 后缀消失（改为缩放+颜色区分）
+
+## 关联
+
+- ADR-009：DamageNumber 共用数字图集（本 ADR 延续该决策的渲染基础）
+- ADR-035：战斗退场生命周期（ClearAll 清理路径）
+- FLOATING_TEXT_TDD.md：完整实施 TDD

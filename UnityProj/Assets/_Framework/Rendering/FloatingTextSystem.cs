@@ -1,14 +1,17 @@
 using System.Collections.Generic;
-using MiniGameTemplate.Rendering;
+using MiniGameTemplate.Danmaku;
 using UnityEngine;
 
-namespace MiniGameTemplate.Danmaku
+namespace MiniGameTemplate.Rendering
 {
     /// <summary>
-    /// 伤害飘字系统——环形缓冲区 (128) + RenderBatchManager 提交。
-    /// R3.1：迁移到 RuntimeAtlas / RBM，数字 UV 基于 DamageText Channel 的分配结果重映射。
+    /// 通用飘字系统——环形缓冲区 (128) + RenderBatchManager 纯 GPU 渲染。
+    /// 独立于 Entity/Danmaku 业务逻辑，任何系统均可通过 Spawn 显示飘字。
+    /// 
+    /// 生命周期由 DanmakuSystem 管理：
+    ///   Initialize → 每帧 Rebuild → ClearAll → Dispose
     /// </summary>
-    public class DamageNumberSystem
+    public class FloatingTextSystem
     {
         public const int MAX_NUMBERS = 128;
         private const int MAX_DIGITS_PER_NUMBER = 5;
@@ -19,7 +22,7 @@ namespace MiniGameTemplate.Danmaku
         private const float FLOAT_SPEED = 1.5f;
         private const float FADE_START = 0.6f;
 
-        private readonly DamageNumberData[] _buffer = new DamageNumberData[MAX_NUMBERS];
+        private readonly FloatingTextData[] _buffer = new FloatingTextData[MAX_NUMBERS];
         private int _head;
         private int _count;
 
@@ -28,11 +31,14 @@ namespace MiniGameTemplate.Danmaku
         private Texture2D _fallbackAtlas;
         private int _totalQuadCount;
 
+        /// <summary>当前活跃飘字产生的 Quad 总数（Debug HUD 用）</summary>
         public int TotalDrawCount => _totalQuadCount;
 
         /// <summary>
-        /// PI-001: 接收 DanmakuSystem 持有的共享 RuntimeAtlasManager。
+        /// 初始化渲染资源。由 DanmakuSystem.InitializeSubsystems() 调用。
         /// </summary>
+        /// <param name="renderConfig">弹幕渲染配置（提供 NumberAtlas + BulletMaterial）</param>
+        /// <param name="sharedAtlas">共享 RuntimeAtlasManager（可选，null 则 fallback 原始贴图）</param>
         public void Initialize(DanmakuRenderConfig renderConfig, RuntimeAtlasManager sharedAtlas = null)
         {
             _batchManager = new RenderBatchManager();
@@ -55,9 +61,13 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 生成一个伤害飘字。
+        /// 生成一个伤害飘字。线程安全：否（仅主线程调用）。
         /// </summary>
-        public void Spawn(Vector2 position, int damage, bool isCritical = false)
+        /// <param name="position">世界坐标</param>
+        /// <param name="damage">伤害数值（0~99999，超出截断为 5 位）</param>
+        /// <param name="color">飘字颜色</param>
+        /// <param name="isCritical">暴击标记（true → 1.5x 缩放 + 放大动画）</param>
+        public void Spawn(Vector2 position, int damage, Color32 color, bool isCritical = false)
         {
             ref var data = ref _buffer[_head];
             data.Position = position;
@@ -68,9 +78,7 @@ namespace MiniGameTemplate.Danmaku
             data.DigitCount = CountDigits(damage);
             data.Flags = isCritical ? (byte)1 : (byte)0;
             data.Scale = isCritical ? 1.5f : 1f;
-            data.Color = isCritical
-                ? new Color32(255, 200, 50, 255)
-                : new Color32(255, 255, 255, 255);
+            data.Color = color;
 
             _head = (_head + 1) % MAX_NUMBERS;
             if (_count < MAX_NUMBERS)
@@ -78,7 +86,8 @@ namespace MiniGameTemplate.Danmaku
         }
 
         /// <summary>
-        /// 每帧更新 + 重建批次。由 DanmakuSystem.LateUpdate 调用。
+        /// 每帧更新位置/透明度 + 重建 GPU 批次。
+        /// 由 DanmakuSystem.RunLateUpdatePipeline() 调用，传入 unscaledDeltaTime。
         /// </summary>
         public void Rebuild(float dt)
         {
@@ -127,19 +136,7 @@ namespace MiniGameTemplate.Danmaku
             _batchManager.UploadAndDrawAll();
         }
 
-        /// <summary>获取 RuntimeAtlas 统计快照（无 Atlas 时返回 null）。
-        /// CR-06: 共享 Atlas 后此方法返回全局统计，建议使用 DanmakuSystem.GetAllAtlasStats() 代替。</summary>
-        [System.Obsolete("Use DanmakuSystem.GetAllAtlasStats() for shared atlas stats.")]
-        public RuntimeAtlasStats? GetAtlasStats()
-        {
-            return _runtimeAtlas != null && _runtimeAtlas.IsInitialized
-                ? _runtimeAtlas.GetStats()
-                : (RuntimeAtlasStats?)null;
-        }
-
-        /// <summary>
-        /// 清除所有活跃飘字——关卡切换/重试时由 DanmakuSystem.ClearAll() 调用。
-        /// </summary>
+        /// <summary>清除所有活跃飘字（战斗退场/关卡切换）。</summary>
         public void ClearAll()
         {
             for (int i = 0; i < MAX_NUMBERS; i++)
@@ -149,6 +146,7 @@ namespace MiniGameTemplate.Danmaku
             _count = 0;
         }
 
+        /// <summary>释放 GPU 资源。</summary>
         public void Dispose()
         {
             _batchManager?.Dispose();
@@ -175,7 +173,7 @@ namespace MiniGameTemplate.Danmaku
             return default;
         }
 
-        private void WriteNumber(RenderBatchManager.RenderBucket bucket, in DamageNumberData data, float alpha, Rect atlasUv)
+        private void WriteNumber(RenderBatchManager.RenderBucket bucket, in FloatingTextData data, float alpha, Rect atlasUv)
         {
             int damage = data.Damage;
             int digits = data.DigitCount;
@@ -250,5 +248,16 @@ namespace MiniGameTemplate.Danmaku
             if (value < 10000) return 4;
             return 5;
         }
+    }
+
+    /// <summary>
+    /// 飘字预定义颜色常量——避免颜色魔法数字散落各处。
+    /// </summary>
+    public static class FloatingTextColors
+    {
+        public static readonly Color32 Normal   = new Color32(255, 255, 255, 255); // 白色
+        public static readonly Color32 Critical = new Color32(255, 200, 50, 255);  // 暴击金
+        public static readonly Color32 Dot      = new Color32(153, 51, 255, 255);  // DOT 紫
+        public static readonly Color32 Heal     = new Color32(50, 255, 100, 255);  // 治疗绿（预留）
     }
 }
