@@ -16,6 +16,8 @@ namespace Game.ShooterGame.UI
     public class SkillCDPanel
     {
         private const int MAX_SKILLS = 6;
+        /// <summary>UI 可显示的最大槽位数（供外部遍历）</summary>
+        public const int MAX_UI_SLOTS = MAX_SKILLS;
         private const int COLUMNS = 3;
         private const float SLOT_SIZE = 48f;
         private const float GAP = 4f;

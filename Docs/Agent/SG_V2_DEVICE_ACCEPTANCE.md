@@ -23,7 +23,7 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 | 通过日期 | 验收项 | 来源 |
 |---------|--------|------|
 | 2026-05-25 | TDD-06 普攻升格（SK_NormalAttack + AimMode + 迁移工具 + PlayTest） | TDD06_ACCEPTANCE_GUIDE |
-| 2026-05-25 | Sprint 5 PlayTest G5~G14 + G16 全部通过 | S5_FINAL_PLAYTEST_GUIDE |
+| 2026-05-25 | Sprint 5 PlayTest G14 + G16 通过（⚠️ G5~G13 未实现，原标记作废） | S5_FINAL_PLAYTEST_GUIDE |
 | 2026-05-26 | TDD-07 退场生命周期 4 条退场路径 PlayMode | TDD07_ACCEPTANCE_GUIDE |
 | 2026-05-26 | 碰撞重构：子弹碰基地 Rect 判定视觉正确 | 碰撞重构 CR |
 | — | Sprint 3 MCP 验收项（A1~A10, B1~B2, D1~D5, E1~E3, E8, G2~G5, G10~G11） | SG_V2_S3 |

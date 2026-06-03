@@ -39,5 +39,11 @@ namespace Game.ShooterGame
 
         /// <summary>基地最大 HP</summary>
         public int BaseHpMax;
+
+        /// <summary>失败时停在第几波（1-based）</summary>
+        public int CurrentWave;
+
+        /// <summary>本关总波数</summary>
+        public int TotalWaves;
     }
 }

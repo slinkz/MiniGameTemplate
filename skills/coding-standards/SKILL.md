@@ -118,9 +118,48 @@ description: >
 - 执行清单：① 对每个公开字段 `Find All References` ② 确认引用已迁移/删除 ③ 删除旧类+字段+Editor ④ 编译通过=完成
 - ❌ 禁止"先标 Obsolete 以后再删" / "留着兼容" / 只看类引用不看字段引用
 
-## §14 伤害飘字禁止 FairyGUI（P0）
+## §14 伤害飘字必须走 FloatingTextSystem（P0）
 
-**战斗伤害数字必须用框架层 `EntityHitReactionHandler` 的 TextMesh 对象池（世界空间），禁止 FairyGUI（UI 空间不跟相机缩放→飘字小一个量级）。**
+**战斗伤害数字必须走 `FloatingTextSystem`（RBM 渲染，`MiniGameTemplate.Rendering` 命名空间），禁止 FairyGUI/TextMesh 对象池。颜色语义由调用方通过 `FloatingTextColors` 常量传入，系统内部不硬编码颜色。**
+
+## §15 Sprint 验收防御机制（P0 · ADR-037）
+
+**编译通过 ≠ 功能交付。Agent 自验不具备最终裁判权。**
+
+### 15.1 TDD 交付物清单
+
+每个 TDD 子任务（G-item）**必须**在任务定义时列出"交付物文件路径清单"：
+
+```markdown
+| ID | 功能 | 交付物文件 |
+|----|------|-----------|
+| G5 | 技能CD HUD | BattleSkillCDHUD.cs, BattleSkillCDHUDExtension.cs |
+```
+
+### 15.2 Gate-0 文件存在性扫描
+
+Sprint 验收的**第一步**（Gate-0）：逐一检查交付物清单中的文件是否存在于磁盘。
+
+- **扫描工具**：`codegraph_search` 或 `search_file` 按路径/类名搜索
+- **缺文件 = 直接中止**：不进入功能验收，标记 "⬜ 未实现（文件不存在）"
+- **禁止**：以"编译通过"或"无报错"作为文件存在的替代证据
+
+### 15.3 验收三态标记
+
+废弃旧的 ✅/空白 二态。所有验收结果只允许三种状态：
+
+| 标记 | 含义 | 使用条件 |
+|------|------|---------|
+| ✅ PASS | 功能正确 | 文件存在 + 运行时行为符合验收标准 |
+| ⬜ 未实现 | 代码不存在 | Gate-0 扫描未找到交付物文件 |
+| ❌ FAIL | 存在但不正确 | 文件存在但行为不符合验收标准 |
+
+### 15.4 传播隔离（天命人确认节点）
+
+- Agent 的 Sprint 自验结果 → 写入 TDD 文档的验收总表
+- **不自动传播**到 `DEVICE_ACCEPTANCE.md`（统一验收手册）
+- 天命人在 H 区（真机/UI/性能统一验收）手动确认后才更新统一验收手册
+- **铁律**：任何 "全部通过" 级别的结论必须经天命人确认，Agent 无权单方面宣布
 
 ---
 
@@ -137,7 +176,8 @@ description: >
 | PIT-050 | 退场 Raise 后 yield 前未切状态→误判通关 | P0 | §5b |
 | PIT-051 | 被替代系统未物理删除，旧字段隐性覆盖新系统 | P0 | §13 |
 | PIT-052 | 改数据模型未同步自定义 Editor（枚举序列化错位为典型表现） | P0 | §6 |
-| PIT-053 | FairyGUI 飘字在 UI 空间不跟相机缩放，比 TextMesh 世界空间飘字小一个量级 | P0 | §14 |
+| PIT-053 | FairyGUI/TextMesh 飘字性能差且不跟相机缩放，必须走 FloatingTextSystem（RBM） | P0 | §14 |
+| PIT-054 | 编译通过≠功能交付，Agent 自验批量标通过但代码文件不存在 | P0 | §15 |
 
 ---
 

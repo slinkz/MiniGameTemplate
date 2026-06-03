@@ -285,6 +285,34 @@ namespace MiniGameTemplate.Entity
         public int ActiveDotCount => _activeDotCount;
 
         /// <summary>
+        /// 获取指定索引的活跃 Buff 显示数据（UI 用）。
+        /// index 范围 [0, ActiveBuffCount)。
+        /// </summary>
+        public BuffDisplayData GetBuffDisplayData(int index)
+        {
+            if (index < 0 || index >= _activeBuffCount)
+                return default;
+
+            ref var slot = ref _buffSlots[index];
+            return new BuffDisplayData
+            {
+                BuffId = slot.BuffId,
+                Tag = slot.Tag,
+                RemainingTime = slot.RemainingTime,
+                Duration = slot.Duration,
+            };
+        }
+
+        /// <summary>UI 只读 Buff 显示数据</summary>
+        public struct BuffDisplayData
+        {
+            public int BuffId;
+            public BuffTag Tag;
+            public float RemainingTime;
+            public float Duration;
+        }
+
+        /// <summary>
         /// 获取子弹数修正倍率（已废弃——改用 BulletCountModifier 属性）。
         /// </summary>
         [System.Obsolete("Use BulletCountModifier property instead")]

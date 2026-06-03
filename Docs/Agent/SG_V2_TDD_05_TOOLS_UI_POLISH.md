@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2-tdd
 scope: sprint5-tools-ui-polish
-last_verified: 2026-05-25
+last_verified: 2026-06-03
 depends_on: [SG_V2_TDD_INDEX, SG_V2_TDD_04_LEVEL_BALANCE, SG_GDD_04_WORKFLOW, SG_GDD_05_SUPPLEMENT]
 related_code: Assets/Editor/ShooterGame/**, Assets/_Game/Scripts/ShooterGame/UI/**, Assets/_Framework/EntitySystem/**
 ---
@@ -638,15 +638,15 @@ BuffConfigEditor : Editor
 | G2 | T2 Buff 速览 | 一览所有 Buff 属性 | ✅ 编译通过+脚本就位 |
 | G3 | T5 ID 检测 | 无冲突通过/有冲突报错 | ✅ MCP 验证 0 冲突 |
 | G4 | T8 构建卡口 | 非法 SO 阻断构建 | ✅ RunFullValidation=True |
-| G5 | 技能 CD HUD | 6 个 CD 指示器四态正确 | ✅ PlayTest 通过 |
-| G6 | 被动栏 HUD | 3 个被动三态正确 | ✅ PlayTest 通过 |
-| G7 | 波次动效 | 弹跳+FINAL WAVE | ✅ PlayTest 通过 |
-| G8 | 通知条 | 拾取弹出+队列限 2 | ✅ PlayTest 通过 |
-| G9 | 暂停菜单 | Build+Buff+统计正确 | ✅ PlayTest 通过 |
-| G10 | 胜利面板 | 星级+技能贡献+解锁触发 | ✅ PlayTest 通过 |
-| G11 | 失败面板 | 火力提示+付费入口 | ✅ PlayTest 通过 |
-| G12 | 解锁弹窗 | 正确时序+立即装备 | ✅ PlayTest 通过 |
-| G13 | 受伤视觉反馈 | 红闪+震动+反击时序 | ✅ PlayTest 通过 |
+| G5 | 技能 CD HUD | 6 个 CD 指示器四态正确 | ✅ 编码完成（待真机验收） |
+| G6 | 被动栏 HUD | 3 个被动三态正确 | ✅ 编码完成（待真机验收） |
+| G7 | 波次动效 | 弹跳+FINAL WAVE | ✅ 编码完成（待真机验收） |
+| G8 | 通知条 | 拾取弹出+队列限 2 | ✅ 编码完成（待真机验收） |
+| G9 | 暂停菜单 | Build+Buff+统计正确 | ✅ 编码完成（待真机验收） |
+| G10 | 胜利面板 | 星级+技能贡献+解锁触发 | ✅ 编码完成（待真机验收） |
+| G11 | 失败面板 | 火力提示+付费入口 | ✅ 编码完成（待真机验收） |
+| G12 | 解锁弹窗 | 正确时序+立即装备 | ✅ 编码完成（待真机验收） |
+| G13 | 受伤视觉反馈 | 红闪+震动+反击时序 | ✅ 编码完成（待真机验收） |
 | G14 | 完整流程 | 5 关通关无崩溃 | ✅ PlayTest 通过 |
 | G15 | BuffConfigEditor | Tag 显隐+HelpBox+预览 | ✅ MCP 验证（12个SO+模板排除） |
 | G16 | EditMode Test | SOValidationRulesTests 全绿 | ✅ PlayTest 通过 |

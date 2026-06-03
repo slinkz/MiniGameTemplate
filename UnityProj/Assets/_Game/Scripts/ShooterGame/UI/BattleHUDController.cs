@@ -2,13 +2,23 @@ using System.Threading.Tasks;
 using UnityEngine;
 using FairyGUI;
 using MiniGameTemplate.Data;
+using MiniGameTemplate.Entity;
 using MiniGameTemplate.UI;
 
 namespace Game.ShooterGame.UI
 {
     /// <summary>
-    /// BattleHUD Controller——血条 + 波次指示 + 暂停按钮 + 受伤红闪。
-    /// TDD_04 §4
+    /// BattleHUD Controller V2——统一管理战斗 HUD 所有子组件。
+    /// TDD_05 §S5.4
+    /// 
+    /// 子组件：
+    /// - 血条 + 百分比文字
+    /// - SkillCDPanel（6 个技能 CD 指示器）
+    /// - PassiveIndicatorPanel（3 个被动栏）
+    /// - WaveIndicatorAnimator（波次弹跳动效）
+    /// - PickupNotificationQueue（拾取通知条）
+    /// - BattleVisualFeedbackSystem（红闪/反击/道具吸入）
+    /// - BattleStartSequence（战斗开始过渡动效）
     /// </summary>
     public class BattleHUDController : MonoBehaviour, IBattleHUDController
     {
@@ -39,6 +49,17 @@ namespace Game.ShooterGame.UI
         private const float PREDAMAGE_DELAY = 0.3f;
         private float _predamageTimer;
 
+        // ── V2 子组件 ──
+        private SkillCDPanel _skillCDPanel;
+        private PassiveIndicatorPanel _passivePanel;
+        private WaveIndicatorAnimator _waveAnimator;
+        private PickupNotificationQueue _notificationQueue;
+        private BattleVisualFeedbackSystem _visualFeedback;
+        private BattleStartSequence _startSequence;
+
+        // 外部注入的 Entity 引用（由 BattleController 设置）
+        private Entity _playerEntity;
+
 #if UNITY_EDITOR
         [Header("Debug (Editor Only)")]
         public float Debug_DisplayHP;
@@ -56,12 +77,13 @@ namespace Game.ShooterGame.UI
             _hpBar = _view.GetChild("hp_bar").asProgress;
             _waveText = _view.GetChild("text_wave").asTextField;
             _hpPctText = _view.GetChild("text_hp_pct")?.asTextField;
+
+            InitSubComponents();
         }
 
         /// <summary>
         /// 异步版本——自动加载 FairyGUI 包后再创建 HUD。
         /// Battle 场景应优先使用此方法。
-        /// 直接传入 Binder，确保包加载与扩展绑定配对，支持直接运行 Battle 场景。
         /// </summary>
         public async Task ShowAsync()
         {
@@ -78,6 +100,68 @@ namespace Game.ShooterGame.UI
             UpdateHPBarColor(_targetHP);
             UpdateHPText(_targetHP);
             UpdateWaveText();
+        }
+
+        // ── V2: 子组件管理 ──
+
+        /// <summary>
+        /// 注入玩家 Entity 引用（由 BattleController 在 InitBattle 后调用）。
+        /// </summary>
+        public void SetPlayerEntity(Entity player)
+        {
+            _playerEntity = player;
+        }
+
+        /// <summary>获取视觉反馈系统（BattleController 用于触发红闪等）</summary>
+        public BattleVisualFeedbackSystem VisualFeedback => _visualFeedback;
+
+        /// <summary>获取通知队列（PickupSystem 拾取时调用）</summary>
+        public PickupNotificationQueue NotificationQueue => _notificationQueue;
+
+        /// <summary>获取波次动效器（BattleController 波次切换时调用）</summary>
+        public WaveIndicatorAnimator WaveAnimator => _waveAnimator;
+
+        /// <summary>获取战斗开始序列</summary>
+        public BattleStartSequence StartSequence => _startSequence;
+
+        private void InitSubComponents()
+        {
+            if (_view == null) return;
+
+            // 血条位于屏幕最下方——获取 Y 坐标用于定位技能面板
+            float hpBarY = _view.height - 40f; // 粗略估算
+
+            // 1. 技能 CD 面板
+            _skillCDPanel = new SkillCDPanel(_view, hpBarY);
+
+            // 2. 被动栏
+            _passivePanel = new PassiveIndicatorPanel(_view);
+
+            // 3. 波次动效
+            _waveAnimator = new WaveIndicatorAnimator(_waveText);
+
+            // 4. 拾取通知队列
+            float centerX = _view.width * 0.5f;
+            float notifY = hpBarY - 60f; // 基地血条上偏高
+            _notificationQueue = new PickupNotificationQueue(_view, centerX, notifY);
+
+            // 5. 视觉反馈系统
+            _visualFeedback = new BattleVisualFeedbackSystem();
+            _visualFeedback.Init(_view);
+
+            // 6. 战斗开始序列（延迟到 PlayStartSequence 时初始化）
+            _startSequence = new BattleStartSequence(_view);
+        }
+
+        /// <summary>
+        /// 播放战斗开始过渡动效（TDD_05 S5.4 PK-R3 UID-010）。
+        /// </summary>
+        public void PlayStartSequence(int waveNumber, System.Action onComplete)
+        {
+            if (_startSequence != null)
+                _startSequence.Play(waveNumber, onComplete);
+            else
+                onComplete?.Invoke();
         }
 
         // ── 生命周期 ──
@@ -98,6 +182,11 @@ namespace Game.ShooterGame.UI
 
         private void OnDestroy()
         {
+            _skillCDPanel?.Dispose();
+            _passivePanel?.Dispose();
+            _notificationQueue?.Clear();
+            _visualFeedback?.Dispose();
+
             if (_view != null)
             {
                 _view.Dispose();
@@ -107,12 +196,127 @@ namespace Game.ShooterGame.UI
 
         private void Update()
         {
-            UpdatePreDamage(Time.deltaTime);
+            float dt = Time.deltaTime;
+
+            UpdatePreDamage(dt);
+            TickSubComponents(dt);
 
 #if UNITY_EDITOR
             Debug_DisplayHP = _displayHP;
             Debug_TargetHP = _targetHP;
 #endif
+        }
+
+        /// <summary>
+        /// 每帧驱动所有子组件。
+        /// </summary>
+        private void TickSubComponents(float dt)
+        {
+            // 通知条超时淡出
+            _notificationQueue?.Tick(dt);
+
+            // 视觉反馈淡出
+            _visualFeedback?.Tick(dt);
+
+            // 被动栏呼吸动画
+            _passivePanel?.Tick(dt);
+
+            // 技能 CD + 被动状态实时同步
+            if (_playerEntity != null)
+            {
+                TickSkillCDPanel();
+                TickPassivePanel();
+            }
+        }
+
+        private void TickSkillCDPanel()
+        {
+            if (_skillCDPanel == null) return;
+
+            var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
+            if (skillComp == null) return;
+
+            for (int i = 0; i < SkillCDPanel.MAX_UI_SLOTS; i++)
+            {
+                int slotIndex = i + SkillCDPanel.SKILL_SLOT_START_INDEX;
+                ref readonly var slot = ref skillComp.GetSlot(slotIndex);
+
+                if (slot.IsEmpty)
+                {
+                    _skillCDPanel.UpdateSlot(i, SkillCDPanel.SkillSlotState.Empty);
+                    continue;
+                }
+
+                SkillCDPanel.SkillSlotState uiState;
+                float progress = 0f;
+
+                switch (slot.State)
+                {
+                    case SkillState.Cooldown:
+                        uiState = SkillCDPanel.SkillSlotState.Cooldown;
+                        progress = 1f - slot.CooldownProgress; // 进度 0→1 代表 CD 恢复
+                        break;
+                    case SkillState.Casting:
+                        uiState = SkillCDPanel.SkillSlotState.Casting;
+                        break;
+                    case SkillState.Recovery:
+                        uiState = SkillCDPanel.SkillSlotState.Release;
+                        break;
+                    default: // Idle
+                        uiState = SkillCDPanel.SkillSlotState.Ready;
+                        break;
+                }
+
+                _skillCDPanel.UpdateSlot(i, uiState, progress);
+            }
+        }
+
+        private void TickPassivePanel()
+        {
+            if (_passivePanel == null) return;
+
+            var passiveComp = _playerEntity.GetComponent(ComponentType.Passive) as PassiveComponent;
+            if (passiveComp == null || !passiveComp.IsActive)
+            {
+                for (int i = 0; i < PassiveComponent.MAX_PASSIVES; i++)
+                    _passivePanel.UpdateSlot(i, PassiveIndicatorPanel.PassiveSlotState.Empty);
+                return;
+            }
+
+            for (int i = 0; i < PassiveComponent.MAX_PASSIVES; i++)
+            {
+                ref readonly var slot = ref passiveComp.GetSlot(i);
+
+                if (slot.Config == null)
+                {
+                    _passivePanel.UpdateSlot(i, PassiveIndicatorPanel.PassiveSlotState.Empty);
+                    continue;
+                }
+
+                if (slot.IsEffectActive)
+                {
+                    // Active 态：环形进度消耗
+                    // 持续时间来自 LinkedBuff.Duration（Buff 型被动），即时型按 ActiveTimer 原始值
+                    float duration = slot.Config.LinkedBuff != null
+                        ? slot.Config.LinkedBuff.Duration
+                        : slot.TotalCooldown; // fallback
+                    float progress = duration > 0 ? slot.ActiveTimer / duration : 0f;
+                    _passivePanel.UpdateSlot(i, PassiveIndicatorPanel.PassiveSlotState.Active, progress);
+                }
+                else if (slot.CooldownTimer > 0f)
+                {
+                    // CD 中
+                    float progress = slot.TotalCooldown > 0
+                        ? 1f - (slot.CooldownTimer / slot.TotalCooldown)
+                        : 0f;
+                    _passivePanel.UpdateSlot(i, PassiveIndicatorPanel.PassiveSlotState.Cooldown, progress);
+                }
+                else
+                {
+                    // Ready
+                    _passivePanel.UpdateSlot(i, PassiveIndicatorPanel.PassiveSlotState.Ready);
+                }
+            }
         }
 
         // ── 血条 ──
@@ -175,6 +379,8 @@ namespace Game.ShooterGame.UI
         private void OnWaveChanged(int newWave)
         {
             UpdateWaveText();
+            // V2: 触发波次切换动效
+            _waveAnimator?.PlayWaveTransition(newWave, _totalWaveCount.Value);
         }
 
         private void OnTotalWaveCountChanged(int newTotalWaveCount)

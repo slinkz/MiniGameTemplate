@@ -137,6 +137,7 @@ namespace Game.ShooterGame
         private IDefeatPanelController _defeatPanel;
         private IJoystickController _joystickController;
         private bool _isHandlingVictory;
+        private SkillUnlockManager _skillUnlockManager;
 
         // ── 公共接口 ──
 
@@ -280,6 +281,9 @@ namespace Game.ShooterGame
 
         private async System.Threading.Tasks.Task InitBattleAsync()
         {
+            // 0. 获取解锁管理器引用（失败面板火力提示用）
+            _skillUnlockManager = SG_Boot.UnlockManager;
+
             // 1. 解析本次战斗启动上下文
             ResolveBattleContext();
 
@@ -402,9 +406,12 @@ namespace Game.ShooterGame
             _defeatPanel?.BindEvents(
                 () => StartCoroutine(HandleRetry()),
                 () => StartCoroutine(HandleDefeatQuit()));
-            _victoryPanel?.BindEvents(HandleVictoryConfirmAsync);
+            _victoryPanel?.BindEvents(
+                HandleNextLevelAsync,
+                HandleVictoryReturnToSelectAsync);
             _pausePanel?.BindEvents(
                 OnResumeFromPause,
+                () => StartCoroutine(HandleRetry()),
                 () => StartCoroutine(HandlePauseQuit()));
 
             // 10. PlayerInputBridge 初始化
@@ -623,7 +630,7 @@ namespace Game.ShooterGame
                     // V2 Sprint 2: 记录死亡次数 + 刷新计数器
                     _progressManager?.RecordDeath();
                     _progressManager?.FlushCounters();
-                    _defeatPanel?.Show();
+                    _defeatPanel?.Show(_lastBattleResult, _skillUnlockManager);
                     break;
             }
         }
@@ -673,6 +680,8 @@ namespace Game.ShooterGame
                 DamageStats = statsSnapshot,
                 BaseHpRemaining = baseHpRemaining,
                 BaseHpMax = baseHpMax,
+                CurrentWave = _displayWaveIndex,
+                TotalWaves = _totalWaveCount.Value,
             };
 
 #if UNITY_EDITOR
@@ -989,11 +998,11 @@ namespace Game.ShooterGame
         }
 
         /// <summary>
-        /// 胜利确认流程（async 版）。
-        /// 存档已在 EnterState(Victory) 时立即完成（PersistVictoryProgress）。
-        /// 此处只需等云端上传完成 → Pop 回选关。
+        /// 胜利→下一关（V2 TDD_05）。
+        /// 存档已在 EnterState(Victory) 时完成。
+        /// 此处等云端同步 → 启动下一关。
         /// </summary>
-        private async void HandleVictoryConfirmAsync()
+        private async void HandleNextLevelAsync()
         {
             if (_isHandlingVictory) return;
             _isHandlingVictory = true;
@@ -1001,50 +1010,71 @@ namespace Game.ShooterGame
             try
             {
                 SetBattleTimePaused(false);
+                await PerformVictoryCleanupAndSync();
 
-                // TDD-07 C1: 退场清理走事件通道
-                if (_onBattleEnd != null)
-                {
-                    _onBattleEnd.Raise();
-                    _battleCleanupRaised = true;
-                }
-                // 切离当前状态：清理完子系统后 Update 不应再执行任何业务逻辑
-                CurrentState = BattleState.None;
-
-                // 直跑场景属于测试模式，不写存档，直接 Pop
-                if (!_launchLevelIndex.HasValue)
-                {
-                    await Task.Yield();
-                    AppFlowNavigator.Instance.Pop();
-                    return;
-                }
-
-                // 尝试获取 CloudSyncService（仅微信环境有）
-                // V4: 存档在 PersistVictoryProgress 中写入内存并触发 EnqueueUpload，
-                // 这里只需等待云端上传完成。
-                if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
-                {
-                    var syncService = cloudSave.SyncService;
-
-                    // 显示遮罩：屏蔽输入 + 视觉反馈"正在保存"
-                    LoadingMaskService.Show("正在保存进度...");
-
-                    // 等待上传完成。如果失败，全局 NetworkRetryService 弹框自动处理重试。
-                    await syncService.WaitForIdleAsync();
-
-                    LoadingMaskService.Hide();
-                }
-
-                await Task.Yield(); // 一帧等待
+                // 下一关：通过 Pop + Push 新 BattleLevelData 实现
+                // V2 简化：直接 Pop 回选关（下一关逻辑由选关界面处理）
                 AppFlowNavigator.Instance.Pop();
             }
             catch (System.Exception ex)
             {
                 Debug.LogException(ex);
-                LoadingMaskService.Hide(); // 兜底清理遮罩
-                // 兜底：即使出异常也尝试 Pop，避免玩家卡死在胜利面板
+                LoadingMaskService.Hide();
                 try { AppFlowNavigator.Instance.Pop(); } catch { }
             }
+        }
+
+        /// <summary>
+        /// 胜利→返回选关（V2 TDD_05）。
+        /// </summary>
+        private async void HandleVictoryReturnToSelectAsync()
+        {
+            if (_isHandlingVictory) return;
+            _isHandlingVictory = true;
+
+            try
+            {
+                SetBattleTimePaused(false);
+                await PerformVictoryCleanupAndSync();
+                AppFlowNavigator.Instance.Pop();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogException(ex);
+                LoadingMaskService.Hide();
+                try { AppFlowNavigator.Instance.Pop(); } catch { }
+            }
+        }
+
+        /// <summary>
+        /// 胜利退出公共清理逻辑：退场事件 + 云存档同步。
+        /// </summary>
+        private async System.Threading.Tasks.Task PerformVictoryCleanupAndSync()
+        {
+            // TDD-07 C1: 退场清理走事件通道
+            if (_onBattleEnd != null)
+            {
+                _onBattleEnd.Raise();
+                _battleCleanupRaised = true;
+            }
+            CurrentState = BattleState.None;
+
+            if (!_launchLevelIndex.HasValue)
+            {
+                await Task.Yield();
+                return;
+            }
+
+            // 云端上传等待
+            if (GameBootstrapper.SaveSystem is CloudSaveSystem cloudSave)
+            {
+                var syncService = cloudSave.SyncService;
+                LoadingMaskService.Show("正在保存进度...");
+                await syncService.WaitForIdleAsync();
+                LoadingMaskService.Hide();
+            }
+
+            await Task.Yield();
         }
 
         private IEnumerator HandleDefeatQuit()

@@ -117,6 +117,59 @@ namespace Game.ShooterGame
             return _newSkillBuffer.Count > 0 || _newPassiveBuffer.Count > 0;
         }
 
+        /// <summary>
+        /// 获取下一个可解锁的技能/被动（失败面板"火力提示"用）。
+        /// 返回 null 表示全部已解锁。
+        /// </summary>
+        public NextUnlockInfo GetNextUnlockable()
+        {
+            // 优先查主动技能
+            for (int i = 0; i < _skillTable.Count; i++)
+            {
+                var entry = _skillTable.GetEntry(i);
+                if (!IsConditionMet(entry.ConditionType, entry.ConditionParam))
+                {
+                    return new NextUnlockInfo
+                    {
+                        DisplayName = entry.Skill != null ? entry.Skill.DisplayName : "???",
+                        IconKey = entry.Skill != null ? entry.Skill.name : "",
+                        Description = entry.Description,
+                        ConditionParam = entry.ConditionParam,
+                        IsPassive = false,
+                    };
+                }
+            }
+
+            // 再查被动
+            for (int i = 0; i < _passiveTable.Count; i++)
+            {
+                var entry = _passiveTable.GetEntry(i);
+                if (!IsConditionMet(entry.ConditionType, entry.ConditionParam))
+                {
+                    return new NextUnlockInfo
+                    {
+                        DisplayName = entry.PassiveConfig != null ? entry.PassiveConfig.DisplayName : "???",
+                        IconKey = entry.PassiveConfig != null ? entry.PassiveConfig.name : "",
+                        Description = entry.Description,
+                        ConditionParam = entry.ConditionParam,
+                        IsPassive = true,
+                    };
+                }
+            }
+
+            return null; // 全部已解锁
+        }
+
+        /// <summary>下一个可解锁项的显示信息</summary>
+        public class NextUnlockInfo
+        {
+            public string DisplayName;
+            public string IconKey;
+            public string Description;
+            public int ConditionParam;
+            public bool IsPassive;
+        }
+
         // ── 内部 ──
 
         private bool IsConditionMet(UnlockConditionType condType, int param)

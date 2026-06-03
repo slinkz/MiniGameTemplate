@@ -15,25 +15,25 @@ namespace Game.ShooterGame
         GComponent GetView();
     }
 
-    /// <summary>暂停面板 Controller 接口</summary>
+    /// <summary>暂停面板 Controller 接口（V2：增加重试回调）</summary>
     public interface IPausePanelController
     {
         void Show();
         void Hide();
-        void BindEvents(Action onResume, Action onQuit);
+        void BindEvents(Action onResume, Action onRetry, Action onQuit);
     }
 
-    /// <summary>胜利面板 Controller 接口</summary>
+    /// <summary>胜利面板 Controller 接口（V2：下一关 + 返回选关）</summary>
     public interface IVictoryPanelController
     {
         void Show(BattleResultData result);
-        void BindEvents(Action onConfirm);
+        void BindEvents(Action onNextLevel, Action onReturnToSelect);
     }
 
-    /// <summary>失败面板 Controller 接口</summary>
+    /// <summary>失败面板 Controller 接口（V2：传入结果数据用于波次/击杀展示）</summary>
     public interface IDefeatPanelController
     {
-        void Show();
+        void Show(BattleResultData result, SkillUnlockManager unlockManager);
         void BindEvents(Action onRetry, Action onQuit);
     }
 

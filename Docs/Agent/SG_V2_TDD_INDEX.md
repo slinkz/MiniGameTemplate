@@ -70,11 +70,11 @@ Sprint 5（策划工具+UI+打磨）
 | [SG_V2_TDD_02](SG_V2_TDD_02_SKILL_EQUIP_ITEM.md) | Sprint 2 | 技能解锁 + 战前装备 + 道具系统 | ~14h | ✅ 编码+逻辑验收通过 |
 | [SG_V2_TDD_03](SG_V2_TDD_03_BUFF_DOT_PASSIVE.md) | Sprint 3 | Buff 扩展 + DOT + 被动技能 | ~15h | ✅ 编码+逻辑验收通过 |
 | [SG_V2_TDD_04](SG_V2_TDD_04_LEVEL_BALANCE.md) | Sprint 4 | 关卡编排 + 数值平衡 | ~8h | ✅ 编码+逻辑验收通过 |
-| [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h | ✅ 全部验收通过 |
+| [SG_V2_TDD_05](SG_V2_TDD_05_TOOLS_UI_POLISH.md) | Sprint 5 | 策划工具 + UI 完善 + 打磨 | ~18.5h | ✅ 编码完成 2026-06-03 |
 | [SG_V2_TDD_06](SG_V2_TDD_06_ATTACK_SKILL.md) | 架构升级 | 普攻升格为技能系统（AimMode 数据驱动） | ~20.5h | ✅ 验收通过 2026-05-25 |
 | [SG_V2_TDD_07](SG_V2_TDD_07_LIFECYCLE.md) | 架构升级 | 战斗退场生命周期统一事件通道（ADR-035） | ~6h | ✅ 编码完成 2026-05-26 |
 
-**总计**：~92h（Sprint 1~5: 65.5h + 架构升级: 26.5h）— 全部编码完成 🎉
+**总计**：~92h（Sprint 1~5: 65.5h + 架构升级: 26.5h）— 全部 Sprint 编码完成
 
 ---
 

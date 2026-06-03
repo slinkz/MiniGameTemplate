@@ -1,27 +1,36 @@
 using System;
 using UnityEngine;
 using FairyGUI;
-using MiniGameTemplate.Data;
 
 namespace Game.ShooterGame.UI
 {
     /// <summary>
-    /// 失败面板 Controller。TDD_04 §7
+    /// 失败结算面板 Controller（V2 TDD_05 S5.5）。
+    /// 职责：
+    ///   - "基地沦陷" + 存活至 Wave N/M + 击杀 X/Y
+    ///   - 火力提示（下一个可解锁技能）
+    ///   - 暗红色淡入动效（0.4s）
+    ///   - 重新挑战（CTA）+ 返回选关按钮
+    ///   - 不触发解锁弹窗
     /// </summary>
     public class DefeatPanelController : MonoBehaviour, IDefeatPanelController
     {
-        [SerializeField] private IntVariable _killCount;
-        [SerializeField] private IntVariable _totalEnemyCount;
+        // ── 常量 ──
+
+        private const float FADE_IN_DURATION = 0.4f;
+
+        // ── FairyGUI ──
 
         private GComponent _view;
+
+        // ── 回调 ──
+
         private Action _onRetry;
         private Action _onQuit;
 
-        // 鼓励文案池
-        private static readonly string[] ENCOURAGE_TEXTS =
-        {
-            "再来一次！", "差一点！", "你能行！", "这次更近了！"
-        };
+        // ══════════════════════════════════════════════
+        // 接口实现
+        // ══════════════════════════════════════════════
 
         public void BindEvents(Action onRetry, Action onQuit)
         {
@@ -29,25 +38,100 @@ namespace Game.ShooterGame.UI
             _onQuit = onQuit;
         }
 
-        public void Show()
+        public void Show(BattleResultData result, SkillUnlockManager unlockManager)
         {
-            if (_view == null)
-            {
-                _view = UIPackage.CreateObject("SG_Popup", "DefeatPanel").asCom;
-                GRoot.inst.AddChild(_view);
-                _view.MakeFullScreen();
-                _view.GetChild("btn_retry").asButton.onClick.Add(OnRetryClicked);
-                _view.GetChild("btn_quit").asButton.onClick.Add(OnQuitClicked);
-            }
-
-            // 填充数据
-            _view.GetChild("text_progress").asTextField.text =
-                $"消灭了 {_killCount.Value}/{_totalEnemyCount.Value} 架";
-            _view.GetChild("text_encourage").asTextField.text =
-                ENCOURAGE_TEXTS[UnityEngine.Random.Range(0, ENCOURAGE_TEXTS.Length)];
-
-            _view.visible = true;
+            EnsureView();
+            PopulateData(result, unlockManager);
+            StartShowAnimation();
         }
+
+        // ══════════════════════════════════════════════
+        // 内部
+        // ══════════════════════════════════════════════
+
+        private void EnsureView()
+        {
+            if (_view != null) return;
+
+            _view = UIPackage.CreateObject("SG_Popup", "DefeatPanel").asCom;
+            GRoot.inst.AddChild(_view);
+            _view.MakeFullScreen();
+            _view.sortingOrder = 100;
+
+            // 按钮绑定
+            var btnRetry = _view.GetChild("btn_retry")?.asButton;
+            if (btnRetry != null)
+                btnRetry.onClick.Add(OnRetryClicked);
+
+            var btnReturn = _view.GetChild("btn_return")?.asButton;
+            if (btnReturn != null)
+                btnReturn.onClick.Add(OnReturnClicked);
+        }
+
+        private void PopulateData(BattleResultData result, SkillUnlockManager unlockManager)
+        {
+            // 标题
+            SetTextSafe("text_title", "基地沦陷");
+
+            // 波次进度
+            SetTextSafe("text_wave", $"存活至 Wave {result.CurrentWave}/{result.TotalWaves}");
+
+            // 击杀
+            SetTextSafe("text_kills", $"击杀：{result.TotalKills}");
+
+            // 火力提示
+            var hintGroup = _view.GetChild("group_hint")?.asCom;
+            if (unlockManager != null)
+            {
+                var nextUnlock = unlockManager.GetNextUnlockable();
+                if (nextUnlock != null && hintGroup != null)
+                {
+                    hintGroup.visible = true;
+                    var txtHint = hintGroup.GetChild("text_hint")?.asTextField;
+                    if (txtHint != null)
+                    {
+                        txtHint.text = $"通关第 {nextUnlock.ConditionParam} 关可解锁 [{nextUnlock.DisplayName}]";
+                    }
+
+                    // 技能图标（FairyGUI 包内图标）
+                    var iconLoader = hintGroup.GetChild("icon_skill")?.asLoader;
+                    if (iconLoader != null && !string.IsNullOrEmpty(nextUnlock.IconKey))
+                    {
+                        iconLoader.url = $"ui://SG_Popup/{nextUnlock.IconKey}";
+                    }
+                }
+                else if (hintGroup != null)
+                {
+                    // 全部已解锁，隐藏火力提示区域
+                    hintGroup.visible = false;
+                }
+            }
+            else if (hintGroup != null)
+            {
+                hintGroup.visible = false;
+            }
+        }
+
+        private void StartShowAnimation()
+        {
+            _view.visible = true;
+            _view.alpha = 0f;
+
+            // 暗红淡入动效
+            _view.TweenFade(1f, FADE_IN_DURATION);
+
+            // 如果有红色背景蒙版，单独做渐变
+            var mask = _view.GetChild("mask_red")?.asGraph;
+            if (mask != null)
+            {
+                mask.alpha = 0f;
+                mask.TweenFade(0.6f, FADE_IN_DURATION);
+            }
+        }
+
+        // ══════════════════════════════════════════════
+        // 按钮回调
+        // ══════════════════════════════════════════════
 
         private void OnRetryClicked()
         {
@@ -55,10 +139,21 @@ namespace Game.ShooterGame.UI
             _onRetry?.Invoke();
         }
 
-        private void OnQuitClicked()
+        private void OnReturnClicked()
         {
             _view.visible = false;
             _onQuit?.Invoke();
+        }
+
+        // ══════════════════════════════════════════════
+        // 辅助
+        // ══════════════════════════════════════════════
+
+        private void SetTextSafe(string childName, string text)
+        {
+            var tf = _view.GetChild(childName)?.asTextField;
+            if (tf != null)
+                tf.text = text;
         }
 
         private void OnDestroy()

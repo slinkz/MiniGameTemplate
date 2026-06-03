@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using MiniGameTemplate.Entity;
 
@@ -50,6 +51,12 @@ namespace Game.ShooterGame
 
         /// <summary>当前活跃道具数量</summary>
         public int ActiveCount => _activeCount;
+
+        /// <summary>
+        /// 道具被拾取时的通知回调（UI 通知条用）。
+        /// 参数：道具显示名称。
+        /// </summary>
+        public event Action<string> OnPickupCollected;
 
         /// <summary>
         /// 初始化系统引用。
@@ -247,6 +254,9 @@ namespace Game.ShooterGame
                     // 后续 Sprint 补充金币系统
                     break;
             }
+
+            // V2 S5.4: 通知 UI
+            OnPickupCollected?.Invoke(config.DisplayName);
         }
 
         // ── 数组操作 ──
