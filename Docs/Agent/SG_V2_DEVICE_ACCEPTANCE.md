@@ -1,7 +1,7 @@
 ---
 system: shootergame-v2
 scope: device-acceptance
-last_verified: 2026-05-31
+last_verified: 2026-06-03
 depends_on: [SG_V2_S2_ACCEPTANCE, SG_V2_S3_ACCEPTANCE, SG_V2_S4_ACCEPTANCE, S5_FINAL_PLAYTEST_GUIDE, TDD07_ACCEPTANCE_GUIDE, APPFLOW_ACCEPTANCE_PLAN]
 related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framework/BattleLifecycle/**
 ---
@@ -69,25 +69,25 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| C1 | 反击触发 | 装备 Retaliate → 被敌弹命中 | 发射 8 发环形弹 | ☐ |
-| C2 | 冷却生效 | 触发后 5s 内再被命中 | 不触发（CD 中） | ☐ |
-| C3 | 无敌帧交互 | 敌机碰飞机（0.5s 无敌帧后）再被弹命中 | PA-04 仍触发 | ☐ |
+| C1 | 反击触发 | 装备 Retaliate → 被敌弹命中 | 发射 8 发环形弹 | ✅ |
+| C2 | 冷却生效 | 触发后 5s 内再被命中 | 不触发（CD 中） | ✅ |
+| C3 | 无敌帧交互 | 敌机碰飞机（0.5s 无敌帧后）再被弹命中 | PA-04 仍触发 | ✅ |
 
 ### D. 关卡流程验证（S4 天命人项）
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| D1 | 难度递进 | 依次玩关卡 1→5 | 感受明显压力递增 | ☐ |
-| D2 | 即时胜利判定 | 最后敌机死亡 | 游戏立即暂停（timeScale=0），不等弹幕消失 | ☐ |
-| D3 | 胜利/失败触发 | 基地 HP=0 → Defeat；通关 → Victory | 两种状态正确 | ☐ |
-| D4 | 星级只升不降 | 三星通关后低星重打 | 存档星级不被覆盖 | ☐ |
-| D5 | 伤害统计 | 通关后看 Console `FreezeBattleResult` 输出 | 各来源伤害之和 ≈ 敌机 HP 总和 | ☐ |
+| D1 | 难度递进 | 依次玩关卡 1→5 | 感受明显压力递增 | ✅ |
+| D2 | 即时胜利判定 | 最后敌机死亡 | 游戏立即暂停（timeScale=0），不等弹幕消失 | ✅ |
+| D3 | 胜利/失败触发 | 基地 HP=0 → Defeat；通关 → Victory | 两种状态正确 | ✅ |
+| D4 | 星级只升不降 | 三星通关后低星重打 | 存档星级不被覆盖 | ✅ |
+| D5 | 伤害统计 | 通关后看 Console `FreezeBattleResult` 输出 | 各来源伤害之和 ≈ 敌机 HP 总和 | ✅ |
 
 ### E. 完整流程走通
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| E1 | 5 关全通 | Boot→MainMenu→LevelSelect→Sortie→Battle→通关/失败 | 5 关可进入，至少 3 关通关 | ☐ |
+| E1 | 5 关全通 | Boot→MainMenu→LevelSelect→Sortie→Battle→通关/失败 | 5 关可进入，至少 3 关通关 | ✅ |
 
 ---
 
@@ -99,19 +99,19 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| F1 | Victory 退场 | 通关→确认返回 | 无飘字/弹丸残留、相机无震动偏移、UI 正常 | ☐ |
-| F2 | Defeat 退场 | 故意死亡→退出 | 同 F1 | ☐ |
-| F3 | PauseQuit 退场 | 暂停→退出 | 同 F1 | ☐ |
-| F4 | Retry 重试 | 失败/暂停→重试 | 无旧弹幕残留、波次重置为 1、敌机正常刷新 | ☐ |
-| F5 | 连续进出 | 进入→暂停退出→再进入→暂停退出 ×3 | 无累积残留、Console 无 Error | ☐ |
+| F1 | Victory 退场 | 通关→确认返回 | 无飘字/弹丸残留、相机无震动偏移、UI 正常 | ✅ |
+| F2 | Defeat 退场 | 故意死亡→退出 | 同 F1 | ✅ |
+| F3 | PauseQuit 退场 | 暂停→退出 | 同 F1 | ✅ |
+| F4 | Retry 重试 | 失败/暂停→重试 | 无旧弹幕残留、波次重置为 1、敌机正常刷新 | ✅ |
+| F5 | 连续进出 | 进入→暂停退出→再进入→暂停退出 ×3 | 无累积残留、Console 无 Error | ✅ |
 
 ### G. PIT-050 复现验证（退出→重入状态污染）
 
 | # | 检查项 | 操作 | 预期 | ✓ |
 |---|--------|------|------|---|
-| G1 | 暂停退出→重入 | 进入战斗→暂停→退出→重新进入同关卡 | 玩家可控、有普攻、怪物正常出现 | ☐ |
-| G2 | 战败退出→重入 | 进入→等死→退出→重新进入 | 同 G1 | ☐ |
-| G3 | 快速循环 | G1 操作连续做 3 次 | 无累积异常 | ☐ |
+| G1 | 暂停退出→重入 | 进入战斗→暂停→退出→重新进入同关卡 | 玩家可控、有普攻、怪物正常出现 | ✅ |
+| G2 | 战败退出→重入 | 进入→等死→退出→重新进入 | 同 G1 | ✅ |
+| G3 | 快速循环 | G1 操作连续做 3 次 | 无累积异常 | ✅ |
 
 ---
 
@@ -232,6 +232,11 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 | 2026-05-31 | B1, B3~B6 | ✅ PASS | Buff 道具拾取 + 穿透/暴击/磁吸被动 + Buff 桥接 |
 | 2026-05-31 | B2 | 🔧 FIXED | 电弧 DOT 未接入 → 已修复（LaserPool.AttachedData 传递链） |
 | 2026-06-01 | B2 | ✅ PASS | 电弧 DOT 真机验收通过（飘字统一为 TextMesh 世界空间） |
+| 2026-06-03 | C1~C3 | ✅ PASS | PA-04 Retaliate 反击被动（触发+CD+无敌帧交互） |
+| 2026-06-03 | D1~D5 | ✅ PASS | 关卡流程验证（难度递进/即时胜利/失败/星级/伤害统计） |
+| 2026-06-03 | E1 | ✅ PASS | 5 关全通完整流程 |
+| 2026-06-03 | F1~F5 | ✅ PASS | 退场清理验证（TDD-07 四路径 + 连续进出） |
+| 2026-06-03 | G1~G3 | ✅ PASS | PIT-050 退出→重入状态污染验证 |
 
 ---
 

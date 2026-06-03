@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-06-03 10:30 | 文件总数：93
+> 最后更新：2026-06-03 22:40 | 文件总数：78（活跃） + 75（归档）
 
 ---
 
@@ -34,14 +34,8 @@
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
 | 实施 V2 技能系统 | SG_V2_TDD_INDEX → 01~05 | V2 TDD：敌方射击 + 技能装备 + Buff/DOT + 关卡平衡 + 工具UI |
 | ShooterGame 编辑器工具 | SG_TOOLS_TDD_INDEX → 01~02 | 工具 TDD：波次编辑器 + Debug + Gizmo |
-| 验收工具/P3/P4 | SG_TOOLS_P0_ACCEPTANCE / SG_P3_ACCEPTANCE_PLAN / SG_P4_TASKLIST | 均已通过 ✅ → P0/P3 已归档 `Archive/` |
-| 验收 V2 Sprint 3 | SG_V2_S3_ACCEPTANCE | Buff/DOT/被动全链路（⬜ 待天命人验收） |
-| 验收 V2 Sprint 4 | SG_V2_S4_ACCEPTANCE | 关卡平衡+伤害统计+星级（⬜ 待天命人验收） |
-| 验收 TDD-06 普攻升格 | TDD06_ACCEPTANCE_GUIDE | 普攻→技能系统迁移验收（✅ 通过 2026-05-25） |
-| 验收 TDD-07 退场生命周期 | TDD07_ACCEPTANCE_GUIDE | 退场生命周期验收（自动✅ + PlayMode 待天命人验收） |
+| 验收工具/P3/P4 | Archive/ShooterGame/ | 均已通过 ✅ → 已归档 |
 | **统一设备验收（SG-V2-DEVICE）** | **SG_V2_DEVICE_ACCEPTANCE** | **65 项统一验收手册 v2.0（整合全部 Sprint + TDD + AppFlow）** |
-| 执行 SG-P4 集成验收 | SG_P4_TASKLIST | 资产收口 + 波次编排 + 全链路验收 + 发布前检查 |
-| ShooterGame 下一步 | SG_NEXT_PHASE_GUIDE | 下一阶段行动指导（工具P0→P3→P4） |
 | 查 SO 配置目录 | SO_WORKFLOWS_INDEX → 01~05 | 34 个 SO 类型 + 字段 + 创建流程 |
 | 理解 Tick 执行顺序 | EC_TDD_02_CORE_ARCH §3.3 | TickOrders 常量表 |
 | 理解 Entity 生命周期 | EC_TDD_03_ENTITY_POOL | Spawn/Despawn/Pool 流程 |
@@ -77,8 +71,8 @@
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
 | `.codegraph/**` + `~/.workbuddy/mcp.json` (codegraph) | CODEGRAPH_INTEGRATION | CodeGraph 知识图谱索引 |
 | `_Game/Scripts/ShooterGame/Battle/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE + SG_V2_TDD_07 | 战斗状态 + 退场生命周期 |
-| `_Game/Scripts/ShooterGame/**/*.cs` | SG_TDD_01~05 + SG_V2_TDD_01~05 + SG_DEV_PLAN | SG 全部逻辑代码 |
-| `_Game/Configs/ShooterGame/**/*.asset` | SG_P4_TASKLIST §P4.1 + SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
+| `_Game/Scripts/ShooterGame/**/*.cs` | SG_TDD_01~05 + SG_V2_TDD_01~05 | SG 全部逻辑代码 |
+| `_Game/Configs/ShooterGame/**/*.asset` | SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
 | `_Framework/Navigation/**/*.cs` | APPFLOW_TDD_01_CORE_DESIGN | AppFlow 栈式导航系统（含面板 Suspend/Resume） |
 | `_Framework/UISystem/Scripts/IUIPanel.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | IPanelSuspendable 可选接口 |
@@ -164,17 +158,18 @@
 | SG_TOOLS_TDD | SG_TOOLS_TDD_INDEX | 2 | ShooterGame 编辑器工具 TDD |
 | SG_TDD_PK* | — | 6 | SG_TDD PK 评审记录 → **已归档** `Archive/ShooterGame/TDD_PK/` + `Design_PK/` |
 | SG_V2_TDD_PK* | — | 4 | V2 TDD PK 评审记录（R1~R4）→ **已归档** `Archive/ShooterGame/V2_TDD_PK/` |
-| TDD06_ACCEPTANCE_GUIDE | — | — | TDD-06 普攻升格验收指南（✅ 通过 2026-05-25） |
-| TDD07_ACCEPTANCE_GUIDE | — | — | TDD-07 退场生命周期验收指南（自动 ✅ + PlayMode ⬜ 待天命人验收） |
-| SG_DEV_PLAN | — | — | ShooterGame 开发计划总览（Phase/子任务/架构/决策汇总） |
-| SG_NEXT_PHASE_GUIDE | — | — | ShooterGame 下一阶段行动指导（P0验收后→工具P0→P3→P4） |
+| FLOATING_TEXT_PK* | — | 2 | 飘字 TDD PK 评审记录 → **已归档** `Archive/ShooterGame/` |
+| TDD06_ACCEPTANCE_GUIDE | — | — | TDD-06 普攻升格验收指南 → **已归档** `Archive/ShooterGame/` |
+| TDD07_ACCEPTANCE_GUIDE | — | — | TDD-07 退场生命周期验收指南 → **已归档** `Archive/ShooterGame/` |
+| S5_FINAL_PLAYTEST_GUIDE | — | — | Sprint 5 最终 PlayTest 指南 → **已归档** `Archive/ShooterGame/` |
+| SG_DEV_PLAN | — | — | ShooterGame V1 开发计划 → **已归档** `Archive/ShooterGame/` |
+| SG_NEXT_PHASE_GUIDE | — | — | ShooterGame V1 下一阶段行动指导 → **已归档** `Archive/ShooterGame/` |
 | SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
 | SG_TOOLS_P0_ACCEPTANCE | — | — | 工具 P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
 | SG_P3_ACCEPTANCE_PLAN | — | — | SG-P3 FairyGUI 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
-| SG_P4_TASKLIST | — | — | SG-P4 集成验收（✅ 通过 2026-05-17） |
-| APPFLOW_ACCEPTANCE_PLAN | — | — | AppFlow 导航系统验收计划（⬜ 待天命人验收） |
+| SG_P4_TASKLIST | — | — | SG-P4 集成验收 → **已归档** `Archive/ShooterGame/` |
 | SG_V2_S1_ACCEPTANCE | — | — | V2 Sprint 1 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
-| SG_V2_S2_ACCEPTANCE | — | — | V2 Sprint 2 验收手册（⬜ 待验收） |
-| SG_V2_S3_ACCEPTANCE | — | — | V2 Sprint 3 验收手册（⬜ 待天命人验收） |
-| SG_V2_S4_ACCEPTANCE | — | — | V2 Sprint 4 验收手册（⬜ 待天命人验收） |
+| SG_V2_S2_ACCEPTANCE | — | — | V2 Sprint 2 验收 → **已归档** `Archive/ShooterGame/` |
+| SG_V2_S3_ACCEPTANCE | — | — | V2 Sprint 3 验收 → **已归档** `Archive/ShooterGame/` |
+| SG_V2_S4_ACCEPTANCE | — | — | V2 Sprint 4 验收 → **已归档** `Archive/ShooterGame/` |
 | **SG_V2_DEVICE_ACCEPTANCE** | — | — | **V2 统一验收手册 v2.0（65 项，⬜ 待天命人验收）— 整合 S2~S5+TDD-06/07+碰撞+PIT-050+AppFlow** |
