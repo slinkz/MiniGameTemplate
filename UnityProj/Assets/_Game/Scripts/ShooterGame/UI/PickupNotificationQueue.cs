@@ -51,22 +51,25 @@ namespace Game.ShooterGame.UI
             }
 
             // 创建通知 UI
-            var notif = UIPackage.CreateObject("SG_Battle", "PickupNotification")?.asCom;
-            if (notif == null)
-            {
-                // Fallback：纯文字
-                notif = new GComponent();
-                notif.SetSize(300, 40);
-                var txt = new GTextField();
-                txt.SetSize(300, 40);
-                var tf = txt.textFormat;
-                tf.size = 20;
-                tf.color = Color.white;
-                txt.textFormat = tf;
-                txt.align = AlignType.Center;
-                txt.name = "text";
-                notif.AddChild(txt);
-            }
+            // 纯代码创建通知横幅
+            var notif = new GComponent();
+            notif.SetSize(300, 40);
+
+            var notifBg = new GGraph();
+            notifBg.SetSize(300, 40);
+            notifBg.DrawRect(300, 40, 0, Color.clear, new Color(0.1f, 0.1f, 0.18f, 0.8f));
+            notifBg.name = "notif_bg";
+            notif.AddChild(notifBg);
+
+            var txt = new GTextField();
+            txt.SetSize(300, 40);
+            var tf = txt.textFormat;
+            tf.size = 20;
+            tf.color = Color.white;
+            txt.textFormat = tf;
+            txt.align = AlignType.Center;
+            txt.name = "text";
+            notif.AddChild(txt);
 
             var textField = notif.GetChild("text") as GTextField;
             if (textField != null)

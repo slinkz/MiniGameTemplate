@@ -45,18 +45,29 @@ namespace Game.ShooterGame.UI
             {
                 float x = i * (SLOT_SIZE + GAP);
 
-                var slot = UIPackage.CreateObject("SG_Battle", "PassiveSlot")?.asCom;
-                if (slot == null)
-                {
-                    // Fallback：代码创建方形圆角
-                    slot = new GComponent();
-                    slot.SetSize(SLOT_SIZE, SLOT_SIZE);
-                    var bg = new GGraph();
-                    bg.SetSize(SLOT_SIZE, SLOT_SIZE);
-                    bg.DrawRect(SLOT_SIZE, SLOT_SIZE, 0, Color.clear, new Color(0.3f, 0.3f, 0.3f));
-                    bg.name = "bg";
-                    slot.AddChild(bg);
-                }
+                // 纯代码创建（40×40 方形圆角白模）
+                var slot = new GComponent();
+                slot.SetSize(SLOT_SIZE, SLOT_SIZE);
+
+                var bg = new GGraph();
+                bg.SetSize(SLOT_SIZE, SLOT_SIZE);
+                bg.DrawRect(SLOT_SIZE, SLOT_SIZE, 0, Color.clear, new Color(0.3f, 0.3f, 0.3f));
+                bg.name = "bg";
+                slot.AddChild(bg);
+
+                // cd_progress：充能进度条
+                var cdProgress = new GProgressBar();
+                cdProgress.SetSize(SLOT_SIZE, SLOT_SIZE);
+                cdProgress.name = "cd_progress";
+                cdProgress.value = 0;
+                slot.AddChild(cdProgress);
+
+                // active_progress：激活状态进度条
+                var activeProgress = new GProgressBar();
+                activeProgress.SetSize(SLOT_SIZE, SLOT_SIZE);
+                activeProgress.name = "active_progress";
+                activeProgress.value = 0;
+                slot.AddChild(activeProgress);
 
                 slot.SetXY(x, 0);
                 _container.AddChild(slot);

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="40,40" extention="ProgressBar">
+  <displayList>
+    <graph id="gen_80" name="bg" xy="0,0" size="40,40"
+           type="rect" fillColor="#00000000" lineSize="2" lineColor="#ff2ecc71" corner="6">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="gen_81" name="bar" xy="0,0" size="40,40"
+           type="rect" fillColor="#332ecc71" corner="6">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+  </displayList>
+  <ProgressBar titleType="percent"/>
+</component>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="300,40">
+  <displayList>
+    <graph id="gen_82" name="bg" xy="0,0" size="300,40"
+           type="rect" fillColor="#cc1a1a2e" corner="8">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <text id="gen_83" name="text" xy="0,0" size="300,40"
+          fontSize="20" color="#ffffff" align="center" vAlign="middle" autoSize="none">
+      <relation target="" sidePair="width-width,height-height"/>
+    </text>
+  </displayList>
+</component>

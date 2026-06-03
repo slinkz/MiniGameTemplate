@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="40,40">
+  <controller name="state" pages="0,empty,1,cooldown,2,ready,3,active" selected="0"/>
+  <displayList>
+    <graph id="gen_72" name="bg" xy="0,0" size="40,40"
+           type="rect" fillColor="#ff666666" corner="6">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <component id="gen_73" name="cd_progress" src="gen_08" xy="0,0" size="40,40">
+      <gearDisplay controller="state" pages="1"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+    <component id="gen_74" name="active_progress" src="gen_09" xy="0,0" size="40,40">
+      <gearDisplay controller="state" pages="3"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+  </displayList>
+</component>

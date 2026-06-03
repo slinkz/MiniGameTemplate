@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component size="48,48">
+  <controller name="state" pages="0,empty,1,cooldown,2,ready,3,casting,4,release" selected="0"/>
+  <displayList>
+    <graph id="gen_62" name="bg" xy="0,0" size="48,48"
+           type="eclipse" fillColor="#ff666666">
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <graph id="gen_63" name="border" xy="0,0" size="48,48"
+           type="eclipse" fillColor="#00000000" lineSize="2" lineColor="#ffffc107">
+      <gearDisplay controller="state" pages="3"/>
+      <relation target="" sidePair="width-width,height-height"/>
+    </graph>
+    <component id="gen_64" name="cd_bar" src="gen_07" xy="0,0" size="48,48">
+      <relation target="" sidePair="width-width,height-height"/>
+    </component>
+  </displayList>
+</component>

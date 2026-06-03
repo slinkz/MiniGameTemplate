@@ -1,6 +1,5 @@
 using UnityEngine;
 using FairyGUI;
-using MiniGameTemplate.Entity;
 
 namespace Game.ShooterGame.UI
 {
@@ -62,19 +61,23 @@ namespace Game.ShooterGame.UI
                 float x = col * (SLOT_SIZE + GAP);
                 float y = row * (SLOT_SIZE + GAP);
 
-                // 使用 FairyGUI 编辑器中预制的 slot 组件（如果存在）
-                var slot = UIPackage.CreateObject("SG_Battle", "SkillSlot")?.asCom;
-                if (slot == null)
-                {
-                    // Fallback：代码创建
-                    slot = new GComponent();
-                    slot.SetSize(SLOT_SIZE, SLOT_SIZE);
-                    var bg = new GGraph();
-                    bg.SetSize(SLOT_SIZE, SLOT_SIZE);
-                    bg.DrawEllipse(SLOT_SIZE, SLOT_SIZE, Color.gray);
-                    bg.name = "bg";
-                    slot.AddChild(bg);
-                }
+                // 纯代码创建（48×48 圆形白模 + CD 进度条）
+                var slot = new GComponent();
+                slot.SetSize(SLOT_SIZE, SLOT_SIZE);
+
+                var bg = new GGraph();
+                bg.SetSize(SLOT_SIZE, SLOT_SIZE);
+                bg.DrawEllipse(SLOT_SIZE, SLOT_SIZE, Color.gray);
+                bg.name = "bg";
+                slot.AddChild(bg);
+
+                // cd_bar：用 GProgressBar 显示扇形遮罩效果
+                var cdBar = new GProgressBar();
+                cdBar.SetSize(SLOT_SIZE, SLOT_SIZE);
+                cdBar.name = "cd_bar";
+                cdBar.value = 0;
+                cdBar.visible = true;
+                slot.AddChild(cdBar);
 
                 slot.SetXY(x, y);
                 _container.AddChild(slot);
