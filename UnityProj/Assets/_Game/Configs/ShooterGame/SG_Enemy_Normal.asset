@@ -18,7 +18,7 @@ MonoBehaviour:
   Components: 010304080a
   PoolMax: 128
   MaxHp: 20
-  MoveSpeed: 1
+  MoveSpeed: 2
   TurnSpeed: 360
   CollisionRadius: 0.4
   HitboxType: 0

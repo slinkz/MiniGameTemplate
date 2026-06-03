@@ -488,11 +488,9 @@ namespace Game.ShooterGame
         /// </summary>
         private void OnPlayerCollisionHit(OnCollisionHit evt)
         {
-            var playerHealth = _playerEntity?.GetComponent(ComponentType.Health) as HealthComponent;
-            if (playerHealth == null) return;
-
-            var ctx = evt.Context;
-            playerHealth.TakeDamage(ref ctx);
+            // 注意：TakeDamage 已由 EntityHitReactionHandler.OnHit 统一处理，
+            // 此处不再重复调用，避免双倍扣血。
+            // 本方法仅负责业务层响应（如记录命中次数）。
 
             // V2 Sprint 2: 记录被命中次数（成就 ID=3 用）
             _progressManager?.RecordHit();

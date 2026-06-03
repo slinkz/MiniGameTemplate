@@ -39,12 +39,12 @@ MonoBehaviour:
   ContactDamage: 9999
   ContactDamageInterval: 0.5
   BaseLineBreachDamage: 0
-  AttackPower: 1
+  AttackPower: 10
   CritRate: 0
   CritDamageMultiplier: 2
   AutoAimRadius: 10
   AutoAimSearchInterval: 0.15
-  AttackInterval: 5
+  AttackInterval: 0.2
   FirstAttackDelay: 1
   AttackBulletPattern: {fileID: 11400000, guid: 85c434b47651ddb4f9e7c9333de12c57, type: 2}
   AttackFireOffset: {x: 0, y: 0.5}

@@ -49,19 +49,14 @@ namespace MiniGameTemplate.Danmaku
                 _bulletWorld, _laserPool, _sprayPool, _obstaclePool,
                 _typeRegistry, _attachRegistry, _targetRegistry, _vfxRuntime, dt);
 
-            // 8. 处理碰撞结果——仅在 Player 阵营目标被命中时触发事件 / 无敌帧 / 飘字
+            // 8. 处理碰撞结果——仅在 Player 阵营目标被命中时触发事件 / 无敌帧
+            // 注意：飘字已由 EntityHitReactionHandler.OnHit 统一 Spawn，此处不再重复
             if (result.PlayerHit && _invincibleTimer <= 0)
             {
                 if (_onPlayerHit != null)
                     _onPlayerHit.Raise();
                 if (result.PlayerDamage > 0 && _onDamageDealt != null)
                     _onDamageDealt.Raise(result.PlayerDamage);
-
-                var ftColor = result.PlayerDamage >= 10
-                    ? FloatingTextColors.Critical
-                    : FloatingTextColors.Normal;
-                _floatingText.Spawn(result.PlayerHitPosition, result.PlayerDamage,
-                    ftColor, result.PlayerDamage >= 10);
 
                 if (_worldConfig.InvincibleDuration > 0)
                     _invincibleTimer = _worldConfig.InvincibleDuration;

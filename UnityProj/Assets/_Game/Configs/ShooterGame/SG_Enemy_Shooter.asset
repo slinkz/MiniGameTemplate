@@ -18,7 +18,7 @@ MonoBehaviour:
   Components: 0001020304080a0b
   PoolMax: 32
   MaxHp: 40
-  MoveSpeed: 0.5
+  MoveSpeed: 1.5
   TurnSpeed: 0
   CollisionRadius: 0.5
   HitboxType: 0

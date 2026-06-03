@@ -17,8 +17,15 @@ MonoBehaviour:
   CooldownTime: 5
   TriggerMode: 1
   LinkedBuff: {fileID: 0}
-  ActivateEffects: []
+  ActivateEffects:
+  - rid: 1536600559428042752
   BulletDirections: 8
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 1536600559428042752
+      type: {class: FireBulletsEffect, ns: MiniGameTemplate.Entity, asm: MiniGameFramework.Runtime}
+      data:
+        Pattern: {fileID: 11400000, guid: 1e0f67fce5ac72745bb459b363467168, type: 2}
+        FireOffset: {x: 0, y: 0}
+        UseForwardDirection: 0

@@ -628,8 +628,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d7f6dbc0f3f51a4449b9b9f2ad8b7c67, type: 2}
   - {fileID: 11400000, guid: ffc54240b088aad4bb5adee0e407d28a, type: 2}
   - {fileID: 11400000, guid: 1ceae7c4a22d75c46b157b45d9666700, type: 2}
-  _overridePassives: 1
+  _overridePassives: 0
   _debugPassives:
+  - {fileID: 11400000, guid: f977e00aa81891a438d927d2c6d5a397, type: 2}
+  - {fileID: 11400000, guid: 0ae22207935ded54bb9788b42b89a269, type: 2}
+  - {fileID: 11400000, guid: e8703ed8e5a26e947b309bbb65a71f5b, type: 2}
   - {fileID: 11400000, guid: e9a5022c01763a945a877642f0e44e4e, type: 2}
   _status: Idle
 --- !u!1 &1740805477
