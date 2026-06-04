@@ -236,7 +236,11 @@ namespace Game.ShooterGame.UI
             var skillComp = _playerEntity.GetComponent(ComponentType.Skill) as SkillComponent;
             if (skillComp == null) return;
 
-            for (int i = 0; i < SkillCDPanel.MAX_UI_SLOTS; i++)
+            // UI 可显示的技能数受 SkillComponent 实际数组长度限制（避免越界）
+            int uiCount = Mathf.Min(SkillCDPanel.MAX_UI_SLOTS,
+                                    SkillComponent.MAX_SLOTS - SkillCDPanel.SKILL_SLOT_START_INDEX);
+
+            for (int i = 0; i < uiCount; i++)
             {
                 int slotIndex = i + SkillCDPanel.SKILL_SLOT_START_INDEX;
                 ref readonly var slot = ref skillComp.GetSlot(slotIndex);
