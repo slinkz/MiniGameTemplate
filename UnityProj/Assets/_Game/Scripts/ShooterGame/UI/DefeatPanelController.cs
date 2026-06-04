@@ -117,15 +117,15 @@ namespace Game.ShooterGame.UI
             _view.visible = true;
             _view.alpha = 0f;
 
-            // 暗红淡入动效
-            _view.TweenFade(1f, FADE_IN_DURATION);
+            // 暗红淡入动效（Defeat 状态下 Time.timeScale=0，必须忽略引擎时间缩放）
+            _view.TweenFade(1f, FADE_IN_DURATION).SetIgnoreEngineTimeScale(true);
 
             // 如果有红色背景蒙版，单独做渐变
             var mask = _view.GetChild("mask_red")?.asGraph;
             if (mask != null)
             {
                 mask.alpha = 0f;
-                mask.TweenFade(0.6f, FADE_IN_DURATION);
+                mask.TweenFade(0.6f, FADE_IN_DURATION).SetIgnoreEngineTimeScale(true);
             }
         }
 

@@ -247,9 +247,9 @@ namespace Game.ShooterGame.UI
             _view.alpha = 0f;
             _view.y = Screen.height * 0.1f;
 
-            // 面板滑入动效
-            _view.TweenFade(1f, PANEL_SLIDE_DURATION);
-            _view.TweenMoveY(0f, PANEL_SLIDE_DURATION).SetEase(EaseType.CubicOut);
+            // 面板滑入动效（Victory 状态下 Time.timeScale=0，必须忽略引擎时间缩放）
+            _view.TweenFade(1f, PANEL_SLIDE_DURATION).SetIgnoreEngineTimeScale(true);
+            _view.TweenMoveY(0f, PANEL_SLIDE_DURATION).SetEase(EaseType.CubicOut).SetIgnoreEngineTimeScale(true);
 
             // 星星弹出延迟（由 FairyGUI 动效控制器驱动，此处仅触发）
             var starGroup = _view.GetChild("star_group")?.asCom;

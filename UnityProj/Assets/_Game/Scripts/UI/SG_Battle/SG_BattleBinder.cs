@@ -13,6 +13,12 @@ namespace SG_Battle
             UIObjectFactory.SetPackageItemExtension(Joystick.URL, typeof(Joystick));
             UIObjectFactory.SetPackageItemExtension(HPBar.URL, typeof(HPBar));
             UIObjectFactory.SetPackageItemExtension(PauseButton.URL, typeof(PauseButton));
+            UIObjectFactory.SetPackageItemExtension(SkillCDBar.URL, typeof(SkillCDBar));
+            UIObjectFactory.SetPackageItemExtension(PassiveCDBar.URL, typeof(PassiveCDBar));
+            UIObjectFactory.SetPackageItemExtension(PassiveActiveBar.URL, typeof(PassiveActiveBar));
+            UIObjectFactory.SetPackageItemExtension(SkillSlot.URL, typeof(SkillSlot));
+            UIObjectFactory.SetPackageItemExtension(PassiveSlot.URL, typeof(PassiveSlot));
+            UIObjectFactory.SetPackageItemExtension(PickupNotification.URL, typeof(PickupNotification));
         }
     }
 }

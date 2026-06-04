@@ -390,6 +390,10 @@ namespace Game.ShooterGame
             {
                 await _hudController.ShowAsync();
                 _hudController.ForceRefresh();
+
+                // 注入玩家 Entity → 驱动 SkillCDPanel / PassiveIndicatorPanel 实时同步
+                if (_hudControllerRef is UI.BattleHUDController hudCtrl)
+                    hudCtrl.SetPlayerEntity(_playerEntity);
             }
             await MiniGameTemplate.UI.UIPackageLoader.AddPackageAsync("SG_Popup", SG_Popup.SG_PopupBinder.BindAll);
             var hudView = _hudController?.GetView();
@@ -1153,6 +1157,10 @@ namespace Game.ShooterGame
 
             // 6. 兜底 UI 同步
             _hudController?.ForceRefresh();
+
+            // 6b. 重新注入玩家 Entity（Retry 后 _playerEntity 已变）
+            if (_hudControllerRef is UI.BattleHUDController retryHudCtrl)
+                retryHudCtrl.SetPlayerEntity(_playerEntity);
 
             // 7. 黑屏淡出
             yield return null;
