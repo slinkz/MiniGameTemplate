@@ -103,6 +103,22 @@ ChangeProtocol:
 
 ## 7. 优先可执行 ADR 摘要
 
+### ADR-012 阵营模型升级为通用关系模型
+
+| 字段 | 内容 |
+|------|------|
+| Status | Accepted |
+| DecisionStatus | Active |
+| ImplementationStatus | Implemented / 需按当前碰撞用例验证细节 |
+| AppliesTo | `UnityProj/Assets/_Framework/DanmakuSystem/Scripts/Data/HitboxMath.cs`, `DanmakuSystem/Scripts/Core/CollisionSolver.cs`, `EntitySystem/Scripts/Collision/**`, `EnumCamp` / Faction / Camp 判定路径 |
+| Decision | 将碰撞阵营表达从二元玩家/敌人升级为通用关系模型，数据结构支持 `FactionId`、Source/Target Faction 与未来关系判断扩展；当前行为仍保持玩家/敌人最小闭环 |
+| Constraints | 不允许把碰撞规则重新写死为二元阵营；新增碰撞路径必须显式处理 Camp/Faction；当前阶段不强行引入完整阵营矩阵编辑器；修改 OBB/Hitbox 数学不得改变阵营过滤语义 |
+| RelatedDocs | `ADR_02_DANMAKU.md`, `OBB_TDD_INDEX.md`, `CONTEXT_PACKS/EntitySystem.md`, `CONTEXT_PACKS/Danmaku_Rendering.md`, `MODULE_CARDS/EntitySystem.md`, `MODULE_CARDS/DanmakuSystem.md` |
+| RelatedCode | `HitboxMath.cs`, `CollisionSolver.cs`, `EntityCollisionSolver.cs`, `TargetRegistry`, `CampUtility`, `DanmakuEnums.cs` |
+| Verification | 玩家/敌人/中立 Camp 判定；弹幕/Entity/障碍物碰撞路径；SectorVsAABB/Hitbox 边界用例；底线检测关系；热路径零 GC |
+| Pitfalls | 只改数学命中但漏掉 Camp/Faction；Entity 与 Danmaku 使用不同阵营语义；新增中立/召唤物时绕过关系判断扩展点 |
+| ChangeProtocol | 修改阵营模型前先读 ADR-012、Entity/Danmaku Context Pack 与 OBB TDD；若引入完整阵营矩阵、编辑器或关系表，需要新增 ADR 或扩展本 ADR |
+
 ### ADR-028 RuntimeAtlasSystem 统一管线
 
 | 字段 | 内容 |

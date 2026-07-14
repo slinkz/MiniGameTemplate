@@ -80,6 +80,8 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 | Rendering/RuntimeAtlas | `MODULE_CARDS/Rendering_RuntimeAtlas.md` |
 | AppFlow | `MODULE_CARDS/AppFlow.md` |
 | UISystem/FairyGUI | `MODULE_CARDS/UISystem_FairyGUI.md` |
+| WeChatBridge | `MODULE_CARDS/WeChatBridge.md` |
+| DataSystem/SO/Luban | `MODULE_CARDS/DataSystem_SO_Luban.md` |
 
 ## 7. 核心架构原则
 

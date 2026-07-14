@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-14 | 文件总数：116（活跃） + 75（归档）
+> 最后更新：2026-07-14 | 文件总数：118（活跃） + 75（归档）
 
 ---
 
@@ -13,13 +13,16 @@
 | 新建一种敌人 | SO_WORKFLOWS_02_ENTITY §EntityConfigSO | 字段 + 完整创建流程 |
 | 新建一个技能 | SO_WORKFLOWS_02_ENTITY §SkillConfigSO | 技能 SO + Effect 链路 |
 | 新建一个 Buff | SO_WORKFLOWS_02_ENTITY §BuffConfigSO | Buff SO + Duration/叠加 |
+| 新增关卡 | CONTEXT_PACKS/ShooterGame_Battle + CONTEXT_PACKS/SO_Config_Workflow + CODE_KNOWLEDGE_MAP §常见任务反查 | Level/Wave/Progress 配置 + 解锁/保存/返回验证 |
 | 新增子弹花样 | SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
+| 修改 FairyGUI 面板 | CONTEXT_PACKS/FairyGUI_UI + MODULE_CARDS/UISystem_FairyGUI | UIProject 发布 + 导出代码 + `.Logic.cs` + AppFlow 验证 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
 | 查可执行 ADR 约束 | ADR_SCHEMA + ADR_INDEX | 编码前确认 ADR 的 AppliesTo、Constraints、Verification 与 Supersedes |
 | 实施退场生命周期改造 | SG_V2_TDD_07_LIFECYCLE | ADR-035 实施——SO 事件通道 + IBattleCleanup |
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 + 域名白名单 |
 | 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V4 云端权威+纯内存（登录+云同步+CloudSaveSystem+启动阻塞重试） |
+| 调试渲染不显示 | CONTEXT_PACKS/Danmaku_Rendering + DEBUG_PLAYBOOK + MODULE_CARDS/Rendering_RuntimeAtlas | active count、bucket、RT 像素、Game View、shaderKeywords |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |
 | 统一飘字系统重构 | FLOATING_TEXT_TDD + ADR_06 §ADR-036 | RBM 通用飘字系统（消除双飘字 Bug） |
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |

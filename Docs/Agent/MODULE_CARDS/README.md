@@ -27,11 +27,11 @@ last_updated: 2026-07-14
 | Rendering_RuntimeAtlas | `Rendering_RuntimeAtlas.md` | RBM、RuntimeAtlas、VFX、飘字、DrawCall、渲染排查 |
 | AppFlow | `AppFlow.md` | 栈式导航、场景流、面板 Suspend/Resume |
 | UISystem_FairyGUI | `UISystem_FairyGUI.md` | UIManager、FairyGUI 包、面板生命周期、导出代码 |
+| WeChatBridge | `WeChatBridge.md` | 微信 SDK 抽象、广告、登录、云函数、隐私、真机平台约束 |
+| DataSystem_SO_Luban | `DataSystem_SO_Luban.md` | SaveSystem、CloudSave、SO 配置、Luban 表、配置生成与加载 |
 
 ## 后续扩展候选
 
-- `DataSystem_SO_Luban.md`
-- `WeChatBridge.md`
 - `Audio_Asset_Timer_Pool.md`
 - `EditorTools.md`
 - `VFXSystem.md`

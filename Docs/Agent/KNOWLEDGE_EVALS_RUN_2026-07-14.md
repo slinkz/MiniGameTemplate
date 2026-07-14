@@ -125,3 +125,46 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 1. 更新 `INDEX.md` 的三个直达任务入口。
 2. 更新 `CODE_KNOWLEDGE_MAP.md` 的“新增关卡”反查。
 3. 将本次评估报告作为后续持续校准的基线。
+
+## 8. 修正记录
+
+2026-07-14 已完成本报告提出的 P1/P2 修正：
+
+| 修正项 | 状态 | 文档 |
+|--------|------|------|
+| 补“新增关卡”直达路由与反查 | 已完成 | `INDEX.md`, `CODE_KNOWLEDGE_MAP.md` |
+| 补“修改 FairyGUI 面板”直达路由 | 已完成 | `INDEX.md` |
+| 补“调试渲染不显示”直达路由 | 已完成 | `INDEX.md` |
+| 可执行化 ADR-012 | 已完成 | `ADR_SCHEMA.md` |
+| 补 WeChatBridge 模块卡 | 已完成 | `MODULE_CARDS/WeChatBridge.md` |
+| 补 DataSystem_SO_Luban 模块卡 | 已完成 | `MODULE_CARDS/DataSystem_SO_Luban.md` |
+
+后续建议重新运行 EVAL-03、EVAL-05、EVAL-07、EVAL-09，确认分数是否提升并检查新模块卡是否足够可用。
+
+## 9. 针对性复测记录
+
+### 9.1 复测范围
+
+- 日期：2026-07-14
+- 范围：EVAL-03、EVAL-05、EVAL-07、EVAL-09
+- 方式：静态知识路由复测；未执行 Unity 编译、PlayMode、微信开发者工具或真机
+- 前置修正：P1/P2 修正已完成，包括直达路由、ADR-012 可执行化、WeChatBridge/DataSystem 模块卡
+
+### 9.2 复测结果
+
+| 任务 | 原分数 | 复测分数 | 结论 | 改善点 |
+|------|--------|----------|------|--------|
+| EVAL-03 修改碰撞逻辑 | 8.5 | 9.0 | 通过 | `ADR_SCHEMA.md` 已补 ADR-012，可直接检查阵营模型约束与验证项 |
+| EVAL-05 修改微信云存储 | 8.0 | 9.0 | 通过 | `WeChatBridge.md` 与 `DataSystem_SO_Luban.md` 已补齐，Code Knowledge Map 不再停在“待补模块卡” |
+| EVAL-07 新增关卡 | 7.5 | 9.0 | 通过 | `INDEX.md` 与 `CODE_KNOWLEDGE_MAP.md` 已补新增关卡直达入口和反查 |
+| EVAL-09 调试渲染不显示 | 8.5 | 9.0 | 通过 | `INDEX.md` 已补“调试渲染不显示”直达路由，减少从“性能”入口绕行 |
+
+### 9.3 复测结论
+
+本次针对性复测通过。P1/P2 修正有效，首批评估中低于 8 分的 `EVAL-07` 已提升到 9.0；WeChat/DataSystem 与 ADR-012 两个结构性缺口已补齐。
+
+剩余风险：
+
+- 本次仍是静态知识路由复测，没有验证 Unity/微信真机链路。
+- `WeChatBridge.md` 与 `DataSystem_SO_Luban.md` 还需要在后续真实云存储或配置任务中检验是否足够细。
+- ADR-012 的实现状态仍建议在后续碰撞代码改动时结合当前代码和测试再确认。
