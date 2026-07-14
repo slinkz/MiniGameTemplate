@@ -104,6 +104,39 @@ Unity Editor (2021.3.17f1)
 | 项目信息 | `unity_project_info` | 包列表、渲染管线、构建设置 |
 | Play Mode | `unity_play_mode` | 进入/暂停/停止播放 |
 
+### PlayMode 快速验证工作流
+
+> **用途**：SO 修改、新实体创建后，进入 PlayMode 运行游戏验证表现。解决"改完 SO 只在 Editor 检查、没跑起来"的问题。
+> **工具名以当前 MCP schema 为准**：每次先 `unity_list_instances` 确认实例端口；若当前 schema 提供截图/场景打开别名，可按 schema 替换。本文默认使用上表已有工具名。
+
+**最小验证流程**（预计 2-3 分钟）：
+
+```
+1. 打开 Main 场景：优先使用当前 schema 的场景打开工具；无专用工具时用 unity_execute_code 调 `EditorSceneManager.OpenScene("Assets/_Game/Scenes/Main.unity")`
+2. 进入 PlayMode：unity_play_mode({ mode: "play", port: <port> })
+3. 等待启动（Boot→Main 界面出现，约 3-5 秒）
+4. 触发关键流程（选关→进入战斗→验证修改）
+5. 截图确认：unity_graphics_game_capture({ port: <port> })
+6. 退出 PlayMode：unity_play_mode({ mode: "stop", port: <port> })
+7. 检查 Console 无运行时错误：unity_console_log({ type: "error", port: <port> })
+```
+
+**PlayMode 操作矩阵**：
+
+| 操作 | MCP 调用 | 说明 |
+|------|---------|------|
+| 进入播放 | `unity_play_mode({ mode: "play" })` | 启动游戏 |
+| 暂停 | `unity_play_mode({ mode: "pause" })` | 暂停帧（检查状态） |
+| 单步 | `unity_play_mode({ mode: "step" })` | 逐帧（调试用） |
+| 停止 | `unity_play_mode({ mode: "stop" })` | 退出播放返回编辑 |
+
+**注意事项**：
+
+- PlayMode 启动耗时依赖场景复杂度（Main 场景 ≈ 3-5s，Battle 场景 ≈ 5-8s）
+- 退出 PlayMode 后会自动恢复 Scene 上下文
+- 如果 PlayMode 中遇到 `NullReferenceException`，先检查 Console 日志再退出
+- **不要**在 PlayMode 中执行 `AssetDatabase.SaveAssets()` 或修改 SO——仅在 Editor 模式下操作资产
+
 > **⚠️ 重要**：所有 MCP 工具调用时请携带当前 Unity 实例的实际端口参数；先用 `unity_list_instances` 发现端口，再把该端口透传给后续工具。
 
 ### 备用方案

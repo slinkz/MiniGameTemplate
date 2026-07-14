@@ -12,7 +12,7 @@ related_code: Assets/_Framework/VFXSystem/Scripts/Config/*.cs, Assets/_Framework
 **菜单路径**：`Create → MiniGameTemplate/VFX/VFX Type`
 **命名空间**：`MiniGameTemplate.VFX`
 **源码**：`Assets/_Framework/VFXSystem/Scripts/Config/VFXTypeSO.cs`
-**实例目录**：`Assets/_Game/Configs/VFX/`
+**实例目录**：`Assets/_Game/Configs/ShooterGame/LaserTypes/`；通用弹幕/VFX 纹理配置优先复用 `Assets/_Game/Configs/ShooterGame/BulletType/` 与 `_Template/BulletType/`
 
 ### 字段清单
 

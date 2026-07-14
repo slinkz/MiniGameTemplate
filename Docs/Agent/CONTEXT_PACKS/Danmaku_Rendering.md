@@ -37,7 +37,6 @@ UnityProj/Assets/_Framework/VFXSystem/
 UnityProj/Assets/_Framework/**/RuntimeAtlas*/
 UnityProj/Assets/_Game/Configs/ShooterGame/
 UnityProj/Assets/_Game/Configs/_Template/
-UnityProj/Assets/_Game/Configs/VFX/
 ```
 
 ## 关键 SO / 配置路径
@@ -45,9 +44,6 @@ UnityProj/Assets/_Game/Configs/VFX/
 ```text
 Assets/_Game/Configs/ShooterGame/
 Assets/_Game/Configs/_Template/
-Assets/_Game/Configs/VFX/
-Assets/_Game/Configs/Rendering/
-Assets/_Game/Configs/ShooterGame/
 ```
 
 常见 SO：`BulletTypeSO`、`BulletPatternSO`、`PatternGroupSO`、`SpawnerProfileSO`、`VFXTypeSO`、RuntimeAtlas/Rendering 配置。

@@ -35,6 +35,7 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/ARCHITECTURE_REVIEW_PROT
 | 改变渲染、RuntimeAtlas、VFX、飘字排查方式 | `DEBUG_PLAYBOOK.md`, Rendering/Danmaku 模块卡 |
 | 改变微信、云存储、CDN、广告、构建流程 | `WECHAT_INTEGRATION.md`, `Docs/Guide/BUILD_MINIGAME.md` |
 | 引入新坑、修复高价值 bug、完成架构迁移 | `Docs/Agent/changes/YYYY-MM-DD-topic/` |
+| 新增 PIT 条目或模块踩坑 | `skills/code-review-checklist/references/known-pitfalls.md`、`INDEX.md`（路由表 D 踩坑速查）、对应 `MODULE_CARDS/*.md` §10 |
 | 修改 `skills/` | 检查运行时 Skill 目录同步策略（`.workbuddy/skills/` 或 `.codebuddy/skills/`） |
 
 ## 3. 变更后维护流程
@@ -54,7 +55,7 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/ARCHITECTURE_REVIEW_PROT
 
 | 文档类型 | 维护重点 | 更新时机 |
 |----------|----------|----------|
-| `INDEX.md` | 任务路由、代码映射、概念速查、文件统计 | 新增入口、新增核心文档、改变高频任务路径 |
+| `INDEX.md` | 任务路由、代码映射、概念速查、**踩坑速查（路由表 D）**、文件统计 | 新增入口、新增核心文档、改变高频任务路径、新增 PIT 或模块踩坑 |
 | `AGENT_BOOTSTRAP.md` | 新会话启动流程、事实源优先级、禁止事项、验证入口 | 改变 Agent 默认工作流 |
 | Context Pack | 高频任务的最小上下文、必读文档、代码入口、必验项 | 任务流程变化或新增高频任务 |
 | Module Card | 模块职责、不负责、入口、数据流、ADR、常见坑 | 模块边界或核心入口变化 |
@@ -123,6 +124,8 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 
 ## 9. 自动化检查
 
+### 9.1 知识同步门禁（knowledge-sync-check）
+
 仓库提供轻量知识同步检查：
 
 ```powershell
@@ -144,6 +147,35 @@ Tools/knowledge-sync-check.ps1
 - `.codebuddy/skills/`
 
 若这些路径有变更，但没有同时修改 `Docs/Agent/**`、操作型 Guide、根 `README.md` 或 `CHANGELOG.md`，检查会失败，并要求回到 `templates/DOC_UPDATE_CHECKLIST.md` 判断是否需要同步知识资产。
+
+### 9.2 知识一致性检查（knowledge-consistency-check）
+
+验证知识文档中引用的代码路径、文档路径、Module Card、Context Pack 是否仍指向实际存在的文件：
+
+```powershell
+python Tools/knowledge-consistency-check.py
+```
+
+默认 strict：存在 warning 或 error 时返回非 0，适合 CI / pre-commit。临时巡检可使用：
+
+```powershell
+python Tools/knowledge-consistency-check.py --allow-warnings
+powershell -ExecutionPolicy Bypass -File Tools/knowledge-consistency-check.ps1 -AllowWarnings
+```
+
+检查范围：
+- `CODE_KNOWLEDGE_MAP.md`：代码路径 → Module Card → Context Pack → TDD/Workflow 引用的存在性
+- `ADR_SCHEMA.md`：AppliesTo 路径的存在性
+- `INDEX.md`：文档引用的存在性
+- `MODULE_CARDS/*.md`：代码路径引用的存在性
+- `CONTEXT_PACKS/*.md`：代码路径引用的存在性
+
+此检查应在以下时机运行：
+- 新增或移动代码路径后
+- 新增或重命名 Module Card / Context Pack 后
+- 定期巡检（与 P7 Evals 同频）
+
+### 9.3 Pre-commit / CI
 
 本地 pre-commit hook 已放在 `.githooks/pre-commit`。每个 clone 可执行一次：
 

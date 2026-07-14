@@ -50,10 +50,10 @@ skills/luban-config/**
 | DOT | `Assets/_Game/Configs/ShooterGame/Dots/` |
 | Passive | `Assets/_Game/Configs/ShooterGame/Passives/` |
 | SpawnWave | `Assets/_Game/Configs/ShooterGame/Waves/` |
-| Danmaku | `Assets/_Game/Configs/Danmaku/` |
-| VFX | `Assets/_Game/Configs/VFX/` |
-| Variables | `Assets/_Game/Configs/Variables/` 或 SG 专用 Variables |
-| Events | `Assets/_Game/Configs/Events/` |
+| Danmaku | `Assets/_Game/Configs/ShooterGame/BulletPattern/`, `Assets/_Game/Configs/ShooterGame/BulletType/`, `Assets/_Game/Configs/_Template/BulletPattern/`, `Assets/_Game/Configs/_Template/BulletType/` |
+| VFX/激光 | `Assets/_Game/Configs/ShooterGame/LaserTypes/`；通用模板优先放在 `_Template/` 对应类型目录 |
+| Variables | `Assets/_Game/Configs/ShooterGame/Variables/` |
+| Events | `Assets/_Game/Configs/ShooterGame/Events/` |
 
 ## 关键 ADR / 约束
 

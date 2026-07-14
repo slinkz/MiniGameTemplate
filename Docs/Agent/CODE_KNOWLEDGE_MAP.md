@@ -17,8 +17,9 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 2. 读取对应 Module Card，确认模块职责和边界。
 3. 读取对应 Context Pack，确认任务上下文和必读文档。
 4. 读取 TDD/ADR，确认设计约束。
-5. 按“修改后必验”执行验证。
-6. 中大型任务使用 `templates/IMPACT_ANALYSIS_TEMPLATE.md` 输出影响面。
+5. 按"修改后必验"执行验证。
+6. **修改 SO 资产后，必须先查引用者**：在 Unity Editor 中右键 SO 资产 → `Find References In Scene` 或在代码中用 `AssetDatabase.FindAssets` + `AssetDatabase.GetDependencies` 确认哪些 Entity/Wave/Skill/Pickup 引用了该资产，避免静默破坏下游配置。
+7. 中大型任务使用 `templates/IMPACT_ANALYSIS_TEMPLATE.md` 输出影响面。
 
 ## 2. 映射格式
 
@@ -39,10 +40,10 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | `_Game/Scripts/ShooterGame/Core/BaseLineDetector*` | `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_02_BATTLE_SYSTEM.md` | ADR-033 | 敌机越线扣基地 HP；敌机回收；失败判定正确 |
 | `_Game/Scripts/ShooterGame/Core/CameraShaker.cs` | `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_02_BATTLE_SYSTEM.md`, `SG_V2_TDD_07_LIFECYCLE.md` | ADR-035 | Shake/StopShake；退场停止震动；场景引用非空 |
 | `_Game/Scripts/ShooterGame/Progress/SG_ProgressManager.cs` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/ShooterGame_Battle.md`, `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_TDD_06_CLOUD_SAVE.md` | ADR-034 | 关卡解锁、保存、Reload、云同步、离线/重试路径 |
-| `_Game/Scripts/ShooterGame/Config/SG_LevelConfigSO.cs`, `_Game/Configs/ShooterGame/Levels/**`, `_Game/Configs/ShooterGame/Waves/**` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_GAME_DESIGN.md`, `SO_WORKFLOWS_02_ENTITY.md` | ADR-033, ADR-034 | Level/Wave 引用完整；SO Validator 通过；关卡显示、进入战斗、波次生成、胜利解锁正确 |
+| `_Game/Scripts/ShooterGame/Config/SG_LevelConfigSO.cs`, `_Game/Configs/ShooterGame/Levels/**`, `_Game/Configs/ShooterGame/Waves/**` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_GAME_DESIGN.md`, `SO_WORKFLOWS_02_ENTITY.md` | ADR-033, ADR-034 | Level/Wave 引用完整；SO Validator 通过；**查 Entity/Wave 引用者（Find References In Scene）**；关卡显示、进入战斗、波次生成、胜利解锁正确 |
 | `_Game/Scripts/ShooterGame/Core/IUIControllers.cs` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `SG_TDD_04_UI_CONTROLLERS.md` | ADR-034 | Controller 绑定、UI 数据刷新、事件不重复绑定 |
 | `_Game/Scripts/ShooterGame/UI/**` | `MODULE_CARDS/UISystem_FairyGUI.md`, `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/FairyGUI_UI.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_04_UI_CONTROLLERS.md`, `SG_UI_DESIGN.md` | ADR-034 | 面板 Open/Refresh/Close；Suspend/Resume；按钮流程；层级 |
-| `_Game/Configs/ShooterGame/**/*.asset` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SO_WORKFLOWS_02_ENTITY.md`, `SG_GAME_DESIGN.md` | ADR-033, ADR-034 | Missing Reference；SO 命名路径；关卡/技能/波次运行验证；进度保存 |
+| `_Game/Configs/ShooterGame/**/*.asset` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SO_WORKFLOWS_02_ENTITY.md`, `SG_GAME_DESIGN.md` | ADR-033, ADR-034 | Missing Reference；**查引用者（右键→Find References）**；SO 命名路径；关卡/技能/波次运行验证；进度保存 |
 | `_Game/Scenes/Battle.unity` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/AppFlow.md` | `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_01_ARCHITECTURE.md`, `SG_V2_TDD_07_LIFECYCLE.md` | ADR-034, ADR-035 | 场景引用完整；Boot->Battle；BattleLifecycleEvent 绑定；返回流程 |
 
 ## 4. EntitySystem 映射
@@ -56,9 +57,10 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | `_Framework/EntitySystem/Scripts/Core/EntitySystemBootstrap.cs` | `MODULE_CARDS/EntitySystem.md`, `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/EntitySystem.md` | `EC_TDD_04_SYSTEMS.md`, `SG_V2_TDD_07_LIFECYCLE.md` | ADR-033, ADR-035 | 初始化、Tick、退场 `OnBattleCleanup`、场景引用 |
 | `_Framework/EntitySystem/Scripts/Components/*.cs` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/EntitySystem.md` | `EC_TDD_05_COMPONENTS.md` | ADR-033 | 组件初始化/Reset/TickOrder；热路径无 GC |
 | `_Framework/EntitySystem/Scripts/Components/Skill*` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/EntitySystem.md`, `CONTEXT_PACKS/SO_Config_Workflow.md` | `EC_TDD_05_COMPONENTS.md`, `SG_V2_TDD_06_ATTACK_SKILL.md` | ADR-033 | 普攻 Slot[0]；技能装备；CD；AimMode；SO 配置 |
-| `_Framework/EntitySystem/Scripts/Components/Buff*`, `Dot*`, `Passive*` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/EntitySystem.md` | `SG_V2_TDD_03_BUFF_DOT_PASSIVE.md` | ADR-033 | Buff 叠加、持续、DOT tick、被动触发、清理 |
+| `_Framework/EntitySystem/Scripts/Components/Buff*`, `_Framework/EntitySystem/Scripts/Components/Passive*` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/EntitySystem.md` | `SG_V2_TDD_03_BUFF_DOT_PASSIVE.md` | ADR-033 | Buff 叠加、持续、DOT tick、被动触发、清理 |
+| `_Game/Configs/ShooterGame/Buffs/*.asset`, `_Game/Configs/ShooterGame/Dots/*.asset`, `_Game/Configs/ShooterGame/Passives/*.asset` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/EntitySystem.md`, `CONTEXT_PACKS/SO_Config_Workflow.md` | `SG_V2_TDD_03_BUFF_DOT_PASSIVE.md`, `SO_WORKFLOWS_02_ENTITY.md` | ADR-033 | Buff/DOT/Passive 值正确；**查引用者（哪些敌人/技能/Pickup 引用此配置）+ PlayMode 验证生效** |
 | `_Framework/EntitySystem/Scripts/Collision/**` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/EntitySystem.md` | `EC_TDD_04_SYSTEMS.md`, `OBB_TDD_INDEX.md` | ADR-033 | Camp 判定、碰撞冷却、TargetRegistry、底线检测关系 |
-| `_Framework/EntitySystem/Scripts/Config/*SO.cs` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `SO_WORKFLOWS_02_ENTITY.md`, `EC_TDD_06_CONFIG.md` | ADR-033 | CreateAssetMenu、Inspector、Validator、模板资产 |
+| `_Framework/EntitySystem/Scripts/Config/*SO.cs` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `SO_WORKFLOWS_02_ENTITY.md`, `EC_TDD_06_CONFIG.md` | ADR-033 | CreateAssetMenu、Inspector、Validator、模板资产；**修改 SO 字段后查引用者 + 运行 SO Validator** |
 | `_Framework/EntitySystem/Editor/**` | `MODULE_CARDS/EntitySystem.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `EC_TDD_07_EDITOR.md`, `EDITOR_TOOLS_MANUAL_04_INSPECTORS.md` | ADR-033 | CustomEditor 条件显示、SO 校验、无破坏序列化 |
 
 ## 5. Danmaku / Rendering 映射
@@ -68,13 +70,13 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | `_Framework/DanmakuSystem/Scripts/DanmakuSystem.cs` | `MODULE_CARDS/DanmakuSystem.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ARCHITECTURE.md`, `SO_WORKFLOWS_03_DANMAKU.md` | ADR-006, ADR-028, ADR-035 | Init、Update/LateUpdate、ClearAll、BattleLifecycle 注册 |
 | `_Framework/DanmakuSystem/Scripts/*UpdatePipeline*` | `MODULE_CARDS/DanmakuSystem.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ARCHITECTURE.md` Danmaku 管线 | ADR-020, ADR-028, ADR-036 | 管线顺序、碰撞事件、VFX/FloatingText 调用 |
 | `_Framework/DanmakuSystem/Scripts/Data/HitboxMath.cs` | `MODULE_CARDS/DanmakuSystem.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `OBB_TDD_INDEX.md` | ADR-012 | 命中数学用例、边界条件、无分配 |
-| `_Framework/DanmakuSystem/Scripts/Rendering/**` | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ATLAS_TDD_INDEX.md` | ADR-028, ADR-031, ADR-032 | DrawCall、UV、材质关键字、Game View 可见 |
+| `_Framework/DanmakuSystem/Scripts/Core/*Renderer*.cs` | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ATLAS_TDD_INDEX.md` | ADR-028, ADR-031, ADR-032 | DrawCall、UV、材质关键字、Game View 可见 |
 | `_Framework/Rendering/RenderBatchManager*.cs` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ATLAS_TDD_INDEX.md`, `DEBUG_PLAYBOOK.md` | ADR-002, ADR-028, ADR-032 | 顶点布局、bucket、mesh upload、shaderKeywords |
 | `_Framework/Rendering/RenderVertex.cs` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `DEBUG_PLAYBOOK.md` | ADR-028 | VertexAttributeDescriptor 顺序、Marshal offset、可见性 |
 | `_Framework/Rendering/RuntimeAtlasSystem/**` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ATLAS_TDD_INDEX.md` | ADR-028, ADR-031 | Allocate、Page 懒建、Blit、RT 像素采样、WebGL |
 | `_Framework/Rendering/FloatingText*.cs` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `FLOATING_TEXT_TDD.md` | ADR-036, ADR-035 | 单飘字路径、退场清理、RBM 可见性、零 GC |
 | `_Framework/VFXSystem/**` | `MODULE_CARDS/VFXSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-016, ADR-028 | VFX Tick/Render、Atlas、排序、清理 |
-| `_Game/Configs/Danmaku/**`, `_Game/Configs/VFX/**` | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/VFXSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `SO_WORKFLOWS_03_DANMAKU.md`, `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-018, ADR-028 | SO 引用、纹理/UV、Atlas 分配、运行可见 |
+| `_Game/Configs/ShooterGame/BulletPattern/**`, `_Game/Configs/ShooterGame/BulletType/**`, `_Game/Configs/ShooterGame/LaserTypes/**`, `_Game/Configs/_Template/BulletPattern/**`, `_Game/Configs/_Template/BulletType/**` | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/VFXSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `SO_WORKFLOWS_03_DANMAKU.md`, `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-018, ADR-028 | SO 引用完整；**查引用者（BulletPattern/BulletType/LaserType 的下游）**；纹理/UV；Atlas 分配；运行可见 |
 
 ## 6. AppFlow / UISystem 映射
 

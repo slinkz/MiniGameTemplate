@@ -30,6 +30,7 @@
 | 了解导航系统 | APPFLOW_TDD_INDEX | 栈式 FlowNode + AppFlowNavigator |
 | 验收 AppFlow 导航 | SG_V2_DEVICE_ACCEPTANCE 第六部分 + APPFLOW_TDD_INDEX | AppFlow 验收已并入统一设备验收，旧独立验收计划已归档 |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
+| 查踩坑记录/已知坑 | → **[路由表 D：踩坑速查](#-路由表-d踩坑速查)** | 45 条活跃 PIT（当前最高 PIT-057）+ 12 条归档 PIT + 模块卡常见错误 + DEBUG_PLAYBOOK + ADR Pitfalls |
 | 使用编辑器工具 | MODULE_CARDS/EditorTools + EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
 | AI 代码检索（知识图谱） | CODEGRAPH_INTEGRATION | CodeGraph MCP 安装/配置/工具优先级 |
@@ -42,6 +43,7 @@
 | 做知识维护 | KNOWLEDGE_MAINTENANCE + templates/DOC_UPDATE_CHECKLIST | 重要变更后的文档同步、变更包、索引统计与 Skill 双路径检查 |
 | 运行知识评估 | KNOWLEDGE_EVALS | 10 个标准任务评估 Agent 路由、设计、影响面、踩坑规避与验证闭环 |
 | 查看首批知识评估结果 | KNOWLEDGE_EVALS_RUN_2026-07-14 | 首批 10 个标准任务评分、漏项与反向修正建议 |
+| 查看真实编码评估结果 | KNOWLEDGE_EVALS_REALCODE_RUN_2026-07-14 | P1-4 真实编码 Evals（3 任务，平均 8.0 分，Editor-only 通过；PlayMode 缺失） |
 | 开发 ShooterGame | SG_GAME_DESIGN + SG_UI_DESIGN | 飞行弹幕射击游戏设计 + UI/交互设计 |
 | ShooterGame V2 技能系统 | SG_GDD_INDEX → 01~06 | 技能系统 GDD v2.4（主动/被动/Buff/DOT/道具/工作流/路线图） |
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
@@ -129,6 +131,8 @@
 | CDN 单一数据源 / WXDataCDNHelper | WECHAT_INTEGRATION §CDN | CDN 只在微信转换面板配一处，运行时 JS 层读取 |
 | CDN 域名白名单 | WECHAT_INTEGRATION §CDN缓存策略 ¶6 | 真机必须在微信后台加 request + downloadFile 合法域名，开发者工具 urlCheck 不绕过真机 |
 | CodeGraph / codegraph_context | CODEGRAPH_INTEGRATION | 预索引代码知识图谱，Agent 代码检索首选工具 |
+| PIT 编号体系 | skills/code-review-checklist/references/known-pitfalls.md | 已知坑统一编号；45 条活跃记录（当前最高 PIT-057）+ 12 条归档记录 |
+| 踩坑速查 | INDEX §[路由表 D](#-路由表-d踩坑速查) | 按领域/模块速查 PIT + 模块卡常见错误 + DEBUG_PLAYBOOK + ADR Pitfalls |
 | 主动技能/被动/Buff/DOT/道具 | SG_GDD_01~03 | 6 主动+4 被动+7 Buff+3 DOT+4 道具 |
 | 技能系统路线图 | SG_GDD_06 §优先级 | 5 Sprint ~67.5h 实施路线 |
 | EnemyShootComponent / InvincibilityModifier / DamageRedirectModifier | SG_V2_TDD_01 §S1.2~S1.3 | Sprint 1：敌机射击+无敌帧+伤害转发 |
@@ -140,6 +144,77 @@
 | BattleResultData / BattleResultCalculator / damageSourceTag | SG_V2_TDD_04 §S4.3~S4.4 | Sprint 4：战果+星级+伤害统计 |
 | SortieBottomSheet / SG_SortieBinder / BtnSortie | SG_V2_TDD_05 §S5.7 | Sprint 5：出战准备面板 |
 | EditorBulletSimulator / SOConsistencyValidator / DPSCalculatorWindow | SG_V2_TDD_05 §S5.1~S5.3 | Sprint 5：弹幕模拟+SO 校验+DPS 面板 |
+
+---
+
+## ⚠️ 路由表 D：踩坑速查
+
+> **定位**：编码前先看对应领域的已知坑，避免重复犯错。
+> **PIT 编号唯一来源**：`skills/code-review-checklist/references/known-pitfalls.md`（45 条活跃记录，当前最高 PIT-057；归档见 `known-pitfalls-archive.md`）
+> **模块级踩坑**：各 `MODULE_CARDS/*.md` 第 10 节「常见错误」
+> **调试踩坑**：`DEBUG_PLAYBOOK.md`（渲染/弹幕/RuntimeAtlas 排查）
+> **架构踩坑**：`ADR_SCHEMA.md` 各 ADR 的 Pitfalls 字段
+
+### 按领域速查
+
+| 领域 | PIT 编号 | 模块卡常见错误 | 调试/ADR |
+|------|----------|---------------|----------|
+| **渲染/顶点/着色器** | PIT-028（顶点字段顺序错位）、PIT-029（材质纹理未绑定）、PIT-032（类名重名 VFXRenderer）、PIT-045（LaserTypeSO 未设纹理）、PIT-053（飘字大小不一致） | Rendering_RuntimeAtlas §10（R1~R5）、DanmakuSystem §10（D3）、VFXSystem §10（V1~V2） | DEBUG_PLAYBOOK §3.1~3.5（DrawCall≠可见、顶点顺序、Blit shader、RT 像素、排查顺序）、ADR-032（shaderKeywords 丢失） |
+| **生命周期/退场清理** | PIT-037（Pool.FreeAll 不清 Data → 幽灵实体）、PIT-047（unscaledDeltaTime 伪 Bug）、PIT-048（DontDestroyOnLoad 三件套）、PIT-050（退场 Raise 后必须切离 Playing） | ShooterGame §10（S1）、EntitySystem §10（E3）、DanmakuSystem §10（D4）、VFXSystem §10（V4）、AppFlow §10（A2~A3） | ADR-035（退场清理协议 + BattleCleanupValidator） |
+| **碰撞/阵营/命中** | PIT-022（先推进后检查 TickTimer）、PIT-023（Pierce 单 byte 多目标覆写）、PIT-044（无敌帧在 modifier 链之前） | EntitySystem §10（E5）、DanmakuSystem §10（D2） | ADR-012（Camp/Faction 语义一致性）、OBB_TDD_INDEX |
+| **UI/FairyGUI** | PIT-014/015（包路径错误）、PIT-017（包名改漏）、PIT-024（OnRefresh→OnOpen 双绑）、PIT-025（Dialog 被遮挡）、PIT-026（ClosePanel 清回调）、PIT-030/031（不同步源文件/导出）、PIT-038（CaptureTouch 丢失）、PIT-055（引用不存在组件）、PIT-057（Tween timeScale 冻结） | UISystem_FairyGUI §10（U1~U6）、AppFlow §10（A4~A5） | ADR-034（Suspend/Resume 行为） |
+| **数据/SO/Luban** | PIT-019（Luban groups 空→零输出）、PIT-020（YooAsset 收集空）、PIT-041（云函数数据不同步）、PIT-042（DamageRedirect 忘清暴击）、PIT-043（HP 同步非单一源）、PIT-046（localOffset 语义错误） | DataSystem_SO_Luban §10（DS1~DS5）、EntitySystem §10（E4）、EditorTools §10（ET3） | SO_WORKFLOWS_INDEX、ADR-033（SO Validator） |
+| **平台/微信/构建** | PIT-018（场景路径不一致）、PIT-040（MCP 编译旧缓存） | WeChatBridge §10（W1~W5）、EditorTools §10（ET4） | WECHAT_INTEGRATION（CDN 域名白名单、真机验证）、BUILD_MINIGAME.md |
+| **通用编码陷阱** | PIT-007（命名空间 global::）、PIT-016（场景名≠文件名）、PIT-021（Timer 僵尸回调）、PIT-027（AssetService NRE）、PIT-034（fake-null 陷阱）、PIT-039（null 参数歧义 CS0121）、PIT-049（swap-remove 忘清尾）、PIT-051（旧系统未物理删除）、PIT-052（改模型未改 Editor 导致序列化错位）、PIT-054（Agent 假标通过）、PIT-056（死代码无调用者） | 所有模块卡 §10 | CONV_INDEX（命名/编码/平台约束）、ARCHITECTURE_REVIEW_PROTOCOL |
+
+### 按模块速查
+
+| 模块 | PIT 编号 | 模块卡 §10 | 其他来源 |
+|------|----------|-----------|----------|
+| ShooterGame | PIT-037, 042, 043, 044, 047, 048, 050 | S1~S5（退场/状态机/SO/旧验收/云存） | ADR-035 |
+| EntitySystem | PIT-022, 023, 034, 037, 044, 049 | E1~E5（GameObject 引用/ComponentType/初始化/SO/碰撞） | ADR-033 |
+| DanmakuSystem | PIT-022, 023, 028 | D1~D5（容量/阵营/可见性/清理/SO） | DEBUG_PLAYBOOK 全文 |
+| Rendering/RuntimeAtlas | PIT-028, 029, 032, 045 | R1~R5（DrawCall≠可见/顶点/Blit/RT/shaderKeywords） | DEBUG_PLAYBOOK §3.1~3.5, ADR-028/031/032 |
+| VFXSystem | PIT-032, 033, 035, 036, 045, 047 | V1~V5（可见性/fallback/SO/退场/边界） | - |
+| UISystem/FairyGUI | PIT-014, 015, 017, 024, 025, 026, 030, 031, 038, 055, 057 | U1~U6（自动生成/双绑/Binder/SortOrder/Suspend/发布） | ADR-034 |
+| AppFlow | PIT-024, 025, 026 | A1~A5（绕过/Suspend/PopAll/热启动恢复/行为） | ADR-034 |
+| WeChatBridge | PIT-018, 040, 041 | W1~W5（Stub 验证/CDN/重构建/jslib/stripping） | WECHAT_INTEGRATION |
+| DataSystem/SO/Luban | PIT-019, 020, 041, 042, 043, 046 | DS1~DS5（Validator/Inspector/TablesExtension/进度/权威混用） | SO_WORKFLOWS |
+| EditorTools | PIT-018, 040, 052 | ET1~ET5（asmdef/确认弹窗/SO结构/CDN/批量规则） | - |
+| 通用 | PIT-007, 016, 021, 027, 034, 039, 049, 051, 052, 054, 056 | - | CONV_INDEX, ARCHITECTURE_REVIEW_PROTOCOL |
+
+### 踩坑查询决策树
+
+```text
+我要改渲染/弹幕/RuntimeAtlas
+  → 先读 DEBUG_PLAYBOOK.md + ADR-028/031/032 的 Pitfalls
+  → 再读 Rendering_RuntimeAtlas §10 + DanmakuSystem §10
+  → 确认 PIT-028/029/032/045
+
+我要改战斗流程/退场
+  → 先读 ADR-035 Pitfalls + Constraints
+  → 再读 ShooterGame §10 + EntitySystem §10 + VFXSystem §10
+  → 确认 PIT-037/047/048/050
+
+我要改 UI/FairyGUI
+  → 先读 UISystem_FairyGUI §10 + AppFlow §10
+  → 再读 known-pitfalls.md 中所有 CL-4/FairyGUI 相关 PIT
+  → 确认 PIT-014/015/017/024/025/026/030/031/038/055/057
+
+我要改碰撞/阵营
+  → 先读 ADR-012 Pitfalls
+  → 再读 EntitySystem §10 + DanmakuSystem §10
+  → 确认 PIT-022/023/044
+
+我要改数据/SO/配置
+  → 先读 DataSystem_SO_Luban §10
+  → 再读 SO_WORKFLOWS_INDEX
+  → 确认 PIT-019/020/041/042/043/046
+
+我不确定属于哪个领域
+  → 先看 known-pitfalls.md 全部活跃 PIT（当前最高 PIT-057）
+  → 再按领域速查表定位
+```
 
 ---
 

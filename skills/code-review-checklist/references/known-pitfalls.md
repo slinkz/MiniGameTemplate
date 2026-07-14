@@ -1,8 +1,8 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：41 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-057）
-> **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
+> **当前条目数**：45 条（PIT-007, PIT-014 ~ PIT-057）
+> **归档层**：`known-pitfalls-archive.md`（12 条，PIT-001~006, PIT-008~013）
 
 ---
 

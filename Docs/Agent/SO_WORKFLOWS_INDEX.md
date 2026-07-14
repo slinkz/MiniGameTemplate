@@ -64,8 +64,8 @@ AssetDatabase.SaveAssets();
 | DOT | `Assets/_Game/Configs/ShooterGame/Dots/` |
 | Passive | `Assets/_Game/Configs/ShooterGame/Passives/` |
 | SpawnWave | `Assets/_Game/Configs/SpawnWave/` |
-| Danmaku | `Assets/_Game/Configs/Danmaku/` |
-| VFX | `Assets/_Game/Configs/VFX/` |
+| Danmaku | `Assets/_Game/Configs/ShooterGame/BulletPattern/`, `Assets/_Game/Configs/ShooterGame/BulletType/`, `_Template/BulletPattern/`, `_Template/BulletType/` |
+| VFX/激光 | `Assets/_Game/Configs/ShooterGame/LaserTypes/` |
 | Rendering | `Assets/_Game/Configs/Rendering/` |
 | Audio | `Assets/_Game/Configs/Audio/` |
 | Variables | `Assets/_Game/Configs/Variables/` |

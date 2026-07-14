@@ -60,9 +60,11 @@ Rendering 是渲染基础层，尽量保持零业务依赖。Danmaku、VFX、Flo
 ## 7. 关键 SO / 配置路径
 
 ```text
-Assets/_Game/Configs/Rendering/
-Assets/_Game/Configs/Danmaku/
-Assets/_Game/Configs/VFX/
+Assets/_Game/Configs/ShooterGame/BulletPattern/
+Assets/_Game/Configs/ShooterGame/BulletType/
+Assets/_Game/Configs/ShooterGame/LaserTypes/
+Assets/_Game/Configs/_Template/BulletPattern/
+Assets/_Game/Configs/_Template/BulletType/
 ```
 
 ## 8. 关键 ADR

@@ -65,8 +65,9 @@ UnityProj/Assets/_Framework/VFXSystem/Scripts/SpriteSheetVFXSystem.cs
 UnityProj/Assets/_Framework/VFXSystem/Scripts/Config/*.cs
 UnityProj/Assets/_Framework/VFXSystem/Scripts/Core/*.cs
 UnityProj/Assets/_Framework/VFXSystem/Scripts/Data/*.cs
-UnityProj/Assets/_Game/Configs/VFX/
-UnityProj/Assets/_Game/Configs/Rendering/
+UnityProj/Assets/_Game/Configs/ShooterGame/LaserTypes/
+UnityProj/Assets/_Game/Configs/ShooterGame/BulletType/
+UnityProj/Assets/_Game/Configs/_Template/BulletType/
 ```
 
 ## 8. 关键 ADR / 约束

@@ -140,6 +140,7 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 | 资源预算 | `Tools -> MiniGame Template -> Validate -> Asset Audit` |
 | SO 配置 | `SO_WORKFLOWS_INDEX.md`, 编辑器 Validator |
 | Unity 编译/运行 | `MCP_INTEGRATION.md` 或 Unity Editor |
+| **PlayMode 验证** | **`MCP_INTEGRATION.md` §「PlayMode 快速验证工作流」**（打开场景→PlayMode→截图→Console→退出） |
 | 渲染/弹幕排查 | `DEBUG_PLAYBOOK.md` |
 | 微信构建 | `Docs/Guide/BUILD_MINIGAME.md`, `WECHAT_INTEGRATION.md` |
 | 知识工程 | `KNOWLEDGE_ENGINEERING_ROADMAP.md` |

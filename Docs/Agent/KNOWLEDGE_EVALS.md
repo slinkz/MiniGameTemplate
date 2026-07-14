@@ -211,3 +211,10 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/CODE_KNOWLEDGE_MAP.md, D
 | 验证闭环弱 | Context Pack 必验项、Code Knowledge Map 验证列 |
 
 P7 不是终点；它是后续持续校准知识工程的回路。
+
+## 8. 评估记录索引
+
+| 日期 | 类型 | 报告 | 平均分 | 结论 |
+|------|------|------|--------|------|
+| 2026-07-14 | 静态路由评估 | `KNOWLEDGE_EVALS_RUN_2026-07-14.md` | 8.5 | 通过 |
+| 2026-07-14 | 真实编码评估 | `KNOWLEDGE_EVALS_REALCODE_RUN_2026-07-14.md` | 8.0 | Editor-only 通过；PlayMode 待补 |

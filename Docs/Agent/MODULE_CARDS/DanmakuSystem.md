@@ -60,10 +60,11 @@ DanmakuSystem 依赖基础 Utils/Event/ObjectPool/Audio/Rendering/VFX 桥接。E
 ## 7. 关键 SO / 配置路径
 
 ```text
-Assets/_Game/Configs/Danmaku/
-Assets/_Game/Configs/ShooterGame/
-Assets/_Game/Configs/VFX/
-Assets/_Game/Configs/Rendering/
+Assets/_Game/Configs/ShooterGame/BulletPattern/
+Assets/_Game/Configs/ShooterGame/BulletType/
+Assets/_Game/Configs/ShooterGame/LaserTypes/
+Assets/_Game/Configs/_Template/BulletPattern/
+Assets/_Game/Configs/_Template/BulletType/
 ```
 
 常见 SO：`BulletTypeSO`、`BulletPatternSO`、`PatternGroupSO`、`SpawnerProfileSO`、`DifficultyProfileSO`、VFX 资源描述。
