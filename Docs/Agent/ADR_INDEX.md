@@ -6,6 +6,32 @@
 
 ---
 
+## 可执行 ADR 使用规则
+
+> P3 知识工程新增：ADR 不只作为历史记录，还作为 Agent 编码前的架构约束入口。详见 [ADR_SCHEMA.md](ADR_SCHEMA.md)。
+
+### Agent 使用流程
+
+1. 根据任务读取对应 Context Pack 和 Module Card。
+2. 查看模块卡引用的 ADR。
+3. 在本文确认 ADR 状态是否 Accepted / Superseded / Rejected。
+4. 对优先 ADR，读取 `ADR_SCHEMA.md` 中的可执行摘要，检查 `AppliesTo`、`Constraints`、`Verification`。
+5. 若本次设计违反现有 ADR，必须先提出 ADR 更新或新增 ADR，不要直接改代码。
+
+### 优先可执行 ADR
+
+| ADR | 主题 | 可执行重点 | 入口 |
+|-----|------|------------|------|
+| 028 | RuntimeAtlasSystem 统一管线 | RuntimeAtlas 是运行时统一渲染核心；旧独立贴图运行时约束被替代 | `ADR_SCHEMA.md` §ADR-028 |
+| 031 | RuntimeAtlas 深化 | 懒建页、Laser 条件入 Atlas、Trail 纹理化 | `ADR_SCHEMA.md` §ADR-031 |
+| 032 | new Material shaderKeywords | 运行时克隆材质必须复制 shaderKeywords | `ADR_SCHEMA.md` §ADR-032 |
+| 033 | Entity-Component 框架 | Entity 纯 C#、热路径零 GC、组件/Tick 契约 | `ADR_SCHEMA.md` §ADR-033 |
+| 034 | AppFlow 栈式导航 | Push/Pop/Replace、面板 Suspend/Resume、冷启动清栈 | `ADR_SCHEMA.md` §ADR-034 |
+| 035 | 战斗退场生命周期 | BattleLifecycleEvent + IBattleCleanup；已代码级确认 | `ADR_SCHEMA.md` §ADR-035 |
+| 036 | 飘字统一 RBM | 禁止新增并行飘字路径，统一 FloatingTextSystem | `ADR_SCHEMA.md` §ADR-036 |
+
+---
+
 ## 子文件目录
 
 | # | 文件 | ADR 范围 | 主题域 | 行数 |
@@ -57,5 +83,5 @@
 | 032 | new Material() shaderKeywords | ✅ | 05 |
 | 033 | Entity-Component 框架 | ✅ | 05 |
 | 034 | AppFlow 栈式导航系统 | ✅ | 05 |
-| 035 | 战斗退场生命周期统一事件通道 | ✅ (待实施) | 06 |
-| 036 | 飘字系统统一到 RBM 渲染管线 | ✅ (待实施) | 06 |
+| 035 | 战斗退场生命周期统一事件通道 | ✅ 已实施（代码级确认 2026-07-14） | 06 |
+| 036 | 飘字系统统一到 RBM 渲染管线 | ✅ 已实施（2026-06-03） | 06 |

@@ -9,7 +9,7 @@ related_code: Assets/_Framework/DanmakuSystem/**, Assets/_Framework/EntitySystem
 # ADR-035：战斗退场生命周期统一事件通道
 
 - **日期**：2026-05-23
-- **状态**：✅ Accepted（待实施）
+- **状态**：✅ Accepted（已实施，代码级确认 2026-07-14；实施 TDD 编码完成 2026-05-26）
 - **触发**：飘字残留 Bug 排查耗时过长，暴露退场清理架构系统性弱点
 
 ---
@@ -172,7 +172,7 @@ if (!_battleActive.Value) return; // 战斗已结束，跳过所有逻辑
 | Phase D | 添加 BoolVariable _battleActive 哨兵 | Phase B |
 | Phase E | 编辑器验证脚本 | Phase B |
 
-**建议执行窗口**：V2 全部 Sprint 完成后、统一验收前。
+**执行状态**：已落地到代码。2026-07-14 复核确认：`BattleLifecycleEvent`、`IBattleCleanup`、`BattleController` Raise 路径、`DanmakuSystem`、`EntitySystemBootstrap`、`CameraShaker`、`BattleCleanupValidator` 与 `SG_OnBattleEnd.asset` 场景绑定均存在。
 
 ---
 

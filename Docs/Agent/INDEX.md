@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-06-03 22:40 | 文件总数：78（活跃） + 75（归档）
+> 最后更新：2026-07-14 | 文件总数：115（活跃） + 75（归档）
 
 ---
 
@@ -16,6 +16,7 @@
 | 新增子弹花样 | SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
+| 查可执行 ADR 约束 | ADR_SCHEMA + ADR_INDEX | 编码前确认 ADR 的 AppliesTo、Constraints、Verification 与 Supersedes |
 | 实施退场生命周期改造 | SG_V2_TDD_07_LIFECYCLE | ADR-035 实施——SO 事件通道 + IBattleCleanup |
 | 配置微信广告/SDK/云开发/CDN | WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 + 域名白名单 |
 | 理解/修改云存储系统 | SG_TDD_06_CLOUD_SAVE | V4 云端权威+纯内存（登录+云同步+CloudSaveSystem+启动阻塞重试） |
@@ -29,6 +30,14 @@
 | 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
 | AI 代码检索（知识图谱） | CODEGRAPH_INTEGRATION | CodeGraph MCP 安装/配置/工具优先级 |
+| 推进项目知识工程 | KNOWLEDGE_ENGINEERING_ROADMAP | 跨会话主任务：Agent 上岗入口、Context Pack、模块卡、ADR 可执行化、代码映射、架构审查、维护与评估 |
+| Agent 新会话上岗 | AGENT_BOOTSTRAP | 新会话事实源优先级、启动流程、Context Pack 路由、核心禁止事项与验证入口 |
+| 查看模块知识卡 | MODULE_CARDS/README | 核心模块职责、边界、入口、数据流、关键 ADR、常见坑与修改后必验 |
+| 查代码知识映射 | CODE_KNOWLEDGE_MAP | 代码路径到 Module Card、Context Pack、TDD、ADR 与验证项的闭环映射 |
+| 做影响面分析 | templates/IMPACT_ANALYSIS_TEMPLATE | 中大型改动编码前的模块、路径、ADR、资产、热路径与验证计划模板 |
+| 做架构审查 | ARCHITECTURE_REVIEW_PROTOCOL + templates/ARCH_REVIEW_TEMPLATE | 跨模块/架构敏感改动编码前的审查协议与模板 |
+| 做知识维护 | KNOWLEDGE_MAINTENANCE + templates/DOC_UPDATE_CHECKLIST | 重要变更后的文档同步、变更包、索引统计与 Skill 双路径检查 |
+| 运行知识评估 | KNOWLEDGE_EVALS | 10 个标准任务评估 Agent 路由、设计、影响面、踩坑规避与验证闭环 |
 | 开发 ShooterGame | SG_GAME_DESIGN + SG_UI_DESIGN | 飞行弹幕射击游戏设计 + UI/交互设计 |
 | ShooterGame V2 技能系统 | SG_GDD_INDEX → 01~06 | 技能系统 GDD v2.4（主动/被动/Buff/DOT/道具/工作流/路线图） |
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
