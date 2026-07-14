@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-14 | 文件总数：115（活跃） + 75（归档）
+> 最后更新：2026-07-14 | 文件总数：116（活跃） + 75（归档）
 
 ---
 
@@ -38,6 +38,7 @@
 | 做架构审查 | ARCHITECTURE_REVIEW_PROTOCOL + templates/ARCH_REVIEW_TEMPLATE | 跨模块/架构敏感改动编码前的审查协议与模板 |
 | 做知识维护 | KNOWLEDGE_MAINTENANCE + templates/DOC_UPDATE_CHECKLIST | 重要变更后的文档同步、变更包、索引统计与 Skill 双路径检查 |
 | 运行知识评估 | KNOWLEDGE_EVALS | 10 个标准任务评估 Agent 路由、设计、影响面、踩坑规避与验证闭环 |
+| 查看首批知识评估结果 | KNOWLEDGE_EVALS_RUN_2026-07-14 | 首批 10 个标准任务评分、漏项与反向修正建议 |
 | 开发 ShooterGame | SG_GAME_DESIGN + SG_UI_DESIGN | 飞行弹幕射击游戏设计 + UI/交互设计 |
 | ShooterGame V2 技能系统 | SG_GDD_INDEX → 01~06 | 技能系统 GDD v2.4（主动/被动/Buff/DOT/道具/工作流/路线图） |
 | 实施 ShooterGame | SG_TDD_INDEX → 01~05 | 核心 TDD：战斗系统 + 关卡 + UI + 摇杆 |
