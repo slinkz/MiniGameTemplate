@@ -1,0 +1,32 @@
+name: Knowledge Sync
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  knowledge-sync:
+    name: Check knowledge docs
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run knowledge sync check
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "pull_request") {
+            ./Tools/knowledge-sync-check.ps1 -BaseRef "origin/${{ github.base_ref }}" -HeadRef "HEAD"
+          } else {
+            $base = "${{ github.event.before }}"
+            if ($base -match "^0+$") {
+              $base = "HEAD~1"
+            }
+            ./Tools/knowledge-sync-check.ps1 -BaseRef $base -HeadRef "HEAD"
+          }

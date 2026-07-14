@@ -1,7 +1,7 @@
 # Known Pitfalls — 活跃层（强制读取）
 
 > **容量上限**：30 条（+ 不限数量的 `[经典]` 条目）。超过时触发蒸馏，详见 SKILL.md「经验库维护规范」。
-> **当前条目数**：38 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-054）
+> **当前条目数**：41 条（PIT-007, PIT-014 ~ PIT-031, PIT-034 ~ PIT-057）
 > **归档层**：`known-pitfalls-archive.md`（13 条，PIT-001~006, PIT-008~013）
 
 ---
@@ -514,6 +514,51 @@
 - **修复**: 制定 ADR-037 验收防御机制：交付物清单 + Gate-0 + 三态标记 + 传播隔离
 - **严重度**: 🔴 导致功能缺失被掩盖，直到真机验收才暴露
 - **标记 [经典] 原因**: "球员兼裁判"是 AI 辅助开发的结构性缺陷，任何 Agent 主导编码+验收的流程都可能重现
+
+---
+
+## PIT-055: 代码引用不存在的 FairyGUI 包内组件 `[经典]`
+- **分类**: CL-4 FairyGUI 规范 / R2 组件闭环
+- **日期**: 2026-06-04
+- **现象**: 运行时控制台报 `FairyGUI: resource not found - SkillSlot in SG_Battle`（及 PassiveSlot/PickupNotification）
+- **根因**: 编码阶段写了 `UIPackage.CreateObject("SG_Battle", "SkillSlot")` 等调用，但没有在 FairyGUI 工程中创建对应组件 XML 且没有在 package.xml 中注册。虽然代码有 null-fallback 不崩溃，但会产生运行时警告
+- **通用教训**：
+  - 任何 `UIPackage.CreateObject(pkg, name)` 调用必须确认 `name` 在目标包的 package.xml `<resources>` 中声明且 `exported="true"`
+  - 如果组件是纯代码几何图形（GGraph 白模），**不应使用 CreateObject**——直接纯代码创建更可靠
+  - code-review 时搜索所有 `CreateObject` 调用，逐一核对 package.xml
+- **修复**: 去掉 CreateObject 调用改为纯代码创建；同时补建 XML 备用
+- **严重度**: 🟡 不崩溃但运行时有大量警告日志，影响调试体验
+- **标记 [经典] 原因**: 代码-资产同步是 FairyGUI 开发的永恒痛点——编译器不检查包资源存在性
+
+---
+
+## PIT-056: public 方法写了但没有调用者 `[经典]`
+- **分类**: CL-1 编码规范 / SRP
+- **日期**: 2026-06-04
+- **现象**: `BattleHUDController.SetPlayerEntity()` 方法存在且功能正确，但 `BattleController` 中没有任何调用 → 技能 CD 面板和被动面板永远不刷新
+- **根因**: 编码时先写了接收端（SetPlayerEntity），后在发送端（BattleController.InitBattleAsync）中忘记添加调用。编译器不报错——public 方法不调用不算语法错误
+- **通用教训**：
+  - code-review 时对所有**本次新增的 public 方法**，必须搜索调用者是否存在
+  - 特别关注"注入/初始化型"方法（Set/Init/Register/Bind）——它们的调用点通常在另一个文件
+  - 可用 grep `methodName\(` 快速验证
+- **修复**: 在 BattleController.InitBattleAsync() 和 HandleRetry() 中添加 `hudCtrl.SetPlayerEntity(_playerEntity)`
+- **严重度**: 🔴 功能完全失效但不崩溃、不报错，极难发现
+- **标记 [经典] 原因**: "写了但没调用"是跨文件协作编码的第一大杀手
+
+---
+
+## PIT-057: FairyGUI Tween 在 Time.timeScale=0 时冻结 `[经典]`
+- **分类**: CL-4 FairyGUI 规范 / 时间系统
+- **日期**: 2026-06-04
+- **现象**: Victory/Defeat 面板调用了 `Show()` 但视觉上不可见——面板 alpha 永远停留在 0
+- **根因**: `EnterState(Victory/Defeat)` 先执行 `Time.timeScale = 0`（冻结游戏世界），之后通过 Coroutine 调用面板 Show()。面板 Show 内部用 `TweenFade(1f, 0.3f)` 做淡入动效，但 FairyGUI GTween 默认受 `Time.timeScale` 影响——timeScale=0 时 Tween 永远不推进
+- **通用教训**：
+  - 任何在 `Time.timeScale=0`（暂停/结算/过场）期间执行的 FairyGUI Tween，**必须**链式调用 `.SetIgnoreEngineTimeScale(true)`
+  - 全局检查方法：grep 所有 `TweenFade\|TweenMove\|TweenScale\|TweenRotate`，确认所属上下文是否可能在 timeScale=0 时执行
+  - 已有正面范例：`BattleStartSequence.cs` 全部 Tween 都正确设置了 IgnoreEngineTimeScale
+- **修复**: VictoryPanelController / DefeatPanelController 所有 Tween 添加 `.SetIgnoreEngineTimeScale(true)`
+- **严重度**: 🔴 面板功能完全不可见但无崩溃/无日志——需要逻辑分析才能定位
+- **标记 [经典] 原因**: Unity timeScale 与第三方 Tween 库的交互是各类项目的高频坑
 
 ---
 

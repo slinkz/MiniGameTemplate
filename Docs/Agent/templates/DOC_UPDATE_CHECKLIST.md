@@ -46,8 +46,9 @@ related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
 | `DEBUG_PLAYBOOK.md` | 是/否 | 是/否 | |
 | `WECHAT_INTEGRATION.md` / Guide | 是/否 | 是/否 | |
 | `skills/` | 是/否 | 是/否 | |
-| `.codebuddy/skills/` | 是/否/不存在 | 是/否/不适用 | |
+| `.workbuddy/skills/` / `.codebuddy/skills/` | 是/否/不存在 | 是/否/不适用 | |
 | `Docs/Agent/changes/` | 是/否 | 是/否 | |
+| `Tools/knowledge-sync-check.ps1` | 是/否 | 是/否 | 若检查失败但确认无需文档更新，需记录绕过原因 |
 
 ## 4. 代码路径映射
 
@@ -108,6 +109,7 @@ related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
 ## 8. 结论
 
 - 知识资产已同步：是/否
+- `knowledge-sync-check` 已通过：是/否/不适用
 - 剩余未验证项：
 - 后续维护项：
 - 最终回复需要说明：

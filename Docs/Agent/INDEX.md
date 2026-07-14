@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-14 | 文件总数：118（活跃） + 88（归档）
+> 最后更新：2026-07-14 | 文件总数：118（活跃） + 90（归档）
 
 ---
 
@@ -180,6 +180,8 @@
 | FRAMEWORK_MODULES*.md | — | 4 | 早期人类框架模块手册 → **已归档** `Archive/Guide/FrameworkModules/`，当前入口见 `MODULE_CARDS/README` 与 `ARCHITECTURE` |
 | S5_FINAL_PLAYTEST_GUIDE | — | — | Sprint 5 最终 PlayTest 指南 → **已归档** `Archive/ShooterGame/` |
 | SG_DEV_PLAN | — | — | ShooterGame V1 开发计划 → **已归档** `Archive/ShooterGame/` |
+| ShooterGame-Design | — | — | 父目录早期游戏设计稿 → **已归档** `Archive/ShooterGame/Design/`，当前入口见 `SG_GAME_DESIGN`, `SG_GDD_INDEX` |
+| ShooterGame-UI-Design | — | — | 父目录早期 UI/交互设计稿 → **已归档** `Archive/ShooterGame/Design/`，当前入口见 `SG_UI_DESIGN`, `CONTEXT_PACKS/FairyGUI_UI` |
 | SG_NEXT_PHASE_GUIDE | — | — | ShooterGame V1 下一阶段行动指导 → **已归档** `Archive/ShooterGame/` |
 | SG_P0_ACCEPTANCE_PLAN | — | — | SG-P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |
 | SG_TOOLS_P0_ACCEPTANCE | — | — | 工具 P0 验收 → **已归档** `Archive/ShooterGame/Acceptance/` |

@@ -49,7 +49,7 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 5. 用 `rg` 或 CodeGraph 定位代码入口。
 6. 若是常规中型改动，使用 `templates/IMPACT_ANALYSIS_TEMPLATE.md` 先做影响面分析；若是跨模块/架构敏感改动，按 `ARCHITECTURE_REVIEW_PROTOCOL.md` 使用 `templates/ARCH_REVIEW_TEMPLATE.md` 审查后再编码。
 7. 修改后按 Context Pack / Code Knowledge Map 的“修改后必验”执行验证。
-8. 重要变更后按 `KNOWLEDGE_MAINTENANCE.md` 和 `templates/DOC_UPDATE_CHECKLIST.md` 检查知识资产同步。
+8. 重要变更后按 `KNOWLEDGE_MAINTENANCE.md` 和 `templates/DOC_UPDATE_CHECKLIST.md` 检查知识资产同步，并运行 `Tools/knowledge-sync-check.ps1` 或确认 CI/pre-commit 会执行。
 
 知识工程任务：
 
@@ -108,7 +108,7 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 | `UnityProj/Assets/_Example/` | 示例项目 |
 | `UIProject/` | FairyGUI 工程 |
 | `skills/` | 纳入版本管理的 Skill 源目录 |
-| `.codebuddy/skills/` | WorkBuddy 自动触发 Skill 的运行时目录，需与 `skills/` 保持一致 |
+| `.workbuddy/skills/` / `.codebuddy/skills/` | Agent 工具自动触发 Skill 的运行时目录，按实际工作区存在情况与 `skills/` 保持一致 |
 
 ## 9. 编码前检查
 

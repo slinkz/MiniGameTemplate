@@ -192,7 +192,7 @@ bash Tools/gen_config.sh
 | 二进制数据 | `Assets/_Game/ConfigData/*.bytes` | YooAsset 运行时加载 |
 | JSON 数据 | `Assets/_Framework/Editor/ConfigPreview/*.json` | 编辑器预览（不打包） |
 
-> 💡 **AI 开发者提示**：项目中提供了 `luban-config` Skill（位于 `.codebuddy/skills/luban-config/`），可自动化新增/修改/删除配置表的完整流程。详见下方 [AI Skills 章节](#ai-skills-工具链)。
+> 💡 **AI 开发者提示**：项目中提供了 `luban-config` Skill（仓库源目录 `skills/luban-config/`；运行时目录按工具可能为 `.workbuddy/skills/luban-config/` 或 `.codebuddy/skills/luban-config/`），可自动化新增/修改/删除配置表的完整流程。详见下方 [AI Skills 章节](#ai-skills-工具链)。
 
 ## Step 7（可选）：打开 FairyGUI 工程
 
@@ -227,16 +227,16 @@ bash Tools/gen_config.sh
 
 ## AI Skills 工具链
 
-本模板内置了供 AI Agent（如 CodeBuddy / WorkBuddy）使用的 **Skills**，可以大幅提升 AI 协作开发效率。Skills 存放在 `.codebuddy/skills/` 目录（CodeBuddy 官方标准路径），会随 Git 仓库一起分发。
+本模板内置了供 AI Agent（如 CodeBuddy / WorkBuddy）使用的 **Skills**，可以大幅提升 AI 协作开发效率。仓库源目录是 `skills/`，会随 Git 仓库一起分发；运行时自动触发目录按工具可能是父目录 `.workbuddy/skills/` 或 `.codebuddy/skills/`。
 
 ### 当前可用 Skills
 
 | Skill | 路径 | 功能 |
 |-------|------|------|
-| `luban-config` | `.codebuddy/skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
-| `fairygui-tools` | `.codebuddy/skills/fairygui-tools/` | FairyGUI UI 全链路开发：从效果图/自然语言生成白模 XML、解析工程结构、生成 Unity C# 面板代码（Extension + IUIPanel + Logic.cs 架构） |
-| `task-tracker` | `.codebuddy/skills/task-tracker/` | 项目任务追踪：跨会话任务状态持久化、多阶段计划管理、挂起/恢复协议、方案暂存 |
-| `code-review-checklist` | `.codebuddy/skills/code-review-checklist/` | 代码审查检查清单：8 类分类检查项 + 分层踩坑经验库，任何代码改动后自动验证 |
+| `luban-config` | `skills/luban-config/` | Luban 配置表自动化：新增/修改/删除表、生成 xlsx、同步 TablesExtension.cs |
+| `fairygui-tools` | `skills/fairygui-tools/` | FairyGUI UI 全链路开发：从效果图/自然语言生成白模 XML、解析工程结构、生成 Unity C# 面板代码（Extension + IUIPanel + Logic.cs 架构） |
+| `task-tracker` | `skills/task-tracker/` | 项目任务追踪：跨会话任务状态持久化、多阶段计划管理、挂起/恢复协议、方案暂存 |
+| `code-review-checklist` | `skills/code-review-checklist/` | 代码审查检查清单：8 类分类检查项 + 分层踩坑经验库，任何代码改动后自动验证 |
 
 ### 为什么需要 task-tracker？
 
@@ -284,8 +284,8 @@ AI Agent 生成的代码经常会犯「人类不太会犯但 AI 反复犯」的�
 
 ### 想了解更多？
 
-- 查看 `.codebuddy/skills/luban-config/SKILL.md` 了解 Luban 配置表 Skill 的完整 SOP 和技术细节
-- 查看 `.codebuddy/skills/fairygui-tools/SKILL.md` 了解 FairyGUI UI 开发 Skill 的工作流、白模规范和 C# 代码架构规范
-- 查看 `.codebuddy/skills/task-tracker/SKILL.md` 了解任务追踪系统的目录规范和完整工作流
-- 查看 `.codebuddy/skills/code-review-checklist/SKILL.md` 了解代码审查检查清单的 8 类检查项、分层加载策略和蒸馏规范
+- 查看 `skills/luban-config/SKILL.md` 了解 Luban 配置表 Skill 的完整 SOP 和技术细节
+- 查看 `skills/fairygui-tools/SKILL.md` 了解 FairyGUI UI 开发 Skill 的工作流、白模规范和 C# 代码架构规范
+- 查看 `skills/task-tracker/SKILL.md` 了解任务追踪系统的目录规范和完整工作流
+- 查看 `skills/code-review-checklist/SKILL.md` 了解代码审查检查清单的 8 类检查项、分层加载策略和蒸馏规范
 - Skill 的格式遵循 CodeBuddy Skill 标准，你也可以为项目创建自定义 Skill

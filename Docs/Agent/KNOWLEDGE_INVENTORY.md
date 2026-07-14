@@ -30,8 +30,9 @@ Agent 在使用本盘点时应遵循：
 | Archive 文档 | `Docs/Agent/Archive/` 中 ShooterGame、PK、验收、历史设计材料最多 | 历史参考，不直接作为当前事实 |
 | changes 文档 | `Docs/Agent/changes/` 有少量变更包和 bugfix 记录 | 用于追溯近期改动和踩坑 |
 | Skills | 仓库实际路径为 `skills/`，包含 8 个技能包 | 操作 SOP 和专家经验源 |
-| Skills 双路径 | `skills/` 是纳入版本管理的源目录；WorkBuddy 自动触发 Skill 需要同步到 `.codebuddy/skills/` | 后续需建立同步/校验规则，确保两处内容一致 |
-| 索引新鲜度 | `Docs/Agent/INDEX.md` 已更新至 2026-07-14，统计为 118 活跃 + 88 归档 | P6 已建立统计规则，后续新增/归档文档时维护 |
+| Skills 双路径 | `skills/` 是纳入版本管理的源目录；运行时目录按 Agent 工具可能是父目录 `.workbuddy/skills/` 或 `.codebuddy/skills/` | 后续需建立同步/校验规则，确保两处内容一致 |
+| 索引新鲜度 | `Docs/Agent/INDEX.md` 已更新至 2026-07-14，统计为 118 活跃 + 90 归档 | P6 已建立统计规则，后续新增/归档文档时维护 |
+| 父目录工作台 | `C:\workspace\mini-game-template` 下存在 `.workbuddy/`, `.tasks/`, `.codegraph/`, `output/` 等非仓库材料 | 可作历史和本机工具背景；当前事实源仍以仓库 `Docs/Agent/**` 为准 |
 
 ## 3. 当前事实源
 
@@ -91,7 +92,7 @@ Agent 在使用本盘点时应遵循：
 
 ## 6. Skills 盘点
 
-仓库实际存在 `skills/` 目录，这是纳入版本管理的 Skill 源目录。WorkBuddy 这类 Agent 工具自动触发 Skill 时，需要将同一套内容放置到 `.codebuddy/skills/`。因此两者不是互斥路径，而是“仓库源目录 + 运行时触发目录”的双路径约定，内容应保持一致。
+仓库实际存在 `skills/` 目录，这是纳入版本管理的 Skill 源目录。Agent 工具自动触发 Skill 时，可能读取工作区运行时目录：本机历史 WorkBuddy 环境为父目录 `.workbuddy/skills/`，部分旧文档/工具可能使用 `.codebuddy/skills/`。因此它们不是互斥路径，而是“仓库源目录 + 运行时触发目录”的双路径约定，内容应保持一致。
 
 | Skill | 路径 | 职责 | 知识工程定位 |
 |-------|------|------|--------------|
@@ -158,15 +159,40 @@ Agent 在使用本盘点时应遵循：
 | `Docs/Guide/DANMAKU_CONFIG.md` | `Docs/Agent/Archive/Guide/Danmaku/DANMAKU_CONFIG.md` | `SO_WORKFLOWS_03_DANMAKU.md`, `SO_WORKFLOWS_04_VFX_RENDER.md` |
 | `Docs/Guide/DANMAKU_COLLISION.md` | `Docs/Agent/Archive/Guide/Danmaku/DANMAKU_COLLISION.md` | `MODULE_CARDS/DanmakuSystem.md`, `OBB_TDD_INDEX.md` |
 | `Docs/Guide/FRAMEWORK_MODULES*.md` | `Docs/Agent/Archive/Guide/FrameworkModules/` | `MODULE_CARDS/README.md`, `ARCHITECTURE.md`, `CODE_KNOWLEDGE_MAP.md` |
+| `C:\workspace\mini-game-template\ShooterGame-Design.md` | `Docs/Agent/Archive/ShooterGame/Design/ShooterGame-Design.md` | `SG_GAME_DESIGN.md`, `SG_GDD_INDEX.md`, `SG_TDD_INDEX.md` |
+| `C:\workspace\mini-game-template\ShooterGame-UI-Design.md` | `Docs/Agent/Archive/ShooterGame/Design/ShooterGame-UI-Design.md` | `SG_UI_DESIGN.md`, `CONTEXT_PACKS/FairyGUI_UI.md`, `MODULE_CARDS/UISystem_FairyGUI.md` |
 
-## 8. 待校验知识
+## 8. 父目录工作台边界
+
+`C:\workspace\mini-game-template` 是本机工作区外壳，不是 Git 仓库。真正纳入版本管理的仓库为 `C:\workspace\mini-game-template\MiniGameTemplate`。
+
+父目录材料的使用规则：
+
+| 路径 | 当前判断 | 使用边界 |
+|------|----------|----------|
+| `.workbuddy/memory/**` | WorkBuddy 历史长期记忆 | 只作历史背景；若与 `Docs/Agent/**` 冲突，以 `Docs/Agent/**` 和当前代码为准 |
+| `.workbuddy/skills/**` | 本机 WorkBuddy 运行时 Skill 目录 | 应与仓库 `skills/**` 保持同步；不直接作为版本化事实源 |
+| `.tasks/**` | 早期 task-tracker 本地任务系统 | 不建议整体纳入版本管理；其中有价值结论应迁入 `Docs/Agent/changes/**`、Roadmap 或 Archive |
+| `.codegraph/**` | CodeGraph 本地索引数据库 | 工具缓存，不入版本管理；事实以代码和 `CODEGRAPH_INTEGRATION.md` 为准 |
+| `output/**` | WebGL/微信小游戏构建产物 | 构建输出，不入版本管理；发布/部署流程见 `WECHAT_INTEGRATION.md` |
+
+`.tasks` 的定位：保留为本地历史工作台即可，不应作为新 Agent 的当前任务入口。后续任务管理优先使用：
+
+1. `Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md`：长期知识工程路线。
+2. `Docs/Agent/changes/YYYY-MM-DD-topic/`：重要变更的可追溯记录。
+3. `Docs/Agent/SG_V2_DEVICE_ACCEPTANCE.md` 等活跃验收/路线文档：项目主线状态。
+4. Git commits / GitHub Issues 或 Projects：需要跨人协作、分配、筛选和关闭状态时使用。
+
+## 9. 待校验知识
 
 以下内容需要后续通过 P7 评估持续观察，或在日常维护中执行。
 
 | 项 | 现象 | 风险 | 建议处理 |
 |----|------|------|----------|
-| Skills 双路径同步 | `skills/` 参与版本管理，`.codebuddy/skills/` 用于 WorkBuddy 自动触发；当前工作区未发现 `.codebuddy/` 目录 | 两处内容不一致会导致 Agent 行为与仓库知识不同步 | P6 已明确同步检查规则；若恢复 WorkBuddy 目录，按维护清单同步 |
-| `INDEX.md` 文件统计 | 索引已更新为 118 活跃 + 88 归档 | 后续新增/归档文档后可能再次过期 | P6 已写入统计命令，日常维护执行 |
+| Skills 双路径同步 | `skills/` 参与版本管理；父目录存在 `.workbuddy/skills/`，当前未发现 `.codebuddy/skills/` | 两处内容不一致会导致 Agent 行为与仓库知识不同步 | P6 已明确同步检查规则；修改 Skill 后同步实际存在的运行时目录 |
+| `INDEX.md` 文件统计 | 索引已更新为 118 活跃 + 90 归档 | 后续新增/归档文档后可能再次过期 | P6 已写入统计命令，日常维护执行 |
+| `.workbuddy/skills` 同步 | 2026-07-14 已发现 `code-review-checklist/known-pitfalls.md` 运行时版本领先仓库，已将 PIT-055~057 同步回 `skills/` | 后续仍可能漂移 | 修改 Skill 后使用哈希或 diff 校验仓库源目录与实际运行时目录 |
+| `.tasks` 历史状态 | `.tasks/active/ADR-035-IMPL.md` 等文件已滞后于当前 `Docs/Agent` 事实 | 新 Agent 若优先读取 `.tasks` 会误判任务状态 | `.tasks` 不作为事实源；必要信息迁入 `Docs/Agent` 后再归档/忽略 |
 | ADR-035 状态已清理 | 原 ADR 标注“待实施”，已于 2026-07-14 代码级确认实现并更新 ADR/Schema | 后续仍需在真机/统一验收中验证退场清理表现 | P4/P5 引用 ADR_SCHEMA 的实现状态与验证项 |
 | Guide 与 Agent 双轨 | Guide 已收敛为操作型文档，架构/模块深文档已归档 | 同一概念的长期事实源减少为 Agent 知识工程 | P8.2 已处理；后续避免新增长期人类事实文档 |
 | Archive 引用边界 | Archive 内容多且有旧方案 | Agent 可能引用废弃方案 | P0 已规定 Archive 只作历史参考 |
@@ -175,7 +201,7 @@ Agent 在使用本盘点时应遵循：
 | 架构审查流程初版完成 | 已创建 `ARCHITECTURE_REVIEW_PROTOCOL.md` 和架构审查模板 | 后续需在实际编码任务中检验是否过重或遗漏 | P7 纳入评估 |
 | 知识评估体系初版完成 | 已创建 `KNOWLEDGE_EVALS.md` 与 10 个标准任务 | 需要定期实际运行评估，发现薄弱环节 | 按评分反向修正知识资产 |
 
-## 9. 当前阶段结论
+## 10. 当前阶段结论
 
 截至 P8.2，MiniGameTemplate 的知识工程已补齐：
 

@@ -69,7 +69,7 @@ MiniGameTemplate/               ← Git 仓库根
 │   ├── Assets/_Game/          ← 你的游戏代码放这里
 │   ├── DataTables/            ← Luban 配置表源数据
 │   └── ThirdParty/            ← 第三方库
-├── .codebuddy/skills/         ← AI Agent Skills
+├── skills/                    ← 纳入版本管理的 AI Agent Skills 源目录
 ├── README.md
 └── CHANGELOG.md
 ```

@@ -99,7 +99,7 @@ CodeGraph / rg / Unity MCP / Validators
 | Debug | `DEBUG_PLAYBOOK.md` | 是否覆盖高频问题 |
 | 工具 | `CODEGRAPH_INTEGRATION.md`, `MCP_INTEGRATION.md` | 当前可用性 |
 | 归档 | `Archive/**`, `changes/**` | 哪些仍有参考价值 |
-| Skills | `.codebuddy/skills/**` | 与 Docs/Agent 的职责边界 |
+| Skills | `skills/**` + 实际运行时目录（如父目录 `.workbuddy/skills/**` 或 `.codebuddy/skills/**`） | 与 Docs/Agent 的职责边界 |
 
 **完成标准**：
 

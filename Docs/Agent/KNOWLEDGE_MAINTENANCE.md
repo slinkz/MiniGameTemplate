@@ -35,7 +35,7 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/ARCHITECTURE_REVIEW_PROT
 | 改变渲染、RuntimeAtlas、VFX、飘字排查方式 | `DEBUG_PLAYBOOK.md`, Rendering/Danmaku 模块卡 |
 | 改变微信、云存储、CDN、广告、构建流程 | `WECHAT_INTEGRATION.md`, `Docs/Guide/BUILD_MINIGAME.md` |
 | 引入新坑、修复高价值 bug、完成架构迁移 | `Docs/Agent/changes/YYYY-MM-DD-topic/` |
-| 修改 `skills/` | 检查 `.codebuddy/skills/` 同步策略 |
+| 修改 `skills/` | 检查运行时 Skill 目录同步策略（`.workbuddy/skills/` 或 `.codebuddy/skills/`） |
 
 ## 3. 变更后维护流程
 
@@ -46,8 +46,9 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/ARCHITECTURE_REVIEW_PROT
 5. 更新 `INDEX.md` 路由表 A/B/C 中受影响行。
 6. 如果新增核心路径，更新 `CODE_KNOWLEDGE_MAP.md`。
 7. 如果改变架构约束，更新 ADR 原文与 `ADR_SCHEMA.md`。
-8. 如果修改 Skill，确认 `skills/` 与 `.codebuddy/skills/` 的同步状态。
+8. 如果修改 Skill，确认 `skills/` 与实际运行时 Skill 目录的同步状态。
 9. 在最终回复中说明已更新哪些知识资产、哪些验证未运行。
+10. 对代码/资产变更运行 `Tools/knowledge-sync-check.ps1`，确认没有漏掉知识资产同步。
 
 ## 4. 文档类型维护规则
 
@@ -90,14 +91,14 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 当前仓库约定：
 
 - `skills/` 是纳入版本管理的 Skill 源目录。
-- `.codebuddy/skills/` 是 WorkBuddy 自动触发 Skill 的运行时目录。
-- `.codebuddy/skills/` 可能在某些工作区不存在；不存在时不视为错误，但需要在交付中说明。
+- 运行时 Skill 目录取决于 Agent 工具：WorkBuddy 历史工作区使用 `.workbuddy/skills/`，部分工具或旧文档可能使用 `.codebuddy/skills/`。
+- 运行时目录可能在某些工作区不存在；不存在时不视为错误，但需要在交付中说明。
 
 修改 Skill 后必须检查：
 
 1. 是否修改了 `skills/<name>/SKILL.md` 或 references/scripts。
-2. 若 `.codebuddy/skills/` 存在，是否同步同名 Skill。
-3. 若 `.codebuddy/skills/` 不存在，是否在最终回复或变更包中记录“未同步运行时目录”。
+2. 若 `.workbuddy/skills/` 或 `.codebuddy/skills/` 存在，是否同步同名 Skill。
+3. 若运行时 Skill 目录不存在，是否在最终回复或变更包中记录“未同步运行时目录”。
 4. 是否需要更新 `KNOWLEDGE_INVENTORY.md` 的 Skill 盘点。
 5. 是否需要更新 `CODE_KNOWLEDGE_MAP.md` 的 Skill 映射。
 
@@ -120,7 +121,47 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 | 标准维护 | 普通功能、SO/UI/模块入口变化 | 填 `DOC_UPDATE_CHECKLIST.md`，更新受影响文档 |
 | 严格维护 | 架构迁移、ADR 变化、跨模块改动、高风险 bugfix | 填清单，创建 changes 包，更新索引/映射/ADR |
 
-## 9. 完成标准
+## 9. 自动化检查
+
+仓库提供轻量知识同步检查：
+
+```powershell
+Tools/knowledge-sync-check.ps1
+```
+
+它会检查以下敏感路径是否发生变化：
+
+- `UnityProj/Assets/_Framework/`
+- `UnityProj/Assets/_Game/Scripts/`
+- `UnityProj/Assets/_Game/Configs/`
+- `UnityProj/Assets/_Game/FairyGUI_Export/`
+- `UnityProj/Assets/_Example/`
+- `UnityProj/DataTables/`
+- `UIProject/`
+- `CloudFunctions/`
+- `skills/`
+- `.workbuddy/skills/`
+- `.codebuddy/skills/`
+
+若这些路径有变更，但没有同时修改 `Docs/Agent/**`、操作型 Guide、根 `README.md` 或 `CHANGELOG.md`，检查会失败，并要求回到 `templates/DOC_UPDATE_CHECKLIST.md` 判断是否需要同步知识资产。
+
+本地 pre-commit hook 已放在 `.githooks/pre-commit`。每个 clone 可执行一次：
+
+```powershell
+git config core.hooksPath .githooks
+```
+
+CI 入口为 `.github/workflows/knowledge-sync.yml`，在 push / pull_request 中运行同一脚本。
+
+若确认某次敏感变更确实无需文档更新，可以本地使用：
+
+```powershell
+Tools/knowledge-sync-check.ps1 -AllowNoDocUpdate
+```
+
+或设置 `KNOWLEDGE_SYNC_ALLOW_NO_DOC=1`。这种绕过只能在已完成 checklist 判断并记录原因后使用。
+
+## 10. 完成标准
 
 一次重要变更完成时，应能回答：
 
@@ -132,7 +173,8 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 5. ADR 状态和约束是否仍准确？
 6. Context Pack 是否仍能指导下一次同类任务？
 7. 是否需要 changes 包记录本次变更？
-8. skills 与 .codebuddy/skills 是否需要同步？
+8. skills 与运行时 Skill 目录是否需要同步？
+9. knowledge-sync 检查是否通过，或是否记录了无需文档更新的原因？
 ```
 
 如果任何答案不清楚，先补知识资产，再结束任务。

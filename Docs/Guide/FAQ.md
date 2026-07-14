@@ -454,7 +454,7 @@ var player = _players.Items[0];
    var item = tables.TbItem.Get(1001);
    ```
 
-> 💡 项目中提供了 `luban-config` Skill（`.codebuddy/skills/luban-config/`），AI 助手会自动使用它完成配置表操作。
+> 💡 项目中提供了 `luban-config` Skill（仓库源目录 `skills/luban-config/`；运行时目录按工具可能为 `.workbuddy/skills/luban-config/` 或 `.codebuddy/skills/luban-config/`），AI 助手会自动使用它完成配置表操作。
 
 ### Q: Luban 生成报错 "table not exported" 或输出为空
 
@@ -509,4 +509,4 @@ var player = _players.Items[0];
 2. 查看对应模块目录下的 `MODULE_README.md`
 3. 查看 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 与 [Agent 索引](../Agent/INDEX.md) 中的当前模块说明
 4. 如果是微信平台特有问题，查看 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)
-5. 如果你在和 AI 助手协作，项目内置了 AI Skills（`.codebuddy/skills/`）可自动化常见操作（如配置表管理），详见 [环境搭建 → AI Skills 章节](GETTING_STARTED.md#ai-skills-工具链)
+5. 如果你在和 AI 助手协作，项目内置了 AI Skills（仓库源目录 `skills/`，运行时目录按工具可能为 `.workbuddy/skills/` 或 `.codebuddy/skills/`）可自动化常见操作（如配置表管理），详见 [环境搭建 → AI Skills 章节](GETTING_STARTED.md#ai-skills-工具链)

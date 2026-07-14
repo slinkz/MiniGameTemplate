@@ -103,9 +103,9 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 
 | 代码路径/符号 | Module Card | Context Pack | TDD / Workflow | ADR | 修改后必验 |
 |---------------|-------------|--------------|----------------|-----|------------|
-| `skills/fairygui-tools/**` | `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `skills/fairygui-tools/SKILL.md` | 无 | `skills/` 与 `.codebuddy/skills/` 同步；XML 校验 |
+| `skills/fairygui-tools/**` | `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `skills/fairygui-tools/SKILL.md` | 无 | `skills/` 与实际运行时 Skill 目录同步；XML 校验 |
 | `skills/luban-config/**` | `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `skills/luban-config/SKILL.md` | 无 | xlsx 生成、TablesExtension、gen_config |
-| `skills/coding-standards/**` | 全局 | `AGENT_BOOTSTRAP.md` | `CONV_INDEX.md` | 多 ADR | 规则不与 CONV 冲突；同步到 `.codebuddy/skills/` |
+| `skills/coding-standards/**` | 全局 | `AGENT_BOOTSTRAP.md` | `CONV_INDEX.md` | 多 ADR | 规则不与 CONV 冲突；同步到实际运行时 Skill 目录 |
 | `skills/code-review-checklist/**` | 全局 | `AGENT_BOOTSTRAP.md` | P5/P6 后续 | 多 ADR | known-pitfalls 更新、审查清单可执行 |
 | `skills/doc-maintenance/**` | 全局 | `KNOWLEDGE_ENGINEERING_ROADMAP.md` | P6 后续 | 无 | frontmatter/索引模板与 Docs 规范一致 |
 | `Docs/Agent/KNOWLEDGE_*` | 全局 | `AGENT_BOOTSTRAP.md` | 知识工程路线图 | 无 | 路线图状态、索引入口、跨会话恢复 |

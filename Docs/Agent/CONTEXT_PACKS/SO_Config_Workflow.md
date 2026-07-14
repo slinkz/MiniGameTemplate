@@ -68,7 +68,7 @@ skills/luban-config/**
 - 修改 SO 字段后没有同步自定义 Inspector、Validator、模板资产。
 - 新增技能/Buff/DOT 时 ID 范围冲突。
 - 在 Play Mode 下改了临时值却以为已经持久化。
-- `skills/` 与 `.codebuddy/skills/` 未同步导致 WorkBuddy 自动触发知识过期。
+- `skills/` 与运行时 Skill 目录（`.workbuddy/skills/` 或 `.codebuddy/skills/`）未同步导致 Agent 自动触发知识过期。
 
 ## 修改后必验
 
@@ -77,4 +77,4 @@ skills/luban-config/**
 - 相关 Validator 通过。
 - 运行时读取配置正常。
 - 若涉及 Luban，执行生成脚本并确认生成代码、bytes、预览 JSON。
-- 若改 Skill，确认 `skills/` 与 `.codebuddy/skills/` 的同步策略没有被破坏。
+- 若改 Skill，确认 `skills/` 与实际运行时 Skill 目录的同步策略没有被破坏。
