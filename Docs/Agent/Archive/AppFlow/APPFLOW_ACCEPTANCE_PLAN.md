@@ -6,6 +6,8 @@ last_verified: 2026-05-17
 
 # AppFlow 导航系统 — 验收计划
 
+> 归档说明：本文是 AppFlow 独立验收计划，当前 AppFlow 验收入口已并入 `Docs/Agent/SG_V2_DEVICE_ACCEPTANCE.md` 第六部分。本文仅作历史参考。
+
 > **对应 TDD**：APPFLOW_TDD v1.5  
 > **状态**：⬜ 待天命人验收  
 > **编译验证**：✅ MCP 确认 0 errors / 0 warnings（2026-05-05 23:30）

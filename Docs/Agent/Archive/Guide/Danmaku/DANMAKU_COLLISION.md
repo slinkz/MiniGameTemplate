@@ -1,5 +1,7 @@
 # 弹幕系统 — 碰撞与运行时
 
+> 归档说明：本文是早期面向人类阅读的 Danmaku Collision Guide，原路径为 `Docs/Guide/DANMAKU_COLLISION.md`。当前碰撞/Hitbox/运行时事实源以 `Docs/Agent/MODULE_CARDS/DanmakuSystem.md`、`Docs/Agent/OBB_TDD_INDEX.md`、`Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md` 和当前代码为准。
+
 > **预计阅读**：25 分钟 &nbsp;|&nbsp; **前置**：先读 [弹幕系统总览](DANMAKU_SYSTEM.md) 了解整体架构
 >
 > 本文档覆盖：障碍物子系统、碰撞检测（7 阶段）、碰撞响应系统、Pierce 冷却、网格分区、伤害模型、速度安全上限、无敌帧、时间缩放、延迟变速、DanmakuSystem 入口与生命周期。

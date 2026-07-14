@@ -1,6 +1,6 @@
 # MiniGameTemplate 开发者文档
 
-> 你正在阅读的是面向**人类开发者**的文档。如果你是 AI Agent，请阅读 [Docs/Agent/](../Agent/) 下的文档。
+> 你正在阅读的是面向**人类开发者**的操作型文档。如果你是 AI Agent，或需要当前架构/模块/弹幕/渲染事实，请阅读 [Docs/Agent/](../Agent/) 下的知识工程文档。
 
 ## 这是什么
 
@@ -43,15 +43,14 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 | 文档 | 说明 | 预计阅读 |
 |------|------|----------|
 | [架构设计解读](ARCHITECTURE_OVERVIEW.md) | 为什么选 SO 驱动？三层架构如何协作？模块依赖规则 | 15 分钟 |
-| [框架模块使用手册](FRAMEWORK_MODULES.md) | 18 个模块的 API、用法示例和注意事项（已拆为 3 子文件） | 按需查阅 |
+| [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) | 当前模块职责、边界、入口、风险和修改后必验 | 按需查阅 |
 
 ### ❓ 参考
 
 | 文档 | 说明 |
 |------|------|
 | [常见问题与排错](FAQ.md) | 常见报错、微信小游戏坑点、性能优化建议 |
-| [微信小游戏导出到手机完整指南](微信小游戏导出到手机完整指南.md) | 从 Unity 到手机上玩到游戏（含 AppID 申请、开发者工具配置） |
-| [弹幕系统文档](DANMAKU_SYSTEM.md) | 弹幕系统架构总览 + 4 篇专题子文档 |
+| [弹幕/渲染 Context Pack](../Agent/CONTEXT_PACKS/Danmaku_Rendering.md) | 当前 Danmaku、RuntimeAtlas、VFX、飘字与调试入口 |
 | [Agent 调试经验手册](../Agent/DEBUG_PLAYBOOK.md) | 本次弹幕 / RuntimeAtlas 排查沉淀出的系统化 Debug 方法论与案例复盘 |
 | [Agent 文档](../Agent/) | AI 开发助手阅读的技术规范（包含编码规范、新游戏创建流程等） |
 
@@ -62,7 +61,7 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 ```
 MiniGameTemplate/               ← Git 仓库根
 ├── Docs/Agent/                ← AI Agent 阅读的技术文档
-├── Docs/Guide/                ← 你正在读的人类开发者文档
+├── Docs/Guide/                ← 人类操作型文档（不承载架构事实源）
 ├── UIProject/                 ← FairyGUI 编辑器工程
 ├── UnityProj/                 ← Unity 工程（用 Unity 2022 LTS 打开）
 │   ├── Assets/_Framework/     ← 框架层（18 个模块）
@@ -81,4 +80,4 @@ MiniGameTemplate/               ← Git 仓库根
 
 **如果你想快速了解架构设计** → 直接看 [架构设计解读](ARCHITECTURE_OVERVIEW.md)
 
-**如果你想知道某个模块怎么用** → 翻 [框架模块使用手册](FRAMEWORK_MODULES.md)
+**如果你想知道某个模块怎么用** → 看 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md)

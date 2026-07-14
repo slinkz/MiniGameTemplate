@@ -249,5 +249,5 @@ AudioSystem/                    Scripts/
 
 ## 下一步
 
-- 📖 **[框架模块使用手册](FRAMEWORK_MODULES.md)** — 每个模块的详细 API 和用法
+- 📖 **[Agent 模块知识卡](../Agent/MODULE_CARDS/README.md)** — 当前模块职责、边界、入口和修改后必验
 - 🎮 **[示例游戏代码解读](EXAMPLE_WALKTHROUGH.md)** — 看看这些概念在实际代码中是什么样的

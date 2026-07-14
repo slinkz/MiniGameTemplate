@@ -207,7 +207,7 @@ bash Tools/gen_config.sh
 
 - 📖 **[示例游戏代码解读](EXAMPLE_WALKTHROUGH.md)** — 理解框架各模块是如何配合工作的
 - 🏗 **[架构设计解读](ARCHITECTURE_OVERVIEW.md)** — 理解 SO 驱动架构的设计理念
-- 📚 **[框架模块使用手册](FRAMEWORK_MODULES.md)** — 开始在 `_Game/` 目录下开发你的游戏
+- 📚 **[Agent 模块知识卡](../Agent/MODULE_CARDS/README.md)** — 开始在 `_Game/` 目录下开发你的游戏
 
 ## 常见问题
 

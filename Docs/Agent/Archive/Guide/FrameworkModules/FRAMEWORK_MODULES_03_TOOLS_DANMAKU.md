@@ -1,5 +1,7 @@
 # 框架模块使用手册 — Part 3：工具 & 弹幕系统
 
+> 归档说明：本文是早期面向人类阅读的工具与 Danmaku 模块手册，原路径为 `Docs/Guide/FRAMEWORK_MODULES_03_TOOLS_DANMAKU.md`。当前事实源以 `Docs/Agent/MODULE_CARDS/README.md`、`Docs/Agent/MODULE_CARDS/DanmakuSystem.md`、`Docs/Agent/MODULE_CARDS/EditorTools.md`、`Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md` 和当前代码为准。
+
 > FSM · WeChatBridge · DebugTools · Utils · Editor 工具 · DanmakuSystem
 
 ---

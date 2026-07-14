@@ -26,7 +26,7 @@ last_updated: 2026-07-14
 | OBB/Hitbox | `OBB_TDD_INDEX.md` |
 | Debug 方法 | `DEBUG_PLAYBOOK.md` |
 | ADR | `ADR_INDEX.md` 中 ADR-028、031、032、036 |
-| Guide 补充 | `Docs/Guide/DANMAKU_SYSTEM.md`, `DANMAKU_RENDERING.md` |
+| 模块卡 | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md`, `MODULE_CARDS/VFXSystem.md` |
 
 ## 关键代码入口
 
@@ -35,14 +35,16 @@ UnityProj/Assets/_Framework/DanmakuSystem/
 UnityProj/Assets/_Framework/Rendering/
 UnityProj/Assets/_Framework/VFXSystem/
 UnityProj/Assets/_Framework/**/RuntimeAtlas*/
-UnityProj/Assets/_Game/Configs/Danmaku/
+UnityProj/Assets/_Game/Configs/ShooterGame/
+UnityProj/Assets/_Game/Configs/_Template/
 UnityProj/Assets/_Game/Configs/VFX/
 ```
 
 ## 关键 SO / 配置路径
 
 ```text
-Assets/_Game/Configs/Danmaku/
+Assets/_Game/Configs/ShooterGame/
+Assets/_Game/Configs/_Template/
 Assets/_Game/Configs/VFX/
 Assets/_Game/Configs/Rendering/
 Assets/_Game/Configs/ShooterGame/

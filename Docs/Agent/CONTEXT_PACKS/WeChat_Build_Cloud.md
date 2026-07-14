@@ -20,10 +20,9 @@ last_updated: 2026-07-14
 |------|------|
 | 微信集成总入口 | `WECHAT_INTEGRATION.md` |
 | 构建流程 | `Docs/Guide/BUILD_MINIGAME.md` |
-| 手机导出完整指南 | `Docs/Guide/微信小游戏导出到手机完整指南.md` |
 | 云存储 TDD | `SG_TDD_06_CLOUD_SAVE.md` |
 | 平台编码约束 | `CONV_03_PLATFORM.md` |
-| Asset/YooAsset 背景 | `Docs/Guide/FRAMEWORK_MODULES_02_INFRA.md` |
+| Asset/YooAsset 背景 | `ARCHITECTURE.md` 中资源管理与启动流程, `WECHAT_INTEGRATION.md` |
 | MCP/Unity 操作 | `MCP_INTEGRATION.md` |
 
 ## 关键代码入口

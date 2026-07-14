@@ -1,5 +1,7 @@
 # 框架模块使用手册 — Part 2：基础设施模块
 
+> 归档说明：本文是早期面向人类阅读的基础设施模块手册，原路径为 `Docs/Guide/FRAMEWORK_MODULES_02_INFRA.md`。当前基础设施事实源以 `Docs/Agent/MODULE_CARDS/README.md`、`Docs/Agent/WECHAT_INTEGRATION.md`、`Docs/Agent/ARCHITECTURE.md` 和当前代码为准。
+
 > AudioSystem · AssetSystem · Timer · ObjectPool
 
 ---

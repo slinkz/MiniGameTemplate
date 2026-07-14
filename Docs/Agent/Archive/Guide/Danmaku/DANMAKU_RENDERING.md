@@ -1,5 +1,7 @@
 # 弹幕系统 — 渲染架构
 
+> 归档说明：本文是早期面向人类阅读的 Danmaku Rendering Guide，原路径为 `Docs/Guide/DANMAKU_RENDERING.md`。当前渲染/RuntimeAtlas/飘字事实源以 `Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md`、`Docs/Agent/ATLAS_TDD_INDEX.md`、`Docs/Agent/FLOATING_TEXT_TDD.md` 和当前代码为准。
+
 > **预计阅读**：10 分钟 &nbsp;|&nbsp; **前置**：先读 [弹幕系统总览](DANMAKU_SYSTEM.md) 了解整体架构
 >
 > 本文档覆盖弹幕系统的渲染管线：统一顶点格式、RenderBatchManager 分桶提交、RuntimeAtlas 动态图集、renderQueue GPU 级层序、拖尾系统、VFX 编排、伤害飘字渲染。

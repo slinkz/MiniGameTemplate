@@ -3,7 +3,7 @@ system: architecture
 scope: battle-lifecycle-cleanup
 last_verified: 2026-05-23
 depends_on: [EC_TDD_02_CORE_ARCH, EC_TDD_04_SYSTEMS]
-related_code: Assets/_Framework/DanmakuSystem/**, Assets/_Framework/EntitySystem/Scripts/View/EntityHitReactionHandler.cs, Assets/_Game/Scripts/ShooterGame/Battle/BattleController.cs
+related_code: Assets/_Framework/DanmakuSystem/**, Assets/_Framework/EntitySystem/Scripts/View/EntityHitReactionHandler.cs, Assets/_Game/Scripts/ShooterGame/Core/BattleController.cs
 ---
 
 # ADR-035：战斗退场生命周期统一事件通道

@@ -32,7 +32,7 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 | EVAL-02 新增一个技能 | 9.0 | 通过 | 可进一步补充技能变更何时需要 changes 包 |
 | EVAL-03 修改碰撞逻辑 | 8.5 | 通过 | ADR-012 未进入 `ADR_SCHEMA.md` 可执行摘要 |
 | EVAL-04 修改 FairyGUI 面板 | 8.5 | 通过 | `INDEX.md` 缺少直接“修改 FairyGUI 面板”任务入口 |
-| EVAL-05 修改微信云存储 | 8.0 | 通过 | `CODE_KNOWLEDGE_MAP.md` 标注 WeChat/DataSystem 模块卡待补 |
+| EVAL-05 修改微信云存储 | 8.0 | 通过 | 当时 `CODE_KNOWLEDGE_MAP.md` 尚未补齐 WeChat/DataSystem 模块卡；已在后续修正 |
 | EVAL-06 调整 RuntimeAtlas | 8.5 | 通过 | WebGL/真机验证只能静态列出，仍需实测闭环 |
 | EVAL-07 新增关卡 | 7.5 | 待修正 | `INDEX.md` 与 `CODE_KNOWLEDGE_MAP.md` 缺少直接“新增关卡”反查入口 |
 | EVAL-08 新增 Buff/DOT | 8.5 | 通过 | DOT 专项入口不如 Buff 明确 |
@@ -49,7 +49,7 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 | 致命漏项 | 无 |
 | 批次是否通过 | 通过 |
 
-本批次说明：P0-P7 初版知识体系已经能覆盖主要任务路由、模块边界、ADR 与验证闭环。最明显短板不是大面积缺文档，而是少数高频任务缺少直达入口，以及少量“待补模块卡 / 待可执行 ADR”仍会让 Agent 多绕一步。
+本批次说明：P0-P7 初版知识体系已经能覆盖主要任务路由、模块边界、ADR 与验证闭环。当时最明显短板不是大面积缺文档，而是少数高频任务缺少直达入口，以及少量模块卡 / ADR 可执行摘要仍会让 Agent 多绕一步；后续修正记录见第 8-10 节。
 
 ## 4. 发现的问题
 
@@ -58,7 +58,7 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 现状：
 
 - `CONTEXT_PACKS/ShooterGame_Battle.md` 和 `CONTEXT_PACKS/SO_Config_Workflow.md` 能覆盖新增关卡。
-- `CODE_KNOWLEDGE_MAP.md` 有 `SG_ProgressManager*` 和 ShooterGame 配置映射。
+- 当时 `CODE_KNOWLEDGE_MAP.md` 只有较粗粒度的 SG 进度与 ShooterGame 配置映射；当前已修正为 `Progress/SG_ProgressManager.cs` 并补充 `SG_LevelConfigSO`、Levels、Waves 映射。
 - 但 `INDEX.md` 与 `CODE_KNOWLEDGE_MAP.md` 常见任务反查没有直接“新增关卡”入口。
 
 建议：
@@ -66,12 +66,12 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 - 在 `INDEX.md` 增加“新增关卡”任务路由。
 - 在 `CODE_KNOWLEDGE_MAP.md` 第 9 节增加“新增关卡”反查行。
 
-### 4.2 WeChat/DataSystem 模块卡待补
+### 4.2 WeChat/DataSystem 模块卡当时未补齐
 
 现状：
 
 - `CONTEXT_PACKS/WeChat_Build_Cloud.md` 覆盖微信构建、云存储、真机验证。
-- `CODE_KNOWLEDGE_MAP.md` 中 `_Framework/WeChatBridge/**`、`_Framework/DataSystem/**/Cloud*.cs` 标注“待补 `WeChatBridge.md` / `DataSystem_SO_Luban.md`”。
+- 当时 `CODE_KNOWLEDGE_MAP.md` 中 `_Framework/WeChatBridge/**`、`_Framework/DataSystem/**/Cloud*.cs` 尚未关联 `WeChatBridge.md` / `DataSystem_SO_Luban.md`。
 
 建议：
 
@@ -155,7 +155,7 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 | 任务 | 原分数 | 复测分数 | 结论 | 改善点 |
 |------|--------|----------|------|--------|
 | EVAL-03 修改碰撞逻辑 | 8.5 | 9.0 | 通过 | `ADR_SCHEMA.md` 已补 ADR-012，可直接检查阵营模型约束与验证项 |
-| EVAL-05 修改微信云存储 | 8.0 | 9.0 | 通过 | `WeChatBridge.md` 与 `DataSystem_SO_Luban.md` 已补齐，Code Knowledge Map 不再停在“待补模块卡” |
+| EVAL-05 修改微信云存储 | 8.0 | 9.0 | 通过 | `WeChatBridge.md` 与 `DataSystem_SO_Luban.md` 已补齐，Code Knowledge Map 已关联模块卡 |
 | EVAL-07 新增关卡 | 7.5 | 9.0 | 通过 | `INDEX.md` 与 `CODE_KNOWLEDGE_MAP.md` 已补新增关卡直达入口和反查 |
 | EVAL-09 调试渲染不显示 | 8.5 | 9.0 | 通过 | `INDEX.md` 已补“调试渲染不显示”直达路由，减少从“性能”入口绕行 |
 
@@ -168,3 +168,19 @@ related_docs: Docs/Agent/KNOWLEDGE_EVALS.md, Docs/Agent/INDEX.md, Docs/Agent/COD
 - 本次仍是静态知识路由复测，没有验证 Unity/微信真机链路。
 - `WeChatBridge.md` 与 `DataSystem_SO_Luban.md` 还需要在后续真实云存储或配置任务中检验是否足够细。
 - ADR-012 的实现状态仍建议在后续碰撞代码改动时结合当前代码和测试再确认。
+
+## 10. Consistency Fix 记录
+
+2026-07-14 已追加一次 Knowledge Consistency Fix，针对代码事实重新校正文档入口：
+
+| 修正项 | 状态 | 文档 |
+|--------|------|------|
+| 修正 `SG_ProgressManager` 实际路径为 `Progress/SG_ProgressManager.cs` | 已完成 | `CODE_KNOWLEDGE_MAP.md` |
+| 补 `SG_LevelConfigSO`、Levels、Waves、SO Validator 直达映射 | 已完成 | `CODE_KNOWLEDGE_MAP.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` |
+| 修正 `BattleController.cs` 实际路径为 `Core/BattleController.cs` | 已完成 | `INDEX.md`, `ADR_06_LIFECYCLE.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` |
+| 补 `VFXSystem.md` 模块卡并纳入 CodeMap/Bootstrap/索引 | 已完成 | `MODULE_CARDS/`, `CODE_KNOWLEDGE_MAP.md`, `AGENT_BOOTSTRAP.md` |
+| 补 `EditorTools.md` 模块卡并清理 EditorTools 待补映射 | 已完成 | `MODULE_CARDS/`, `CODE_KNOWLEDGE_MAP.md`, `INDEX.md` |
+| 澄清 WeChat 双登录语义：传统 `IWeChatBridge.Login` 与云存储 `WxAuthService.Login` | 已完成 | `MODULE_CARDS/WeChatBridge.md` |
+| 同步活跃文档统计为 120 + 75 | 已完成 | `INDEX.md`, `KNOWLEDGE_INVENTORY.md` |
+
+本节不覆盖 Unity 编译、PlayMode、微信开发者工具或真机验证；这些仍应在相关代码任务中执行。

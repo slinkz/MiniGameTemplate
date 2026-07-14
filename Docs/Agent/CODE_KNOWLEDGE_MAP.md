@@ -38,7 +38,8 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | `_Game/Scripts/ShooterGame/Core/BattleController.cs` | `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_02_BATTLE_SYSTEM.md`, `SG_V2_TDD_07_LIFECYCLE.md` | ADR-034, ADR-035, ADR-036 | Victory/Defeat/Retry/PauseQuit/Return；退场无残留；AppFlow 返回正确 |
 | `_Game/Scripts/ShooterGame/Core/BaseLineDetector*` | `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_02_BATTLE_SYSTEM.md` | ADR-033 | 敌机越线扣基地 HP；敌机回收；失败判定正确 |
 | `_Game/Scripts/ShooterGame/Core/CameraShaker.cs` | `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_02_BATTLE_SYSTEM.md`, `SG_V2_TDD_07_LIFECYCLE.md` | ADR-035 | Shake/StopShake；退场停止震动；场景引用非空 |
-| `_Game/Scripts/ShooterGame/Core/SG_ProgressManager*` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/ShooterGame_Battle.md`, `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_TDD_06_CLOUD_SAVE.md` | ADR-034 | 关卡解锁、保存、Reload、云同步、离线/重试路径 |
+| `_Game/Scripts/ShooterGame/Progress/SG_ProgressManager.cs` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/ShooterGame_Battle.md`, `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_TDD_06_CLOUD_SAVE.md` | ADR-034 | 关卡解锁、保存、Reload、云同步、离线/重试路径 |
+| `_Game/Scripts/ShooterGame/Config/SG_LevelConfigSO.cs`, `_Game/Configs/ShooterGame/Levels/**`, `_Game/Configs/ShooterGame/Waves/**` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_GAME_DESIGN.md`, `SO_WORKFLOWS_02_ENTITY.md` | ADR-033, ADR-034 | Level/Wave 引用完整；SO Validator 通过；关卡显示、进入战斗、波次生成、胜利解锁正确 |
 | `_Game/Scripts/ShooterGame/Core/IUIControllers.cs` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `SG_TDD_04_UI_CONTROLLERS.md` | ADR-034 | Controller 绑定、UI 数据刷新、事件不重复绑定 |
 | `_Game/Scripts/ShooterGame/UI/**` | `MODULE_CARDS/UISystem_FairyGUI.md`, `MODULE_CARDS/ShooterGame.md` | `CONTEXT_PACKS/FairyGUI_UI.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SG_TDD_04_UI_CONTROLLERS.md`, `SG_UI_DESIGN.md` | ADR-034 | 面板 Open/Refresh/Close；Suspend/Resume；按钮流程；层级 |
 | `_Game/Configs/ShooterGame/**/*.asset` | `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/SO_Config_Workflow.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `SO_WORKFLOWS_02_ENTITY.md`, `SG_GAME_DESIGN.md` | ADR-033, ADR-034 | Missing Reference；SO 命名路径；关卡/技能/波次运行验证；进度保存 |
@@ -72,15 +73,15 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | `_Framework/Rendering/RenderVertex.cs` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `DEBUG_PLAYBOOK.md` | ADR-028 | VertexAttributeDescriptor 顺序、Marshal offset、可见性 |
 | `_Framework/Rendering/RuntimeAtlasSystem/**` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `ATLAS_TDD_INDEX.md` | ADR-028, ADR-031 | Allocate、Page 懒建、Blit、RT 像素采样、WebGL |
 | `_Framework/Rendering/FloatingText*.cs` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `FLOATING_TEXT_TDD.md` | ADR-036, ADR-035 | 单飘字路径、退场清理、RBM 可见性、零 GC |
-| `_Framework/VFXSystem/**` | `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-016, ADR-028 | VFX Tick/Render、Atlas、排序、清理 |
-| `_Game/Configs/Danmaku/**`, `_Game/Configs/VFX/**` | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `SO_WORKFLOWS_03_DANMAKU.md`, `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-018, ADR-028 | SO 引用、纹理/UV、Atlas 分配、运行可见 |
+| `_Framework/VFXSystem/**` | `MODULE_CARDS/VFXSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/Danmaku_Rendering.md` | `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-016, ADR-028 | VFX Tick/Render、Atlas、排序、清理 |
+| `_Game/Configs/Danmaku/**`, `_Game/Configs/VFX/**` | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/VFXSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md` | `CONTEXT_PACKS/SO_Config_Workflow.md` | `SO_WORKFLOWS_03_DANMAKU.md`, `SO_WORKFLOWS_04_VFX_RENDER.md` | ADR-018, ADR-028 | SO 引用、纹理/UV、Atlas 分配、运行可见 |
 
 ## 6. AppFlow / UISystem 映射
 
 | 代码路径/符号 | Module Card | Context Pack | TDD / Workflow | ADR | 修改后必验 |
 |---------------|-------------|--------------|----------------|-----|------------|
 | `_Framework/Navigation/**/*.cs` | `MODULE_CARDS/AppFlow.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `APPFLOW_TDD_INDEX.md`, `APPFLOW_TDD_01_CORE_DESIGN.md` | ADR-034 | Push/Pop/Replace/PopTo；栈状态；冷启动清栈 |
-| `_Framework/UISystem/Scripts/UIManager.cs` | `MODULE_CARDS/UISystem_FairyGUI.md`, `MODULE_CARDS/AppFlow.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `APPFLOW_TDD_01_CORE_DESIGN.md`, `FRAMEWORK_MODULES_01_CORE.md` | ADR-034 | Open/Close/Refresh/Suspend/Resume；层级；遮罩 |
+| `_Framework/UISystem/Scripts/UIManager.cs` | `MODULE_CARDS/UISystem_FairyGUI.md`, `MODULE_CARDS/AppFlow.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `APPFLOW_TDD_01_CORE_DESIGN.md` | ADR-034 | Open/Close/Refresh/Suspend/Resume；层级；遮罩 |
 | `_Framework/UISystem/Scripts/IUIPanel.cs` | `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `APPFLOW_TDD_01_CORE_DESIGN.md` | ADR-034 | IUIPanel 实现完整；IPanelSuspendable 行为 |
 | `_Game/Scripts/GameStartupFlow.cs` | `MODULE_CARDS/AppFlow.md`, `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md`, `CONTEXT_PACKS/ShooterGame_Battle.md` | `APPFLOW_TDD_03_INTEGRATION.md` | ADR-034 | Binder 注册、冷启动清栈、Main 场景入口 |
 | `_Game/Scripts/UI/**/*.cs` | `MODULE_CARDS/UISystem_FairyGUI.md` | `CONTEXT_PACKS/FairyGUI_UI.md` | `SG_TDD_04_UI_CONTROLLERS.md`, `SG_UI_DESIGN.md` | ADR-034 | 自动生成代码不手改；Logic 生命周期；按钮事件 |
@@ -94,8 +95,8 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | `_Framework/WeChatBridge/**` | `MODULE_CARDS/WeChatBridge.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `WECHAT_INTEGRATION.md` | 平台约束见 CONV | 微信开发者工具、真机 API、隐私授权 |
 | `_Framework/DataSystem/**/Cloud*.cs` | `MODULE_CARDS/DataSystem_SO_Luban.md`, `MODULE_CARDS/WeChatBridge.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `SG_TDD_06_CLOUD_SAVE.md` | 平台约束见 CONV | 登录、Pull、Upload、Reload、离线/冲突 |
 | `CloudFunctions/**` | `MODULE_CARDS/WeChatBridge.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `SG_TDD_06_CLOUD_SAVE.md`, `WECHAT_INTEGRATION.md` | 平台约束见 CONV | 云函数部署、权限、返回格式、异常路径 |
-| `_Framework/Editor/LocalHttpServerWindow.cs` | 待补 `EditorTools.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `WECHAT_INTEGRATION.md`, `EDITOR_TOOLS_MANUAL_INDEX.md` | 平台约束见 CONV | Dev Server 根目录、CDN 环境切换、域名 |
-| `UnityProj/Tools/**` | 待补 `EditorTools.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `BUILD_MINIGAME.md`, `NEWGAME_GUIDE.md` | 平台约束见 CONV | Bundle/WebGL/微信转换步骤、时间戳 |
+| `_Framework/Editor/LocalHttpServerWindow.cs` | `MODULE_CARDS/EditorTools.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `WECHAT_INTEGRATION.md`, `EDITOR_TOOLS_MANUAL_INDEX.md` | 平台约束见 CONV | Dev Server 根目录、CDN 环境切换、域名 |
+| `UnityProj/Tools/**` | `MODULE_CARDS/EditorTools.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md`, `CONTEXT_PACKS/SO_Config_Workflow.md` | `BUILD_MINIGAME.md`, `NEWGAME_GUIDE.md`, `EDITOR_TOOLS_MANUAL_INDEX.md` | 平台约束见 CONV | Bundle/WebGL/微信转换步骤、Luban 生成、setup 脚本、时间戳 |
 | `UnityProj/Assets/link.xml` | `MODULE_CARDS/WeChatBridge.md` | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | `BUILD_MINIGAME.md` | 平台约束见 CONV | IL2CPP stripping、MissingMethodException |
 
 ## 8. Skills / Knowledge Infrastructure 映射
@@ -119,11 +120,11 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 | 新增敌人 | `CONTEXT_PACKS/SO_Config_Workflow.md`, `MODULE_CARDS/EntitySystem.md` | `EntityConfigSO`, `Configs/ShooterGame`, Wave SO | SO Validator、刷怪、碰撞、击杀/越线 |
 | 新增技能 | `CONTEXT_PACKS/EntitySystem.md` | `SkillConfigSO`, `SkillComponent`, Skill Effects | 装备、CD、AimMode、伤害、退场清理 |
 | 新增 Buff/DOT | `CONTEXT_PACKS/EntitySystem.md`, `CONTEXT_PACKS/SO_Config_Workflow.md` | `BuffComponent`, `BuffConfigSO`, `DotConfigSO`, `PassiveComponent` | 叠加、持续、DOT tick、结束清理 |
-| 新增关卡 | `CONTEXT_PACKS/ShooterGame_Battle.md`, `CONTEXT_PACKS/SO_Config_Workflow.md`, `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | Level/Wave SO、`SG_ProgressManager*`、`Configs/ShooterGame` | 关卡显示、进入战斗、波次生成、胜利解锁、保存/Reload、返回流程 |
+| 新增关卡 | `CONTEXT_PACKS/ShooterGame_Battle.md`, `CONTEXT_PACKS/SO_Config_Workflow.md`, `MODULE_CARDS/ShooterGame.md`, `MODULE_CARDS/DataSystem_SO_Luban.md` | `SG_LevelConfigSO`、Level/Wave SO、`SG_ProgressManager`、`Configs/ShooterGame`、`SOValidationRules` | 关卡显示、进入战斗、波次生成、胜利解锁、保存/Reload、返回流程 |
 | 修改战斗退出 | `MODULE_CARDS/ShooterGame.md`, `ADR_SCHEMA.md` ADR-035 | `BattleController`, `BattleLifecycleEvent`, `IBattleCleanup` | Victory/Defeat/Retry/PauseQuit/OnDestroy，无残留 |
 | 调试弹幕不可见 | `CONTEXT_PACKS/Danmaku_Rendering.md`, `DEBUG_PLAYBOOK.md` | Renderer、RBM、RuntimeAtlas | active count、bucket、RT 像素、Game View |
 | 修改 UI 面板 | `CONTEXT_PACKS/FairyGUI_UI.md` | `UIProject`, `Scripts/UI`, `UIManager` | 发布、Binder、Open/Refresh/Close、AppFlow |
-| 修改微信云存储 | `CONTEXT_PACKS/WeChat_Build_Cloud.md` | CloudSaveSystem、WxAuth、CloudFunctions | 登录、Pull、Upload、Reload、真机 |
+| 修改微信云存储 | `CONTEXT_PACKS/WeChat_Build_Cloud.md`, `MODULE_CARDS/WeChatBridge.md`, `MODULE_CARDS/DataSystem_SO_Luban.md`, `MODULE_CARDS/EditorTools.md` | `CloudSaveSystem`、`WxAuthService`、`CloudSyncService`、`IWeChatBridge.CallCloudFunction`、`CloudFunctions/**`、Dev Server | 登录、Pull、Upload、Reload、开发者工具、真机 |
 | 修改 AppFlow | `MODULE_CARDS/AppFlow.md`, `ADR_SCHEMA.md` ADR-034 | `_Framework/Navigation`, `UIManager` | Push/Pop/Replace、Suspend/Resume、冷启动 |
 
 ## 10. 维护规则
@@ -131,5 +132,5 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/MODULE_CARDS/README.md, 
 - 新增核心代码路径时，应在本文补映射。
 - 新增 ADR 时，应在相关路径行补 ADR 引用。
 - 新增 Module Card 或 Context Pack 时，应反向更新本文。
-- 如果某路径映射到“待补模块卡”，P2 后续扩展应优先补齐。
+- 如果某路径映射到缺失模块卡，应优先补齐模块卡后再推进中大型改动。
 - 修改验证流程时，应同步更新“修改后必验”。

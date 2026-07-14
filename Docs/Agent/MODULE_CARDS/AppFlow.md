@@ -90,7 +90,7 @@ AppFlow 不是高频战斗热路径，但必须避免异步/场景切换竞态�
 - `APPFLOW_TDD_INDEX.md`
 - `APPFLOW_TDD_01_CORE_DESIGN.md`
 - `APPFLOW_TDD_03_INTEGRATION.md`
-- `APPFLOW_ACCEPTANCE_PLAN.md`
+- `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分
 - `ADR_INDEX.md` 中 ADR-034
 - 触碰 UI 时读 `MODULE_CARDS/UISystem_FairyGUI.md`
 

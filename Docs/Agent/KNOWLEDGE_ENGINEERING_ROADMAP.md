@@ -172,7 +172,8 @@ Docs/Agent/MODULE_CARDS/
 ├── AppFlow.md
 ├── UISystem_FairyGUI.md
 ├── DataSystem_SO_Luban.md
-└── WeChatBridge.md
+├── WeChatBridge.md
+└── EditorTools.md
 ```
 
 **模块卡模板**：
@@ -360,12 +361,13 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 |------|------|----------|--------|
 | P0 知识资产盘点 | 初版完成 | 已建立知识清单与事实源边界 | P1 创建 `AGENT_BOOTSTRAP.md` |
 | P1 Agent 上岗入口 | 初版完成 | 已建立上岗入口与首批 Context Pack | P2 创建 `MODULE_CARDS/` |
-| P2 模块知识卡 | 初版完成 | 已建立 6 张核心模块卡 | P3 创建 `ADR_SCHEMA.md` |
+| P2 模块知识卡 | 初版完成 | 已建立 10 张核心模块卡 | P3 创建 `ADR_SCHEMA.md` |
 | P3 ADR 可执行化 | 初版完成 | 已建立 ADR Schema 与 7 条优先 ADR 可执行摘要 | P4 创建 `CODE_KNOWLEDGE_MAP.md` |
 | P4 代码映射闭环 | 初版完成 | 已建立代码路径到知识资产与验证项映射 | P5 创建 `ARCHITECTURE_REVIEW_PROTOCOL.md` |
 | P5 架构审查流程 | 初版完成 | 已建立中大型改动前的架构审查协议与模板 | P6 创建 `KNOWLEDGE_MAINTENANCE.md` |
 | P6 知识维护机制 | 初版完成 | 已建立知识维护协议、更新清单与 changes 规范 | P7 创建 `KNOWLEDGE_EVALS.md` |
 | P7 评估体系 | 初版完成 | 已建立 10 个标准评估任务与评分规则 | 后续按评估结果持续校准知识资产 |
+| P8 文档收敛与归档 | P8.2 完成 | 已归档旧微信手机导出指南、Danmaku Demo 决策、AppFlow 独立验收、S5.4~S5.6 独立验收、Guide Danmaku 系列、Framework Modules 系列 | 后续仅保留操作型 Guide；架构/模块长文按需由 Agent 基于当前知识工程生成 |
 
 ## 7. 推荐推进顺序
 
@@ -433,9 +435,10 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 
 ## 11. 下一步
 
-P0-P7 初版已完成。后续进入持续校准：
+P0-P8.2 初版已完成。后续进入持续校准：
 
 1. 使用 `Docs/Agent/KNOWLEDGE_EVALS.md` 定期运行 10 个标准评估任务。
 2. 记录每次评估的分数、漏项和需修正文档。
 3. 按评估结果反向修正 Context Pack、Module Card、Code Knowledge Map、ADR_SCHEMA、架构审查和维护规则。
 4. 当项目新增高频任务或核心模块时，补充新的评估任务。
+5. 继续控制文档膨胀：Guide 只保留操作型入口；架构、模块、Danmaku、渲染等长期事实统一沉淀到 Agent 知识工程。

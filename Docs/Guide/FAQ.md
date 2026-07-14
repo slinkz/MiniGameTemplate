@@ -507,6 +507,6 @@ var player = _players.Items[0];
 
 1. 先搜索 Console 中的错误消息关键词（如 `[Bootstrapper]`、`[AssetService]`、`[UIManager]`）——框架所有日志都有模块前缀
 2. 查看对应模块目录下的 `MODULE_README.md`
-3. 查看 [框架模块使用手册](FRAMEWORK_MODULES.md) 中的详细 API 说明
+3. 查看 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 与 [Agent 索引](../Agent/INDEX.md) 中的当前模块说明
 4. 如果是微信平台特有问题，查看 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)
 5. 如果你在和 AI 助手协作，项目内置了 AI Skills（`.codebuddy/skills/`）可自动化常见操作（如配置表管理），详见 [环境搭建 → AI Skills 章节](GETTING_STARTED.md#ai-skills-工具链)

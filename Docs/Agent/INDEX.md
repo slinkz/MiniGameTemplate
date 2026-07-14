@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-14 | 文件总数：118（活跃） + 75（归档）
+> 最后更新：2026-07-14 | 文件总数：118（活跃） + 88（归档）
 
 ---
 
@@ -28,9 +28,9 @@
 | 从零开始新项目 | NEWGAME_GUIDE | 全流程 |
 | 了解全局架构 | ARCHITECTURE | 分层 + Entity 战斗层图 |
 | 了解导航系统 | APPFLOW_TDD_INDEX | 栈式 FlowNode + AppFlowNavigator |
-| 验收 AppFlow 导航 | APPFLOW_ACCEPTANCE_PLAN | 10 验收项 + PlayMode + 冷启动清栈（热启动恢复已禁用） |
+| 验收 AppFlow 导航 | SG_V2_DEVICE_ACCEPTANCE 第六部分 + APPFLOW_TDD_INDEX | AppFlow 验收已并入统一设备验收，旧独立验收计划已归档 |
 | 查命名/编码规范 | CONV_INDEX → CONV_01~04 | 命名/编码/平台/工作流 |
-| 使用编辑器工具 | EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
+| 使用编辑器工具 | MODULE_CARDS/EditorTools + EDITOR_TOOLS_MANUAL_INDEX → 01~04 | 菜单工具 + Inspector + 自动处理器 |
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
 | AI 代码检索（知识图谱） | CODEGRAPH_INTEGRATION | CodeGraph MCP 安装/配置/工具优先级 |
 | 推进项目知识工程 | KNOWLEDGE_ENGINEERING_ROADMAP | 跨会话主任务：Agent 上岗入口、Context Pack、模块卡、ADR 可执行化、代码映射、架构审查、维护与评估 |
@@ -76,21 +76,21 @@
 | `RuntimeAtlas/**/*.cs` | ATLAS_TDD_INDEX | 动态图集 |
 | `_Framework/Rendering/FloatingText*.cs` | FLOATING_TEXT_TDD + ADR_06 §036 | 通用飘字系统（RBM 渲染） |
 | `OBB/**/*.cs` | OBB_TDD_INDEX | OBB 碰撞 |
-| `Editor/**/*.cs` | EDITOR_TOOLS_MANUAL_INDEX → 01~04 + SG_V2_TDD_05 | 编辑器工具 |
+| `Editor/**/*.cs` | MODULE_CARDS/EditorTools + EDITOR_TOOLS_MANUAL_INDEX → 01~04 + SG_V2_TDD_05 | 编辑器工具 |
 | `_Framework/Editor/LocalHttpServerWindow.cs` | WECHAT_INTEGRATION §Dev Server + EDITOR_TOOLS_MANUAL | Dev Server 一键 CDN 环境切换 |
 | `*ConfigSO.cs` / `*SO.cs` | SO_WORKFLOWS_INDEX → 01~05 | SO 配置流程 |
 | `_Framework/WeChatBridge/**` | WECHAT_INTEGRATION + SG_TDD_06 | 微信集成（广告/云开发/隐私/CDN/登录/同步） |
 | `_Framework/DataSystem/**/Cloud*.cs` + `CloudFunctions/**` | SG_TDD_06 | CloudSaveSystem + 云函数模板 |
 | `Packages/com.anklebreaker.unity-mcp/**` | MCP_INTEGRATION | Unity MCP 集成 |
 | `.codegraph/**` + `~/.workbuddy/mcp.json` (codegraph) | CODEGRAPH_INTEGRATION | CodeGraph 知识图谱索引 |
-| `_Game/Scripts/ShooterGame/Battle/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE + SG_V2_TDD_07 | 战斗状态 + 退场生命周期 |
+| `_Game/Scripts/ShooterGame/Core/BattleController.cs` | SG_TDD_02 + ADR_06_LIFECYCLE + SG_V2_TDD_07 | 战斗状态 + 退场生命周期 |
 | `_Game/Scripts/ShooterGame/**/*.cs` | SG_TDD_01~05 + SG_V2_TDD_01~05 | SG 全部逻辑代码 |
 | `_Game/Configs/ShooterGame/**/*.asset` | SO_WORKFLOWS_02_ENTITY | SG 配置资产 |
 | `_Framework/DataSystem/Scripts/Variables/Vector2Variable.cs` | SG_TDD_05 | 框架新增 SO 变量 |
 | `_Framework/Navigation/**/*.cs` | APPFLOW_TDD_01_CORE_DESIGN | AppFlow 栈式导航系统（含面板 Suspend/Resume） |
 | `_Framework/UISystem/Scripts/IUIPanel.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | IPanelSuspendable 可选接口 |
 | `_Framework/UISystem/Scripts/UIManager.cs` | APPFLOW_TDD_01_CORE_DESIGN §3.5 | UIManager Suspend/Resume API |
-| `_Game/Scripts/GameStartupFlow.cs` | APPFLOW_TDD_03_INTEGRATION §4.3 + APPFLOW_ACCEPTANCE_PLAN | 启动流程 + 冷启动清栈 |
+| `_Game/Scripts/GameStartupFlow.cs` | APPFLOW_TDD_03_INTEGRATION §4.3 + SG_V2_DEVICE_ACCEPTANCE 第六部分 | 启动流程 + 冷启动清栈 |
 | `_Game/Scenes/Main.unity` | APPFLOW_TDD_03_INTEGRATION §4.4 + SG_TDD_01 §4 | 非战斗宿主场景 |
 | `_Game/ScriptableObjects/Config/SD_Main.asset` | APPFLOW_TDD_03_INTEGRATION §4.2 | Main 场景定义 SO |
 | `UIProject/assets/SG_*/**` | SG_TDD_04 §4.2 + SG_UI_DESIGN | SG FairyGUI 白模包（4包16 XML） |
@@ -154,6 +154,7 @@
 | OBB_TDD | OBB_TDD_INDEX | 2 | OBB 碰撞检测 |
 | — | ARCHITECTURE | — | 全局架构总览 |
 | APPFLOW | APPFLOW_TDD_INDEX | 5 | AppFlow 栈式导航系统 TDD（✅ Phase 1~4 + 3 轮 PK + 面板 Suspend/Resume + 冷启动清栈 v1.8） |
+| APPFLOW_ACCEPTANCE_PLAN | — | — | AppFlow 独立验收计划 → **已归档** `Archive/AppFlow/`，当前统一入口见 `SG_V2_DEVICE_ACCEPTANCE` 第六部分 |
 | APPFLOW_TDD_PK* | — | 3 | AppFlow TDD PK 评审记录 → **已归档** `Archive/AppFlow/` |
 | SO_WORKFLOWS | SO_WORKFLOWS_INDEX | 5 | SO 配置流程指南 |
 | EDITOR_TOOLS_MANUAL | EDITOR_TOOLS_MANUAL_INDEX | 4 | 编辑器工具使用手册 |
@@ -174,6 +175,9 @@
 | FLOATING_TEXT_PK* | — | 2 | 飘字 TDD PK 评审记录 → **已归档** `Archive/ShooterGame/` |
 | TDD06_ACCEPTANCE_GUIDE | — | — | TDD-06 普攻升格验收指南 → **已归档** `Archive/ShooterGame/` |
 | TDD07_ACCEPTANCE_GUIDE | — | — | TDD-07 退场生命周期验收指南 → **已归档** `Archive/ShooterGame/` |
+| TDD05_S54_S56_ACCEPTANCE_GUIDE | — | — | S5.4~S5.6 UI 人工验收指南 → **已归档** `Archive/ShooterGame/Acceptance/`，当前统一入口见 `SG_V2_DEVICE_ACCEPTANCE` |
+| DANMAKU_*.md | — | 5 | 早期人类 Danmaku Guide → **已归档** `Archive/Guide/Danmaku/`，当前入口见 `CONTEXT_PACKS/Danmaku_Rendering` 与 `MODULE_CARDS/DanmakuSystem` |
+| FRAMEWORK_MODULES*.md | — | 4 | 早期人类框架模块手册 → **已归档** `Archive/Guide/FrameworkModules/`，当前入口见 `MODULE_CARDS/README` 与 `ARCHITECTURE` |
 | S5_FINAL_PLAYTEST_GUIDE | — | — | Sprint 5 最终 PlayTest 指南 → **已归档** `Archive/ShooterGame/` |
 | SG_DEV_PLAN | — | — | ShooterGame V1 开发计划 → **已归档** `Archive/ShooterGame/` |
 | SG_NEXT_PHASE_GUIDE | — | — | ShooterGame V1 下一阶段行动指导 → **已归档** `Archive/ShooterGame/` |

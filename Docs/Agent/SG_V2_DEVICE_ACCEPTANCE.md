@@ -2,7 +2,7 @@
 system: shootergame-v2
 scope: device-acceptance
 last_verified: 2026-06-03
-depends_on: [SG_V2_S2_ACCEPTANCE, SG_V2_S3_ACCEPTANCE, SG_V2_S4_ACCEPTANCE, S5_FINAL_PLAYTEST_GUIDE, TDD07_ACCEPTANCE_GUIDE, APPFLOW_ACCEPTANCE_PLAN]
+depends_on: [SG_V2_S2_ACCEPTANCE, SG_V2_S3_ACCEPTANCE, SG_V2_S4_ACCEPTANCE, S5_FINAL_PLAYTEST_GUIDE, TDD07_ACCEPTANCE_GUIDE, Archive/AppFlow/APPFLOW_ACCEPTANCE_PLAN]
 related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framework/BattleLifecycle/**
 ---
 
@@ -165,7 +165,7 @@ related_code: Assets/_Game/**, Assets/_Framework/EntitySystem/**, Assets/_Framew
 
 ## 第六部分：AppFlow 导航验收（~10 分钟）
 
-> **来源**：APPFLOW_ACCEPTANCE_PLAN。独立于 ShooterGame 战斗的导航系统验收。
+> **来源**：归档的 `Archive/AppFlow/APPFLOW_ACCEPTANCE_PLAN.md`。独立于 ShooterGame 战斗的导航系统验收。
 
 ### K. 正常流程
 

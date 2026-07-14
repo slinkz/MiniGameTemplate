@@ -1,5 +1,7 @@
 # 框架模块使用手册 — Part 1：核心模块
 
+> 归档说明：本文是早期面向人类阅读的核心模块手册，原路径为 `Docs/Guide/FRAMEWORK_MODULES_01_CORE.md`。当前核心模块事实源以 `Docs/Agent/MODULE_CARDS/README.md`、`Docs/Agent/ARCHITECTURE.md`、`Docs/Agent/CONTEXT_PACKS/FairyGUI_UI.md` 和当前代码为准。
+
 > EventSystem · DataSystem · GameLifecycle · UISystem
 
 ---

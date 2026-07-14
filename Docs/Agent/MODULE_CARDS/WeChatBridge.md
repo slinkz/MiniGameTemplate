@@ -52,6 +52,15 @@ Bootstrap 注入配置 -> 创建 Bridge -> 隐私授权/广告预加载/Cloud In
 
 微信环境与 Editor 环境必须保持同一接口语义；Editor 用 Stub 模拟成功/失败路径。
 
+### 登录语义澄清
+
+当前代码里有两条登录相关路径，不能混用理解：
+
+- `IWeChatBridge.Login(Action<bool, string>)` 保留传统微信登录接口语义，接口注释仍以 auth code / code2session 为安全边界说明。
+- `WxAuthService.Login()` 是云存储 V4 实际使用的静默登录路径，直接调用 `IWeChatBridge.CallCloudFunction("login", "{}")`，由云开发注入 openid，并在内存中维护 openid/token。
+
+因此修改云存储、Pull、Upload、Reload 时，应优先审查 `WxAuthService`、`CloudSyncService`、`CloudSaveSystem` 和 `CallCloudFunction` 回调链；只有修改传统登录/用户信息能力时，才把 `IWeChatBridge.Login` 当作主入口。
+
 ## 6. 依赖关系
 
 WeChatBridge 属于平台抽象层。Game 层、DataSystem、UI 可以依赖 `IWeChatBridge`，但 WeChatBridge 不反向依赖 ShooterGame 业务规则。

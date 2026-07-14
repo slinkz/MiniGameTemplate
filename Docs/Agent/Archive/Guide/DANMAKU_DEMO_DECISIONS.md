@@ -1,5 +1,7 @@
 # 弹幕试炼场 Demo 决策记录
 
+> 归档说明：本文是早期 Danmaku Demo 决策记录，原路径为 `Docs/Guide/DANMAKU_DEMO_DECISIONS.md`。当前弹幕/渲染事实源以 `Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md`、`Docs/Agent/MODULE_CARDS/DanmakuSystem.md` 和 `Docs/Agent/MODULE_CARDS/Rendering_RuntimeAtlas.md` 为准。
+
 > 决策日期：2026-04-09
 > 状态：**已确认，待实施**
 

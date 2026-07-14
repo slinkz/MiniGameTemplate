@@ -203,8 +203,8 @@ Test-Path '<导出路径>\webgl\StreamingAssets'
 ## 🔗 相关文档
 
 - [环境搭建与首次运行](GETTING_STARTED.md) — 从零开始搭建开发环境
-- [微信小游戏导出到手机完整指南](微信小游戏导出到手机完整指南.md) — 从 Unity 到手机上玩到游戏的完整链路（含 AppID 申请、开发者工具配置等）
 - [常见问题与排错](FAQ.md) — 更多故障排查方案
+- [Agent 微信集成文档](../Agent/WECHAT_INTEGRATION.md) — CDN、Dev Server、域名白名单、云开发与真机约束
 
 ---
 

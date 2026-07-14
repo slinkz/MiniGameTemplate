@@ -30,7 +30,7 @@ last_updated: 2026-07-14
 | V2 技能系统入口 | `SG_V2_TDD_INDEX.md` |
 | 退场生命周期 | `SG_V2_TDD_07_LIFECYCLE.md` |
 | 统一设备验收 | `SG_V2_DEVICE_ACCEPTANCE.md` |
-| AppFlow | `APPFLOW_TDD_INDEX.md`, `APPFLOW_ACCEPTANCE_PLAN.md` |
+| AppFlow | `APPFLOW_TDD_INDEX.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
 
 ## 关键代码入口
 
@@ -46,12 +46,13 @@ UIProject/assets/SG_*/
 
 | 代码/资产 | 先读 |
 |-----------|------|
-| `Battle/BattleController.cs` | `SG_TDD_02_BATTLE_SYSTEM.md`, `SG_V2_TDD_07_LIFECYCLE.md` |
-| `SG_ProgressManager` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_TDD_06_CLOUD_SAVE.md` |
+| `Core/BattleController.cs` | `SG_TDD_02_BATTLE_SYSTEM.md`, `SG_V2_TDD_07_LIFECYCLE.md` |
+| `Progress/SG_ProgressManager.cs` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_TDD_06_CLOUD_SAVE.md` |
+| `Config/SG_LevelConfigSO.cs` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_GAME_DESIGN.md` |
 | UI Controllers | `SG_TDD_04_UI_CONTROLLERS.md`, `SG_UI_DESIGN.md` |
 | Joystick/Input Bridge | `SG_TDD_05_INPUT_JOYSTICK.md` |
 | Skills/Pickups/Buffs | `SG_V2_TDD_02~03`, `SG_V2_TDD_06_ATTACK_SKILL.md` |
-| Level/Wave SO | `SG_GAME_DESIGN.md`, `SO_WORKFLOWS_02_ENTITY.md` |
+| `Configs/ShooterGame/Levels/**`, `Configs/ShooterGame/Waves/**` | `SG_GAME_DESIGN.md`, `SO_WORKFLOWS_02_ENTITY.md` |
 
 ## 关键 SO / 配置路径
 

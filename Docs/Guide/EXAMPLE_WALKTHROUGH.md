@@ -383,7 +383,7 @@ DanmakuDemo 复用统一返回策略；VFXDemo 则用于独立验证 Sprite Shee
 
 现在你已经理解了框架的工作方式，可以：
 
-- 查阅 [框架模块使用手册](FRAMEWORK_MODULES.md) 了解更多模块的详细 API
+- 查阅 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 了解当前模块职责、入口和修改边界
 - 在 `Assets/_Game/` 中开始开发你自己的游戏
 - 遇到问题看 [常见问题与排错](FAQ.md)
 

@@ -1,5 +1,7 @@
 # 弹幕系统 — SO 配置体系
 
+> 归档说明：本文是早期面向人类阅读的 Danmaku Config Guide，原路径为 `Docs/Guide/DANMAKU_CONFIG.md`。当前 SO 配置事实源以 `Docs/Agent/SO_WORKFLOWS_03_DANMAKU.md`、`Docs/Agent/SO_WORKFLOWS_04_VFX_RENDER.md`、`Docs/Agent/MODULE_CARDS/DanmakuSystem.md` 和当前代码/资产目录为准。
+
 > **预计阅读**：20 分钟 &nbsp;|&nbsp; **前置**：先读 [弹幕系统总览](DANMAKU_SYSTEM.md) 了解整体架构
 >
 > 本文档覆盖弹幕系统的所有 ScriptableObject 定义：弹丸/激光/喷雾/障碍物类型、弹幕模式、组合引擎、发射器/难度配置、系统配置拆分。

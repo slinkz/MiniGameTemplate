@@ -637,7 +637,7 @@ public FloatingTextSystem FloatingText => _floatingText;
 | `ADR_06_LIFECYCLE.md` | 追加 ADR-036 全文 |
 | `INDEX.md` | 路由表 B 新增 `FloatingTextSystem` 映射 |
 | `EC_TDD_04_SYSTEMS.md` | 更新 EntityHitReactionHandler 职责（删除飘字相关） |
-| `DANMAKU_RENDERING.md` | 更新 DamageNumberSystem → FloatingTextSystem |
+| `Archive/Guide/Danmaku/DANMAKU_RENDERING.md` | 已归档的早期 Guide，仅保留历史迁移线索；当前事实以本文和 `CONTEXT_PACKS/Danmaku_Rendering.md` 为准 |
 | `SO_WORKFLOWS_02_ENTITY.md` | 删除 DamageNumberPool 字段文档 |
 | `coding-standards SKILL.md §14` | **PK-R1 UA-004**：更新为"伤害飘字必须走 FloatingTextSystem（RBM 渲染），禁止 FairyGUI/TextMesh 对象池" |
 

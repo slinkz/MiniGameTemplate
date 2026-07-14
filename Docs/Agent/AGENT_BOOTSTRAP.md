@@ -19,11 +19,11 @@ MiniGameTemplate 是一个 Unity 2022 LTS 微信小游戏开发模板，核心�
 
 | 主线 | 状态 | 入口 |
 |------|------|------|
-| 框架基础设施 | 已形成体系 | `ARCHITECTURE.md`, `FRAMEWORK_MODULES*`, `CONV_INDEX.md` |
+| 框架基础设施 | 已形成体系 | `ARCHITECTURE.md`, `MODULE_CARDS/README.md`, `CONV_INDEX.md` |
 | Entity-Component 战斗框架 | 已形成体系 | `EC_TDD_INDEX.md` |
 | 弹幕/渲染/RuntimeAtlas | 已形成体系，风险高 | `ATLAS_TDD_INDEX.md`, `DEBUG_PLAYBOOK.md` |
 | ShooterGame | 当前业务主线 | `SG_TDD_INDEX.md`, `SG_V2_TDD_INDEX.md` |
-| AppFlow 导航 | 已完成多轮设计 | `APPFLOW_TDD_INDEX.md`, `APPFLOW_ACCEPTANCE_PLAN.md` |
+| AppFlow 导航 | 已完成多轮设计 | `APPFLOW_TDD_INDEX.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
 | 知识工程 | 当前长期任务 | `KNOWLEDGE_ENGINEERING_ROADMAP.md` |
 
 ## 3. 事实源优先级
@@ -33,7 +33,7 @@ MiniGameTemplate 是一个 Unity 2022 LTS 微信小游戏开发模板，核心�
 1. 当前代码与 Unity 编译/运行结果。
 2. 活跃 Agent 文档：`Docs/Agent/INDEX.md` 路由到的当前 TDD、ADR、CONV、SO_WORKFLOWS。
 3. `Docs/Agent/KNOWLEDGE_INVENTORY.md` 中列为当前事实源的文档。
-4. `Docs/Guide/` 人类文档。
+4. 仍活跃的操作型 Guide，例如 `Docs/Guide/BUILD_MINIGAME.md`。
 5. `Docs/Agent/Archive/**` 与 PK 记录。
 
 Archive 只解释历史原因，不直接作为当前实现事实。
@@ -78,10 +78,12 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 | EntitySystem | `MODULE_CARDS/EntitySystem.md` |
 | DanmakuSystem | `MODULE_CARDS/DanmakuSystem.md` |
 | Rendering/RuntimeAtlas | `MODULE_CARDS/Rendering_RuntimeAtlas.md` |
+| VFXSystem | `MODULE_CARDS/VFXSystem.md` |
 | AppFlow | `MODULE_CARDS/AppFlow.md` |
 | UISystem/FairyGUI | `MODULE_CARDS/UISystem_FairyGUI.md` |
 | WeChatBridge | `MODULE_CARDS/WeChatBridge.md` |
 | DataSystem/SO/Luban | `MODULE_CARDS/DataSystem_SO_Luban.md` |
+| EditorTools | `MODULE_CARDS/EditorTools.md` |
 
 ## 7. 核心架构原则
 

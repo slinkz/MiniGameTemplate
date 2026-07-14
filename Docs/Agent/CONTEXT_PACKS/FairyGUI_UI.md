@@ -19,9 +19,9 @@ last_updated: 2026-07-14
 | 目的 | 文档 |
 |------|------|
 | UI 系统架构 | `ARCHITECTURE.md` 中 UI 工作流和 SortingOrder |
-| UI 模块手册 | `Docs/Guide/FRAMEWORK_MODULES_01_CORE.md` 中 UISystem |
+| UI 模块卡 | `MODULE_CARDS/UISystem_FairyGUI.md` |
 | ShooterGame UI | `SG_UI_DESIGN.md`, `SG_TDD_04_UI_CONTROLLERS.md` |
-| AppFlow | `APPFLOW_TDD_INDEX.md`, `APPFLOW_TDD_03_INTEGRATION.md`, `APPFLOW_ACCEPTANCE_PLAN.md` |
+| AppFlow | `APPFLOW_TDD_INDEX.md`, `APPFLOW_TDD_03_INTEGRATION.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
 | FairyGUI Skill | `skills/fairygui-tools/SKILL.md` |
 | FairyGUI 坑 | `skills/fairygui-tools/references/pitfalls.md` |
 | 编辑器工具 | `EDITOR_TOOLS_MANUAL_INDEX.md` |

@@ -186,7 +186,7 @@ ChangeProtocol:
 | AppliesTo | `UnityProj/Assets/_Framework/Navigation/**`, `UIManager`, `GameStartupFlow`, 主界面/战斗场景流转 |
 | Decision | 引入基于栈的 UI/场景导航系统，统一 Push/Pop/Replace/PopTo 与面板 Suspend/Resume |
 | Constraints | 不绕过 AppFlow 硬切场景/关面板；Pop/Replace 必须处理 suspended panels；热启动恢复当前禁用，冷启动清栈 |
-| RelatedDocs | `APPFLOW_TDD_INDEX.md`, `APPFLOW_ACCEPTANCE_PLAN.md`, `MODULE_CARDS/AppFlow.md` |
+| RelatedDocs | `APPFLOW_TDD_INDEX.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分, `MODULE_CARDS/AppFlow.md` |
 | Verification | Push/Pop/PopTo/PopAll/Replace、Main->Battle->Return、冷启动清栈、面板事件不重复绑定 |
 
 ### ADR-035 战斗退场生命周期统一事件通道

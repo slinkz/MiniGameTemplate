@@ -25,13 +25,13 @@ last_updated: 2026-07-14
 | EntitySystem | `EntitySystem.md` | Entity、组件、池、Tick、技能/Buff、碰撞、刷怪 |
 | DanmakuSystem | `DanmakuSystem.md` | 弹丸、激光、喷雾、碰撞事件、弹幕 SO |
 | Rendering_RuntimeAtlas | `Rendering_RuntimeAtlas.md` | RBM、RuntimeAtlas、VFX、飘字、DrawCall、渲染排查 |
+| VFXSystem | `VFXSystem.md` | SpriteSheet VFX、PlayAttached、Tick/Render、Atlas 回退链、退场清理 |
 | AppFlow | `AppFlow.md` | 栈式导航、场景流、面板 Suspend/Resume |
 | UISystem_FairyGUI | `UISystem_FairyGUI.md` | UIManager、FairyGUI 包、面板生命周期、导出代码 |
 | WeChatBridge | `WeChatBridge.md` | 微信 SDK 抽象、广告、登录、云函数、隐私、真机平台约束 |
 | DataSystem_SO_Luban | `DataSystem_SO_Luban.md` | SaveSystem、CloudSave、SO 配置、Luban 表、配置生成与加载 |
+| EditorTools | `EditorTools.md` | Unity Editor 菜单、构建、校验、Dev Server、Inspector、工具脚本 |
 
 ## 后续扩展候选
 
 - `Audio_Asset_Timer_Pool.md`
-- `EditorTools.md`
-- `VFXSystem.md`

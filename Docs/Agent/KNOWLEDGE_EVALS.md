@@ -64,7 +64,7 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/CODE_KNOWLEDGE_MAP.md, D
 
 致命漏项包括：
 
-- 引用 Archive 旧方案作为当前事实。
+- 引用 Archive 旧方案作为当前事实，尤其是 `Archive/Guide/**` 中已归档的 Danmaku / Framework Modules 长文。
 - 漏掉命中的 Accepted ADR。
 - 漏掉热路径或 WebGL/微信平台约束。
 - 涉及 SO/UI/Scene 却没有资产验证。
