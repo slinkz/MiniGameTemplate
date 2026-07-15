@@ -4,7 +4,7 @@ scope: architecture-review-template
 status: active
 created: 2026-07-14
 last_updated: 2026-07-14
-related_docs: Docs/Agent/ARCHITECTURE_REVIEW_PROTOCOL.md, Docs/Agent/CODE_KNOWLEDGE_MAP.md, Docs/Agent/ADR_SCHEMA.md
+related_docs: Docs/Agent/KNOWLEDGE/ARCHITECTURE_REVIEW_PROTOCOL.md, Docs/Agent/KNOWLEDGE/CODE_KNOWLEDGE_MAP.md, Docs/Agent/ADR/ADR_SCHEMA.md
 ---
 
 # Architecture Review Template
@@ -56,9 +56,9 @@ related_docs: Docs/Agent/ARCHITECTURE_REVIEW_PROTOCOL.md, Docs/Agent/CODE_KNOWLE
 
 | 路径/符号 | 改动类型 | 映射来源 | 风险 | 验证项 |
 |-----------|----------|----------|------|--------|
-| | 新增/修改/删除 | `CODE_KNOWLEDGE_MAP.md` / 新发现 | 低/中/高 | |
+| | 新增/修改/删除 | `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` / 新发现 | 低/中/高 | |
 
-未在 `CODE_KNOWLEDGE_MAP.md` 中覆盖但应补充的路径：
+未在 `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` 中覆盖但应补充的路径：
 
 ```text
 
@@ -147,10 +147,10 @@ related_docs: Docs/Agent/ARCHITECTURE_REVIEW_PROTOCOL.md, Docs/Agent/CODE_KNOWLE
 
 | 文档 | 是否更新 | 原因 |
 |------|----------|------|
-| `CODE_KNOWLEDGE_MAP.md` | 是/否 | |
+| `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` | 是/否 | |
 | Module Card | 是/否 | |
 | Context Pack | 是/否 | |
-| ADR 原文 / `ADR_SCHEMA.md` | 是/否 | |
+| ADR 原文 / `ADR/ADR_SCHEMA.md` | 是/否 | |
 | `SO_WORKFLOWS_*` | 是/否 | |
 | `DEBUG_PLAYBOOK.md` | 是/否 | |
 | `AGENT_BOOTSTRAP.md` / `INDEX.md` | 是/否 | |

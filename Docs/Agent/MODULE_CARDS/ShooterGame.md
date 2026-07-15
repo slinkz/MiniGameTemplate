@@ -109,9 +109,9 @@ UnityProj/Assets/_Game/Resources/ShooterGame/
 ## 11. 修改前必读
 
 - `CONTEXT_PACKS/ShooterGame_Battle.md`
-- `SG_TDD_INDEX.md`
-- `SG_V2_TDD_INDEX.md`
-- `SO_WORKFLOWS_02_ENTITY.md`
+- `SHOOTER_GAME/TDD/SG_TDD_INDEX.md`
+- `SHOOTER_GAME/V2_TDD/SG_V2_TDD_INDEX.md`
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md`
 - 触碰 UI 时读 `CONTEXT_PACKS/FairyGUI_UI.md`
 - 触碰导航时读 `MODULE_CARDS/AppFlow.md`
 

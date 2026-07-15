@@ -233,13 +233,13 @@ def looks_doc_like(value: str) -> bool:
 
 
 # =====================================================
-# Check CODE_KNOWLEDGE_MAP.md
+# Check KNOWLEDGE/CODE_KNOWLEDGE_MAP.md
 # =====================================================
-print("=== Checking CODE_KNOWLEDGE_MAP.md ===")
+print("=== Checking KNOWLEDGE/CODE_KNOWLEDGE_MAP.md ===")
 
-map_file = REPO_ROOT / "Docs" / "Agent" / "CODE_KNOWLEDGE_MAP.md"
+map_file = REPO_ROOT / "Docs" / "Agent" / "KNOWLEDGE/CODE_KNOWLEDGE_MAP.md"
 if not map_file.exists():
-    errors.append("CODE_KNOWLEDGE_MAP.md not found")
+    errors.append("KNOWLEDGE/CODE_KNOWLEDGE_MAP.md not found")
 else:
     content = map_file.read_text(encoding="utf-8")
     for line_no, line in enumerate(content.splitlines(), start=1):
@@ -257,13 +257,13 @@ else:
         check_doc_paths(tdd_cell, f"CODE_MAP.TDD:{line_no}")
 
 # =====================================================
-# Check ADR_SCHEMA.md AppliesTo
+# Check ADR/ADR_SCHEMA.md AppliesTo
 # =====================================================
-print("=== Checking ADR_SCHEMA.md AppliesTo ===")
+print("=== Checking ADR/ADR_SCHEMA.md AppliesTo ===")
 
-adr_file = REPO_ROOT / "Docs" / "Agent" / "ADR_SCHEMA.md"
+adr_file = REPO_ROOT / "Docs" / "Agent" / "ADR/ADR_SCHEMA.md"
 if not adr_file.exists():
-    errors.append("ADR_SCHEMA.md not found")
+    errors.append("ADR/ADR_SCHEMA.md not found")
 else:
     content = adr_file.read_text(encoding="utf-8")
     # Extract AppliesTo from ADR blocks

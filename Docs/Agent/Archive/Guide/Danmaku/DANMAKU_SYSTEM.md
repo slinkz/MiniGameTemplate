@@ -1,6 +1,6 @@
 # 弹幕系统架构设计
 
-> 归档说明：本文是早期面向人类阅读的 Danmaku Guide，原路径为 `Docs/Guide/DANMAKU_SYSTEM.md`。当前弹幕事实源以 `Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md`、`Docs/Agent/MODULE_CARDS/DanmakuSystem.md`、`Docs/Agent/SO_WORKFLOWS_03_DANMAKU.md`、`Docs/Agent/SO_WORKFLOWS_04_VFX_RENDER.md` 和当前代码为准。
+> 归档说明：本文是早期面向人类阅读的 Danmaku Guide，原路径为 `Docs/Guide/DANMAKU_SYSTEM.md`。当前弹幕事实源以 `Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md`、`Docs/Agent/MODULE_CARDS/DanmakuSystem.md`、`Docs/Agent/SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_03_DANMAKU.md`、`Docs/Agent/SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_04_VFX_RENDER.md` 和当前代码为准。
 
 > **预计阅读**：10 分钟 &nbsp;|&nbsp; **目标**：理解弹幕系统的整体架构、设计动机和各子文档定位
 

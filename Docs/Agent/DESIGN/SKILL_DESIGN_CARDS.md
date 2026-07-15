@@ -4,12 +4,12 @@ scope: skill-design-cards
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/SG_GDD_01_ACTIVE_SKILLS.md, Docs/Agent/SG_V2_TDD_06_ATTACK_SKILL.md
+related_docs: Docs/Agent/SHOOTER_GAME/GDD/SG_GDD_01_ACTIVE_SKILLS.md, Docs/Agent/SHOOTER_GAME/V2_TDD/SG_V2_TDD_06_ATTACK_SKILL.md
 ---
 
 # Skill Design Cards
 
-> 定位：技能设计卡片。详细数值仍以 `SG_GDD_01_ACTIVE_SKILLS.md` 和对应 SO 为准。
+> 定位：技能设计卡片。详细数值仍以 `SHOOTER_GAME/GDD/SG_GDD_01_ACTIVE_SKILLS.md` 和对应 SO 为准。
 
 ## 卡片模板
 

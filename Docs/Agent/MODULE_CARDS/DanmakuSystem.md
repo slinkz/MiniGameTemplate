@@ -96,9 +96,9 @@ Assets/_Game/Configs/_Template/BulletType/
 
 - `CONTEXT_PACKS/Danmaku_Rendering.md`
 - `ARCHITECTURE.md` 中 DanmakuSystem 架构与统一渲染管线
-- `SO_WORKFLOWS_03_DANMAKU.md`
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_03_DANMAKU.md`
 - `DEBUG_PLAYBOOK.md`
-- `ATLAS_TDD_INDEX.md`
+- `SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md`
 
 ## 12. 修改后必验
 

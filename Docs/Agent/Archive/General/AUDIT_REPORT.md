@@ -31,7 +31,7 @@ related_code: Docs/Agent/**
 
 ## 偏差详情
 
-### 1. EC_TDD_02_CORE_ARCH.md — ComponentType 枚举
+### 1. SYSTEMS/EC_TDD/EC_TDD_02_CORE_ARCH.md — ComponentType 枚举
 
 | 项目 | 偏差 |
 |------|------|
@@ -39,7 +39,7 @@ related_code: Docs/Agent/**
 | **代码** | `Buff = 10`（Phase 3A P3.4 新增） |
 | **修正** | 补充 `Buff = 10` + 注释 |
 
-### 2. EC_TDD_02_CORE_ARCH.md — TickOrders
+### 2. SYSTEMS/EC_TDD/EC_TDD_02_CORE_ARCH.md — TickOrders
 
 | 项目 | 偏差 |
 |------|------|
@@ -47,7 +47,7 @@ related_code: Docs/Agent/**
 | **代码** | Buff=50, Decision=100, AutoAim=120, Attack=150, Skill=160, Health=250, Movement=300, Animation=400 |
 | **修正** | 完整替换为代码实际值 |
 
-### 3. EC_TDD_05_COMPONENTS.md — §4.8 SkillComponent
+### 3. SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md — §4.8 SkillComponent
 
 | 项目 | 偏差 |
 |------|------|
@@ -55,7 +55,7 @@ related_code: Docs/Agent/**
 | **代码** | 完整的 CD 状态机（188行），含 SkillState/TriggerMode/Effect 链/死亡中断 |
 | **修正** | 补充完整设计：状态转换矩阵、触发模式、效果执行、字段表 |
 
-### 4. EC_TDD_05_COMPONENTS.md — §4.9 AttackComponent
+### 4. SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md — §4.9 AttackComponent
 
 | 项目 | 偏差 |
 |------|------|
@@ -63,7 +63,7 @@ related_code: Docs/Agent/**
 | **代码** | `ComponentType.Attack`（独立）、`TickOrder = 150`（TickOrders.Attack）、`BulletPatternSO` + Buff 攻速修正 |
 | **修正** | 重写为表格+代码片段格式，反映当前实现 |
 
-### 5. EC_TDD_05_COMPONENTS.md — §4.10 BuffComponent
+### 5. SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md — §4.10 BuffComponent
 
 | 项目 | 偏差 |
 |------|------|
@@ -92,14 +92,14 @@ related_code: Docs/Agent/**
 | **文档** | 缺少 EntityConfigSOEditor、SkillConfigSOEditor、AIBehaviorSOEditor、EntitySpawnWaveSOEditor |
 | **修正** | 新增 "Entity 自定义 Inspector" 章节 + 快速参考表补充 |
 
-### 9. CONV_01_NAMING.md — Template_ 前缀约定
+### 9. SYSTEMS/CONV/CONV_01_NAMING.md — Template_ 前缀约定
 
 | 项目 | 偏差 |
 |------|------|
 | **文档** | 缺少模板资产目录和 `Template_` 前缀命名约定 |
 | **修正** | 在目录规范中补充 Entity SO 资产路径 + Template_ 前缀 |
 
-### 10. CONV_02_CODING.md — SO 引用约束
+### 10. SYSTEMS/CONV/CONV_02_CODING.md — SO 引用约束
 
 | 项目 | 偏差 |
 |------|------|
@@ -115,7 +115,7 @@ related_code: Docs/Agent/**
 | ADR_01~05 所有 ADR 状态 | 全部"已接受"或"已接受+Supersede 注明"，与代码一致 |
 | DEBUG_PLAYBOOK.md | 渲染/Atlas 调试流程正确，Entity 调试留待后续补充（低优先级） |
 | NEWGAME_GUIDE.md | 🟢 低风险，本次未深审 |
-| WECHAT_INTEGRATION.md | 🟢 低风险，本次未深审 |
+| PLATFORM/WECHAT_INTEGRATION.md | 🟢 低风险，本次未深审 |
 
 ---
 
@@ -123,4 +123,4 @@ related_code: Docs/Agent/**
 
 1. **Entity 调试条目**：当真机验证发现 Entity 相关 bug 时，补充到 DEBUG_PLAYBOOK.md
 2. **SkillConfigSO 字段文档**：SO_CATALOG 可进一步补充 SkillConfigSO 的 Effects/TriggerMode/CastTime 等字段表
-3. **CONV_03_PLATFORM.md**：可补充 Entity 系统在 WebGL 下的已知限制（如目前无特殊限制则无需）
+3. **SYSTEMS/CONV/CONV_03_PLATFORM.md**：可补充 Entity 系统在 WebGL 下的已知限制（如目前无特殊限制则无需）

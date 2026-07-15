@@ -204,7 +204,7 @@ Test-Path '<导出路径>\webgl\StreamingAssets'
 
 - [环境搭建与首次运行](GETTING_STARTED.md) — 从零开始搭建开发环境
 - [常见问题与排错](FAQ.md) — 更多故障排查方案
-- [Agent 微信集成文档](../Agent/WECHAT_INTEGRATION.md) — CDN、Dev Server、域名白名单、云开发与真机约束
+- [Agent 微信集成文档](../Agent/PLATFORM/WECHAT_INTEGRATION.md) — CDN、Dev Server、域名白名单、云开发与真机约束
 
 ---
 

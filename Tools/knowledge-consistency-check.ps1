@@ -160,14 +160,14 @@ function Resolve-ContextPack([string]$Name) {
 }
 
 # ============================================================
-# CODE_KNOWLEDGE_MAP.md Verification
+# KNOWLEDGE/CODE_KNOWLEDGE_MAP.md Verification
 # ============================================================
 
-Write-Host "`n=== Checking CODE_KNOWLEDGE_MAP.md ===" -ForegroundColor Yellow
+Write-Host "`n=== Checking KNOWLEDGE/CODE_KNOWLEDGE_MAP.md ===" -ForegroundColor Yellow
 
-$mapFile = Join-Path $repoRoot "Docs/Agent/CODE_KNOWLEDGE_MAP.md"
+$mapFile = Join-Path $repoRoot "Docs/Agent/KNOWLEDGE/CODE_KNOWLEDGE_MAP.md"
 if (-not (Test-Path $mapFile)) {
-    Log-Error "CODE_KNOWLEDGE_MAP.md not found"
+    Log-Error "KNOWLEDGE/CODE_KNOWLEDGE_MAP.md not found"
 } else {
     $mapContent = Get-Content $mapFile -Raw -Encoding UTF8
 
@@ -257,14 +257,14 @@ if (-not (Test-Path $mapFile)) {
 }
 
 # ============================================================
-# ADR_SCHEMA.md AppliesTo Verification
+# ADR/ADR_SCHEMA.md AppliesTo Verification
 # ============================================================
 
-Write-Host "`n=== Checking ADR_SCHEMA.md AppliesTo ===" -ForegroundColor Yellow
+Write-Host "`n=== Checking ADR/ADR_SCHEMA.md AppliesTo ===" -ForegroundColor Yellow
 
-$adrSchemaFile = Join-Path $repoRoot "Docs/Agent/ADR_SCHEMA.md"
+$adrSchemaFile = Join-Path $repoRoot "Docs/Agent/ADR/ADR_SCHEMA.md"
 if (-not (Test-Path $adrSchemaFile)) {
-    Log-Error "ADR_SCHEMA.md not found"
+    Log-Error "ADR/ADR_SCHEMA.md not found"
 } else {
     $adrContent = Get-Content $adrSchemaFile -Raw -Encoding UTF8
 

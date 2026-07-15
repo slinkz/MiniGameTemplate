@@ -77,7 +77,7 @@ Assets/_Game/Configs/ShooterGame/Waves/
 
 - ADR-033：Entity-Component 框架。
 - ADR-035：战斗退场生命周期统一事件通道。
-- 与技能/普攻相关：`SG_V2_TDD_06_ATTACK_SKILL.md`。
+- 与技能/普攻相关：`SHOOTER_GAME/V2_TDD/SG_V2_TDD_06_ATTACK_SKILL.md`。
 
 ## 9. 热路径 / 性能约束
 
@@ -97,11 +97,11 @@ Assets/_Game/Configs/ShooterGame/Waves/
 ## 11. 修改前必读
 
 - `CONTEXT_PACKS/EntitySystem.md`
-- `EC_TDD_INDEX.md`
-- `EC_TDD_02_CORE_ARCH.md`
-- `EC_TDD_05_COMPONENTS.md`
-- `SO_WORKFLOWS_02_ENTITY.md`
-- `ADR_INDEX.md` 中 ADR-033/035
+- `SYSTEMS/EC_TDD/EC_TDD_INDEX.md`
+- `SYSTEMS/EC_TDD/EC_TDD_02_CORE_ARCH.md`
+- `SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md`
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md`
+- `ADR/ADR_INDEX.md` 中 ADR-033/035
 
 ## 12. 修改后必验
 

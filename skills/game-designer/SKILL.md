@@ -7,10 +7,10 @@ description: "MiniGameTemplate 策划 Agent 工作流。用于新增或修改关
 
 ## 使用流程
 
-1. 先读 `Docs/Agent/DESIGNER_BOOTSTRAP.md`。
+1. 先读 `Docs/Agent/ROLES/DESIGNER_BOOTSTRAP.md`。
 2. 按任务读 `Docs/Agent/DESIGN/README.md` 中的专题文档。
-3. 若涉及配置，读 `Docs/Agent/SO_WORKFLOWS_INDEX.md` 和对应子文档。
-4. 若涉及 UI 或资产，同步切到 `UI_AGENT_BOOTSTRAP.md` 或 `ART_ASSET_AGENT_BOOTSTRAP.md`。
+3. 若涉及配置，读 `Docs/Agent/SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md` 和对应子文档。
+4. 若涉及 UI 或资产，同步切到 `ROLES/UI_AGENT_BOOTSTRAP.md` 或 `ROLES/ART_ASSET_AGENT_BOOTSTRAP.md`。
 5. 输出 Design Brief，不只输出想法。
 
 ## 任务路由
@@ -18,10 +18,10 @@ description: "MiniGameTemplate 策划 Agent 工作流。用于新增或修改关
 | 任务 | 必读 |
 |------|------|
 | 新增/调关卡 | `DESIGN/LEVEL_DESIGN_GUIDE.md`, `DESIGN/BALANCE_BASELINES.md` |
-| 新敌人 | `DESIGN/ENEMY_DESIGN_CARDS.md`, `SO_WORKFLOWS_02_ENTITY.md` |
-| 新技能 | `DESIGN/SKILL_DESIGN_CARDS.md`, `SG_GDD_INDEX.md` |
-| Buff/DOT/道具 | `DESIGN/ITEM_BUFF_DESIGN_CARDS.md`, `SG_GDD_02_PASSIVE_BUFFS.md`, `SG_GDD_03_ITEMS_CONFIG.md` |
-| 经济/广告/成长 | `DESIGN/ECONOMY_AND_PROGRESSION.md`, `WECHAT_INTEGRATION.md` |
+| 新敌人 | `DESIGN/ENEMY_DESIGN_CARDS.md`, `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md` |
+| 新技能 | `DESIGN/SKILL_DESIGN_CARDS.md`, `SHOOTER_GAME/GDD/SG_GDD_INDEX.md` |
+| Buff/DOT/道具 | `DESIGN/ITEM_BUFF_DESIGN_CARDS.md`, `SHOOTER_GAME/GDD/SG_GDD_02_PASSIVE_BUFFS.md`, `SHOOTER_GAME/GDD/SG_GDD_03_ITEMS_CONFIG.md` |
+| 经济/广告/成长 | `DESIGN/ECONOMY_AND_PROGRESSION.md`, `PLATFORM/WECHAT_INTEGRATION.md` |
 
 ## Design Brief 模板
 

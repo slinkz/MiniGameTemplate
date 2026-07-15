@@ -1,6 +1,6 @@
-# PK 评审记录 — SG_GAME_DESIGN.md（编辑器工具可执行性）
+# PK 评审记录 — SHOOTER_GAME/SG_GAME_DESIGN.md（编辑器工具可执行性）
 
-> **目标文档**：`Docs/Agent/SG_GAME_DESIGN.md` v3.0
+> **目标文档**：`Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md` v3.0
 > **文档类型**：游戏设计文档（编辑器工具与策划工作流可执行性评审）
 > **攻方角色**：Unity 编辑器工具开发者（专精 EditorWindow、PropertyDrawer、AssetPostprocessor、构建管线、策划工具链 DX）
 > **守方角色**：游戏设计师（专精玩法节奏、关卡编排、策划工作流需求定义）

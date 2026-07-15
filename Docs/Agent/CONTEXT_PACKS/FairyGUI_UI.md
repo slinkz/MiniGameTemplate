@@ -20,11 +20,11 @@ last_updated: 2026-07-14
 |------|------|
 | UI 系统架构 | `ARCHITECTURE.md` 中 UI 工作流和 SortingOrder |
 | UI 模块卡 | `MODULE_CARDS/UISystem_FairyGUI.md` |
-| ShooterGame UI | `SG_UI_DESIGN.md`, `SG_TDD_04_UI_CONTROLLERS.md` |
-| AppFlow | `APPFLOW_TDD_INDEX.md`, `APPFLOW_TDD_03_INTEGRATION.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
+| ShooterGame UI | `SHOOTER_GAME/SG_UI_DESIGN.md`, `SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md` |
+| AppFlow | `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md`, `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_03_INTEGRATION.md`, `SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
 | FairyGUI Skill | `skills/fairygui-tools/SKILL.md` |
 | FairyGUI 坑 | `skills/fairygui-tools/references/pitfalls.md` |
-| 编辑器工具 | `EDITOR_TOOLS_MANUAL_INDEX.md` |
+| 编辑器工具 | `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_INDEX.md` |
 
 ## 关键代码入口
 

@@ -1,6 +1,6 @@
 # 弹幕系统 — 碰撞与运行时
 
-> 归档说明：本文是早期面向人类阅读的 Danmaku Collision Guide，原路径为 `Docs/Guide/DANMAKU_COLLISION.md`。当前碰撞/Hitbox/运行时事实源以 `Docs/Agent/MODULE_CARDS/DanmakuSystem.md`、`Docs/Agent/OBB_TDD_INDEX.md`、`Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md` 和当前代码为准。
+> 归档说明：本文是早期面向人类阅读的 Danmaku Collision Guide，原路径为 `Docs/Guide/DANMAKU_COLLISION.md`。当前碰撞/Hitbox/运行时事实源以 `Docs/Agent/MODULE_CARDS/DanmakuSystem.md`、`Docs/Agent/SYSTEMS/OBB_TDD/OBB_TDD_INDEX.md`、`Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md` 和当前代码为准。
 
 > **预计阅读**：25 分钟 &nbsp;|&nbsp; **前置**：先读 [弹幕系统总览](DANMAKU_SYSTEM.md) 了解整体架构
 >

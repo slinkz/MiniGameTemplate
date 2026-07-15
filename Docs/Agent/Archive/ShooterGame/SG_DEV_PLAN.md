@@ -30,8 +30,8 @@
 
 | 类别 | 文档 | 版本 | 状态 |
 |------|------|------|------|
-| **游戏设计** | SG_GAME_DESIGN.md | v3.2 | ✅ PK 通过 |
-| **UI 设计** | SG_UI_DESIGN.md | v2.0 | ✅ PK 通过 |
+| **游戏设计** | SHOOTER_GAME/SG_GAME_DESIGN.md | v3.2 | ✅ PK 通过 |
+| **UI 设计** | SHOOTER_GAME/SG_UI_DESIGN.md | v2.0 | ✅ PK 通过 |
 | **核心 TDD** | SG_TDD_INDEX + 5 子文件 | v1.4 | ✅ PK 通过（含微信真机 PK） |
 | **工具 TDD** | SG_TOOLS_TDD_INDEX + 2 子文件 | v1.3 | ✅ PK 通过 |
 | **PK 记录** | 7 个 PK 文件 | — | ✅ 全部收敛 |
@@ -273,8 +273,8 @@ Game.ShooterGame.Editor   → 编辑器工具（仅 Editor 平台）
 
 | 文档 | 路径 |
 |------|------|
-| 游戏设计 | `Docs/Agent/SG_GAME_DESIGN.md` |
-| UI 设计 | `Docs/Agent/SG_UI_DESIGN.md` |
-| 核心 TDD | `Docs/Agent/SG_TDD_INDEX.md` + 5 子文件 |
-| 工具 TDD | `Docs/Agent/SG_TOOLS_TDD_INDEX.md` + 2 子文件 |
+| 游戏设计 | `Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md` |
+| UI 设计 | `Docs/Agent/SHOOTER_GAME/SG_UI_DESIGN.md` |
+| 核心 TDD | `Docs/Agent/SHOOTER_GAME/TDD/SG_TDD_INDEX.md` + 5 子文件 |
+| 工具 TDD | `Docs/Agent/SHOOTER_GAME/TOOLS_TDD/SG_TOOLS_TDD_INDEX.md` + 2 子文件 |
 | PK 记录 | `Docs/Agent/SG_*_PK*.md`（7 个文件） |

@@ -1,6 +1,6 @@
 # PK 评审记录 — ShooterGame 用户登录与关卡进度（微信真机视角）
 
-> **目标文档**：`SG_TDD_03_LEVEL_PROGRESS.md` + `SG_TDD_04_UI_CONTROLLERS.md` + `SG_GAME_DESIGN.md` §九
+> **目标文档**：`SHOOTER_GAME/TDD/SG_TDD_03_LEVEL_PROGRESS.md` + `SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md` + `SHOOTER_GAME/SG_GAME_DESIGN.md` §九
 > **文档类型**：TDD
 > **攻方角色**：资深微信小程序开发者（10 年微信生态经验，专精登录、存储、真机兼容、网络中断恢复）
 > **守方角色**：Unity 架构师（ShooterGame TDD 设计者）
@@ -236,7 +236,7 @@ private IEnumerator HandleVictoryConfirm()
 ### WX-009 | 严重度 🟡中 | MarkLevelCleared 返回 false 后 BattleController 处理未在 TDD 中定义
 
 **涉及章节**：§2.3.1（存储失败处理）、SG_TDD_02（BattleController HandleVictoryConfirm）
-**质疑**：§2.3.1 提到"调用方检查返回值"并 Toast 提示，但 `SG_TDD_02_BATTLE_SYSTEM.md` 中的 `HandleVictoryConfirm` 代码还是：
+**质疑**：§2.3.1 提到"调用方检查返回值"并 Toast 提示，但 `SHOOTER_GAME/TDD/SG_TDD_02_BATTLE_SYSTEM.md` 中的 `HandleVictoryConfirm` 代码还是：
 ```csharp
 _progressManager.MarkLevelCleared(_currentLevelIndex.Value + 1);
 ```
@@ -279,7 +279,7 @@ _progressManager.MarkLevelCleared(_currentLevelIndex.Value + 1);
 
 ### WX-009 ✅ 已接受并修正
 
-**回应**：确实需要同步更新。`SG_TDD_04_UI_CONTROLLERS.md` §8.1 的 `HandleVictoryConfirm` 已补充 bool 接收 + 失败 Toast。
+**回应**：确实需要同步更新。`SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md` §8.1 的 `HandleVictoryConfirm` 已补充 bool 接收 + 失败 Toast。
 
 **文档变更**：SG_TDD_04 §8.1 HandleVictoryConfirm 更新
 

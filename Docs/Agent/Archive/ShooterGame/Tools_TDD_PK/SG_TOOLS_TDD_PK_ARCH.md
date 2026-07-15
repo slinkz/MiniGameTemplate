@@ -1,6 +1,6 @@
 # PK 评审记录 — SG_TOOLS_TDD 编辑器工具 TDD（第二轮）
 
-> **目标文档**：`SG_TOOLS_TDD_INDEX.md` + `SG_TOOLS_TDD_01~02`
+> **目标文档**：`SHOOTER_GAME/TOOLS_TDD/SG_TOOLS_TDD_INDEX.md` + `SG_TOOLS_TDD_01~02`
 > **文档类型**：TDD（编辑器工具）
 > **攻方角色**：Unity 架构师（10 年 Unity 架构经验，专精依赖管理、SRP、可维护性、框架/Game 层边界）
 > **守方角色**：Unity 编辑器工具开发者（10 年 Unity Editor 扩展经验，专精 CustomEditor/EditorWindow/Gizmo/MenuItem）

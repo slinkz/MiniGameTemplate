@@ -1,6 +1,6 @@
 # PK 评审记录 — SG_V2_TDD_06_ATTACK_SKILL
 
-> **目标文档**：`Docs/Agent/SG_V2_TDD_06_ATTACK_SKILL.md`
+> **目标文档**：`Docs/Agent/SHOOTER_GAME/V2_TDD/SG_V2_TDD_06_ATTACK_SKILL.md`
 > **文档类型**：TDD
 > **攻方角色**：Unity 架构师（10 年以上 Unity 引擎经验，专精 ECS/组件化架构、WebGL 平台限制、性能优化）
 > **守方角色**：软件架构师（10 年以上系统设计经验，专精 DDD、可维护架构、接口设计、权衡分析）

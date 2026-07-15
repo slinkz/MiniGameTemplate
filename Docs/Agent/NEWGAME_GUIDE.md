@@ -145,7 +145,7 @@ namespace MainMenu
 
 ## Step 8: 微信 SDK（如需要）
 
-详见 [WECHAT_INTEGRATION.md](WECHAT_INTEGRATION.md)
+详见 [PLATFORM/WECHAT_INTEGRATION.md](PLATFORM/WECHAT_INTEGRATION.md)
 
 ## Step 9: 验证
 

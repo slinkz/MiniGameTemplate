@@ -53,7 +53,7 @@ depends_on: [SG_DEV_PLAN, SG_TDD_INDEX, SG_TOOLS_TDD_INDEX]
 ### 执行指导
 
 1. 在 `Assets/_Game/Editor/ShooterGame/` 下创建 `EntitySpawnWaveSOEditor.cs`
-2. 参考 TDD：`SG_TOOLS_TDD_01_WAVE_EDITOR.md`
+2. 参考 TDD：`SHOOTER_GAME/TOOLS_TDD/SG_TOOLS_TDD_01_WAVE_EDITOR.md`
 3. Debug MenuItem 放在 `ShooterGame/Debug/` 菜单路径
 4. ProfilerMarker 包裹 `TickPlaying` / `UpdateWaveIndex` / `BaseLineDetector.Tick`
 
@@ -63,7 +63,7 @@ depends_on: [SG_DEV_PLAN, SG_TDD_INDEX, SG_TOOLS_TDD_INDEX]
 
 ### 前置
 - FairyGUI 编辑器安装并能打开工程
-- 5 个 UI 包结构已在 `SG_UI_DESIGN.md` v2.0 中定义
+- 5 个 UI 包结构已在 `SHOOTER_GAME/SG_UI_DESIGN.md` v2.0 中定义
 
 ### 子任务清单
 
@@ -77,7 +77,7 @@ depends_on: [SG_DEV_PLAN, SG_TDD_INDEX, SG_TOOLS_TDD_INDEX]
 
 ### 执行指导
 
-1. **FairyGUI 编辑器**：按 `SG_UI_DESIGN.md` §4~§7 创建包和组件
+1. **FairyGUI 编辑器**：按 `SHOOTER_GAME/SG_UI_DESIGN.md` §4~§7 创建包和组件
 2. **导出路径**：`Assets/_Game/Resources/FairyGUI/` (V1 全量预加载)
 3. **代码绑定**：UI Controller 已有完整代码，只需验证 FairyGUI 组件名与代码中 const 一致
 4. **关键常量**（已定义在代码中）：

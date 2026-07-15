@@ -1,6 +1,6 @@
 # PK 评审记录 — SG_TDD 核心技术设计文档（第二轮）
 
-> **目标文档**：`SG_TDD_INDEX.md` + `SG_TDD_01~05`
+> **目标文档**：`SHOOTER_GAME/TDD/SG_TDD_INDEX.md` + `SG_TDD_01~05`
 > **文档类型**：TDD
 > **攻方角色**：Unity 编辑器工具开发者（10 年 Unity Editor 扩展经验，专精 Inspector 工作流、CustomEditor、SerializedProperty、调试工具）
 > **守方角色**：Unity 架构师（10 年 Unity 开发经验，专精 Entity 框架、FairyGUI、微信小游戏）

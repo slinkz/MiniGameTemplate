@@ -4,7 +4,7 @@ scope: level-design-guide
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/SG_GAME_DESIGN.md, Docs/Agent/SG_TOOLS_TDD_INDEX.md, Docs/Agent/SO_WORKFLOWS_02_ENTITY.md
+related_docs: Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md, Docs/Agent/SHOOTER_GAME/TOOLS_TDD/SG_TOOLS_TDD_INDEX.md, Docs/Agent/SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md
 ---
 
 # Level Design Guide

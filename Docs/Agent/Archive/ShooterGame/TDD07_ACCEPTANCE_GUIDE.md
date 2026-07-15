@@ -9,7 +9,7 @@ related_code: Assets/_Framework/BattleLifecycle/*.cs, Assets/_Game/Scripts/Shoot
 
 > **版本**：v1.0  
 > **日期**：2026-05-26  
-> **TDD 来源**：SG_V2_TDD_07_LIFECYCLE.md
+> **TDD 来源**：SHOOTER_GAME/V2_TDD/SG_V2_TDD_07_LIFECYCLE.md
 
 ---
 

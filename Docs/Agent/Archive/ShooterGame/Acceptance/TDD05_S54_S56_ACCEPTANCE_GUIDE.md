@@ -1,9 +1,9 @@
 # TDD_05 S5.4~S5.6 验收指南
 
-> 归档说明：本文是 S5.4~S5.6 UI 人工验收拆分文档，当前统一验收入口为 `Docs/Agent/SG_V2_DEVICE_ACCEPTANCE.md`，设计源仍为 `Docs/Agent/SG_V2_TDD_05_TOOLS_UI_POLISH.md`。
+> 归档说明：本文是 S5.4~S5.6 UI 人工验收拆分文档，当前统一验收入口为 `Docs/Agent/SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md`，设计源仍为 `Docs/Agent/SHOOTER_GAME/V2_TDD/SG_V2_TDD_05_TOOLS_UI_POLISH.md`。
 
 > 生成时间：2026-06-04
-> TDD：SG_V2_TDD_05_TOOLS_UI_POLISH.md §S5.4~S5.6
+> TDD：SHOOTER_GAME/V2_TDD/SG_V2_TDD_05_TOOLS_UI_POLISH.md §S5.4~S5.6
 > 需要人工验收的项目（MCP 无法验证 UI 视觉效果和交互体验）
 
 ---

@@ -68,7 +68,7 @@ MiniGameTemplate 采用 **ScriptableObject 驱动的组件化架构**：
 └────────────────────────────────────────────────────────┘
 ```
 
-> **详细设计**：→ [EC_TDD_INDEX](EC_TDD_INDEX.md) | **架构决策**：→ [ADR_INDEX](ADR_INDEX.md)
+> **详细设计**：→ [EC_TDD_INDEX](SYSTEMS/EC_TDD/EC_TDD_INDEX.md) | **架构决策**：→ [ADR_INDEX](ADR/ADR_INDEX.md)
 
 ## 项目目录分层
 
@@ -382,4 +382,4 @@ FireLaser/FireSpray(Attached 重载)
 
 ---
 
-> **Unity MCP 集成**详见 → [MCP_INTEGRATION.md](MCP_INTEGRATION.md)
+> **Unity MCP 集成**详见 → [TOOLS/MCP_INTEGRATION.md](TOOLS/MCP_INTEGRATION.md)

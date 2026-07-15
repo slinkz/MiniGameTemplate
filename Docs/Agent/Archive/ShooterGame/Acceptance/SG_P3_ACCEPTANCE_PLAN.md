@@ -34,7 +34,7 @@ related_code: UIProject/assets/SG_*/**/*, Assets/_Game/Scripts/ShooterGame/UI/*.
 
 | 文件 | 改动 |
 |------|------|
-| `SG_TDD_04_UI_CONTROLLERS.md` | 新增 Frontmatter + §4.1 暂停按钮绑定说明 + §4.2 白模包对照表 |
+| `SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md` | 新增 Frontmatter + §4.1 暂停按钮绑定说明 + §4.2 白模包对照表 |
 | `INDEX.md` | 路由表 B 新增 FairyGUI 白模路径 |
 
 ---

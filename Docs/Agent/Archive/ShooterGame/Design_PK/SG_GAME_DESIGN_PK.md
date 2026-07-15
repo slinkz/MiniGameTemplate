@@ -1,6 +1,6 @@
-# PK 评审记录 — SG_GAME_DESIGN.md
+# PK 评审记录 — SHOOTER_GAME/SG_GAME_DESIGN.md
 
-> **目标文档**：`Docs/Agent/SG_GAME_DESIGN.md`
+> **目标文档**：`Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md`
 > **文档类型**：游戏设计文档（可执行性评审）
 > **攻方角色**：Unity 架构师（专精数据驱动架构、微信小游戏平台限制、Entity-Component 框架、性能预算）
 > **守方角色**：游戏设计师（专精玩法节奏、玩家体验、关卡编排、休闲游戏设计）

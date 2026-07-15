@@ -2,7 +2,7 @@
 
 > **攻方**：Unity 编辑器工具开发者 Agent（关注编辑器配置效率、Inspector 可视化、SO 批量工具、预览能力、调试可观测性）  
 > **守方**：UI 设计师 Agent  
-> **评审对象**：`SG_UI_DESIGN.md` v1.0 + 前轮 PK 补充结论  
+> **评审对象**：`SHOOTER_GAME/SG_UI_DESIGN.md` v1.0 + 前轮 PK 补充结论  
 > **最大轮次**：6  
 > **PK 状态**：✅ 已完成（4 轮收敛，10/10 问题关闭）
 

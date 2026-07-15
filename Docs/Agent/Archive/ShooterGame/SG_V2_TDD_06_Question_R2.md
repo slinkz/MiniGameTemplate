@@ -1,6 +1,6 @@
 # PK 评审记录：SG_V2_TDD_06（第 2 轮 —— 编辑器工具视角）
 
-> **目标文档**：`SG_V2_TDD_06_ATTACK_SKILL.md` (v0.2)  
+> **目标文档**：`SHOOTER_GAME/V2_TDD/SG_V2_TDD_06_ATTACK_SKILL.md` (v0.2)  
 > **攻方**：Unity 编辑器工具开发者（10 年经验，专精 Inspector/SO 序列化/Editor 工作流/配置安全）  
 > **守方**：软件架构师（广智）  
 > **最大轮次**：8  

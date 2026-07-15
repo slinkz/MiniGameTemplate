@@ -19,13 +19,13 @@ last_updated: 2026-07-14
 | 目的 | 文档 |
 |------|------|
 | 全局渲染/弹幕架构 | `ARCHITECTURE.md` 中统一渲染管线与 DanmakuSystem |
-| RuntimeAtlas | `ATLAS_TDD_INDEX.md`, `ATLAS_TDD_01_DESIGN.md`, `ATLAS_TDD_02_IMPL.md` |
-| 弹幕 SO 工作流 | `SO_WORKFLOWS_03_DANMAKU.md` |
-| VFX/Rendering SO | `SO_WORKFLOWS_04_VFX_RENDER.md` |
-| 飘字系统 | `FLOATING_TEXT_TDD.md` |
-| OBB/Hitbox | `OBB_TDD_INDEX.md` |
+| RuntimeAtlas | `SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md`, `SYSTEMS/ATLAS_TDD/ATLAS_TDD_01_DESIGN.md`, `SYSTEMS/ATLAS_TDD/ATLAS_TDD_02_IMPL.md` |
+| 弹幕 SO 工作流 | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_03_DANMAKU.md` |
+| VFX/Rendering SO | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_04_VFX_RENDER.md` |
+| 飘字系统 | `SYSTEMS/FLOATING_TEXT/FLOATING_TEXT_TDD.md` |
+| OBB/Hitbox | `SYSTEMS/OBB_TDD/OBB_TDD_INDEX.md` |
 | Debug 方法 | `DEBUG_PLAYBOOK.md` |
-| ADR | `ADR_INDEX.md` 中 ADR-028、031、032、036 |
+| ADR | `ADR/ADR_INDEX.md` 中 ADR-028、031、032、036 |
 | 模块卡 | `MODULE_CARDS/DanmakuSystem.md`, `MODULE_CARDS/Rendering_RuntimeAtlas.md`, `MODULE_CARDS/VFXSystem.md` |
 
 ## 关键代码入口

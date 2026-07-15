@@ -93,10 +93,10 @@ Assets/_Game/Configs/_Template/BulletType/
 ## 11. 修改前必读
 
 - `CONTEXT_PACKS/Danmaku_Rendering.md`
-- `ATLAS_TDD_INDEX.md`
+- `SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md`
 - `DEBUG_PLAYBOOK.md`
-- `FLOATING_TEXT_TDD.md`
-- `ADR_03_RENDERING.md`, `ADR_05_RECENT.md`, `ADR_06_LIFECYCLE.md`
+- `SYSTEMS/FLOATING_TEXT/FLOATING_TEXT_TDD.md`
+- `ADR/ADR_03_RENDERING.md`, `ADR/ADR_05_RECENT.md`, `ADR/ADR_06_LIFECYCLE.md`
 
 ## 12. 修改后必验
 

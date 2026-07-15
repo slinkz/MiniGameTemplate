@@ -4,7 +4,7 @@ scope: asset-naming-and-paths
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/CONV_INDEX.md, Docs/Agent/SG_GDD_04_WORKFLOW.md
+related_docs: Docs/Agent/SYSTEMS/CONV/CONV_INDEX.md, Docs/Agent/SHOOTER_GAME/GDD/SG_GDD_04_WORKFLOW.md
 ---
 
 # Asset Naming And Paths

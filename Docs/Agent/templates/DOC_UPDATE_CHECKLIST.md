@@ -4,7 +4,7 @@ scope: doc-update-checklist
 status: active
 created: 2026-07-14
 last_updated: 2026-07-14
-related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
+related_docs: Docs/Agent/KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
 ---
 
 # Doc Update Checklist
@@ -39,15 +39,15 @@ related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
 | `AGENT_BOOTSTRAP.md` | 是/否 | 是/否 | |
 | Context Pack | 是/否 | 是/否 | |
 | Module Card | 是/否 | 是/否 | |
-| `CODE_KNOWLEDGE_MAP.md` | 是/否 | 是/否 | |
+| `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` | 是/否 | 是/否 | |
 | ADR 原文 | 是/否 | 是/否 | |
-| `ADR_SCHEMA.md` | 是/否 | 是/否 | |
+| `ADR/ADR_SCHEMA.md` | 是/否 | 是/否 | |
 | `SO_WORKFLOWS_*` | 是/否 | 是/否 | |
 | `DESIGN/*.md` | 是/否 | 是/否 | 玩法、关卡、敌人、技能、Buff、道具、经济变更 |
 | `UI_DESIGN/*.md` | 是/否 | 是/否 | UI token、组件、界面、动效、文案变更 |
 | `ASSET_PIPELINE/*.md` | 是/否 | 是/否 | 关键资产、Manifest、命名、导入、验收变更 |
 | `DEBUG_PLAYBOOK.md` | 是/否 | 是/否 | |
-| `WECHAT_INTEGRATION.md` / Guide | 是/否 | 是/否 | |
+| `PLATFORM/WECHAT_INTEGRATION.md` / Guide | 是/否 | 是/否 | |
 | `skills/` | 是/否 | 是/否 | |
 | `.workbuddy/skills/` / `.codebuddy/skills/` | 是/否/不存在 | 是/否/不适用 | |
 | `Docs/Agent/changes/` | 是/否 | 是/否 | |
@@ -61,7 +61,7 @@ related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
 
 ```
 
-是否已写入 `CODE_KNOWLEDGE_MAP.md`：
+是否已写入 `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md`：
 
 - 是/否：
 - 不需要的原因：

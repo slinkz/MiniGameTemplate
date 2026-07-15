@@ -1,6 +1,6 @@
 # 飞行弹幕射击 · UI/交互设计文档
 
-> 归档说明：本文是父目录早期 ShooterGame UI/交互设计稿，原路径为 `C:\workspace\mini-game-template\ShooterGame-UI-Design.md`。当前 UI 事实源以 `Docs/Agent/SG_UI_DESIGN.md`、`Docs/Agent/CONTEXT_PACKS/FairyGUI_UI.md`、`Docs/Agent/MODULE_CARDS/UISystem_FairyGUI.md` 和当前 UIProject/代码为准。
+> 归档说明：本文是父目录早期 ShooterGame UI/交互设计稿，原路径为 `C:\workspace\mini-game-template\ShooterGame-UI-Design.md`。当前 UI 事实源以 `Docs/Agent/SHOOTER_GAME/SG_UI_DESIGN.md`、`Docs/Agent/CONTEXT_PACKS/FairyGUI_UI.md`、`Docs/Agent/MODULE_CARDS/UISystem_FairyGUI.md` 和当前 UIProject/代码为准。
 
 > **版本**：v1.0  
 > **日期**：2026-05-02  

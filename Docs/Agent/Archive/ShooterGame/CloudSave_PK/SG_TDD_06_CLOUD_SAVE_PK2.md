@@ -1,6 +1,6 @@
 # PK 评审记录 — SG_TDD_06 云存储系统（Unity 架构师视角）
 
-> **目标文档**：`SG_TDD_06_CLOUD_SAVE.md`（v0.3）
+> **目标文档**：`SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md`（v0.3）
 > **文档类型**：TDD
 > **攻方角色**：资深 Unity 架构师（10 年+ Unity 引擎开发经验，专精 WebGL 平台限制、MonoBehaviour 生命周期、DllImport/jslib 桥接、异步模式、内存管理）
 > **守方角色**：微信小程序开发者（专精微信生态、wx API、云开发、真机兼容性）

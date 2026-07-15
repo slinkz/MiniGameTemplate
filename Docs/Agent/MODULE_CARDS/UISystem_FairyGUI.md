@@ -88,9 +88,9 @@ UI 不是战斗最热路径，但战斗 HUD 高频刷新应避免重复创建对
 ## 11. 修改前必读
 
 - `CONTEXT_PACKS/FairyGUI_UI.md`
-- `SG_TDD_04_UI_CONTROLLERS.md`
-- `SG_UI_DESIGN.md`
-- `APPFLOW_TDD_INDEX.md`
+- `SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md`
+- `SHOOTER_GAME/SG_UI_DESIGN.md`
+- `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md`
 - `skills/fairygui-tools/SKILL.md`
 - `skills/fairygui-tools/references/pitfalls.md`
 

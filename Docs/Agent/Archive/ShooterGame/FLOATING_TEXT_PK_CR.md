@@ -1,6 +1,6 @@
 # FLOATING_TEXT_TDD PK 评审记录（Code Review Checklist 视角）
 
-> **目标文档**：`FLOATING_TEXT_TDD.md` v2.1（PK 收敛）  
+> **目标文档**：`SYSTEMS/FLOATING_TEXT/FLOATING_TEXT_TDD.md` v2.1（PK 收敛）  
 > **攻方**：代码评审专家（code-review-checklist CL-1~CL-11 + known-pitfalls 视角）  
 > **守方**：软件架构师  
 > **最大轮次**：8  

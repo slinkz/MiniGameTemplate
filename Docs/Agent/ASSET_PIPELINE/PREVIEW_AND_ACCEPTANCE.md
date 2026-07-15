@@ -4,7 +4,7 @@ scope: asset-preview-and-acceptance
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/MCP_INTEGRATION.md, Docs/Agent/SG_V2_DEVICE_ACCEPTANCE.md
+related_docs: Docs/Agent/TOOLS/MCP_INTEGRATION.md, Docs/Agent/SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md
 ---
 
 # Preview And Acceptance

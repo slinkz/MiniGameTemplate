@@ -71,7 +71,7 @@ FlowNodeSO 相关资产应在 AppFlow TDD 集成文档中查找。
 ## 8. 关键 ADR
 
 - ADR-034：AppFlow 栈式导航系统。
-- 相关实施：`APPFLOW_TDD_INDEX.md` v1.8，冷启动清栈，热启动恢复暂时禁用。
+- 相关实施：`SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md` v1.8，冷启动清栈，热启动恢复暂时禁用。
 
 ## 9. 热路径 / 性能约束
 
@@ -87,11 +87,11 @@ AppFlow 不是高频战斗热路径，但必须避免异步/场景切换竞态�
 
 ## 11. 修改前必读
 
-- `APPFLOW_TDD_INDEX.md`
-- `APPFLOW_TDD_01_CORE_DESIGN.md`
-- `APPFLOW_TDD_03_INTEGRATION.md`
-- `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分
-- `ADR_INDEX.md` 中 ADR-034
+- `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md`
+- `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_01_CORE_DESIGN.md`
+- `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_03_INTEGRATION.md`
+- `SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md` 第六部分
+- `ADR/ADR_INDEX.md` 中 ADR-034
 - 触碰 UI 时读 `MODULE_CARDS/UISystem_FairyGUI.md`
 
 ## 12. 修改后必验

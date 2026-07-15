@@ -13,7 +13,7 @@ description: >
 解决 Agent 跨会话记忆丢失问题。将任务状态、计划文档、决策记录持久化到磁盘文件系统，
 不依赖 AI 上下文窗口或 working memory 的压缩机制。
 
-> MiniGameTemplate 当前约定：`Docs/Agent/**`、代码与验证结果是当前事实源；`.tasks/**` 是早期 WorkBuddy 本地任务系统，可能含过期状态。新会话恢复项目主线时优先读 `Docs/Agent/AGENT_BOOTSTRAP.md`、`Docs/Agent/INDEX.md`、`Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md`。只有用户明确要求维护 `.tasks`，或当前任务确实需要跨会话临时执行态时，才按本 Skill 操作 `.tasks`。
+> MiniGameTemplate 当前约定：`Docs/Agent/**`、代码与验证结果是当前事实源；`.tasks/**` 是早期 WorkBuddy 本地任务系统，可能含过期状态。新会话恢复项目主线时优先读 `Docs/Agent/AGENT_BOOTSTRAP.md`、`Docs/Agent/INDEX.md`、`Docs/Agent/KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md`。只有用户明确要求维护 `.tasks`，或当前任务确实需要跨会话临时执行态时，才按本 Skill 操作 `.tasks`。
 
 ## 何时使用
 
@@ -79,7 +79,7 @@ description: >
 
 当用户给出或 Agent 生成一个明确会跨会话的多阶段计划时：
 
-1. 先确认这个计划不应直接写入 `Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md` 或 `changes/**`。
+1. 先确认这个计划不应直接写入 `Docs/Agent/KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md` 或 `changes/**`。
 2. 将临时计划文档保存到 `.tasks/plans/{plan-name}.md`。
 3. 为每个阶段在 `active/` 下创建独立的任务详情文档。
 4. 更新 `BOARD.md` 注册所有任务。
@@ -128,7 +128,7 @@ description: >
 | 临时执行进度、恢复点、未定方案 | `.tasks/**` |
 | 当前架构事实、模块边界、任务路由 | `Docs/Agent/**` |
 | 重要变更过程和验证记录 | `Docs/Agent/changes/**` |
-| 长期项目路线 | `Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md` |
+| 长期项目路线 | `Docs/Agent/KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md` |
 | 团队协作任务管理 | GitHub Issues / Projects 优先 |
 
 ## 禁止事项

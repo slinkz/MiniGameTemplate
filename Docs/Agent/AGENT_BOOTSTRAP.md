@@ -4,7 +4,7 @@ scope: agent-bootstrap
 status: active
 created: 2026-07-14
 last_updated: 2026-07-15
-related_docs: Docs/Agent/INDEX.md, Docs/Agent/KNOWLEDGE_INVENTORY.md, Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md, Docs/Agent/DESIGNER_BOOTSTRAP.md, Docs/Agent/UI_AGENT_BOOTSTRAP.md, Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md
+related_docs: Docs/Agent/INDEX.md, Docs/Agent/KNOWLEDGE/KNOWLEDGE_INVENTORY.md, Docs/Agent/KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md, Docs/Agent/ROLES/DESIGNER_BOOTSTRAP.md, Docs/Agent/ROLES/UI_AGENT_BOOTSTRAP.md, Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md
 ---
 
 # Agent 上岗入口
@@ -19,12 +19,12 @@ MiniGameTemplate 是一个 Unity 2022 LTS 微信小游戏开发模板，核心�
 
 | 主线 | 状态 | 入口 |
 |------|------|------|
-| 框架基础设施 | 已形成体系 | `ARCHITECTURE.md`, `MODULE_CARDS/README.md`, `CONV_INDEX.md` |
-| Entity-Component 战斗框架 | 已形成体系 | `EC_TDD_INDEX.md` |
-| 弹幕/渲染/RuntimeAtlas | 已形成体系，风险高 | `ATLAS_TDD_INDEX.md`, `DEBUG_PLAYBOOK.md` |
-| ShooterGame | 当前业务主线 | `SG_TDD_INDEX.md`, `SG_V2_TDD_INDEX.md` |
-| AppFlow 导航 | 已完成多轮设计 | `APPFLOW_TDD_INDEX.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
-| 知识工程 | 当前长期任务 | `KNOWLEDGE_ENGINEERING_ROADMAP.md` |
+| 框架基础设施 | 已形成体系 | `ARCHITECTURE.md`, `MODULE_CARDS/README.md`, `SYSTEMS/CONV/CONV_INDEX.md` |
+| Entity-Component 战斗框架 | 已形成体系 | `SYSTEMS/EC_TDD/EC_TDD_INDEX.md` |
+| 弹幕/渲染/RuntimeAtlas | 已形成体系，风险高 | `SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md`, `DEBUG_PLAYBOOK.md` |
+| ShooterGame | 当前业务主线 | `SHOOTER_GAME/TDD/SG_TDD_INDEX.md`, `SHOOTER_GAME/V2_TDD/SG_V2_TDD_INDEX.md` |
+| AppFlow 导航 | 已完成多轮设计 | `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md`, `SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
+| 知识工程 | 当前长期任务 | `KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md` |
 
 ## 3. 事实源优先级
 
@@ -32,7 +32,7 @@ MiniGameTemplate 是一个 Unity 2022 LTS 微信小游戏开发模板，核心�
 
 1. 当前代码与 Unity 编译/运行结果。
 2. 活跃 Agent 文档：`Docs/Agent/INDEX.md` 路由到的当前 TDD、ADR、CONV、SO_WORKFLOWS。
-3. `Docs/Agent/KNOWLEDGE_INVENTORY.md` 中列为当前事实源的文档。
+3. `Docs/Agent/KNOWLEDGE/KNOWLEDGE_INVENTORY.md` 中列为当前事实源的文档。
 4. 仍活跃的操作型 Guide，例如 `Docs/Guide/BUILD_MINIGAME.md`。
 5. `Docs/Agent/Archive/**` 与 PK 记录。
 
@@ -45,16 +45,16 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 1. 读 `Docs/Agent/INDEX.md`。
 2. 根据任务读取对应 Context Pack。
 3. 读取 Context Pack 标出的 2-8 个核心文档。
-4. 读取 `CODE_KNOWLEDGE_MAP.md`，确认代码路径对应的 Module Card、ADR、TDD 与验证项。
+4. 读取 `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md`，确认代码路径对应的 Module Card、ADR、TDD 与验证项。
 5. 用 `rg` 或 CodeGraph 定位代码入口。
-6. 若是常规中型改动，使用 `templates/IMPACT_ANALYSIS_TEMPLATE.md` 先做影响面分析；若是跨模块/架构敏感改动，按 `ARCHITECTURE_REVIEW_PROTOCOL.md` 使用 `templates/ARCH_REVIEW_TEMPLATE.md` 审查后再编码。
+6. 若是常规中型改动，使用 `templates/IMPACT_ANALYSIS_TEMPLATE.md` 先做影响面分析；若是跨模块/架构敏感改动，按 `KNOWLEDGE/ARCHITECTURE_REVIEW_PROTOCOL.md` 使用 `templates/ARCH_REVIEW_TEMPLATE.md` 审查后再编码。
 7. 修改后按 Context Pack / Code Knowledge Map 的“修改后必验”执行验证。
-8. 重要变更后按 `KNOWLEDGE_MAINTENANCE.md` 和 `templates/DOC_UPDATE_CHECKLIST.md` 检查知识资产同步，并运行 `Tools/knowledge-sync-check.ps1` 或确认 CI/pre-commit 会执行。
+8. 重要变更后按 `KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md` 和 `templates/DOC_UPDATE_CHECKLIST.md` 检查知识资产同步，并运行 `Tools/knowledge-sync-check.ps1` 或确认 CI/pre-commit 会执行。
 
 知识工程任务：
 
-1. 读 `KNOWLEDGE_ENGINEERING_ROADMAP.md`。
-2. 读 `KNOWLEDGE_INVENTORY.md`。
+1. 读 `KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md`。
+2. 读 `KNOWLEDGE/KNOWLEDGE_INVENTORY.md`。
 3. 查看任务看板当前阶段。
 4. 创建或更新本阶段产物。
 5. 更新路线图状态和下一步。
@@ -63,9 +63,9 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 
 | 任务类型 | 先读 |
 |----------|------|
-| 玩法、关卡、敌人、技能、Buff、道具、经济、数值 | `DESIGNER_BOOTSTRAP.md` |
-| UI/UX、界面、组件、状态矩阵、动效、文案、FairyGUI handoff | `UI_AGENT_BOOTSTRAP.md` |
-| sprite、VFX、UI icon、audio、font、background、资产接入 | `ART_ASSET_AGENT_BOOTSTRAP.md` |
+| 玩法、关卡、敌人、技能、Buff、道具、经济、数值 | `ROLES/DESIGNER_BOOTSTRAP.md` |
+| UI/UX、界面、组件、状态矩阵、动效、文案、FairyGUI handoff | `ROLES/UI_AGENT_BOOTSTRAP.md` |
+| sprite、VFX、UI icon、audio、font、background、资产接入 | `ROLES/ART_ASSET_AGENT_BOOTSTRAP.md` |
 
 ## 5. 常用 Context Pack
 
@@ -123,7 +123,7 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 开始改代码前，至少回答：
 
 1. 这次任务属于哪个 Context Pack？
-2. 是否触碰 ADR？若触碰，读取 `ADR_INDEX.md` 和 `ADR_SCHEMA.md`。
+2. 是否触碰 ADR？若触碰，读取 `ADR/ADR_INDEX.md` 和 `ADR/ADR_SCHEMA.md`。
 3. 是否触碰热路径？
 4. 是否触碰微信/WebGL 约束？
 5. 是否应新增或修改 SO，而不是硬编码？
@@ -146,16 +146,16 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 |----------|------|
 | 架构规则 | `Tools -> MiniGame Template -> Validate -> Architecture Check` |
 | 资源预算 | `Tools -> MiniGame Template -> Validate -> Asset Audit` |
-| SO 配置 | `SO_WORKFLOWS_INDEX.md`, 编辑器 Validator |
-| Unity 编译/运行 | `MCP_INTEGRATION.md` 或 Unity Editor |
-| **PlayMode 验证** | **`MCP_INTEGRATION.md` §「PlayMode 快速验证工作流」**（打开场景→PlayMode→截图→Console→退出） |
+| SO 配置 | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md`, 编辑器 Validator |
+| Unity 编译/运行 | `TOOLS/MCP_INTEGRATION.md` 或 Unity Editor |
+| **PlayMode 验证** | **`TOOLS/MCP_INTEGRATION.md` §「PlayMode 快速验证工作流」**（打开场景→PlayMode→截图→Console→退出） |
 | 渲染/弹幕排查 | `DEBUG_PLAYBOOK.md` |
-| 微信构建 | `Docs/Guide/BUILD_MINIGAME.md`, `WECHAT_INTEGRATION.md` |
-| 知识工程 | `KNOWLEDGE_ENGINEERING_ROADMAP.md` |
-| 架构审查 | `ARCHITECTURE_REVIEW_PROTOCOL.md`, `templates/ARCH_REVIEW_TEMPLATE.md` |
-| 知识维护 | `KNOWLEDGE_MAINTENANCE.md`, `templates/DOC_UPDATE_CHECKLIST.md` |
-| 知识评估 | `KNOWLEDGE_EVALS.md` |
+| 微信构建 | `Docs/Guide/BUILD_MINIGAME.md`, `PLATFORM/WECHAT_INTEGRATION.md` |
+| 知识工程 | `KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md` |
+| 架构审查 | `KNOWLEDGE/ARCHITECTURE_REVIEW_PROTOCOL.md`, `templates/ARCH_REVIEW_TEMPLATE.md` |
+| 知识维护 | `KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md`, `templates/DOC_UPDATE_CHECKLIST.md` |
+| 知识评估 | `KNOWLEDGE/KNOWLEDGE_EVALS.md` |
 
 ## 12. 下一步知识工程
 
-P0-P9 初版已完成。后续知识工程进入持续校准：用 `KNOWLEDGE_EVALS.md` 定期跑标准任务和职业 Agent D/U/A 评估，按评估结果修正 Context Pack、Module Card、ADR_SCHEMA、CODE_KNOWLEDGE_MAP、职业入口、设计卡片、UI 设计系统和资产管线。
+P0-P9 初版已完成。后续知识工程进入持续校准：用 `KNOWLEDGE/KNOWLEDGE_EVALS.md` 定期跑标准任务和职业 Agent D/U/A 评估，按评估结果修正 Context Pack、Module Card、ADR_SCHEMA、CODE_KNOWLEDGE_MAP、职业入口、设计卡片、UI 设计系统和资产管线。

@@ -4,7 +4,7 @@ scope: design-index
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/DESIGNER_BOOTSTRAP.md, Docs/Agent/SG_GAME_DESIGN.md, Docs/Agent/SG_GDD_INDEX.md
+related_docs: Docs/Agent/ROLES/DESIGNER_BOOTSTRAP.md, Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md, Docs/Agent/SHOOTER_GAME/GDD/SG_GDD_INDEX.md
 ---
 
 # Design Knowledge Index
@@ -17,10 +17,10 @@ related_docs: Docs/Agent/DESIGNER_BOOTSTRAP.md, Docs/Agent/SG_GAME_DESIGN.md, Do
 |------------|--------|
 | 确认设计方向 | `DESIGN_PILLARS.md`, `PLAYER_JOURNEY.md` |
 | 改关卡/波次 | `LEVEL_DESIGN_GUIDE.md`, `BALANCE_BASELINES.md` |
-| 新增技能 | `SKILL_DESIGN_CARDS.md`, `SG_GDD_01_ACTIVE_SKILLS.md` |
-| 新增敌人 | `ENEMY_DESIGN_CARDS.md`, `SO_WORKFLOWS_02_ENTITY.md` |
-| 新增 Buff/DOT/道具 | `ITEM_BUFF_DESIGN_CARDS.md`, `SG_GDD_02_PASSIVE_BUFFS.md`, `SG_GDD_03_ITEMS_CONFIG.md` |
-| 改成长/奖励/广告 | `ECONOMY_AND_PROGRESSION.md`, `WECHAT_INTEGRATION.md` |
+| 新增技能 | `SKILL_DESIGN_CARDS.md`, `SHOOTER_GAME/GDD/SG_GDD_01_ACTIVE_SKILLS.md` |
+| 新增敌人 | `ENEMY_DESIGN_CARDS.md`, `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md` |
+| 新增 Buff/DOT/道具 | `ITEM_BUFF_DESIGN_CARDS.md`, `SHOOTER_GAME/GDD/SG_GDD_02_PASSIVE_BUFFS.md`, `SHOOTER_GAME/GDD/SG_GDD_03_ITEMS_CONFIG.md` |
+| 改成长/奖励/广告 | `ECONOMY_AND_PROGRESSION.md`, `PLATFORM/WECHAT_INTEGRATION.md` |
 
 ## 策划卡片最小格式
 

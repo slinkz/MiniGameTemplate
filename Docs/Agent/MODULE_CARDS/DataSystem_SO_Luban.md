@@ -100,8 +100,8 @@ skills/luban-config/
 
 - `CONTEXT_PACKS/SO_Config_Workflow.md`
 - `CONTEXT_PACKS/WeChat_Build_Cloud.md`
-- `SO_WORKFLOWS_INDEX.md`
-- `SG_TDD_06_CLOUD_SAVE.md`
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md`
+- `SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md`
 - `skills/luban-config/SKILL.md`
 - `MODULE_CARDS/ShooterGame.md`
 - `MODULE_CARDS/EntitySystem.md`

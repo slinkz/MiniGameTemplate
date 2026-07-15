@@ -87,7 +87,7 @@
 | 事件 | 产出 | 影响 |
 |------|------|------|
 | Unity MCP Bridge 安装 | `Packages/com.anklebreaker.unity-mcp` | AI 自己编译验证，不再需要人工中转 |
-| MCP_INTEGRATION.md 文档 | `Docs/Agent/MCP_INTEGRATION.md` | 建立使用规范（端口不固定、execute_code 不支持 using 等） |
+| TOOLS/MCP_INTEGRATION.md 文档 | `Docs/Agent/TOOLS/MCP_INTEGRATION.md` | 建立使用规范（端口不固定、execute_code 不支持 using 等） |
 
 **经验**：**给 AI 工具而非答案。** MCP 让 AI 能自己"看到"Unity 的状态，而不是猜测或等人类反馈。闭环效率翻倍。
 
@@ -142,7 +142,7 @@
 | 事件 | 产出 | 影响 |
 |------|------|------|
 | CodeGraph 安装配置 | `.codegraph/` + `~/.workbuddy/mcp.json` | AI 代码检索从多次 grep 降为单次图查询 |
-| CODEGRAPH_INTEGRATION.md | `Docs/Agent/` | ~60% token 节省 + ~50% 响应时间缩短 |
+| TOOLS/CODEGRAPH_INTEGRATION.md | `Docs/Agent/` | ~60% token 节省 + ~50% 响应时间缩短 |
 
 **经验**：**给 AI 一张代码地图，胜过让它一条一条路试。** 预索引的知识图谱让"理解代码关系"从 O(n) 变成 O(1)。
 

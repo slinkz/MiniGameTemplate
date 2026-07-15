@@ -19,13 +19,13 @@ last_updated: 2026-07-14
 
 | 目的 | 文档 |
 |------|------|
-| SO 总入口 | `SO_WORKFLOWS_INDEX.md` |
-| 核心配置 | `SO_WORKFLOWS_01_CORE.md` |
-| Entity/Skill/Buff/DOT/Passive/Pickup/Wave | `SO_WORKFLOWS_02_ENTITY.md` |
-| 弹幕 | `SO_WORKFLOWS_03_DANMAKU.md` |
-| VFX/Rendering | `SO_WORKFLOWS_04_VFX_RENDER.md` |
-| 变量/事件/Pool/FSM/Audio | `SO_WORKFLOWS_05_INFRA.md` |
-| 命名规则 | `CONV_01_NAMING.md` |
+| SO 总入口 | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md` |
+| 核心配置 | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_01_CORE.md` |
+| Entity/Skill/Buff/DOT/Passive/Pickup/Wave | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md` |
+| 弹幕 | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_03_DANMAKU.md` |
+| VFX/Rendering | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_04_VFX_RENDER.md` |
+| 变量/事件/Pool/FSM/Audio | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_05_INFRA.md` |
+| 命名规则 | `SYSTEMS/CONV/CONV_01_NAMING.md` |
 | Luban Skill 源 | `skills/luban-config/SKILL.md` |
 
 ## 关键代码入口

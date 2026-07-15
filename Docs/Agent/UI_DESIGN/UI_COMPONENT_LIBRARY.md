@@ -4,7 +4,7 @@ scope: ui-component-library
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/SG_UI_DESIGN.md, skills/fairygui-tools/SKILL.md
+related_docs: Docs/Agent/SHOOTER_GAME/SG_UI_DESIGN.md, skills/fairygui-tools/SKILL.md
 ---
 
 # UI Component Library

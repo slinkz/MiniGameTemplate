@@ -7,7 +7,7 @@ description: "MiniGameTemplate 美术资产生产与接入工作流。用于新�
 
 ## 使用流程
 
-1. 先读 `Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md`。
+1. 先读 `Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md`。
 2. 查 `Docs/Agent/ASSET_PIPELINE/ASSET_MANIFEST.md`，避免重复生产。
 3. 按类型读 `Docs/Agent/ASSET_PIPELINE/README.md` 路由的专题文档。
 4. VFX 任务继续读 `skills/vfx-creator/SKILL.md`。

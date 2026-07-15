@@ -60,7 +60,7 @@ _gameFSM.OnStateChanged += (previousState, newState) => {
 
 ## 10. WeChatBridge — 微信 SDK 桥接
 
-> 📐 完整接口清单、构建配置表、隐私授权流程图参见 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)。
+> 📐 完整接口清单、构建配置表、隐私授权流程图参见 [Agent/PLATFORM/WECHAT_INTEGRATION.md](../Agent/PLATFORM/WECHAT_INTEGRATION.md)。
 
 **用途**：统一微信小游戏 SDK 接口层。模板默认提供：
 - Editor / 非 WebGL：`WeChatBridgeStub`
@@ -256,7 +256,7 @@ int sprayIdx = DanmakuSystem.Instance.FireSpray(
 
 ### SO 配置体系
 
-> 📐 所有 SO 类型完整清单参见 [Agent/SO_WORKFLOWS_INDEX](../Agent/SO_WORKFLOWS_INDEX.md)。
+> 📐 所有 SO 类型完整清单参见 [Agent/SO_WORKFLOWS_INDEX](../Agent/SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md)。
 
 | SO | 说明 |
 |----|------|

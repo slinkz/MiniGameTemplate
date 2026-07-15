@@ -19,18 +19,18 @@ last_updated: 2026-07-14
 
 | 目的 | 文档 |
 |------|------|
-| 游戏设计 | `SG_GAME_DESIGN.md` |
-| UI/交互设计 | `SG_UI_DESIGN.md` |
-| V1 技术入口 | `SG_TDD_INDEX.md` |
-| 战斗系统 | `SG_TDD_02_BATTLE_SYSTEM.md` |
-| 关卡进度 | `SG_TDD_03_LEVEL_PROGRESS.md` |
-| UI Controller | `SG_TDD_04_UI_CONTROLLERS.md` |
-| 输入摇杆 | `SG_TDD_05_INPUT_JOYSTICK.md` |
-| 云存储 | `SG_TDD_06_CLOUD_SAVE.md` |
-| V2 技能系统入口 | `SG_V2_TDD_INDEX.md` |
-| 退场生命周期 | `SG_V2_TDD_07_LIFECYCLE.md` |
-| 统一设备验收 | `SG_V2_DEVICE_ACCEPTANCE.md` |
-| AppFlow | `APPFLOW_TDD_INDEX.md`, `SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
+| 游戏设计 | `SHOOTER_GAME/SG_GAME_DESIGN.md` |
+| UI/交互设计 | `SHOOTER_GAME/SG_UI_DESIGN.md` |
+| V1 技术入口 | `SHOOTER_GAME/TDD/SG_TDD_INDEX.md` |
+| 战斗系统 | `SHOOTER_GAME/TDD/SG_TDD_02_BATTLE_SYSTEM.md` |
+| 关卡进度 | `SHOOTER_GAME/TDD/SG_TDD_03_LEVEL_PROGRESS.md` |
+| UI Controller | `SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md` |
+| 输入摇杆 | `SHOOTER_GAME/TDD/SG_TDD_05_INPUT_JOYSTICK.md` |
+| 云存储 | `SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md` |
+| V2 技能系统入口 | `SHOOTER_GAME/V2_TDD/SG_V2_TDD_INDEX.md` |
+| 退场生命周期 | `SHOOTER_GAME/V2_TDD/SG_V2_TDD_07_LIFECYCLE.md` |
+| 统一设备验收 | `SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md` |
+| AppFlow | `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md`, `SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
 
 ## 关键代码入口
 
@@ -46,13 +46,13 @@ UIProject/assets/SG_*/
 
 | 代码/资产 | 先读 |
 |-----------|------|
-| `Core/BattleController.cs` | `SG_TDD_02_BATTLE_SYSTEM.md`, `SG_V2_TDD_07_LIFECYCLE.md` |
-| `Progress/SG_ProgressManager.cs` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_TDD_06_CLOUD_SAVE.md` |
-| `Config/SG_LevelConfigSO.cs` | `SG_TDD_03_LEVEL_PROGRESS.md`, `SG_GAME_DESIGN.md` |
-| UI Controllers | `SG_TDD_04_UI_CONTROLLERS.md`, `SG_UI_DESIGN.md` |
-| Joystick/Input Bridge | `SG_TDD_05_INPUT_JOYSTICK.md` |
-| Skills/Pickups/Buffs | `SG_V2_TDD_02~03`, `SG_V2_TDD_06_ATTACK_SKILL.md` |
-| `Configs/ShooterGame/Levels/**`, `Configs/ShooterGame/Waves/**` | `SG_GAME_DESIGN.md`, `SO_WORKFLOWS_02_ENTITY.md` |
+| `Core/BattleController.cs` | `SHOOTER_GAME/TDD/SG_TDD_02_BATTLE_SYSTEM.md`, `SHOOTER_GAME/V2_TDD/SG_V2_TDD_07_LIFECYCLE.md` |
+| `Progress/SG_ProgressManager.cs` | `SHOOTER_GAME/TDD/SG_TDD_03_LEVEL_PROGRESS.md`, `SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md` |
+| `Config/SG_LevelConfigSO.cs` | `SHOOTER_GAME/TDD/SG_TDD_03_LEVEL_PROGRESS.md`, `SHOOTER_GAME/SG_GAME_DESIGN.md` |
+| UI Controllers | `SHOOTER_GAME/TDD/SG_TDD_04_UI_CONTROLLERS.md`, `SHOOTER_GAME/SG_UI_DESIGN.md` |
+| Joystick/Input Bridge | `SHOOTER_GAME/TDD/SG_TDD_05_INPUT_JOYSTICK.md` |
+| Skills/Pickups/Buffs | `SG_V2_TDD_02~03`, `SHOOTER_GAME/V2_TDD/SG_V2_TDD_06_ATTACK_SKILL.md` |
+| `Configs/ShooterGame/Levels/**`, `Configs/ShooterGame/Waves/**` | `SHOOTER_GAME/SG_GAME_DESIGN.md`, `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md` |
 
 ## 关键 SO / 配置路径
 

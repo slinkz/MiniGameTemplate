@@ -1,6 +1,6 @@
-# PK 评审记录 — SG_TDD_06_CLOUD_SAVE.md
+# PK 评审记录 — SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md
 
-> **目标文档**：`Docs/Agent/SG_TDD_06_CLOUD_SAVE.md`
+> **目标文档**：`Docs/Agent/SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md`
 > **文档类型**：TDD
 > **攻方角色**：软件架构师（专精系统设计、API 设计、可维护性和关注点分离，10 年以上经验）
 > **守方角色**：微信小程序开发者（专精微信 API、平台约束、真机行为、云开发实战）

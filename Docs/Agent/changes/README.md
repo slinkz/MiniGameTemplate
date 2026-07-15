@@ -4,7 +4,7 @@ scope: changes-index
 status: active
 created: 2026-07-14
 last_updated: 2026-07-14
-related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/templates/DOC_UPDATE_CHECKLIST.md
+related_docs: Docs/Agent/KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/templates/DOC_UPDATE_CHECKLIST.md
 ---
 
 # changes 变更包规范

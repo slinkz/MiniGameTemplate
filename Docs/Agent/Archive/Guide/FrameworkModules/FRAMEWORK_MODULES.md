@@ -1,6 +1,6 @@
 # 框架模块使用手册
 
-> 归档说明：本文是早期面向人类阅读的框架模块手册，原路径为 `Docs/Guide/FRAMEWORK_MODULES.md`。当前模块事实源以 `Docs/Agent/MODULE_CARDS/README.md`、`Docs/Agent/ARCHITECTURE.md`、`Docs/Agent/CODE_KNOWLEDGE_MAP.md` 和对应 Context Pack 为准。
+> 归档说明：本文是早期面向人类阅读的框架模块手册，原路径为 `Docs/Guide/FRAMEWORK_MODULES.md`。当前模块事实源以 `Docs/Agent/MODULE_CARDS/README.md`、`Docs/Agent/ARCHITECTURE.md`、`Docs/Agent/KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` 和对应 Context Pack 为准。
 
 > 按需查阅。每个模块独立成节，你只需要读用到的部分。
 > 文档已拆分为三个子文件，方便定位。

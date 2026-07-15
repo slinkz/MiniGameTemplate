@@ -2,7 +2,7 @@
 
 > **攻方**：软件架构师（10 年系统设计经验，专精 Editor 工具扩展、领域驱动设计）
 > **守方**：Unity 编辑器工具开发者（10 年 Unity Editor 扩展经验，专精 CustomEditor/EditorWindow/Gizmo）
-> **评审对象**：`SG_TOOLS_TDD_INDEX.md` + 01（波次编辑器增强）+ 02（调试工具+Gizmo）
+> **评审对象**：`SHOOTER_GAME/TOOLS_TDD/SG_TOOLS_TDD_INDEX.md` + 01（波次编辑器增强）+ 02（调试工具+Gizmo）
 > **最大轮次**：8
 > **PK 状态**：✅ 已收敛（2 轮 / 10 问题 / 100% 回应）
 
@@ -33,7 +33,7 @@
 
 ### ST-003 | 严重度 🟡中 | BattleController.RetryBattle() / DebugForceVictory / DebugForceDefeat 方法签名未在核心 TDD 定义
 **涉及章节**：TOOLS_TDD_02 §2.1/§2.2
-**质疑**：MenuItem 引用了 `bc.RetryBattle()`、`bc.DebugForceVictory()`、`bc.DebugForceDefeat()`，但核心 TDD（SG_TDD_02_BATTLE_SYSTEM.md）中：
+**质疑**：MenuItem 引用了 `bc.RetryBattle()`、`bc.DebugForceVictory()`、`bc.DebugForceDefeat()`，但核心 TDD（SHOOTER_GAME/TDD/SG_TDD_02_BATTLE_SYSTEM.md）中：
 1. `RetryBattle()` 存在（§5.1 重试流程），但 DebugForceVictory/Defeat 只在工具 TDD 中提及
 2. EnterState 是 private 方法还是 public？核心 TDD 写的是 `EnterState(BattleState)` 但未标可见性
 3. `#if UNITY_EDITOR` 包裹 public 方法在编辑器中可见但 build 时不存在——如果其他代码引用了这些方法，build 会报错

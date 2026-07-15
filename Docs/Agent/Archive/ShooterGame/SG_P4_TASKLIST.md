@@ -245,6 +245,6 @@ P4.1（补资产） → P4.2（编排波次） → P4.3 路径 D（配置检查�
 |------|------|
 | SG_DEV_PLAN.md | P4 原始定义 + 全局路线图 |
 | SG_TDD_INDEX → 01~05 | 技术设计参考 |
-| SG_GAME_DESIGN.md | 游戏设计锚点（难度/节奏） |
+| SHOOTER_GAME/SG_GAME_DESIGN.md | 游戏设计锚点（难度/节奏） |
 | SO_WORKFLOWS_INDEX | SO 创建流程参考 |
 | SG_P3_ACCEPTANCE_PLAN.md | P3 验收参考（FairyGUI 部分） |

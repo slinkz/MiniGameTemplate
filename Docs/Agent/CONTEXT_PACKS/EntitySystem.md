@@ -19,14 +19,14 @@ last_updated: 2026-07-14
 
 | 目的 | 文档 |
 |------|------|
-| 总入口 | `EC_TDD_INDEX.md` |
-| 核心架构、TickOrder、EventBus | `EC_TDD_02_CORE_ARCH.md` |
-| EntityPool / EntityManager | `EC_TDD_03_ENTITY_POOL.md` |
-| 系统集成、TargetRegistry、碰撞、Spawner | `EC_TDD_04_SYSTEMS.md` |
-| 组件详细设计 | `EC_TDD_05_COMPONENTS.md` |
-| SO 配置 | `EC_TDD_06_CONFIG.md`, `SO_WORKFLOWS_02_ENTITY.md` |
-| 编辑器工具 | `EC_TDD_07_EDITOR.md`, `EDITOR_TOOLS_MANUAL_04_INSPECTORS.md` |
-| 架构决策 | `ADR_INDEX.md` 中 ADR-033 |
+| 总入口 | `SYSTEMS/EC_TDD/EC_TDD_INDEX.md` |
+| 核心架构、TickOrder、EventBus | `SYSTEMS/EC_TDD/EC_TDD_02_CORE_ARCH.md` |
+| EntityPool / EntityManager | `SYSTEMS/EC_TDD/EC_TDD_03_ENTITY_POOL.md` |
+| 系统集成、TargetRegistry、碰撞、Spawner | `SYSTEMS/EC_TDD/EC_TDD_04_SYSTEMS.md` |
+| 组件详细设计 | `SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md` |
+| SO 配置 | `SYSTEMS/EC_TDD/EC_TDD_06_CONFIG.md`, `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md` |
+| 编辑器工具 | `SYSTEMS/EC_TDD/EC_TDD_07_EDITOR.md`, `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_04_INSPECTORS.md` |
+| 架构决策 | `ADR/ADR_INDEX.md` 中 ADR-033 |
 
 ## 关键代码入口
 
@@ -46,12 +46,12 @@ UnityProj/Assets/_Framework/EntitySystem/
 
 | 代码 | 先读 |
 |------|------|
-| `Core/*.cs` | `EC_TDD_02_CORE_ARCH.md`, `EC_TDD_03_ENTITY_POOL.md` |
-| `Components/Skill*` | `EC_TDD_05_COMPONENTS.md`, `SG_V2_TDD_06_ATTACK_SKILL.md` |
-| `Components/Buff*` | `EC_TDD_05_COMPONENTS.md`, `SG_V2_TDD_03_BUFF_DOT_PASSIVE.md` |
-| `Collision/*.cs` | `EC_TDD_04_SYSTEMS.md`, `OBB_TDD_INDEX.md` |
-| `EntitySystemBootstrap.cs` | `EC_TDD_04_SYSTEMS.md`, `SG_V2_TDD_07_LIFECYCLE.md` |
-| `Config/*SO.cs` | `SO_WORKFLOWS_02_ENTITY.md` |
+| `Core/*.cs` | `SYSTEMS/EC_TDD/EC_TDD_02_CORE_ARCH.md`, `SYSTEMS/EC_TDD/EC_TDD_03_ENTITY_POOL.md` |
+| `Components/Skill*` | `SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md`, `SHOOTER_GAME/V2_TDD/SG_V2_TDD_06_ATTACK_SKILL.md` |
+| `Components/Buff*` | `SYSTEMS/EC_TDD/EC_TDD_05_COMPONENTS.md`, `SHOOTER_GAME/V2_TDD/SG_V2_TDD_03_BUFF_DOT_PASSIVE.md` |
+| `Collision/*.cs` | `SYSTEMS/EC_TDD/EC_TDD_04_SYSTEMS.md`, `SYSTEMS/OBB_TDD/OBB_TDD_INDEX.md` |
+| `EntitySystemBootstrap.cs` | `SYSTEMS/EC_TDD/EC_TDD_04_SYSTEMS.md`, `SHOOTER_GAME/V2_TDD/SG_V2_TDD_07_LIFECYCLE.md` |
+| `Config/*SO.cs` | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md` |
 
 ## 关键 SO / 配置路径
 

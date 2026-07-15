@@ -35,13 +35,18 @@ MiniGameTemplate/
 │   ├── Agent/                  # Agent 知识工程：152 活跃文档 + 90 归档文档
 │   │   ├── INDEX.md            # 总索引：任务路由、代码映射、概念速查、踩坑速查
 │   │   ├── AGENT_BOOTSTRAP.md  # 新 Agent 上岗入口
+│   │   ├── ADR/                # 架构决策与可执行约束
+│   │   ├── SYSTEMS/            # EC_TDD / APPFLOW / ATLAS / OBB / SO_WORKFLOWS 等系统文档
+│   │   ├── SHOOTER_GAME/       # ShooterGame GDD/TDD/V2_TDD/Tools_TDD
+│   │   ├── KNOWLEDGE/          # 知识工程、代码映射、Evals、维护协议
+│   │   ├── ROLES/              # 策划/UI/资产职业 Agent 上岗入口
 │   │   ├── DESIGN/             # 策划 Agent：设计支柱、关卡、平衡、技能、敌人、Buff/道具
 │   │   ├── UI_DESIGN/          # UI Agent：设计系统、组件库、屏幕卡、动效、文案
 │   │   ├── ASSET_PIPELINE/     # 资产 Agent：Manifest、命名、sprite/VFX/audio/font 管线
 │   │   ├── CONTEXT_PACKS/      # 高频任务最小上下文
 │   │   ├── MODULE_CARDS/       # 模块职责、边界、入口、验证
-│   │   ├── ADR_*.md            # 架构决策与可执行约束
-│   │   └── *_TDD_*.md / SG_*   # 框架与 ShooterGame 设计/技术文档
+│   │   ├── TOOLS/              # MCP / CodeGraph 集成
+│   │   └── PLATFORM/           # 微信平台集成
 │   └── Guide/                  # 人类开发者操作型文档
 ├── UIProject/                  # FairyGUI 编辑器工程
 ├── UnityProj/                  # Unity 工程根目录
@@ -86,17 +91,17 @@ MiniGameTemplate/
 |------|------|
 | [Docs/Agent/AGENT_BOOTSTRAP.md](Docs/Agent/AGENT_BOOTSTRAP.md) | 新会话上岗入口 |
 | [Docs/Agent/INDEX.md](Docs/Agent/INDEX.md) | 总路由表 |
-| [Docs/Agent/CODE_KNOWLEDGE_MAP.md](Docs/Agent/CODE_KNOWLEDGE_MAP.md) | 代码路径到文档/ADR/验证的映射 |
-| [Docs/Agent/KNOWLEDGE_MAINTENANCE.md](Docs/Agent/KNOWLEDGE_MAINTENANCE.md) | 知识维护规则 |
-| [Docs/Agent/KNOWLEDGE_EVALS.md](Docs/Agent/KNOWLEDGE_EVALS.md) | Agent 评估任务 |
+| [Docs/Agent/KNOWLEDGE/CODE_KNOWLEDGE_MAP.md](Docs/Agent/KNOWLEDGE/CODE_KNOWLEDGE_MAP.md) | 代码路径到文档/ADR/验证的映射 |
+| [Docs/Agent/KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md](Docs/Agent/KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md) | 知识维护规则 |
+| [Docs/Agent/KNOWLEDGE/KNOWLEDGE_EVALS.md](Docs/Agent/KNOWLEDGE/KNOWLEDGE_EVALS.md) | Agent 评估任务 |
 
 ### 职业 Agent
 
 | 角色 | 入口 |
 |------|------|
-| 策划 Agent | [Docs/Agent/DESIGNER_BOOTSTRAP.md](Docs/Agent/DESIGNER_BOOTSTRAP.md), [Docs/Agent/DESIGN/README.md](Docs/Agent/DESIGN/README.md), `skills/game-designer` |
-| UI Agent | [Docs/Agent/UI_AGENT_BOOTSTRAP.md](Docs/Agent/UI_AGENT_BOOTSTRAP.md), [Docs/Agent/UI_DESIGN/README.md](Docs/Agent/UI_DESIGN/README.md), `skills/ui-designer` |
-| 资产 Agent | [Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md](Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md), [Docs/Agent/ASSET_PIPELINE/README.md](Docs/Agent/ASSET_PIPELINE/README.md), `skills/asset-pipeline` |
+| 策划 Agent | [Docs/Agent/ROLES/DESIGNER_BOOTSTRAP.md](Docs/Agent/ROLES/DESIGNER_BOOTSTRAP.md), [Docs/Agent/DESIGN/README.md](Docs/Agent/DESIGN/README.md), `skills/game-designer` |
+| UI Agent | [Docs/Agent/ROLES/UI_AGENT_BOOTSTRAP.md](Docs/Agent/ROLES/UI_AGENT_BOOTSTRAP.md), [Docs/Agent/UI_DESIGN/README.md](Docs/Agent/UI_DESIGN/README.md), `skills/ui-designer` |
+| 资产 Agent | [Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md](Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md), [Docs/Agent/ASSET_PIPELINE/README.md](Docs/Agent/ASSET_PIPELINE/README.md), `skills/asset-pipeline` |
 
 ## 常用检查
 

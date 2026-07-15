@@ -1,6 +1,6 @@
 # PK 评审记录 — FLOATING_TEXT_TDD
 
-> **目标文档**：`Docs/Agent/FLOATING_TEXT_TDD.md`
+> **目标文档**：`Docs/Agent/SYSTEMS/FLOATING_TEXT/FLOATING_TEXT_TDD.md`
 > **文档类型**：TDD
 > **攻方角色**：Unity 架构师（10 年+ Unity 引擎经验，专精渲染管线、WebGL 平台限制、ScriptableObject 驱动设计）
 > **守方角色**：软件架构师（系统设计、解耦、数据驱动架构、迁移方案设计）

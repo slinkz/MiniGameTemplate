@@ -1,6 +1,6 @@
 # PK 评审记录 — TDD-07 战斗退场生命周期统一事件通道
 
-> **目标文档**：`Docs/Agent/SG_V2_TDD_07_LIFECYCLE.md`
+> **目标文档**：`Docs/Agent/SHOOTER_GAME/V2_TDD/SG_V2_TDD_07_LIFECYCLE.md`
 > **文档类型**：TDD
 > **攻方角色**：Unity 编辑器工具开发者（10+ 年 Unity Editor 扩展 / EditorWindow / 自动化测试 / SerializedObject 工作流经验）
 > **守方角色**：软件架构师（专精系统设计、SO 事件通道、观察者模式、可维护性和关注点分离）

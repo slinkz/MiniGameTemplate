@@ -7,10 +7,10 @@ description: "MiniGameTemplate UI/UX Agent 工作流。用于新增或修改 Fai
 
 ## 使用流程
 
-1. 先读 `Docs/Agent/UI_AGENT_BOOTSTRAP.md`。
+1. 先读 `Docs/Agent/ROLES/UI_AGENT_BOOTSTRAP.md`。
 2. 按任务读 `Docs/Agent/UI_DESIGN/README.md` 中的专题文档。
 3. 若要生成 XML/白模/面板代码，继续读 `skills/fairygui-tools/SKILL.md`。
-4. 若涉及资产，读 `Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md`。
+4. 若涉及资产，读 `Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md`。
 5. 输出 UI Handoff，不只输出视觉描述。
 
 ## 任务路由

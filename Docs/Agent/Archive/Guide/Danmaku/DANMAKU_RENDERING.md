@@ -1,6 +1,6 @@
 # 弹幕系统 — 渲染架构
 
-> 归档说明：本文是早期面向人类阅读的 Danmaku Rendering Guide，原路径为 `Docs/Guide/DANMAKU_RENDERING.md`。当前渲染/RuntimeAtlas/飘字事实源以 `Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md`、`Docs/Agent/ATLAS_TDD_INDEX.md`、`Docs/Agent/FLOATING_TEXT_TDD.md` 和当前代码为准。
+> 归档说明：本文是早期面向人类阅读的 Danmaku Rendering Guide，原路径为 `Docs/Guide/DANMAKU_RENDERING.md`。当前渲染/RuntimeAtlas/飘字事实源以 `Docs/Agent/CONTEXT_PACKS/Danmaku_Rendering.md`、`Docs/Agent/SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md`、`Docs/Agent/SYSTEMS/FLOATING_TEXT/FLOATING_TEXT_TDD.md` 和当前代码为准。
 
 > **预计阅读**：10 分钟 &nbsp;|&nbsp; **前置**：先读 [弹幕系统总览](DANMAKU_SYSTEM.md) 了解整体架构
 >

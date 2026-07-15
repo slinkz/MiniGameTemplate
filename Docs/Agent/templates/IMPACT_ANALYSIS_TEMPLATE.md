@@ -26,7 +26,7 @@ last_updated: 2026-07-14
 
 | 路径/符号 | 改动类型 | 来源映射 | 风险 |
 |-----------|----------|----------|------|
-| | 新增/修改/删除 | `CODE_KNOWLEDGE_MAP.md` | 低/中/高 |
+| | 新增/修改/删除 | `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` | 低/中/高 |
 
 ## 4. 文档与设计依据
 
@@ -93,7 +93,7 @@ last_updated: 2026-07-14
 
 | 文档 | 是否更新 | 原因 |
 |------|----------|------|
-| `CODE_KNOWLEDGE_MAP.md` | 是/否 | |
+| `KNOWLEDGE/CODE_KNOWLEDGE_MAP.md` | 是/否 | |
 | Module Card | 是/否 | |
 | Context Pack | 是/否 | |
 | ADR | 是/否 | |

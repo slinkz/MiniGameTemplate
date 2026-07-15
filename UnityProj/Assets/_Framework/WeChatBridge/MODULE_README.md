@@ -44,4 +44,4 @@ wx.ShowRewardedAd(success => {
 - 业务层仅依赖 `IWeChatBridge`，不直接调用 jslib
 
 ## 详细文档
-- `Docs/Agent/WECHAT_INTEGRATION.md`
+- `Docs/Agent/PLATFORM/WECHAT_INTEGRATION.md`

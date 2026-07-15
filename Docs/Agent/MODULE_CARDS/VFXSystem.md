@@ -95,7 +95,7 @@ UnityProj/Assets/_Game/Configs/_Template/BulletType/
 ## 11. 修改前必读
 
 - `CONTEXT_PACKS/Danmaku_Rendering.md`
-- `SO_WORKFLOWS_04_VFX_RENDER.md`
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_04_VFX_RENDER.md`
 - `MODULE_CARDS/Rendering_RuntimeAtlas.md`
 - `MODULE_CARDS/DanmakuSystem.md`
 - `UnityProj/Assets/_Framework/VFXSystem/MODULE_README.md`

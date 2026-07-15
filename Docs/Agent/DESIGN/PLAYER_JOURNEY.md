@@ -4,7 +4,7 @@ scope: player-journey
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/SG_GAME_DESIGN.md, Docs/Agent/SG_UI_DESIGN.md, Docs/Agent/APPFLOW_TDD_INDEX.md
+related_docs: Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md, Docs/Agent/SHOOTER_GAME/SG_UI_DESIGN.md, Docs/Agent/SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md
 ---
 
 # Player Journey

@@ -4,7 +4,7 @@ scope: economy-and-progression
 status: proposed
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/SG_GAME_DESIGN.md, Docs/Agent/WECHAT_INTEGRATION.md, Docs/Agent/SG_TDD_06_CLOUD_SAVE.md
+related_docs: Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md, Docs/Agent/PLATFORM/WECHAT_INTEGRATION.md, Docs/Agent/SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE.md
 ---
 
 # Economy And Progression

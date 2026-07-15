@@ -484,7 +484,7 @@ var player = _players.Items[0];
 1. 导入 **WX-WASM-SDK-V2** (`com.qq.weixin.minigame`)
 2. 创建 `WeChatBridgeImpl : IWeChatBridge`，实现所有接口方法
 3. 在 `WeChatBridgeFactory` 中注册新实现
-4. 详细步骤参见 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)
+4. 详细步骤参见 [Agent/PLATFORM/WECHAT_INTEGRATION.md](../Agent/PLATFORM/WECHAT_INTEGRATION.md)
 
 ### Q: 编辑器菜单在哪？
 
@@ -508,5 +508,5 @@ var player = _players.Items[0];
 1. 先搜索 Console 中的错误消息关键词（如 `[Bootstrapper]`、`[AssetService]`、`[UIManager]`）——框架所有日志都有模块前缀
 2. 查看对应模块目录下的 `MODULE_README.md`
 3. 查看 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 与 [Agent 索引](../Agent/INDEX.md) 中的当前模块说明
-4. 如果是微信平台特有问题，查看 [Agent/WECHAT_INTEGRATION.md](../Agent/WECHAT_INTEGRATION.md)
+4. 如果是微信平台特有问题，查看 [Agent/PLATFORM/WECHAT_INTEGRATION.md](../Agent/PLATFORM/WECHAT_INTEGRATION.md)
 5. 如果你在和 AI 助手协作，项目内置了 AI Skills（仓库源目录 `skills/`，运行时目录按工具可能为 `.workbuddy/skills/` 或 `.codebuddy/skills/`）可自动化常见操作（如配置表管理），详见 [环境搭建 → AI Skills 章节](GETTING_STARTED.md#ai-skills-工具链)

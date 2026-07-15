@@ -7,33 +7,38 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
 ### 新增（P9 职业 Agent 知识工程）
 
 - **新增策划 Agent 知识入口**
-  - 新增 `Docs/Agent/DESIGNER_BOOTSTRAP.md`
+  - 新增 `Docs/Agent/ROLES/DESIGNER_BOOTSTRAP.md`
   - 新增 `Docs/Agent/DESIGN/`：设计支柱、玩家动线、关卡设计、平衡基准、技能卡、敌人卡、Buff/道具卡、经济成长入口
   - 新增 `skills/game-designer/`，用于玩法、关卡、敌人、技能、Buff、道具和数值设计任务
 - **新增 UI Agent 知识入口**
-  - 新增 `Docs/Agent/UI_AGENT_BOOTSTRAP.md`
+  - 新增 `Docs/Agent/ROLES/UI_AGENT_BOOTSTRAP.md`
   - 新增 `Docs/Agent/UI_DESIGN/`：UI 设计系统、组件库、屏幕卡、动效、文案、FairyGUI handoff 清单
   - 新增 `skills/ui-designer/`，用于界面、组件、状态矩阵、动效、文案和 FairyGUI 交付任务
 - **新增资产 Agent 知识入口**
-  - 新增 `Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md`
+  - 新增 `Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md`
   - 新增 `Docs/Agent/ASSET_PIPELINE/`：资产 Manifest、命名路径、sprite/VFX/UI icon/audio/font 管线、导入设置、预览验收、生成式资产 prompt
   - 新增 `skills/asset-pipeline/`，用于 sprite、VFX、UI 图标、音频、字体和背景等资产生产接入任务
 - **新增职业 Agent 扩展方案**
-  - 新增 `Docs/Agent/ROLE_AGENT_KNOWLEDGE_EXTENSION_PLAN.md`
+  - 新增 `Docs/Agent/KNOWLEDGE/ROLE_AGENT_KNOWLEDGE_EXTENSION_PLAN.md`
   - 明确策划/UI/资产 Agent 的职责、交付物、工作流、Evals、技能包和阶段路线
 
 ### 变更
+
+- **Docs/Agent 目录收敛**
+  - 顶层活跃 md 从 96 个收敛到 5 个入口文件：`INDEX.md`、`AGENT_BOOTSTRAP.md`、`ARCHITECTURE.md`、`DEBUG_PLAYBOOK.md`、`NEWGAME_GUIDE.md`
+  - 新增/使用分组目录：`ADR/`、`SYSTEMS/`、`SHOOTER_GAME/`、`KNOWLEDGE/`、`ROLES/`、`TOOLS/`、`PLATFORM/`
+  - 更新 README、INDEX、Context Pack、Module Card、技能文档和知识检查脚本中的路径引用
 
 - **Agent 上岗入口更新**
   - `AGENT_BOOTSTRAP.md` 增加职业 Agent 任务入口
   - `INDEX.md` 增加设计敌人/技能/Buff、关卡调优、UI 设计、资产生产等任务路由
   - Agent 活跃文档统计更新为 152 活跃 + 90 归档
 - **知识工程路线图更新**
-  - `KNOWLEDGE_ENGINEERING_ROADMAP.md` 新增 P9「职业 Agent 与资产管线扩展」，状态为初版完成
+  - `KNOWLEDGE/KNOWLEDGE_ENGINEERING_ROADMAP.md` 新增 P9「职业 Agent 与资产管线扩展」，状态为初版完成
 - **知识维护规则扩展**
-  - `KNOWLEDGE_MAINTENANCE.md` 和 `templates/DOC_UPDATE_CHECKLIST.md` 纳入 DESIGN、UI_DESIGN、ASSET_PIPELINE 变更检查
+  - `KNOWLEDGE/KNOWLEDGE_MAINTENANCE.md` 和 `templates/DOC_UPDATE_CHECKLIST.md` 纳入 DESIGN、UI_DESIGN、ASSET_PIPELINE 变更检查
 - **知识评估体系扩展**
-  - `KNOWLEDGE_EVALS.md` 新增 D/U/A 三组职业 Agent 评估任务，覆盖策划、UI 和资产生产闭环
+  - `KNOWLEDGE/KNOWLEDGE_EVALS.md` 新增 D/U/A 三组职业 Agent 评估任务，覆盖策划、UI 和资产生产闭环
 - **README 更新**
   - 重写项目入口说明，修正 Unity 版本、文档目录、Agent 文档数量和当前知识工程入口
   - 移除已归档 Guide 深文档的旧导航，改为当前操作型 Guide + Agent 知识工程路由
@@ -142,7 +147,7 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
   - D4：INDEX.md 三路由表索引架构
   - D5：编辑器工具使用手册（INDEX + 4 子文件）
   - D6：SO 配置流程指南（INDEX + 5 子文件）
-- **ARCHITECTURE.md 拆出 MCP_INTEGRATION.md**（498→327+96 行）
+- **ARCHITECTURE.md 拆出 TOOLS/MCP_INTEGRATION.md**（498→327+96 行）
 - **RuntimeAtlas TDD v2.0 + 验收报告**
 - **Entity-Component TDD v2.6**（6 轮 PK 评审全量回写）
 - **当前活文档总数：43**
@@ -327,7 +332,7 @@ MiniGameTemplate 的所有重要变更都会记录在本文件中。
   - `MainMenuPanel`：主菜单态支持 Banner 显示/隐藏；结算触发插屏；结算态“激励重开”可获得开局奖励分
   - `ClickCounterPanel`：结算触发插屏；重开改为激励广告驱动并支持奖励开局分
 - **文档同步**
-  - 更新 `Docs/Agent/WECHAT_INTEGRATION.md`
+  - 更新 `Docs/Agent/PLATFORM/WECHAT_INTEGRATION.md`
   - 更新 `Docs/Guide/FRAMEWORK_MODULES.md`
   - 更新 `Assets/_Framework/WeChatBridge/MODULE_README.md`
   - 更新 `Assets/_Example/README.md`

@@ -121,8 +121,8 @@ Archive/
 
 | 文件名 | 内容 | 预估行数 |
 |--------|------|---------|
-| `EC_TDD_INDEX.md` | 版本历史 + 目录 + 子文件链接 | ~60 |
-| `EC_TDD_01_OVERVIEW.md` | 架构概述、组件枚举、核心设计原则 | ~300 |
+| `SYSTEMS/EC_TDD/EC_TDD_INDEX.md` | 版本历史 + 目录 + 子文件链接 | ~60 |
+| `SYSTEMS/EC_TDD/EC_TDD_01_OVERVIEW.md` | 架构概述、组件枚举、核心设计原则 | ~300 |
 | `EC_TDD_02_ENTITY_POOL.md` | Entity + EntityPool + EntityManager | ~300 |
 | `EC_TDD_03_COMPONENTS_CORE.md` | State/Health/Movement/Collision 组件 | ~350 |
 | `EC_TDD_04_COMPONENTS_COMBAT.md` | Attack/AutoAim/Skill/Buff 组件 | ~350 |
@@ -138,9 +138,9 @@ Archive/
 
 | 文件名 | 内容 | 预估行数 |
 |--------|------|---------|
-| `ADR_INDEX.md` | 总览表 + 状态速查 | ~80 |
-| `ADR_01_FOUNDATION.md` | ADR-001~010（基础架构决策） | ~350 |
-| `ADR_02_DANMAKU.md` | ADR-011~020（弹幕系统决策） | ~350 |
+| `ADR/ADR_INDEX.md` | 总览表 + 状态速查 | ~80 |
+| `ADR/ADR_01_FOUNDATION.md` | ADR-001~010（基础架构决策） | ~350 |
+| `ADR/ADR_02_DANMAKU.md` | ADR-011~020（弹幕系统决策） | ~350 |
 | `ADR_03_ENTITY.md` | ADR-021~030（Entity 系统决策） | ~350 |
 | `ADR_04_RECENT.md` | ADR-031+（最新决策，持续追加） | ~200 |
 
@@ -152,9 +152,9 @@ Archive/
 
 | 文件名 | 内容 | 预估行数 |
 |--------|------|---------|
-| `ATLAS_TDD_INDEX.md` | 概述 + 目录 | ~60 |
-| `ATLAS_TDD_01_DESIGN.md` | 架构设计、API、内存管理 | ~350 |
-| `ATLAS_TDD_02_IMPL.md` | 实现细节、任务步骤 | ~250 |
+| `SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md` | 概述 + 目录 | ~60 |
+| `SYSTEMS/ATLAS_TDD/ATLAS_TDD_01_DESIGN.md` | 架构设计、API、内存管理 | ~350 |
+| `SYSTEMS/ATLAS_TDD/ATLAS_TDD_02_IMPL.md` | 实现细节、任务步骤 | ~250 |
 | `ATLAS_TDD_03_ACCEPTANCE.md` | 验收标准、测试结果 | ~200 |
 
 **拆分后删除**：`RUNTIME_ATLAS_SYSTEM_TDD.md`
@@ -165,9 +165,9 @@ Archive/
 
 | 文件名 | 内容 | 预估行数 |
 |--------|------|---------|
-| `CONV_INDEX.md` | 总览 + 分类索引 | ~60 |
-| `CONV_01_NAMING.md` | 命名规范（文件/类/变量/SO/Prefab） | ~300 |
-| `CONV_02_CODING.md` | 编码规范（GC/性能/架构层级） | ~250 |
+| `SYSTEMS/CONV/CONV_INDEX.md` | 总览 + 分类索引 | ~60 |
+| `SYSTEMS/CONV/CONV_01_NAMING.md` | 命名规范（文件/类/变量/SO/Prefab） | ~300 |
+| `SYSTEMS/CONV/CONV_02_CODING.md` | 编码规范（GC/性能/架构层级） | ~250 |
 | `CONV_03_WORKFLOW.md` | 工作流约定（Git/文档/变更包） | ~200 |
 
 **拆分后删除**：`CONVENTIONS.md`
@@ -178,9 +178,9 @@ Archive/
 
 | 文件名 | 内容 | 预估行数 |
 |--------|------|---------|
-| `OBB_TDD_INDEX.md` | 概述 + 目录 | ~50 |
-| `OBB_TDD_01_DESIGN.md` | 碰撞设计、数学模型 | ~250 |
-| `OBB_TDD_02_IMPL.md` | 实现 + 测试 + 验收 | ~220 |
+| `SYSTEMS/OBB_TDD/OBB_TDD_INDEX.md` | 概述 + 目录 | ~50 |
+| `SYSTEMS/OBB_TDD/OBB_TDD_01_DESIGN.md` | 碰撞设计、数学模型 | ~250 |
+| `SYSTEMS/OBB_TDD/OBB_TDD_02_IMPL.md` | 实现 + 测试 + 验收 | ~220 |
 
 **拆分后删除**：`OBB_OBSTACLE_TDD.md`
 
@@ -207,7 +207,7 @@ Archive/
 | 6 | CONV 子文件群 | 🟢 低 | 新约定（Template_ 前缀）是否收录 |
 | 7 | DEBUG_PLAYBOOK.md | 🟢 低 | Entity 调试条目是否需补充 |
 | 8 | NEWGAME_GUIDE.md | 🟢 低 | 与当前项目结构是否一致 |
-| 9 | WECHAT_INTEGRATION.md | 🟢 低 | WeChat SDK 版本是否最新 |
+| 9 | PLATFORM/WECHAT_INTEGRATION.md | 🟢 低 | WeChat SDK 版本是否最新 |
 
 ### 审计方法
 
@@ -399,11 +399,11 @@ EditorApplication.ExecuteMenuItem("Tools/...");
 17 个工具 × ~20 行/工具 + 7 Inspector × ~10 行 + 头尾 = ~420 行
 
 **→ 略超 400 行，拆分为**：
-- `EDITOR_TOOLS_MANUAL_INDEX.md`（~60 行，速查表 + 链接）
-- `EDITOR_TOOLS_MANUAL_01_BUILD.md`（构建/导出类工具，~150 行）
-- `EDITOR_TOOLS_MANUAL_02_VALIDATE.md`（校验/审计类工具，~120 行）
-- `EDITOR_TOOLS_MANUAL_03_ENTITY.md`（Entity 系统工具，~100 行）
-- `EDITOR_TOOLS_MANUAL_04_INSPECTORS.md`（自定义 Inspector + 自动处理器，~120 行）
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_INDEX.md`（~60 行，速查表 + 链接）
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_01_BUILD.md`（构建/导出类工具，~150 行）
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_02_VALIDATE.md`（校验/审计类工具，~120 行）
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_03_ENTITY.md`（Entity 系统工具，~100 行）
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_04_INSPECTORS.md`（自定义 Inspector + 自动处理器，~120 行）
 
 ---
 
@@ -454,12 +454,12 @@ EditorApplication.ExecuteMenuItem("Tools/...");
 33 个 SO × ~25 行 + 端到端工作流 × 4 = ~900 行
 
 **→ 需拆分为**：
-- `SO_WORKFLOWS_INDEX.md`（~80 行，类型总览表 + 端到端工作流 + 链接）
-- `SO_WORKFLOWS_01_CORE.md`（核心配置 3 个 SO，~100 行）
-- `SO_WORKFLOWS_02_ENTITY.md`（Entity 系统 6 个 SO，~200 行）
-- `SO_WORKFLOWS_03_DANMAKU.md`（弹幕系统 9 个 SO，~250 行）
-- `SO_WORKFLOWS_04_VFX_RENDER.md`（VFX + 渲染 3 个 SO，~100 行）
-- `SO_WORKFLOWS_05_INFRA.md`（基础设施 12 个 SO，~250 行）
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md`（~80 行，类型总览表 + 端到端工作流 + 链接）
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_01_CORE.md`（核心配置 3 个 SO，~100 行）
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_02_ENTITY.md`（Entity 系统 6 个 SO，~200 行）
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_03_DANMAKU.md`（弹幕系统 9 个 SO，~250 行）
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_04_VFX_RENDER.md`（VFX + 渲染 3 个 SO，~100 行）
+- `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_05_INFRA.md`（基础设施 12 个 SO，~250 行）
 
 ---
 
@@ -513,21 +513,21 @@ D1 归档 ──→ D2 拆分 ──→ D3 审计 ──→ D4 长效机制
 | 2 | `ARCHITECTURE.md` | 架构总览 | 378 |
 | 3 | `DEBUG_PLAYBOOK.md` | 调试手册 | 284 |
 | 4 | `NEWGAME_GUIDE.md` | 新游戏指南 | 179 |
-| 5 | `WECHAT_INTEGRATION.md` | 微信集成 | 250 |
+| 5 | `PLATFORM/WECHAT_INTEGRATION.md` | 微信集成 | 250 |
 | 6 | `SO_CATALOG.md` | SO 目录 | 175 |
 | 7 | `EDITOR_TOOLS.md` | 编辑器工具（D5 后被 MANUAL 取代） | 297 |
 | 8 | `RUNTIME_ATLAS_ACCEPTANCE_REPORT.md` | Atlas 验收报告 | 199 |
 | 9 | `DOC_CLEANUP_PLAN.md` | 本文件（执行完后归档） | ~此文件 |
 | — | **INDEX 文件群** | | |
-| 10 | `EC_TDD_INDEX.md` + 7 子文件 | Entity TDD | ≤400/个 |
-| 11 | `ADR_INDEX.md` + 4 子文件 | ADR 决策 | ≤400/个 |
-| 12 | `ATLAS_TDD_INDEX.md` + 3 子文件 | Atlas TDD | ≤400/个 |
-| 13 | `CONV_INDEX.md` + 3 子文件 | 约定规范 | ≤400/个 |
-| 14 | `OBB_TDD_INDEX.md` + 2 子文件 | OBB TDD | ≤400/个 |
+| 10 | `SYSTEMS/EC_TDD/EC_TDD_INDEX.md` + 7 子文件 | Entity TDD | ≤400/个 |
+| 11 | `ADR/ADR_INDEX.md` + 4 子文件 | ADR 决策 | ≤400/个 |
+| 12 | `SYSTEMS/ATLAS_TDD/ATLAS_TDD_INDEX.md` + 3 子文件 | Atlas TDD | ≤400/个 |
+| 13 | `SYSTEMS/CONV/CONV_INDEX.md` + 3 子文件 | 约定规范 | ≤400/个 |
+| 14 | `SYSTEMS/OBB_TDD/OBB_TDD_INDEX.md` + 2 子文件 | OBB TDD | ≤400/个 |
 | 15 | `PHASE3A_TDD_INDEX.md` + 5 子文件 | Phase3A TDD | ≤400/个 |
 | — | **D5/D6 新增** | | |
-| 16 | `EDITOR_TOOLS_MANUAL_INDEX.md` + 4 子文件 | 工具手册 | ≤400/个 |
-| 17 | `SO_WORKFLOWS_INDEX.md` + 5 子文件 | SO 配置流程 | ≤400/个 |
+| 16 | `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_INDEX.md` + 4 子文件 | 工具手册 | ≤400/个 |
+| 17 | `SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_INDEX.md` + 5 子文件 | SO 配置流程 | ≤400/个 |
 
 > **注**：D3 审计后 `EDITOR_TOOLS.md`（297 行）可能被 D5 的 MANUAL 系列取代后删除，届时再决定。
 

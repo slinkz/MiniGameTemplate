@@ -77,7 +77,7 @@ UnityProj/DataTables/
 
 - Editor 工具不能泄漏到运行时 asmdef 或 Player 构建。
 - 批量资产修改必须可审计：明确目标路径、日志、Undo 或可重建策略。
-- WebGL/微信构建工具必须遵守 `CONV_03_PLATFORM.md` 的平台约束。
+- WebGL/微信构建工具必须遵守 `SYSTEMS/CONV/CONV_03_PLATFORM.md` 的平台约束。
 - 自动导入规则要跳过 ThirdParty / FairyGUI 等外部资产路径，避免破坏供应商资源。
 
 ## 9. 热路径 / 平台约束
@@ -97,14 +97,14 @@ UnityProj/DataTables/
 
 ## 11. 修改前必读
 
-- `EDITOR_TOOLS_MANUAL_INDEX.md`
-- `EDITOR_TOOLS_MANUAL_01_BUILD.md`
-- `EDITOR_TOOLS_MANUAL_02_VALIDATE.md`
-- `EDITOR_TOOLS_MANUAL_03_ENTITY.md`
-- `EDITOR_TOOLS_MANUAL_04_INSPECTORS.md`
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_INDEX.md`
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_01_BUILD.md`
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_02_VALIDATE.md`
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_03_ENTITY.md`
+- `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_04_INSPECTORS.md`
 - `CONTEXT_PACKS/SO_Config_Workflow.md`
 - `CONTEXT_PACKS/WeChat_Build_Cloud.md`
-- `MCP_INTEGRATION.md`
+- `TOOLS/MCP_INTEGRATION.md`
 
 ## 12. 修改后必验
 

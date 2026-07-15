@@ -4,7 +4,7 @@ scope: asset-pipeline-index
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md, Docs/Agent/SG_GDD_04_WORKFLOW.md
+related_docs: Docs/Agent/ROLES/ART_ASSET_AGENT_BOOTSTRAP.md, Docs/Agent/SHOOTER_GAME/GDD/SG_GDD_04_WORKFLOW.md
 ---
 
 # Asset Pipeline Index

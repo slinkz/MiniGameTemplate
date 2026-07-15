@@ -1,6 +1,6 @@
 # 飞行弹幕射击 · 游戏设计文档
 
-> 归档说明：本文是父目录早期 ShooterGame 人类设计稿，原路径为 `C:\workspace\mini-game-template\ShooterGame-Design.md`。当前 ShooterGame 事实源以 `Docs/Agent/SG_GAME_DESIGN.md`、`Docs/Agent/SG_GDD_INDEX.md`、`Docs/Agent/SG_TDD_INDEX.md`、`Docs/Agent/SG_V2_TDD_INDEX.md` 和当前代码为准。
+> 归档说明：本文是父目录早期 ShooterGame 人类设计稿，原路径为 `C:\workspace\mini-game-template\ShooterGame-Design.md`。当前 ShooterGame 事实源以 `Docs/Agent/SHOOTER_GAME/SG_GAME_DESIGN.md`、`Docs/Agent/SHOOTER_GAME/GDD/SG_GDD_INDEX.md`、`Docs/Agent/SHOOTER_GAME/TDD/SG_TDD_INDEX.md`、`Docs/Agent/SHOOTER_GAME/V2_TDD/SG_V2_TDD_INDEX.md` 和当前代码为准。
 
 > **版本**：v2.1  
 > **日期**：2026-05-02  

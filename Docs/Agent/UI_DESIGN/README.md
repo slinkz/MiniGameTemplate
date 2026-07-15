@@ -4,12 +4,12 @@ scope: ui-design-index
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/UI_AGENT_BOOTSTRAP.md, Docs/Agent/SG_UI_DESIGN.md, Docs/Agent/CONTEXT_PACKS/FairyGUI_UI.md
+related_docs: Docs/Agent/ROLES/UI_AGENT_BOOTSTRAP.md, Docs/Agent/SHOOTER_GAME/SG_UI_DESIGN.md, Docs/Agent/CONTEXT_PACKS/FairyGUI_UI.md
 ---
 
 # UI Design Index
 
-> 定位：UI/UX Agent 的设计知识路由。`SG_UI_DESIGN.md` 是长文事实源，本目录提供可执行的设计系统、组件、屏幕和交接清单。
+> 定位：UI/UX Agent 的设计知识路由。`SHOOTER_GAME/SG_UI_DESIGN.md` 是长文事实源，本目录提供可执行的设计系统、组件、屏幕和交接清单。
 
 ## 路由
 

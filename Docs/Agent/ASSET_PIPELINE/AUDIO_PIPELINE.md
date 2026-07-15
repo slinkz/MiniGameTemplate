@@ -4,7 +4,7 @@ scope: audio-pipeline
 status: active
 created: 2026-07-15
 last_updated: 2026-07-15
-related_docs: Docs/Agent/DESIGN/PLAYER_JOURNEY.md, Docs/Agent/WECHAT_INTEGRATION.md
+related_docs: Docs/Agent/DESIGN/PLAYER_JOURNEY.md, Docs/Agent/PLATFORM/WECHAT_INTEGRATION.md
 ---
 
 # Audio Pipeline
