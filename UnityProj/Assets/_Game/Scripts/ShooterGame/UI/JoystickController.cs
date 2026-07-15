@@ -19,7 +19,7 @@ namespace Game.ShooterGame.UI
 
         // FairyGUI 元素
         private GGraph _touchArea;
-        private GComponent _joystickBase;
+        private SG_Battle.Joystick _joystickBase;
         private GObject _joystickStick;
 
         // 状态
@@ -41,11 +41,11 @@ namespace Game.ShooterGame.UI
             battleHUD.AddChildAt(_touchArea, 1); // 位于背景之上、HUD 按钮之下
 
             // 创建底座和摇杆头
-            _joystickBase = UIPackage.CreateObject(FGUI_PKG, FGUI_JOYSTICK).asCom;
+            _joystickBase = SG_Battle.Joystick.CreateInstance();
             _joystickBase.visible = false;
             battleHUD.AddChildAt(_joystickBase, 2); // 位于触摸层之上、HUD 按钮之下
 
-            _joystickStick = _joystickBase.GetChild("stick");
+            _joystickStick = _joystickBase.stick;
 
             // 绑定事件
             _touchArea.onTouchBegin.Add(OnTouchBegin);

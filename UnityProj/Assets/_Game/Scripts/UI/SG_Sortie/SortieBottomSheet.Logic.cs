@@ -130,18 +130,17 @@ namespace SG_Sortie
 
         private void RenderSkillItem(int index, GObject obj)
         {
-            var item = obj.asCom;
+            var item = obj as SkillCard;
             if (item == null || index >= _unlockedSkills.Count) return;
 
             var skill = _unlockedSkills[index];
             bool isSelected = _selectedSkills.Contains(skill);
 
             // 设置名称
-            var nameText = item.GetChild("text_name");
-            if (nameText != null) nameText.text = skill.DisplayName;
+            if (item.text_name != null) item.text_name.text = skill.DisplayName;
 
             // 选中态（controller "selected" page 0=未选 1=已选）
-            var ctrl = item.GetController("selected");
+            var ctrl = item.selected;
             if (ctrl != null) ctrl.selectedIndex = isSelected ? 1 : 0;
 
             // 绑定点击（利用 data 属性避免闭包）
@@ -178,11 +177,11 @@ namespace SG_Sortie
         private void RefreshSkillItemState(int index)
         {
             if (list_skills == null) return;
-            var item = list_skills.GetChildAt(index)?.asCom;
+            var item = list_skills.GetChildAt(index) as SkillCard;
             if (item == null) return;
 
             bool isSelected = _selectedSkills.Contains(_unlockedSkills[index]);
-            var ctrl = item.GetController("selected");
+            var ctrl = item.selected;
             if (ctrl != null) ctrl.selectedIndex = isSelected ? 1 : 0;
         }
 
@@ -215,16 +214,15 @@ namespace SG_Sortie
 
         private void RenderPassiveItem(int index, GObject obj)
         {
-            var item = obj.asCom;
+            var item = obj as PassiveCard;
             if (item == null || index >= _unlockedPassives.Count) return;
 
             var passive = _unlockedPassives[index];
             bool isSelected = _selectedPassives.Contains(passive);
 
-            var nameText = item.GetChild("text_name");
-            if (nameText != null) nameText.text = passive.DisplayName;
+            if (item.text_name != null) item.text_name.text = passive.DisplayName;
 
-            var ctrl = item.GetController("selected");
+            var ctrl = item.selected;
             if (ctrl != null) ctrl.selectedIndex = isSelected ? 1 : 0;
 
             item.data = index;
@@ -257,11 +255,11 @@ namespace SG_Sortie
         private void RefreshPassiveItemState(int index)
         {
             if (list_passives == null) return;
-            var item = list_passives.GetChildAt(index)?.asCom;
+            var item = list_passives.GetChildAt(index) as PassiveCard;
             if (item == null) return;
 
             bool isSelected = _selectedPassives.Contains(_unlockedPassives[index]);
-            var ctrl = item.GetController("selected");
+            var ctrl = item.selected;
             if (ctrl != null) ctrl.selectedIndex = isSelected ? 1 : 0;
         }
 

@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-15 | 文件总数：152（活跃） + 90（归档）
+> 最后更新：2026-07-15 | 文件总数：156（活跃） + 90（归档）
 
 ---
 
@@ -27,6 +27,7 @@
 | 查可执行 ADR 约束 | ADR/ADR_SCHEMA + ADR/ADR_INDEX | 编码前确认 ADR 的 AppliesTo、Constraints、Verification 与 Supersedes |
 | 实施退场生命周期改造 | SHOOTER_GAME/V2_TDD/SG_V2_TDD_07_LIFECYCLE | ADR-035 实施——SO 事件通道 + IBattleCleanup |
 | 配置微信广告/SDK/云开发/CDN | PLATFORM/WECHAT_INTEGRATION | 广告 ID + 云开发 + CDN 单一数据源 + Dev Server 环境切换 + 域名白名单 |
+| 更新微信小游戏 Unity 插件 | skills/wechat-minigame-plugin-update/SKILL.md + PLATFORM/WECHAT_INTEGRATION | 官方版本接口 + embedded package 更新 + DLL 锁处理 + MCP 编译验证 |
 | 理解/修改云存储系统 | SHOOTER_GAME/TDD/SG_TDD_06_CLOUD_SAVE | V4 云端权威+纯内存（登录+云同步+CloudSaveSystem+启动阻塞重试） |
 | 调试渲染不显示 | CONTEXT_PACKS/Danmaku_Rendering + DEBUG_PLAYBOOK + MODULE_CARDS/Rendering_RuntimeAtlas | active count、bucket、RT 像素、Game View、shaderKeywords |
 | 调试渲染/性能 | DEBUG_PLAYBOOK | Profiler + DC + Atlas 排查 |

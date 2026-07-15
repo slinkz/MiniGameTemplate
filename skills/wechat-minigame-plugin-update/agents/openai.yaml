@@ -1,0 +1,4 @@
+interface:
+  display_name: "WeChat Plugin Update"
+  short_description: "Update WeChat Unity minigame SDK safely."
+  default_prompt: "Use $wechat-minigame-plugin-update to update the WeChat Unity minigame SDK and verify Unity compilation."

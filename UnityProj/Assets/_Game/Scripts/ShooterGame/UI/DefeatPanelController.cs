@@ -21,7 +21,7 @@ namespace Game.ShooterGame.UI
 
         // ── FairyGUI ──
 
-        private GComponent _view;
+        private SG_Popup.DefeatPanel _view;
 
         // ── 回调 ──
 
@@ -53,19 +53,21 @@ namespace Game.ShooterGame.UI
         {
             if (_view != null) return;
 
-            _view = UIPackage.CreateObject("SG_Popup", "DefeatPanel").asCom;
+            _view = SG_Popup.DefeatPanel.CreateInstance();
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
             _view.sortingOrder = 100;
 
             // 按钮绑定
-            var btnRetry = _view.GetChild("btn_retry")?.asButton;
-            if (btnRetry != null)
-                btnRetry.onClick.Add(OnRetryClicked);
+            if (_view.btn_retry != null)
+                _view.btn_retry.onClick.Add(OnRetryClicked);
+            else
+                Debug.LogError("[DefeatPanelController] Required button missing: btn_retry");
 
-            var btnReturn = _view.GetChild("btn_return")?.asButton;
-            if (btnReturn != null)
-                btnReturn.onClick.Add(OnReturnClicked);
+            if (_view.btn_quit != null)
+                _view.btn_quit.onClick.Add(OnReturnClicked);
+            else
+                Debug.LogError("[DefeatPanelController] Required button missing: btn_quit");
         }
 
         private void PopulateData(BattleResultData result, SkillUnlockManager unlockManager)
@@ -121,7 +123,7 @@ namespace Game.ShooterGame.UI
             _view.TweenFade(1f, FADE_IN_DURATION).SetIgnoreEngineTimeScale(true);
 
             // 如果有红色背景蒙版，单独做渐变
-            var mask = _view.GetChild("mask_red")?.asGraph;
+            var mask = _view.mask;
             if (mask != null)
             {
                 mask.alpha = 0f;
@@ -151,6 +153,27 @@ namespace Game.ShooterGame.UI
 
         private void SetTextSafe(string childName, string text)
         {
+            if (childName == "text_title")
+            {
+                if (_view.text_defeat != null)
+                    _view.text_defeat.text = text;
+                return;
+            }
+
+            if (childName == "text_wave")
+            {
+                if (_view.text_progress != null)
+                    _view.text_progress.text = text;
+                return;
+            }
+
+            if (childName == "text_kills")
+            {
+                if (_view.text_encourage != null)
+                    _view.text_encourage.text = text;
+                return;
+            }
+
             var tf = _view.GetChild(childName)?.asTextField;
             if (tf != null)
                 tf.text = text;

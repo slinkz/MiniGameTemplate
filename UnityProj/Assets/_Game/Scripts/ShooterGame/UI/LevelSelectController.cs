@@ -16,8 +16,8 @@ namespace Game.ShooterGame.UI
         [SerializeField] private string _battleSceneName = "Battle";
 
         private SG_ProgressManager _progressManager;
-        private GComponent _view;
-        private GComponent[] _levelNodes = new GComponent[5];
+        private SG_LevelSelect.LevelSelectScreen _view;
+        private readonly SG_LevelSelect.LevelNode[] _levelNodes = new SG_LevelSelect.LevelNode[5];
 
         private enum LevelNodeState { Cleared, Available, Locked }
 
@@ -30,7 +30,7 @@ namespace Game.ShooterGame.UI
         {
             if (_view == null)
             {
-                _view = UIPackage.CreateObject("SG_LevelSelect", "LevelSelectScreen").asCom;
+                _view = SG_LevelSelect.LevelSelectScreen.CreateInstance();
                 GRoot.inst.AddChild(_view);
                 _view.MakeFullScreen();
                 SetupNodes();
@@ -51,11 +51,19 @@ namespace Game.ShooterGame.UI
 
         private void SetupNodes()
         {
-            for (int i = 0; i < 5; i++)
+            _levelNodes[0] = _view.node_1;
+            _levelNodes[1] = _view.node_2;
+            _levelNodes[2] = _view.node_3;
+            _levelNodes[3] = _view.node_4;
+            _levelNodes[4] = _view.node_5;
+
+            for (int i = 0; i < _levelNodes.Length; i++)
             {
-                _levelNodes[i] = _view.GetChild($"node_{i + 1}").asCom;
                 int capturedIndex = i + 1; // 1-based capture for closure
-                _levelNodes[i].onClick.Add(() => OnLevelClicked(capturedIndex));
+                if (_levelNodes[i] != null)
+                    _levelNodes[i].onClick.Add(() => OnLevelClicked(capturedIndex));
+                else
+                    Debug.LogError($"[LevelSelectController] Required level node missing: node_{capturedIndex}");
             }
         }
 
@@ -83,10 +91,10 @@ namespace Game.ShooterGame.UI
             }
         }
 
-        private void SetNodeState(GComponent node, LevelNodeState state)
+        private void SetNodeState(SG_LevelSelect.LevelNode node, LevelNodeState state)
         {
             // 通过 FairyGUI Controller 切换节点三态
-            var ctrl = node.GetController("state");
+            var ctrl = node?.state;
             if (ctrl != null)
             {
                 switch (state)
@@ -104,12 +112,12 @@ namespace Game.ShooterGame.UI
             }
         }
 
-        private void SetNodeStars(GComponent node, int stars)
+        private void SetNodeStars(SG_LevelSelect.LevelNode node, int stars)
         {
-            var starGroup = node.GetChild("star_group")?.asCom;
+            var starGroup = node?.star_group;
             if (starGroup == null) return;
 
-            var ctrl = starGroup.GetController("stars");
+            var ctrl = starGroup.stars;
             if (ctrl != null)
                 ctrl.selectedIndex = Mathf.Clamp(stars, 0, 3);
         }

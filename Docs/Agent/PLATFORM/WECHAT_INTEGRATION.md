@@ -1,7 +1,7 @@
 ---
 system: wechat
 scope: sdk-integration
-last_verified: 2026-05-24
+last_verified: 2026-07-15
 related_code: Assets/_Framework/WeChatBridge/**, Assets/_Framework/AssetSystem/WechatFileSystem/**, Assets/_Framework/Editor/LocalHttpServerWindow.cs
 ---
 
@@ -77,6 +77,17 @@ wx.ShowInterstitialAd();
 ### 5. 仍可按项目扩展真实能力
 
 当前 WebGL 实现优先补齐广告链路；社交/登录/排行榜/订阅消息等能力仍可按项目需求继续在 `WeChatBridgeWebGL` 中逐步替换为真实 JS 调用。
+
+## 微信小游戏 Unity 插件升级 SOP
+
+插件升级任务优先使用 `skills/wechat-minigame-plugin-update/SKILL.md`。关键规则：
+
+1. 每次升级先查询官方接口 `https://game.weixin.qq.com/cgi-bin/gamewxagwasmsplitwap/getunityplugininfo`，不要凭记忆判断最新版本。
+2. 当前项目使用 embedded package：`UnityProj/Packages/com.qq.weixin.minigame`。官方 UnityPackage 解出的 `Assets/WX-WASM-SDK-V2` 内容应映射同步到该 package。
+3. 不要把完整 SDK Runtime 同步成 `UnityProj/Assets/WX-WASM-SDK-V2/Runtime` 下的第二套 Runtime；否则会出现 `wx-perf.dll` / `WxWasmSDKRuntime.asmdef` 重复程序集错误。
+4. `UnityProj/Assets/WX-WASM-SDK-V2/Editor/MiniGameConfig.asset` 是项目配置资产，应保留项目当前值。
+5. Windows 下 Unity 可能锁住插件 DLL；必要时保存、关闭 Unity 后再同步。
+6. 完成后必须通过 Unity MCP 检查编译：`unity_editor_state` 确认 `isCompiling=false`，`unity_get_compilation_errors` 返回 `count: 0`。
 
 
 ## 接口功能清单

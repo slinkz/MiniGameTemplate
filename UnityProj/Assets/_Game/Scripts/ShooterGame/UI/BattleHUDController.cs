@@ -36,7 +36,7 @@ namespace Game.ShooterGame.UI
         [SerializeField] private Color _hpRed = new Color(0.9f, 0.2f, 0.2f);
 
         // FairyGUI 引用
-        private GComponent _view;
+        private SG_Battle.BattleHUD _view;
         public GComponent View => _view;
         private GProgressBar _hpBar;
         private GTextField _waveText;
@@ -71,12 +71,12 @@ namespace Game.ShooterGame.UI
         public void Show()
         {
             // 同步版本——仅在包已预加载时使用
-            _view = UIPackage.CreateObject(FGUI_PKG, FGUI_BATTLE_HUD).asCom;
+            _view = SG_Battle.BattleHUD.CreateInstance();
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
-            _hpBar = _view.GetChild("hp_bar").asProgress;
-            _waveText = _view.GetChild("text_wave").asTextField;
-            _hpPctText = _view.GetChild("text_hp_pct")?.asTextField;
+            _hpBar = _view.hp_bar;
+            _waveText = _view.text_wave;
+            _hpPctText = _view.text_hp_pct;
 
             InitSubComponents();
         }
@@ -92,6 +92,18 @@ namespace Game.ShooterGame.UI
         }
 
         public GComponent GetView() => _view;
+
+        public void BindPauseButton(EventCallback0 handler)
+        {
+            if (_view?.btn_pause != null && handler != null)
+                _view.btn_pause.onClick.Add(handler);
+        }
+
+        public void UnbindPauseButton(EventCallback0 handler)
+        {
+            if (_view?.btn_pause != null && handler != null)
+                _view.btn_pause.onClick.Remove(handler);
+        }
 
         public void ForceRefresh()
         {

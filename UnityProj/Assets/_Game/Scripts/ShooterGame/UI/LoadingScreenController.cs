@@ -11,15 +11,15 @@ namespace Game.ShooterGame.UI
     {
         [SerializeField] private float _minDisplayTime = 1f;
 
-        private GComponent _view;
+        private SG_Loading.LoadingScreen _view;
         private GProgressBar _progressBar;
 
         public void Show()
         {
-            _view = UIPackage.CreateObject("SG_Loading", "LoadingScreen").asCom;
+            _view = SG_Loading.LoadingScreen.CreateInstance();
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
-            _progressBar = _view.GetChild("bar").asProgress;
+            _progressBar = _view.bar;
         }
 
         public void SetProgress(float ratio)

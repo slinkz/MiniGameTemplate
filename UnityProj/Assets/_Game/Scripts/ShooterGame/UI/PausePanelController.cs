@@ -32,7 +32,7 @@ namespace Game.ShooterGame.UI
         [SerializeField] private IntVariable _currentWaveIndex;
         [SerializeField] private IntVariable _totalWaveCount;
 
-        private GComponent _view;
+        private SG_Popup.PausePanel _view;
         private Action _onResume;
         private Action _onRetry;
         private Action _onQuit;
@@ -81,12 +81,12 @@ namespace Game.ShooterGame.UI
 
         private void CreateView()
         {
-            _view = UIPackage.CreateObject(FGUI_PKG, FGUI_COMPONENT)?.asCom;
+            _view = SG_Popup.PausePanel.CreateInstance();
             if (_view == null)
             {
                 // Fallback：代码创建简易布局
-                _view = new GComponent();
-                _view.SetSize(GRoot.inst.width, GRoot.inst.height);
+                Debug.LogError("[PausePanelController] Required component missing: PausePanel");
+                return;
             }
 
             GRoot.inst.AddChild(_view);
@@ -94,20 +94,22 @@ namespace Game.ShooterGame.UI
             _view.MakeFullScreen();
 
             // 按钮绑定
-            var btnResume = _view.GetChild("btn_resume")?.asButton;
-            if (btnResume != null)
-                btnResume.onClick.Add(OnResumeClicked);
+            if (_view.btn_resume != null)
+                _view.btn_resume.onClick.Add(OnResumeClicked);
+            else
+                Debug.LogError("[PausePanelController] Required button missing: btn_resume");
 
             var btnRetry = _view.GetChild("btn_retry")?.asButton;
             if (btnRetry != null)
                 btnRetry.onClick.Add(OnRetryClicked);
 
-            var btnQuit = _view.GetChild("btn_quit")?.asButton;
-            if (btnQuit != null)
-                btnQuit.onClick.Add(OnQuitClicked);
+            if (_view.btn_quit != null)
+                _view.btn_quit.onClick.Add(OnQuitClicked);
+            else
+                Debug.LogError("[PausePanelController] Required button missing: btn_quit");
 
             // 蒙版点击=继续
-            var mask = _view.GetChild("mask");
+            var mask = _view.mask;
             if (mask != null)
                 mask.onClick.Add(OnResumeClicked);
         }

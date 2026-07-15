@@ -252,10 +252,8 @@ namespace Game.ShooterGame
             }
 
             // 清理暂停按钮事件绑定
-            var hudView = _hudController?.GetView();
-            var btnPause = hudView?.GetChild("btn_pause");
-            if (btnPause != null)
-                btnPause.onClick.Remove(OnPauseButtonClicked);
+            if (_hudControllerRef is UI.BattleHUDController destroyHudCtrl)
+                destroyHudCtrl.UnbindPauseButton(OnPauseButtonClicked);
 
             // TDD-07 C5: 退场清理走事件通道（仅异常退出时兜底）
             // 正常路径（PauseQuit/DefeatQuit/VictoryConfirm/Retry）已主动 Raise 并置位，
@@ -400,12 +398,8 @@ namespace Game.ShooterGame
             _joystickController?.Init(hudView);
 
             // 暂停按钮：从 HUD view 中获取并绑定（TDD_04 §4 + UI Design §2.3）
-            if (hudView != null)
-            {
-                var btnPause = hudView.GetChild("btn_pause");
-                if (btnPause != null)
-                    btnPause.onClick.Add(OnPauseButtonClicked);
-            }
+            if (_hudControllerRef is UI.BattleHUDController pauseHudCtrl)
+                pauseHudCtrl.BindPauseButton(OnPauseButtonClicked);
 
             _defeatPanel?.BindEvents(
                 () => StartCoroutine(HandleRetry()),

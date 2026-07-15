@@ -107,6 +107,7 @@ Agent 在使用本盘点时应遵循：
 | `game-designer` | `skills/game-designer/` | 玩法、关卡、敌人、技能、Buff、道具、经济和数值设计工作流 | P9 策划 Agent 入口 |
 | `ui-designer` | `skills/ui-designer/` | UI/UX、界面、组件、状态矩阵、动效、文案和 FairyGUI handoff 工作流 | P9 UI Agent 入口 |
 | `asset-pipeline` | `skills/asset-pipeline/` | sprite、VFX、UI icon、audio、font 等资产生产、接入和验收工作流 | P9 资产 Agent 入口 |
+| `wechat-minigame-plugin-update` | `skills/wechat-minigame-plugin-update/` | WeChat Mini Game Unity SDK update SOP: official version endpoint, embedded package sync, DLL lock handling, duplicate runtime recovery, MCP compile gate | Platform/build maintenance Skill |
 
 ## 7. Archive 与 changes 边界
 

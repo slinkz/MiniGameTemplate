@@ -71,7 +71,7 @@ namespace Game.ShooterGame.UI
             txt.name = "text";
             notif.AddChild(txt);
 
-            var textField = notif.GetChild("text") as GTextField;
+            var textField = txt;
             if (textField != null)
                 textField.text = $"获得：{pickupName}！";
 

@@ -27,10 +27,10 @@ namespace Game.ShooterGame.UI
         /// <summary>
         /// 初始化。传入 HUD View 用于创建红闪 overlay。
         /// </summary>
-        public void Init(GComponent hudView)
+        public void Init(SG_Battle.BattleHUD hudView)
         {
             // 创建红闪 overlay（仅边缘 100pt 区域，中央透明）
-            _redFlashOverlay = hudView.GetChild("red_flash") as GGraph;
+            _redFlashOverlay = hudView != null ? hudView.red_flash : null;
             if (_redFlashOverlay == null)
             {
                 _redFlashOverlay = new GGraph();

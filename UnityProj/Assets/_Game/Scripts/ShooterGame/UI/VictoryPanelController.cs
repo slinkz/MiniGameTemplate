@@ -29,7 +29,7 @@ namespace Game.ShooterGame.UI
 
         // ── FairyGUI 组件引用 ──
 
-        private GComponent _view;
+        private SG_Popup.VictoryPanel _view;
         private GList _barList;
 
         // ── 回调 ──
@@ -91,19 +91,16 @@ namespace Game.ShooterGame.UI
         {
             if (_view != null) return;
 
-            _view = UIPackage.CreateObject("SG_Popup", "VictoryPanel").asCom;
+            _view = SG_Popup.VictoryPanel.CreateInstance();
             GRoot.inst.AddChild(_view);
             _view.MakeFullScreen();
             _view.sortingOrder = 100;
 
             // 按钮绑定
-            var btnNext = _view.GetChild("btn_next")?.asButton;
-            if (btnNext != null)
-                btnNext.onClick.Add(OnNextLevelClicked);
-
-            var btnReturn = _view.GetChild("btn_return")?.asButton;
-            if (btnReturn != null)
-                btnReturn.onClick.Add(OnReturnClicked);
+            if (_view.btn_confirm != null)
+                _view.btn_confirm.onClick.Add(OnReturnClicked);
+            else
+                Debug.LogError("[VictoryPanelController] Required button missing: btn_confirm");
 
             _barList = _view.GetChild("list_contribution")?.asList;
         }
@@ -116,10 +113,10 @@ namespace Game.ShooterGame.UI
                 txtLevel.text = $"第 {result.LevelIndex + 1} 关";
 
             // 星级
-            var starGroup = _view.GetChild("star_group")?.asCom;
+            var starGroup = _view.star_group;
             if (starGroup != null)
             {
-                var ctrl = starGroup.GetController("stars");
+                var ctrl = starGroup.stars;
                 if (ctrl != null)
                     ctrl.selectedIndex = Mathf.Clamp(result.Stars, 0, 3);
             }
@@ -252,7 +249,7 @@ namespace Game.ShooterGame.UI
             _view.TweenMoveY(0f, PANEL_SLIDE_DURATION).SetEase(EaseType.CubicOut).SetIgnoreEngineTimeScale(true);
 
             // 星星弹出延迟（由 FairyGUI 动效控制器驱动，此处仅触发）
-            var starGroup = _view.GetChild("star_group")?.asCom;
+            var starGroup = _view.star_group;
             if (starGroup != null)
             {
                 var trans = starGroup.GetTransition("t_pop");
@@ -353,6 +350,20 @@ namespace Game.ShooterGame.UI
 
         private void SetTextSafe(string childName, string text)
         {
+            if (childName == "text_kills")
+            {
+                if (_view.text_kills != null)
+                    _view.text_kills.text = text;
+                return;
+            }
+
+            if (childName == "text_hp")
+            {
+                if (_view.text_hp != null)
+                    _view.text_hp.text = text;
+                return;
+            }
+
             var tf = _view.GetChild(childName)?.asTextField;
             if (tf != null)
                 tf.text = text;
