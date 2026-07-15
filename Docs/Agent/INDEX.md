@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-15 | 文件总数：156（活跃） + 90（归档）
+> 最后更新：2026-07-15 | 文件总数：160（活跃） + 90（归档）
 
 ---
 
@@ -20,7 +20,7 @@
 | 设计/调优关卡 | ROLES/DESIGNER_BOOTSTRAP + DESIGN/LEVEL_DESIGN_GUIDE + DESIGN/BALANCE_BASELINES | 关卡节奏、波次、难度锚点、调参顺序与验收 |
 | 新增子弹花样 | SYSTEMS/SO_WORKFLOWS/SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + SYSTEMS/OBB_TDD/OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
-| 修改 FairyGUI 面板 | CONTEXT_PACKS/FairyGUI_UI + MODULE_CARDS/UISystem_FairyGUI | UIProject 发布 + 导出代码 + `.Logic.cs` + AppFlow 验证 |
+| 修改 FairyGUI 面板 | CONTEXT_PACKS/FairyGUI_UI + MODULE_CARDS/UISystem_FairyGUI | UIProject 发布 + 导出代码 + `.Logic.cs` + 强类型绑定检查 + AppFlow 验证 |
 | 设计 UI 界面/组件 | ROLES/UI_AGENT_BOOTSTRAP + UI_DESIGN/README + skills/ui-designer/SKILL.md | UI token、状态矩阵、组件库、动效、文案与 FairyGUI handoff |
 | 生产/接入游戏资产 | ROLES/ART_ASSET_AGENT_BOOTSTRAP + ASSET_PIPELINE/README + skills/asset-pipeline/SKILL.md | Manifest、命名路径、导入设置、SO/FairyGUI/VFX/Audio 接入与验收 |
 | 新增 ADR 决策 | ADR/ADR_INDEX → ADR/ADR_05_RECENT / ADR/ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |

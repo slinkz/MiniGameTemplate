@@ -18,7 +18,7 @@ namespace Game.ShooterGame.UI
         private const float BREATH_HZ = 2f;
 
         private readonly GComponent _container;
-        private readonly GComponent[] _slots = new GComponent[MAX_PASSIVES];
+        private readonly SG_Battle.PassiveSlot[] _slots = new SG_Battle.PassiveSlot[MAX_PASSIVES];
         private readonly PassiveSlotState[] _lastStates = new PassiveSlotState[MAX_PASSIVES];
         private readonly float[] _breathTimers = new float[MAX_PASSIVES];
 
@@ -45,30 +45,7 @@ namespace Game.ShooterGame.UI
             {
                 float x = i * (SLOT_SIZE + GAP);
 
-                // 纯代码创建（40×40 方形圆角白模）
-                var slot = new GComponent();
-                slot.SetSize(SLOT_SIZE, SLOT_SIZE);
-
-                var bg = new GGraph();
-                bg.SetSize(SLOT_SIZE, SLOT_SIZE);
-                bg.DrawRect(SLOT_SIZE, SLOT_SIZE, 0, Color.clear, new Color(0.3f, 0.3f, 0.3f));
-                bg.name = "bg";
-                slot.AddChild(bg);
-
-                // cd_progress：充能进度条
-                var cdProgress = new GProgressBar();
-                cdProgress.SetSize(SLOT_SIZE, SLOT_SIZE);
-                cdProgress.name = "cd_progress";
-                cdProgress.value = 0;
-                slot.AddChild(cdProgress);
-
-                // active_progress：激活状态进度条
-                var activeProgress = new GProgressBar();
-                activeProgress.SetSize(SLOT_SIZE, SLOT_SIZE);
-                activeProgress.name = "active_progress";
-                activeProgress.value = 0;
-                slot.AddChild(activeProgress);
-
+                var slot = SG_Battle.PassiveSlot.CreateInstance();
                 slot.SetXY(x, 0);
                 _container.AddChild(slot);
                 _slots[i] = slot;
@@ -97,22 +74,21 @@ namespace Game.ShooterGame.UI
                     slot.alpha = 0.6f;
                     slot.grayed = true;
                     slot.SetScale(1f, 1f);
-                    // 充能进度（如果有 progress bar 子对象）
-                    var cdBar = slot.GetChild("cd_progress") as GProgressBar;
-                    if (cdBar != null) cdBar.value = progress * 100f;
+                    if (slot.state != null) slot.state.selectedPage = "cooldown";
+                    if (slot.cd_progress != null) slot.cd_progress.value = progress * 100f;
                     break;
                 case PassiveSlotState.Ready:
                     slot.alpha = 1f;
                     slot.grayed = false;
+                    if (slot.state != null) slot.state.selectedPage = "ready";
                     // 呼吸缩放由 Tick 驱动
                     break;
                 case PassiveSlotState.Active:
                     slot.alpha = 1f;
                     slot.grayed = false;
                     slot.SetScale(1f, 1f);
-                    // 环形进度消耗
-                    var activeBar = slot.GetChild("active_progress") as GProgressBar;
-                    if (activeBar != null) activeBar.value = progress * 100f;
+                    if (slot.state != null) slot.state.selectedPage = "active";
+                    if (slot.active_progress != null) slot.active_progress.value = progress * 100f;
                     break;
             }
         }
@@ -139,6 +115,9 @@ namespace Game.ShooterGame.UI
             slot.alpha = 0.3f;
             slot.grayed = true;
             slot.SetScale(1f, 1f);
+            if (slot.state != null) slot.state.selectedPage = "empty";
+            if (slot.cd_progress != null) slot.cd_progress.value = 0f;
+            if (slot.active_progress != null) slot.active_progress.value = 0f;
         }
 
         public void Dispose()

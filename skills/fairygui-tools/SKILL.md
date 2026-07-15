@@ -82,6 +82,14 @@ FairyGUI 重新导出 C# 后，手写的 Logic.cs **不会自动更新**。必�
 2. 在 Logic.cs 中搜索替换所有旧引用
 3. 编译验证零错误
 
+### R9：业务 Controller 必须使用强类型绑定
+
+- 新增或重写业务 Controller / `.Logic.cs` 时，必须通过 FairyGUI 生成类字段访问控件，例如 `_view.btn_confirm`、`btnConfirm`、`textTitle`。
+- 禁止在手写业务代码中新增 `GetChild("...")`、`GetController("...")`、`GetTransition("...")`、`as GButton`、`as GTextField` 等字符串绑定或手动转换。
+- UI 组件和代码必须成对出现：没有 FairyGUI XML / 生成类的 UI 功能，不允许先写 Controller 代码；已有代码找不到对应 UI 时按死代码删除，或先补 UI 后再写代码。
+- 动态列表 item、临时兼容旧包等确需例外时，必须先说明原因，并显式更新 `Tools/fairygui-typed-bindings-baseline.txt`；baseline 正常应保持为 0。
+- 生成/修改 C# 后必须执行仓库检查：`python Tools/check_fairygui_typed_bindings.py`。
+
 ---
 
 ## C# 架构强制规则（流程 D 速查）
@@ -120,6 +128,14 @@ FairyGUI 重新导出 C# 后，手写的 Logic.cs **不会自动更新**。必�
 ## 校验
 
 生成 XML 后必须执行：`python scripts/validate_fui.py <输出目录或文件>`
+
+生成或修改 Unity C# UI 代码后必须执行：
+
+```bash
+python Tools/check_fairygui_typed_bindings.py
+```
+
+该脚本允许 `Tools/fairygui-typed-bindings-baseline.txt` 中记录的显式例外，但 baseline 正常应为 0；任何新增字符串绑定都应优先通过补 UI 生成字段或删除死代码解决。
 
 ---
 

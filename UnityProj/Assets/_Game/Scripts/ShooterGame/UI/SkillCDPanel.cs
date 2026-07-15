@@ -29,8 +29,8 @@ namespace Game.ShooterGame.UI
         public const int SKILL_SLOT_START_INDEX = 1;
 
         private readonly GComponent _container;
-        private readonly GComponent[] _slots = new GComponent[MAX_SKILLS];
-        private readonly GProgressBar[] _cdBars = new GProgressBar[MAX_SKILLS];
+        private readonly SG_Battle.SkillSlot[] _slots = new SG_Battle.SkillSlot[MAX_SKILLS];
+        private readonly SG_Battle.SkillCDBar[] _cdBars = new SG_Battle.SkillCDBar[MAX_SKILLS];
         private readonly SkillSlotState[] _lastStates = new SkillSlotState[MAX_SKILLS];
 
         public enum SkillSlotState : byte
@@ -61,28 +61,11 @@ namespace Game.ShooterGame.UI
                 float x = col * (SLOT_SIZE + GAP);
                 float y = row * (SLOT_SIZE + GAP);
 
-                // 纯代码创建（48×48 圆形白模 + CD 进度条）
-                var slot = new GComponent();
-                slot.SetSize(SLOT_SIZE, SLOT_SIZE);
-
-                var bg = new GGraph();
-                bg.SetSize(SLOT_SIZE, SLOT_SIZE);
-                bg.DrawEllipse(SLOT_SIZE, SLOT_SIZE, Color.gray);
-                bg.name = "bg";
-                slot.AddChild(bg);
-
-                // cd_bar：用 GProgressBar 显示扇形遮罩效果
-                var cdBar = new GProgressBar();
-                cdBar.SetSize(SLOT_SIZE, SLOT_SIZE);
-                cdBar.name = "cd_bar";
-                cdBar.value = 0;
-                cdBar.visible = true;
-                slot.AddChild(cdBar);
-
+                var slot = SG_Battle.SkillSlot.CreateInstance();
                 slot.SetXY(x, y);
                 _container.AddChild(slot);
                 _slots[i] = slot;
-                _cdBars[i] = slot.GetChild("cd_bar") as GProgressBar;
+                _cdBars[i] = slot.cd_bar;
                 _lastStates[i] = SkillSlotState.Empty;
 
                 // 初始：灰色空圈
@@ -117,25 +100,26 @@ namespace Game.ShooterGame.UI
                 case SkillSlotState.Cooldown:
                     slot.alpha = 1f;
                     slot.grayed = false;
+                    if (slot.state != null) slot.state.selectedPage = "cooldown";
                     if (_cdBars[index] != null)
                         _cdBars[index].value = cdProgress * 100f;
                     break;
                 case SkillSlotState.Ready:
                     slot.alpha = 1f;
                     slot.grayed = false;
+                    if (slot.state != null) slot.state.selectedPage = "ready";
                     if (_cdBars[index] != null)
                         _cdBars[index].value = 100f;
                     break;
                 case SkillSlotState.Casting:
                     slot.alpha = 1f;
                     slot.grayed = false;
-                    // 金色边框可通过 controller 切换
-                    var ctrl = slot.GetController("state");
-                    if (ctrl != null) ctrl.selectedPage = "casting";
+                    if (slot.state != null) slot.state.selectedPage = "casting";
                     break;
                 case SkillSlotState.Release:
                     // 闪白 0.2s
                     slot.alpha = 1f;
+                    if (slot.state != null) slot.state.selectedPage = "release";
                     slot.TweenFade(0.5f, 0.1f).OnComplete(() => slot.TweenFade(1f, 0.1f));
                     break;
             }
@@ -146,6 +130,9 @@ namespace Game.ShooterGame.UI
             var slot = _slots[index];
             slot.alpha = 0.3f;
             slot.grayed = true;
+            if (slot.state != null) slot.state.selectedPage = "empty";
+            if (_cdBars[index] != null)
+                _cdBars[index].value = 0f;
         }
 
         public void Dispose()

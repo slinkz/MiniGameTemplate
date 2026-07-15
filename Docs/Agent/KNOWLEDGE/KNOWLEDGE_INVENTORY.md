@@ -99,7 +99,7 @@ Agent 在使用本盘点时应遵循：
 | `coding-standards` | `skills/coding-standards/` | 编码规则、平台规则、Bug 修复 SOP | P1 Bootstrap 必读规则候选 |
 | `code-review-checklist` | `skills/code-review-checklist/` | 审查清单、已知坑、维护指南 | P5/P6 审查与维护输入 |
 | `doc-maintenance` | `skills/doc-maintenance/` | 文档 frontmatter、索引模板、维护规则 | P6 的基础材料 |
-| `fairygui-tools` | `skills/fairygui-tools/` | FairyGUI XML、工作流、C# 模板、校验脚本 | P1 Context Pack 输入 |
+| `fairygui-tools` | `skills/fairygui-tools/` | FairyGUI XML、工作流、C# 强类型模板、XML 校验、业务绑定回流检查 | P1 Context Pack 输入 |
 | `luban-config` | `skills/luban-config/` | Luban 表结构、脚本、项目布局 | P1 SO/Config Context Pack 输入 |
 | `task-tracker` | `skills/task-tracker/` | 跨会话任务模板 | 可与本路线图协同 |
 | `tdd-pk-review` | `skills/tdd-pk-review/tdd-pk-review/` | PK 对抗评审模板与收敛标准 | P5 架构审查流程输入 |

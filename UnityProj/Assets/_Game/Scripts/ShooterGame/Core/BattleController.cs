@@ -137,7 +137,6 @@ namespace Game.ShooterGame
         private IDefeatPanelController _defeatPanel;
         private IJoystickController _joystickController;
         private bool _isHandlingVictory;
-        private SkillUnlockManager _skillUnlockManager;
 
         // ── 公共接口 ──
 
@@ -280,7 +279,6 @@ namespace Game.ShooterGame
         private async System.Threading.Tasks.Task InitBattleAsync()
         {
             // 0. 获取解锁管理器引用（失败面板火力提示用）
-            _skillUnlockManager = SG_Boot.UnlockManager;
 
             // 1. 解析本次战斗启动上下文
             ResolveBattleContext();
@@ -404,12 +402,9 @@ namespace Game.ShooterGame
             _defeatPanel?.BindEvents(
                 () => StartCoroutine(HandleRetry()),
                 () => StartCoroutine(HandleDefeatQuit()));
-            _victoryPanel?.BindEvents(
-                HandleNextLevelAsync,
-                HandleVictoryReturnToSelectAsync);
+            _victoryPanel?.BindEvents(HandleVictoryReturnToSelectAsync);
             _pausePanel?.BindEvents(
                 OnResumeFromPause,
-                () => StartCoroutine(HandleRetry()),
                 () => StartCoroutine(HandlePauseQuit()));
 
             // 10. PlayerInputBridge 初始化
@@ -628,7 +623,7 @@ namespace Game.ShooterGame
                     // V2 Sprint 2: 记录死亡次数 + 刷新计数器
                     _progressManager?.RecordDeath();
                     _progressManager?.FlushCounters();
-                    _defeatPanel?.Show(_lastBattleResult, _skillUnlockManager);
+                    _defeatPanel?.Show(_lastBattleResult);
                     break;
             }
         }
@@ -993,33 +988,6 @@ namespace Game.ShooterGame
 
             // 标记关卡通关（本地写入 + 触发 EnqueueUpload）
             _progressManager?.MarkLevelCleared(clearedLevelIndex);
-        }
-
-        /// <summary>
-        /// 胜利→下一关（V2 TDD_05）。
-        /// 存档已在 EnterState(Victory) 时完成。
-        /// 此处等云端同步 → 启动下一关。
-        /// </summary>
-        private async void HandleNextLevelAsync()
-        {
-            if (_isHandlingVictory) return;
-            _isHandlingVictory = true;
-
-            try
-            {
-                SetBattleTimePaused(false);
-                await PerformVictoryCleanupAndSync();
-
-                // 下一关：通过 Pop + Push 新 BattleLevelData 实现
-                // V2 简化：直接 Pop 回选关（下一关逻辑由选关界面处理）
-                AppFlowNavigator.Instance.Pop();
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogException(ex);
-                LoadingMaskService.Hide();
-                try { AppFlowNavigator.Instance.Pop(); } catch { }
-            }
         }
 
         /// <summary>

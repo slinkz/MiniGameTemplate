@@ -1,0 +1,9 @@
+# FairyGUI typed-binding baseline.
+#
+# This file records existing string-based FairyGUI bindings in
+# hand-written UI code. The checker allows these exact signatures
+# and fails when new signatures appear.
+#
+# Do not add new entries for generated Controller code. Prefer
+# generated FairyGUI fields such as _view.btn_confirm.
+

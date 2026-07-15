@@ -40,10 +40,8 @@ namespace Common
 
             if (progressBar != null)
             {
+                progressBar.titleType = ProgressTitleType.Percent;
                 progressBar.value = progress * 100;
-                var percentText = progressBar.GetChild("title")?.asTextField;
-                if (percentText != null)
-                    percentText.text = $"{Mathf.RoundToInt(progress * 100)}%";
             }
         }
 

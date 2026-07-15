@@ -120,6 +120,39 @@ namespace <PackageName>  // 必须与 FairyGUI 包名一致
 }
 ```
 
+## 强类型绑定要求
+
+手写业务代码只访问 FairyGUI 生成字段，不新增字符串查找。
+
+UI 和代码必须成对落地：新增面板、弹窗、列表 item、按钮或动效入口时，先在 `UIProject/assets/<Package>/` 创建 XML 并发布生成类，再写 Controller 逻辑。没有对应 XML / 生成字段的 Controller 逻辑视为死代码，应删除。
+
+允许：
+
+```csharp
+if (btnConfirm != null)
+    btnConfirm.onClick.Add(OnConfirmClicked);
+
+if (txtTitle != null)
+    txtTitle.text = d.Title;
+```
+
+禁止：
+
+```csharp
+GetChild("btn_confirm").asButton.onClick.Add(OnConfirmClicked);
+var title = GetChild("txt_title") as GTextField;
+var state = GetController("state");
+var intro = GetTransition("t_intro");
+```
+
+生成/修改 `XXXPanel.Logic.cs`、Controller 或手写 UI 代码后，必须在仓库根目录执行：
+
+```bash
+python Tools/check_fairygui_typed_bindings.py
+```
+
+如果脚本报出新增违规，优先回到 FairyGUI 导出设置补生成字段，或删除没有 UI 承载的代码；只有经过确认的兼容例外才更新 `Tools/fairygui-typed-bindings-baseline.txt`，且 baseline 正常应保持为 0。
+
 ## Logic.cs 模板（对话框）
 
 ```csharp

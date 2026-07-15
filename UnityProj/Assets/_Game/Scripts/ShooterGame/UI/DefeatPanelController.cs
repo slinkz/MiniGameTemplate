@@ -38,10 +38,10 @@ namespace Game.ShooterGame.UI
             _onQuit = onQuit;
         }
 
-        public void Show(BattleResultData result, SkillUnlockManager unlockManager)
+        public void Show(BattleResultData result)
         {
             EnsureView();
-            PopulateData(result, unlockManager);
+            PopulateData(result);
             StartShowAnimation();
         }
 
@@ -70,48 +70,11 @@ namespace Game.ShooterGame.UI
                 Debug.LogError("[DefeatPanelController] Required button missing: btn_quit");
         }
 
-        private void PopulateData(BattleResultData result, SkillUnlockManager unlockManager)
+        private void PopulateData(BattleResultData result)
         {
-            // 标题
             SetTextSafe("text_title", "基地沦陷");
-
-            // 波次进度
             SetTextSafe("text_wave", $"存活至 Wave {result.CurrentWave}/{result.TotalWaves}");
-
-            // 击杀
             SetTextSafe("text_kills", $"击杀：{result.TotalKills}");
-
-            // 火力提示
-            var hintGroup = _view.GetChild("group_hint")?.asCom;
-            if (unlockManager != null)
-            {
-                var nextUnlock = unlockManager.GetNextUnlockable();
-                if (nextUnlock != null && hintGroup != null)
-                {
-                    hintGroup.visible = true;
-                    var txtHint = hintGroup.GetChild("text_hint")?.asTextField;
-                    if (txtHint != null)
-                    {
-                        txtHint.text = $"通关第 {nextUnlock.ConditionParam} 关可解锁 [{nextUnlock.DisplayName}]";
-                    }
-
-                    // 技能图标（FairyGUI 包内图标）
-                    var iconLoader = hintGroup.GetChild("icon_skill")?.asLoader;
-                    if (iconLoader != null && !string.IsNullOrEmpty(nextUnlock.IconKey))
-                    {
-                        iconLoader.url = $"ui://SG_Popup/{nextUnlock.IconKey}";
-                    }
-                }
-                else if (hintGroup != null)
-                {
-                    // 全部已解锁，隐藏火力提示区域
-                    hintGroup.visible = false;
-                }
-            }
-            else if (hintGroup != null)
-            {
-                hintGroup.visible = false;
-            }
         }
 
         private void StartShowAnimation()
@@ -174,9 +137,7 @@ namespace Game.ShooterGame.UI
                 return;
             }
 
-            var tf = _view.GetChild(childName)?.asTextField;
-            if (tf != null)
-                tf.text = text;
+            Debug.LogWarning($"[DefeatPanelController] Unsupported text binding: {childName}");
         }
 
         private void OnDestroy()

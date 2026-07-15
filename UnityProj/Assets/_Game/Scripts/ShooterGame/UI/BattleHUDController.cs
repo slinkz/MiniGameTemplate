@@ -18,7 +18,6 @@ namespace Game.ShooterGame.UI
     /// - WaveIndicatorAnimator（波次弹跳动效）
     /// - PickupNotificationQueue（拾取通知条）
     /// - BattleVisualFeedbackSystem（红闪/反击/道具吸入）
-    /// - BattleStartSequence（战斗开始过渡动效）
     /// </summary>
     public class BattleHUDController : MonoBehaviour, IBattleHUDController
     {
@@ -55,7 +54,6 @@ namespace Game.ShooterGame.UI
         private WaveIndicatorAnimator _waveAnimator;
         private PickupNotificationQueue _notificationQueue;
         private BattleVisualFeedbackSystem _visualFeedback;
-        private BattleStartSequence _startSequence;
 
         // 外部注入的 Entity 引用（由 BattleController 设置）
         private Entity _playerEntity;
@@ -133,9 +131,6 @@ namespace Game.ShooterGame.UI
         /// <summary>获取波次动效器（BattleController 波次切换时调用）</summary>
         public WaveIndicatorAnimator WaveAnimator => _waveAnimator;
 
-        /// <summary>获取战斗开始序列</summary>
-        public BattleStartSequence StartSequence => _startSequence;
-
         private void InitSubComponents()
         {
             if (_view == null) return;
@@ -161,19 +156,6 @@ namespace Game.ShooterGame.UI
             _visualFeedback = new BattleVisualFeedbackSystem();
             _visualFeedback.Init(_view);
 
-            // 6. 战斗开始序列（延迟到 PlayStartSequence 时初始化）
-            _startSequence = new BattleStartSequence(_view);
-        }
-
-        /// <summary>
-        /// 播放战斗开始过渡动效（TDD_05 S5.4 PK-R3 UID-010）。
-        /// </summary>
-        public void PlayStartSequence(int waveNumber, System.Action onComplete)
-        {
-            if (_startSequence != null)
-                _startSequence.Play(waveNumber, onComplete);
-            else
-                onComplete?.Invoke();
         }
 
         // ── 生命周期 ──

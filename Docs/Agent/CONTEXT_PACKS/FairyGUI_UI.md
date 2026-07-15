@@ -24,6 +24,7 @@ last_updated: 2026-07-14
 | AppFlow | `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_INDEX.md`, `SYSTEMS/APPFLOW_TDD/APPFLOW_TDD_03_INTEGRATION.md`, `SHOOTER_GAME/SG_V2_DEVICE_ACCEPTANCE.md` 第六部分 |
 | FairyGUI Skill | `skills/fairygui-tools/SKILL.md` |
 | FairyGUI 坑 | `skills/fairygui-tools/references/pitfalls.md` |
+| 强类型绑定检查 | `Tools/check_fairygui_typed_bindings.py`, `Tools/fairygui-typed-bindings-baseline.txt` |
 | 编辑器工具 | `SYSTEMS/EDITOR_TOOLS_MANUAL/EDITOR_TOOLS_MANUAL_INDEX.md` |
 
 ## 关键代码入口
@@ -54,6 +55,8 @@ UI 通常通过 SO 变量和事件绑定数据，不直接追场景对象。
 - `IUIPanel` 是 UIManager 管理面板生命周期的核心接口。
 - `IPanelSuspendable` 用于面板 Suspend/Resume。
 - FairyGUI 自动生成文件不要手动改，业务逻辑写 `.Logic.cs`。
+- 手写 Controller / `.Logic.cs` 必须优先使用 FairyGUI 生成字段，禁止新增 `GetChild("...")` / `GetController("...")` 字符串绑定。
+- UI 组件和代码必须成对出现；没有 XML / 生成类的 UI Controller 逻辑按死代码处理，不允许代码先行。
 - 对话框/Loading 层级要遵守 `UIConstants` SortingOrder。
 
 ## 常见坑
@@ -68,6 +71,7 @@ UI 通常通过 SO 变量和事件绑定数据，不直接追场景对象。
 ## 修改后必验
 
 - FairyGUI 发布成功，Unity 中包可加载。
+- 执行 `python Tools/check_fairygui_typed_bindings.py`，确认没有 FairyGUI 字符串绑定；baseline 正常应为 0。
 - Binder 在 `GameStartupFlow` 或对应启动流程中注册。
 - 面板 Open/Refresh/Close 不重复绑定事件。
 - Push/Pop/Replace/返回流程符合 AppFlow。
