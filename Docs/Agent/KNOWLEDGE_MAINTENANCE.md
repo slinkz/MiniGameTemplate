@@ -32,6 +32,9 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/ARCHITECTURE_REVIEW_PROT
 | 改变架构决策或实现状态 | ADR 原文、`ADR_SCHEMA.md`, `ADR_INDEX.md` |
 | 改变 SO 类型、字段、创建流程或校验方式 | `SO_WORKFLOWS_*`, 相关 Skill |
 | 改变 FairyGUI 导出、Binder、UI 生命周期 | `CONTEXT_PACKS/FairyGUI_UI.md`, `MODULE_CARDS/UISystem_FairyGUI.md` |
+| 改变玩法规则、关卡节奏、敌人/技能/Buff/道具设计 | `DESIGNER_BOOTSTRAP.md`, `DESIGN/README.md`, 对应 `DESIGN/*.md` |
+| 改变 UI token、组件规格、界面状态、动效或文案 | `UI_AGENT_BOOTSTRAP.md`, `UI_DESIGN/README.md`, 对应 `UI_DESIGN/*.md` |
+| 新增或替换 sprite、VFX、UI icon、audio、font、background 等关键资产 | `ART_ASSET_AGENT_BOOTSTRAP.md`, `ASSET_PIPELINE/README.md`, `ASSET_PIPELINE/ASSET_MANIFEST.md` |
 | 改变渲染、RuntimeAtlas、VFX、飘字排查方式 | `DEBUG_PLAYBOOK.md`, Rendering/Danmaku 模块卡 |
 | 改变微信、云存储、CDN、广告、构建流程 | `WECHAT_INTEGRATION.md`, `Docs/Guide/BUILD_MINIGAME.md` |
 | 引入新坑、修复高价值 bug、完成架构迁移 | `Docs/Agent/changes/YYYY-MM-DD-topic/` |
@@ -62,6 +65,9 @@ related_docs: Docs/Agent/AGENT_BOOTSTRAP.md, Docs/Agent/ARCHITECTURE_REVIEW_PROT
 | `CODE_KNOWLEDGE_MAP.md` | 代码路径到文档/ADR/验证项映射 | 新增核心路径或验证项变化 |
 | ADR | 长期架构约束、实现状态、替代关系、验证要求 | 决策变化或代码事实确认 |
 | SO Workflow | 资产类型、字段、路径、创建与校验流程 | SO 类型/字段/Validator 变化 |
+| Design Docs | 设计支柱、关卡节奏、平衡基准、技能/敌人/Buff/道具卡片 | 玩法、数值、关卡或配置语义变化 |
+| UI Design Docs | UI token、组件库、屏幕卡、动效、文案、FairyGUI handoff | UI 设计系统或界面状态变化 |
+| Asset Pipeline Docs | Manifest、命名路径、资产类型 SOP、导入设置、验收规则 | 新增/替换关键资产或资产接入流程变化 |
 | Debug Playbook | 可复用排查路径、已知坑、验证命令 | 修复高价值 bug 或新增排查手法 |
 | Skill | 操作 SOP、工具脚本、专家经验 | Agent 需要自动触发或复用该流程 |
 | changes 包 | 重要变更的摘要、影响、验证、文档更新 | 架构迁移、高风险 bugfix、跨模块改动 |

@@ -218,3 +218,40 @@ P7 不是终点；它是后续持续校准知识工程的回路。
 |------|------|------|--------|------|
 | 2026-07-14 | 静态路由评估 | `KNOWLEDGE_EVALS_RUN_2026-07-14.md` | 8.5 | 通过 |
 | 2026-07-14 | 真实编码评估 | `KNOWLEDGE_EVALS_REALCODE_RUN_2026-07-14.md` | 8.0 | Editor-only 通过；PlayMode 待补 |
+
+## 9. 职业 Agent 扩展评估
+
+P9 新增策划/UI/资产 Agent 后，标准评估任务扩展为 D/U/A 三组。评分仍按 10 分制，但重点从“能否编码”转为“能否交付给程序员和资产链路闭环”。
+
+| 维度 | 分值 | 达标表现 |
+|------|------|----------|
+| 角色路由 | 2 | 读到 `DESIGNER_BOOTSTRAP` / `UI_AGENT_BOOTSTRAP` / `ART_ASSET_AGENT_BOOTSTRAP` 和专题文档 |
+| 产出完整 | 2 | 有 Design/UI/Asset Handoff，不停留在概念描述 |
+| 影响面 | 2 | 识别 SO、UI、VFX、Audio、代码、平台和验收影响 |
+| 一致性 | 2 | 遵守设计支柱、UI token、资产命名路径和 FairyGUI/VFX 规则 |
+| 验收闭环 | 2 | 给出 Editor / PlayMode / 截图录屏 / 真机等可执行验收 |
+
+### D 组：策划 Agent
+
+| ID | 任务 | 必读 | 期望 |
+|----|------|------|------|
+| D-01 | 设计一个新敌人 | `DESIGNER_BOOTSTRAP.md`, `DESIGN/ENEMY_DESIGN_CARDS.md` | 敌人职责、数值、资产、SO、关卡投放、验收剧本 |
+| D-02 | 调整第 3 关难度 | `DESIGN/LEVEL_DESIGN_GUIDE.md`, `DESIGN/BALANCE_BASELINES.md` | 前后对比、调参顺序、波次/HP/速度影响、回归验证 |
+| D-03 | 新增一个 Buff | `DESIGN/ITEM_BUFF_DESIGN_CARDS.md`, `SG_GDD_02_PASSIVE_BUFFS.md` | ID、叠加、UI、VFX、掉落、清理和配置验证 |
+| D-04 | 设计复活广告入口 | `DESIGN/ECONOMY_AND_PROGRESSION.md`, `WECHAT_INTEGRATION.md` | 失败动线、广告回调、云存储、UI 状态、平台风险 |
+
+### U 组：UI Agent
+
+| ID | 任务 | 必读 | 期望 |
+|----|------|------|------|
+| U-01 | 新增出战准备界面状态 | `UI_AGENT_BOOTSTRAP.md`, `UI_DESIGN/SCREEN_CARDS.md` | 状态矩阵、组件、数据绑定、FairyGUI handoff |
+| U-02 | 改 BattleHUD 技能槽 | `UI_DESIGN/UI_COMPONENT_LIBRARY.md`, `UI_DESIGN/UI_DESIGN_SYSTEM.md` | 安全区、触摸穿透、CD、被动/Buff 折叠和性能 |
+| U-03 | 做 UI 视觉一致性走查 | `UI_DESIGN/README.md` | token、组件、字体、按钮状态、动效和文案问题清单 |
+
+### A 组：资产 Agent
+
+| ID | 任务 | 必读 | 期望 |
+|----|------|------|------|
+| A-01 | 生产一套敌机 sprite | `ART_ASSET_AGENT_BOOTSTRAP.md`, `ASSET_PIPELINE/SPRITE_PIPELINE.md` | 尺寸、命名、导入、SO 接入、Manifest 和预览 |
+| A-02 | 生产一个 Buff VFX | `ASSET_PIPELINE/VFX_PIPELINE.md`, `skills/vfx-creator/SKILL.md` | VFXTypeSO、Registry、业务触发、视觉验收 |
+| A-03 | 接入一组音效 | `ASSET_PIPELINE/AUDIO_PIPELINE.md` | 格式、响度、触发点、循环、暂停/重试和真机验收 |

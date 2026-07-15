@@ -1,0 +1,7 @@
+interface:
+  display_name: "UI Designer"
+  short_description: "Design UI handoff specs."
+  default_prompt: "Use $ui-designer to produce a UI handoff with state matrix, FairyGUI components, and validation steps."
+
+policy:
+  allow_implicit_invocation: true

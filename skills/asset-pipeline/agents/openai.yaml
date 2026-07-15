@@ -1,0 +1,7 @@
+interface:
+  display_name: "Asset Pipeline"
+  short_description: "Wire and validate assets."
+  default_prompt: "Use $asset-pipeline to produce an asset handoff with paths, import settings, wiring, and acceptance checks."
+
+policy:
+  allow_implicit_invocation: true

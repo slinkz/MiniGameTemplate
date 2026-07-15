@@ -3,8 +3,8 @@ system: knowledge-engineering
 scope: agent-bootstrap
 status: active
 created: 2026-07-14
-last_updated: 2026-07-14
-related_docs: Docs/Agent/INDEX.md, Docs/Agent/KNOWLEDGE_INVENTORY.md, Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md
+last_updated: 2026-07-15
+related_docs: Docs/Agent/INDEX.md, Docs/Agent/KNOWLEDGE_INVENTORY.md, Docs/Agent/KNOWLEDGE_ENGINEERING_ROADMAP.md, Docs/Agent/DESIGNER_BOOTSTRAP.md, Docs/Agent/UI_AGENT_BOOTSTRAP.md, Docs/Agent/ART_ASSET_AGENT_BOOTSTRAP.md
 ---
 
 # Agent 上岗入口
@@ -58,6 +58,14 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 3. 查看任务看板当前阶段。
 4. 创建或更新本阶段产物。
 5. 更新路线图状态和下一步。
+
+职业 Agent 任务：
+
+| 任务类型 | 先读 |
+|----------|------|
+| 玩法、关卡、敌人、技能、Buff、道具、经济、数值 | `DESIGNER_BOOTSTRAP.md` |
+| UI/UX、界面、组件、状态矩阵、动效、文案、FairyGUI handoff | `UI_AGENT_BOOTSTRAP.md` |
+| sprite、VFX、UI icon、audio、font、background、资产接入 | `ART_ASSET_AGENT_BOOTSTRAP.md` |
 
 ## 5. 常用 Context Pack
 
@@ -150,4 +158,4 @@ Archive 只解释历史原因，不直接作为当前实现事实。
 
 ## 12. 下一步知识工程
 
-P0-P7 初版已完成。后续知识工程进入持续校准：用 `KNOWLEDGE_EVALS.md` 定期跑标准任务，按评估结果修正 Context Pack、Module Card、ADR_SCHEMA、CODE_KNOWLEDGE_MAP、架构审查和维护规则。
+P0-P9 初版已完成。后续知识工程进入持续校准：用 `KNOWLEDGE_EVALS.md` 定期跑标准任务和职业 Agent D/U/A 评估，按评估结果修正 Context Pack、Module Card、ADR_SCHEMA、CODE_KNOWLEDGE_MAP、职业入口、设计卡片、UI 设计系统和资产管线。

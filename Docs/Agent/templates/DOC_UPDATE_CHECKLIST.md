@@ -43,6 +43,9 @@ related_docs: Docs/Agent/KNOWLEDGE_MAINTENANCE.md, Docs/Agent/changes/README.md
 | ADR 原文 | 是/否 | 是/否 | |
 | `ADR_SCHEMA.md` | 是/否 | 是/否 | |
 | `SO_WORKFLOWS_*` | 是/否 | 是/否 | |
+| `DESIGN/*.md` | 是/否 | 是/否 | 玩法、关卡、敌人、技能、Buff、道具、经济变更 |
+| `UI_DESIGN/*.md` | 是/否 | 是/否 | UI token、组件、界面、动效、文案变更 |
+| `ASSET_PIPELINE/*.md` | 是/否 | 是/否 | 关键资产、Manifest、命名、导入、验收变更 |
 | `DEBUG_PLAYBOOK.md` | 是/否 | 是/否 | |
 | `WECHAT_INTEGRATION.md` / Guide | 是/否 | 是/否 | |
 | `skills/` | 是/否 | 是/否 | |

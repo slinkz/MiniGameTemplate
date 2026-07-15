@@ -2,7 +2,7 @@
 
 > **定位**：Agent 每次会话的 GPS。通过路由表一步定位目标文件，无需 grep 全目录。
 >
-> 最后更新：2026-07-14 | 文件总数：118（活跃） + 90（归档）
+> 最后更新：2026-07-15 | 文件总数：152（活跃） + 90（归档）
 
 ---
 
@@ -11,12 +11,18 @@
 | 我要做什么 | 读什么文件 | 备注 |
 |-----------|-----------|------|
 | 新建一种敌人 | SO_WORKFLOWS_02_ENTITY §EntityConfigSO | 字段 + 完整创建流程 |
+| 设计一种新敌人 | DESIGNER_BOOTSTRAP + DESIGN/ENEMY_DESIGN_CARDS | 敌人职责、数值、资产、SO、关卡投放与验收剧本 |
 | 新建一个技能 | SO_WORKFLOWS_02_ENTITY §SkillConfigSO | 技能 SO + Effect 链路 |
+| 设计一个新技能 | DESIGNER_BOOTSTRAP + DESIGN/SKILL_DESIGN_CARDS | 目标体验、CD/伤害/表现、UI/VFX/SFX、配置入口与验收 |
 | 新建一个 Buff | SO_WORKFLOWS_02_ENTITY §BuffConfigSO | Buff SO + Duration/叠加 |
+| 设计 Buff/DOT/道具 | DESIGNER_BOOTSTRAP + DESIGN/ITEM_BUFF_DESIGN_CARDS | ID 范围、叠加/刷新、UI、VFX、掉落与验收 |
 | 新增关卡 | CONTEXT_PACKS/ShooterGame_Battle + CONTEXT_PACKS/SO_Config_Workflow + CODE_KNOWLEDGE_MAP §常见任务反查 | Level/Wave/Progress 配置 + 解锁/保存/返回验证 |
+| 设计/调优关卡 | DESIGNER_BOOTSTRAP + DESIGN/LEVEL_DESIGN_GUIDE + DESIGN/BALANCE_BASELINES | 关卡节奏、波次、难度锚点、调参顺序与验收 |
 | 新增子弹花样 | SO_WORKFLOWS_03_DANMAKU §BulletType/Pattern | 弹幕 SO + Atlas 纹理 |
 | 修改碰撞逻辑 | EC_TDD_04_SYSTEMS §Collision + OBB_TDD_INDEX | 碰撞组件 + OBB 数学 |
 | 修改 FairyGUI 面板 | CONTEXT_PACKS/FairyGUI_UI + MODULE_CARDS/UISystem_FairyGUI | UIProject 发布 + 导出代码 + `.Logic.cs` + AppFlow 验证 |
+| 设计 UI 界面/组件 | UI_AGENT_BOOTSTRAP + UI_DESIGN/README + skills/ui-designer/SKILL.md | UI token、状态矩阵、组件库、动效、文案与 FairyGUI handoff |
+| 生产/接入游戏资产 | ART_ASSET_AGENT_BOOTSTRAP + ASSET_PIPELINE/README + skills/asset-pipeline/SKILL.md | Manifest、命名路径、导入设置、SO/FairyGUI/VFX/Audio 接入与验收 |
 | 新增 ADR 决策 | ADR_INDEX → ADR_05_RECENT / ADR_06_LIFECYCLE | 追加到对应 ADR 子文件 |
 | 查可执行 ADR 约束 | ADR_SCHEMA + ADR_INDEX | 编码前确认 ADR 的 AppliesTo、Constraints、Verification 与 Supersedes |
 | 实施退场生命周期改造 | SG_V2_TDD_07_LIFECYCLE | ADR-035 实施——SO 事件通道 + IBattleCleanup |
@@ -35,6 +41,7 @@
 | 操作 Unity Editor (MCP) | MCP_INTEGRATION | 编译验证/截图/执行代码/Play Mode |
 | AI 代码检索（知识图谱） | CODEGRAPH_INTEGRATION | CodeGraph MCP 安装/配置/工具优先级 |
 | 推进项目知识工程 | KNOWLEDGE_ENGINEERING_ROADMAP | 跨会话主任务：Agent 上岗入口、Context Pack、模块卡、ADR 可执行化、代码映射、架构审查、维护与评估 |
+| 扩展策划/UI/资产职业 Agent 知识工程 | ROLE_AGENT_KNOWLEDGE_EXTENSION_PLAN | 评估当前缺口，并规划 DESIGN / UI_DESIGN / ASSET_PIPELINE、角色上岗入口、资产生产 SOP 与非代码 Evals |
 | Agent 新会话上岗 | AGENT_BOOTSTRAP | 新会话事实源优先级、启动流程、Context Pack 路由、核心禁止事项与验证入口 |
 | 查看模块知识卡 | MODULE_CARDS/README | 核心模块职责、边界、入口、数据流、关键 ADR、常见坑与修改后必验 |
 | 查代码知识映射 | CODE_KNOWLEDGE_MAP | 代码路径到 Module Card、Context Pack、TDD、ADR 与验证项的闭环映射 |
@@ -239,6 +246,10 @@
 | — | NEWGAME_GUIDE | — | 新项目指南 |
 | — | WECHAT_INTEGRATION | — | 微信平台集成 |
 | — | FLOATING_TEXT_TDD | — | 飘字系统统一重构 TDD（ADR-036） |
+| ROLE_AGENT_KNOWLEDGE_EXTENSION_PLAN | — | — | 策划/UI/美术资产职业 Agent 知识工程扩展方案（P9 提案） |
+| DESIGN | DESIGN/README | 9 | 策划 Agent 设计卡片：支柱、玩家动线、关卡、平衡、技能、敌人、Buff/道具、经济 |
+| UI_DESIGN | UI_DESIGN/README | 7 | UI Agent 设计系统：token、组件库、屏幕卡、动效、文案、FairyGUI 交接 |
+| ASSET_PIPELINE | ASSET_PIPELINE/README | 10 | 资产 Agent 管线：Manifest、命名、sprite、VFX、UI icon、audio、font、导入与验收 |
 | SG | SG_GAME_DESIGN | — | ShooterGame 游戏设计文档 v2.1 |
 | SG | SG_UI_DESIGN | — | ShooterGame UI/交互设计文档 v1.0 |
 | SG_GDD | SG_GDD_INDEX | 6 | ShooterGame V2 技能系统 GDD v2.4 |

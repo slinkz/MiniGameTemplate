@@ -5,7 +5,7 @@ status: active
 created: 2026-07-14
 last_updated: 2026-07-14
 owner: Agent + 天命人
-related_docs: Docs/Agent/INDEX.md, Docs/Agent/ARCHITECTURE.md, Docs/Agent/ADR_INDEX.md, Docs/Agent/CONV_INDEX.md, Docs/Agent/CODEGRAPH_INTEGRATION.md
+related_docs: Docs/Agent/INDEX.md, Docs/Agent/ARCHITECTURE.md, Docs/Agent/ADR_INDEX.md, Docs/Agent/CONV_INDEX.md, Docs/Agent/CODEGRAPH_INTEGRATION.md, Docs/Agent/ROLE_AGENT_KNOWLEDGE_EXTENSION_PLAN.md
 ---
 
 # MiniGameTemplate 知识工程路线图
@@ -368,6 +368,7 @@ Docs/Agent/changes/YYYY-MM-DD-topic/
 | P6 知识维护机制 | 初版完成 | 已建立知识维护协议、更新清单与 changes 规范 | P7 创建 `KNOWLEDGE_EVALS.md` |
 | P7 评估体系 | 初版完成 | 已建立 10 个标准评估任务与评分规则 | 后续按评估结果持续校准知识资产 |
 | P8 文档收敛与归档 | P8.2 完成 | 已归档旧微信手机导出指南、Danmaku Demo 决策、AppFlow 独立验收、S5.4~S5.6 独立验收、Guide Danmaku 系列、Framework Modules 系列 | 后续仅保留操作型 Guide；架构/模块长文按需由 Agent 基于当前知识工程生成 |
+| P9 职业 Agent 与资产管线扩展 | 初版完成 | 已新增角色上岗入口、`DESIGN/`、`UI_DESIGN/`、`ASSET_PIPELINE/`、3 个职业 Skill 与非代码 Evals | 后续通过 D/U/A Evals 反向校准细节，并按真实资产任务补自动化检查 |
 
 ## 7. 推荐推进顺序
 
@@ -442,3 +443,4 @@ P0-P8.2 初版已完成。后续进入持续校准：
 3. 按评估结果反向修正 Context Pack、Module Card、Code Knowledge Map、ADR_SCHEMA、架构审查和维护规则。
 4. 当项目新增高频任务或核心模块时，补充新的评估任务。
 5. 继续控制文档膨胀：Guide 只保留操作型入口；架构、模块、Danmaku、渲染等长期事实统一沉淀到 Agent 知识工程。
+6. 按 `ROLE_AGENT_KNOWLEDGE_EXTENSION_PLAN.md` 推进 P9：先补职业 Agent 上岗入口，再补 DESIGN / UI_DESIGN / ASSET_PIPELINE 与非代码 Evals。

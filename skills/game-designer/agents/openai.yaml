@@ -1,0 +1,7 @@
+interface:
+  display_name: "Game Designer"
+  short_description: "Plan gameplay and balance."
+  default_prompt: "Use $game-designer to produce a design brief with config, UI, asset, and validation impacts."
+
+policy:
+  allow_implicit_invocation: true
