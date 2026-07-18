@@ -17,7 +17,6 @@ namespace MainMenu
         public GTextField txtDemoSection;
         public MenuIconButton btnClickGame;
         public MenuIconButton btnDanmakuDemo;
-        public MenuIconButton btnVFXDemo;
         public MenuIconButton btnSettings;
         public MenuIconButton btnRanking;
         public MenuIconButton btnShare;
@@ -42,7 +41,6 @@ namespace MainMenu
             txtDemoSection = (GTextField)GetChild("txtDemoSection");
             btnClickGame = (MenuIconButton)GetChild("btnClickGame");
             btnDanmakuDemo = (MenuIconButton)GetChild("btnDanmakuDemo");
-            btnVFXDemo = (MenuIconButton)GetChild("btnVFXDemo");
             btnSettings = (MenuIconButton)GetChild("btnSettings");
             btnRanking = (MenuIconButton)GetChild("btnRanking");
             btnShare = (MenuIconButton)GetChild("btnShare");
