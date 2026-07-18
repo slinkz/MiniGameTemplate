@@ -170,8 +170,6 @@ Assets/_Framework/EntitySystem/
 │       ├── EntitySpawnWaveSO.cs     — 刷怪波次配置 SO
 │       └── (Phase 2: Luban 生成配置)
 │
-├── MODULE_README.md               — v2.6: 含 Quick Start 段落（WF-009）
-│
 Assets/_Framework/Editor/Entity/       ← Editor 工具（归入 MiniGameFramework.Editor.asmdef）
 ├── EntityGizmoDrawer.cs               — v2.5: 静态 [DrawGizmo] 碰撞圈/HP Gizmo
 ├── EntityConfigSOEditor.cs            — v2.5: CustomEditor 条件显示 + HelpBox 校验
@@ -181,15 +179,10 @@ Assets/_Framework/Editor/Entity/       ← Editor 工具（归入 MiniGameFramew
 └── EntityDebugWindow.cs               — v2.5: Play Mode 概览面板
 ```
 
-**MODULE_README.md 内容定义（v2.6 新增，WF-009）**：
-- **系统概述**（1 段）：Entity-Component 框架定位、核心功能一句话说明
-- **Quick Start**（5 步）：
-  1. 场景中加 EntitySystemBootstrap 组件
-  2. 复制 `Assets/_Game/Configs/_Template/Template_Slime` SO → 改名
-  3. 修改参数（HP/速度/弹幕/AI 行为等）
-  4. 创建/引用 EntitySpawnWaveSO，在 SpawnPoint 中配置波次
-  5. Play → 看效果
-- **文件清单**：目录下各文件职责一句话说明
+**当前知识入口（替代早期模块 README）**：
+- `Docs/Agent/MODULE_CARDS/EntitySystem.md`：职责边界、关键文件、修改前必读与修改后必验
+- `Docs/Agent/CONTEXT_PACKS/EntitySystem.md`：任务上下文与相关系统链路
+- `Docs/Agent/INDEX.md`：按文件路径和问题类型定位当前说明
 
 **asmdef 隔离方案（v2.5 新增，ET-004）**：
 - **Runtime 代码**（`_Framework/EntitySystem/Scripts/`）归入 `MiniGameFramework.Runtime.asmdef`（已有，无需新建 asmdef）
@@ -197,4 +190,3 @@ Assets/_Framework/Editor/Entity/       ← Editor 工具（归入 MiniGameFramew
 - **不新建独立 asmdef**——项目规模尚小，复用框架级 asmdef 即可。Phase 2+ 如需拆分模块再评估
 - 所有 Editor 代码必须包裹 `#if UNITY_EDITOR` 或放在 Editor asmdef 管辖目录
 - EntitySystem/Scripts/ 下**不再有 Editor/ 子目录**——Editor 代码统一收归 `_Framework/Editor/Entity/`
-

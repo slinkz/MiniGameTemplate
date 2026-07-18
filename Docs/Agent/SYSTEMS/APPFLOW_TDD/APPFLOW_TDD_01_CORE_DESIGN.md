@@ -76,8 +76,7 @@ Assets/_Framework/Navigation/
 │   ├── FlowNodeSO.cs           # 导航节点定义
 │   ├── AppFlowNavigator.cs     # 栈式导航器 Singleton
 │   └── IFlowHandler.cs         # 可选：节点进入/退出钩子
-├── Navigation.asmdef           # Assembly Definition
-└── MODULE_README.md
+└── Navigation.asmdef           # Assembly Definition
 ```
 
 ---

@@ -17,7 +17,6 @@ namespace MiniGameTemplate.EditorTools
     /// - Ignores matches inside comments (// and /* */)
     /// - Checks for Resources.Load outside of fallback patterns
     /// - Checks for excessive Update() methods
-    /// - Verifies MODULE_README.md presence in _Framework/ and _Game/ subdirectories
     /// - Provides structured summary output
     ///
     /// Run via: Tools → MiniGame Template → Validate → Architecture Check
@@ -135,9 +134,6 @@ namespace MiniGameTemplate.EditorTools
 
             }
 
-            // Check for MODULE_README.md presence
-            CheckModuleReadmes(ref warningCount);
-
             // Check optional Spine integration consistency
             CheckSpineSetupConsistency(ref warningCount);
 
@@ -152,30 +148,6 @@ namespace MiniGameTemplate.EditorTools
                 Debug.Log($"[Architecture] Validation complete: {errorCount} error(s), {warningCount} warning(s) in {filesScanned} files.");
             }
             Debug.Log("──────────────────────────────────────────────");
-        }
-
-        private static void CheckModuleReadmes(ref int warningCount)
-        {
-            var moduleDirs = new[] { "Assets/_Framework", "Assets/_Game" };
-            foreach (var root in moduleDirs)
-            {
-                if (!Directory.Exists(root)) continue;
-
-                var subdirs = Directory.GetDirectories(root);
-                foreach (var dir in subdirs)
-                {
-                    var dirName = Path.GetFileName(dir);
-                    // Skip special directories
-                    if (dirName == "Editor" || dirName == "Scripts" || dirName.StartsWith(".")) continue;
-
-                    var readmePath = Path.Combine(dir, "MODULE_README.md");
-                    if (!File.Exists(readmePath))
-                    {
-                        Debug.LogWarning($"[Architecture] WARNING: Missing MODULE_README.md in {dir}/");
-                        warningCount++;
-                    }
-                }
-            }
         }
 
         private static void CheckSpineSetupConsistency(ref int warningCount)

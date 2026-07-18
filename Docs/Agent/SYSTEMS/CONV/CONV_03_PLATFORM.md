@@ -292,7 +292,7 @@ Agent 在完成代码编写后，提交前必须自检以下项目：
 - [ ] **FairyGUI 分层**: FairyGUI 导出的 `*.cs` 不手动修改；业务逻辑在 `*.Logic.cs` 中实现 `IUIPanel`；`OnRefresh` 调 `ApplyData` 不调 `OnOpen`
 
 - [ ] **依赖方向**: 不违反层级依赖图
-- [ ] **MODULE_README**: 新模块目录包含 `MODULE_README.md`
+- [ ] **知识入口**: 新核心模块需要补充或更新对应 `MODULE_CARDS/`、`CONTEXT_PACKS/` 或 `INDEX.md`
 - [ ] **Review Skill**: 任何代码改动后必须执行 `code-review-checklist` Skill，修完 bug 后再复查一次
 - [ ] **Unity CLI 编译验证**: 代码评审与 bug 修复完成后，必须验证编译通过。**优先使用 MCP 工具** `unity_get_compilation_errors`（见 ARCHITECTURE.md 的 MCP 集成章节），MCP 不可用时回退到 Unity 编辑器命令行 batchmode 编译检查
 - [ ] **可视化验证样本检查**: 涉及多类型渲染/换色/皮肤切换时，先确认验证样本在肉眼上可明显区分（颜色、尺寸、轮廓、混合层至少一项强差异）；如果日志已证明类型/状态切换正确，应优先检查素材与混合表现，而不是继续在输入链路和状态机上兜圈子

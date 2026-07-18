@@ -225,11 +225,11 @@ AudioSystem/                    Scripts/
 ├── Presets/                    ├── PoolManager.cs
 │   ├── AudioClipSO.asset       Prefabs/
 │   └── AudioLibrary.asset      ├── AudioPrefab.prefab
-└── MODULE_README.md             ScriptableObjects/
+└── ...                          ScriptableObjects/
                                  ├── AudioClipSO.asset
 ```
 
-按功能域组织的好处：要改音频系统，只需要看 `AudioSystem/` 目录。不需要在 Scripts、Prefabs、ScriptableObjects 之间跳来跳去。
+按功能域组织的好处：要改音频系统，优先看对应功能域目录，再结合 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 和 [Agent 索引](../Agent/INDEX.md) 定位当前设计说明。不需要在 Scripts、Prefabs、ScriptableObjects 之间跳来跳去。
 
 ## 微信小游戏适配要点
 

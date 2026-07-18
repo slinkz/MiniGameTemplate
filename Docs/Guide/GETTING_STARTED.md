@@ -163,7 +163,7 @@ Assets/
 └── ScriptTemplates/         ← C# 脚本模板
 ```
 
-每个框架模块目录下都有一个 `MODULE_README.md`，想了解某个模块就读它。
+模块说明已集中到 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 和 [Agent 索引](../Agent/INDEX.md)，想了解某个模块优先读这些当前知识入口。
 
 ## Step 6（可选）：生成 Luban 配置表
 
@@ -217,7 +217,7 @@ bash Tools/gen_config.sh
 
 ### Q: 我需要修改框架代码吗？
 
-一般不需要。框架设计为通过 SO 资产（变量、事件、配置）与游戏代码交互。如果你发现必须修改框架，可能说明缺少了某个扩展点——先看看 `MODULE_README.md` 有没有现成的解决方案。
+一般不需要。框架设计为通过 SO 资产（变量、事件、配置）与游戏代码交互。如果你发现必须修改框架，可能说明缺少了某个扩展点——先查看 [Agent 模块知识卡](../Agent/MODULE_CARDS/README.md) 和 [Agent 索引](../Agent/INDEX.md) 中是否已有现成方案。
 
 ### Q: 可以删掉不需要的模块吗？
 

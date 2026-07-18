@@ -11,7 +11,7 @@ related_code: Assets/_Framework/Editor/ArchitectureValidator.cs, Assets/_Framewo
 
 **菜单路径**：`Tools/MiniGame Template/Validate/Architecture Check`
 **源码**：`Assets/_Framework/Editor/ArchitectureValidator.cs`
-**用途**：扫描全部运行时 C# 脚本，检查架构违规（禁用 API、SRP 超限、模块 README 缺失）
+**用途**：扫描全部运行时 C# 脚本，检查架构违规（禁用 API、SRP 超限）
 
 ### 规则详情
 
@@ -35,7 +35,6 @@ related_code: Assets/_Framework/Editor/ArchitectureValidator.cs, Assets/_Framewo
 **白名单**（不检查）：`Singleton.cs`、`GameBootstrapper.cs`、所有 Editor/ 和 ThirdParty/ 目录
 
 ### 附加检查
-- **MODULE_README.md**：扫描 `Assets/_Framework/` 和 `Assets/_Game/` 的一级子目录，缺失则 Warning
 - **Spine 一致性**：`FAIRYGUI_SPINE` 和 `ENABLE_SPINE` 必须同步启用/禁用
 
 ### Agent MCP 调用

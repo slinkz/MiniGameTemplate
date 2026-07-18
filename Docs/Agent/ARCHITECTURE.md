@@ -232,7 +232,7 @@ Spine（可选）接入：
 ### 为什么目录按功能域而非技术分类？
 - Agent 操作一个功能时，只需读一个目录的内容
 - 减少 Agent 的上下文消耗（不需要在 Scripts/、Prefabs/、SO/ 之间跳转）
-- 每个模块的 MODULE_README.md 就是该模块的完整说明书
+- 模块知识集中在 `MODULE_CARDS/`、`CONTEXT_PACKS/` 和 `INDEX.md`，这些是当前说明入口
 
 ### 为什么 Unity 工程和 UI 工程分离？
 - FairyGUI 编辑器工程（UIProject/）是 UI 设计师的工作区

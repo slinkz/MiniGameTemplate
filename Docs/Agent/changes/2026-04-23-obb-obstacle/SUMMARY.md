@@ -25,7 +25,6 @@
 | `_Framework/.../Data/DanmakuEnums.cs` | CollisionTarget.Obstacle 注释 AABB→OBB |
 | `_Example/.../ObstacleRegistrar.cs` | +BoxCollider2D + OBB 旋转 + 变化检测 + Reset() + Gizmo |
 | `_Example/.../ObstacleSpawner.cs` | ObstacleDefinition +Rotation + Gizmo 旋转 |
-| `_Framework/DanmakuSystem/MODULE_README.md` | 新增 ObstacleCollisionMath + 碰撞描述更新 |
 | `docs/Agent/OBB_OBSTACLE_TDD.md` | AC-09 编译通过 + 状态更新 |
 
 ## 向后兼容性

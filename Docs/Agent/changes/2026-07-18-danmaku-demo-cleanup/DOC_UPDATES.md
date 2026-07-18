@@ -16,7 +16,6 @@ created: 2026-07-18
 - `Docs/Agent/ARCHITECTURE.md`
 - `Docs/Agent/ASSET_PIPELINE/VFX_PIPELINE.md`
 - `Docs/Agent/ASSET_PIPELINE/PREVIEW_AND_ACCEPTANCE.md`
-- `UnityProj/Assets/_Framework/EntitySystem/MODULE_README.md`
 - `Docs/Agent/DEMO_CLEANUP_SOP.md`
 
 ## Preserved History
