@@ -31,6 +31,8 @@ namespace MiniGameTemplate.Core
 
         /// <summary>Minimum interval between progress updates (seconds).</summary>
         private const float PROGRESS_THROTTLE = 0.1f;
+        private const string TRANSITION_SCENE_NAME = "Transition";
+        private const string TRANSITION_SCENE_PATH = "Assets/_Game/Scenes/Transition.unity";
 
         private bool _isLoading;
 
@@ -124,6 +126,9 @@ namespace MiniGameTemplate.Core
             }
 
             if (!sceneDef.IsAdditive)
+                ReleaseUnloadedSceneHandles(exceptSceneName: sceneDef.SceneName);
+
+            if (!sceneDef.IsAdditive)
                 _isLoading = false;
 
             _onSceneLoadCompleted?.Raise();
@@ -154,6 +159,13 @@ namespace MiniGameTemplate.Core
 
         private IEnumerator UnloadSceneCoroutine(SceneDefinition sceneDef, TaskCompletionSource<bool> tcs)
         {
+            if (IsLastLoadedScene(sceneDef.SceneName))
+            {
+                yield return TransitionAwayFromLastSceneCoroutine(sceneDef.SceneName);
+                tcs.TrySetResult(true);
+                yield break;
+            }
+
             if (_sceneHandleCache.TryGetValue(sceneDef.SceneName, out var handle))
             {
                 _sceneHandleCache.Remove(sceneDef.SceneName);
@@ -227,6 +239,9 @@ namespace MiniGameTemplate.Core
                 yield break;
             }
 
+            if (!sceneDef.IsAdditive)
+                ReleaseUnloadedSceneHandles(exceptSceneName: sceneDef.SceneName);
+
             _isLoading = false;
             _onSceneLoadCompleted?.Raise();
         }
@@ -263,6 +278,9 @@ namespace MiniGameTemplate.Core
             if (_onSceneLoadCompleted != null)
                 _onSceneLoadCompleted.Raise();
             GameLog.Log($"[SceneLoader] Scene loaded via SceneManager: {sceneDef.SceneName}");
+
+            if (!sceneDef.IsAdditive)
+                ReleaseUnloadedSceneHandles(exceptSceneName: sceneDef.SceneName);
         }
 
         /// <summary>
@@ -272,6 +290,12 @@ namespace MiniGameTemplate.Core
         {
             if (sceneDef == null) return;
 
+            if (IsLastLoadedScene(sceneDef.SceneName))
+            {
+                StartCoroutine(TransitionAwayFromLastSceneCoroutine(sceneDef.SceneName));
+                return;
+            }
+
             if (_sceneHandleCache.TryGetValue(sceneDef.SceneName, out var handle))
             {
                 _sceneHandleCache.Remove(sceneDef.SceneName);
@@ -280,6 +304,112 @@ namespace MiniGameTemplate.Core
             else
             {
                 SceneManager.UnloadSceneAsync(sceneDef.SceneName);
+            }
+        }
+
+        private IEnumerator TransitionAwayFromLastSceneCoroutine(string sceneName)
+        {
+            if (sceneName == TRANSITION_SCENE_NAME)
+                yield break;
+
+            yield return LoadTransitionSceneCoroutine();
+            var transitionScene = SceneManager.GetSceneByName(TRANSITION_SCENE_NAME);
+            if (!transitionScene.isLoaded)
+            {
+                Debug.LogError($"[SceneLoader] Transition scene failed to load. Keeping scene handle for: {sceneName}");
+                yield break;
+            }
+
+            ReleaseSceneHandle(sceneName);
+            GameLog.Log($"[SceneLoader] Transitioned through '{TRANSITION_SCENE_NAME}' before unloading last scene: {sceneName}");
+        }
+
+        private IEnumerator LoadTransitionSceneCoroutine()
+        {
+            var transitionScene = SceneManager.GetSceneByName(TRANSITION_SCENE_NAME);
+            if (transitionScene.isLoaded)
+                yield break;
+
+            ReleaseSceneHandle(TRANSITION_SCENE_NAME);
+
+            if (AssetService.Instance != null && AssetService.Instance.IsInitialized)
+            {
+                var sceneHandle = AssetService.Instance.LoadSceneAsync(TRANSITION_SCENE_PATH, LoadSceneMode.Single);
+                yield return sceneHandle;
+
+                if (sceneHandle.Status == YooAsset.EOperationStatus.Succeed)
+                {
+                    _sceneHandleCache[TRANSITION_SCENE_NAME] = sceneHandle;
+                    yield break;
+                }
+
+                GameLog.Log($"[SceneLoader] AssetService failed to load transition scene: {sceneHandle.LastError}. Falling back to SceneManager.");
+                if (sceneHandle.IsValid)
+                    sceneHandle.Release();
+            }
+
+            var operation = SceneManager.LoadSceneAsync(TRANSITION_SCENE_NAME, LoadSceneMode.Single);
+            if (operation == null)
+            {
+                Debug.LogError($"[SceneLoader] Failed to load transition scene: {TRANSITION_SCENE_NAME}");
+                yield break;
+            }
+
+            while (!operation.isDone)
+                yield return null;
+        }
+
+        private void ReleaseSceneHandle(string sceneName)
+        {
+            if (!_sceneHandleCache.TryGetValue(sceneName, out var handle))
+                return;
+
+            _sceneHandleCache.Remove(sceneName);
+            if (handle.IsValid)
+                handle.Release();
+        }
+
+        private bool IsLastLoadedScene(string sceneName)
+        {
+            var scene = SceneManager.GetSceneByName(sceneName);
+            if (!scene.isLoaded)
+                return false;
+
+            int loadedCount = 0;
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                if (SceneManager.GetSceneAt(i).isLoaded)
+                    loadedCount++;
+            }
+
+            return loadedCount <= 1;
+        }
+
+        private void ReleaseUnloadedSceneHandles(string exceptSceneName)
+        {
+            if (_sceneHandleCache.Count == 0)
+                return;
+
+            var staleSceneNames = new List<string>(2);
+            foreach (var pair in _sceneHandleCache)
+            {
+                if (pair.Key == exceptSceneName)
+                    continue;
+
+                var scene = SceneManager.GetSceneByName(pair.Key);
+                if (!scene.isLoaded)
+                    staleSceneNames.Add(pair.Key);
+            }
+
+            for (int i = 0; i < staleSceneNames.Count; i++)
+            {
+                string staleSceneName = staleSceneNames[i];
+                var handle = _sceneHandleCache[staleSceneName];
+                _sceneHandleCache.Remove(staleSceneName);
+                if (handle.IsValid)
+                    handle.Release();
+
+                GameLog.Log($"[SceneLoader] Released stale SceneHandle: {staleSceneName}");
             }
         }
     }

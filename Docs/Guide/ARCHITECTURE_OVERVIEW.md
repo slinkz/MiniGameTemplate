@@ -36,8 +36,7 @@ MiniGameTemplate 的架构有一个核心原则：**组件之间不直接引用�
 
 > **当前示例组织（2026-04-11）**
 > - `Assets/_Example/ClickGame/`：点击计数器示例，包含 `Scenes/ClickGame.unity`、`Scripts/`、`UI/ClickGame/`
-> - `Assets/_Example/DanmakuDemo/`：弹幕演示示例，包含 `Scenes/DanmakuDemo.unity` 与示例专用脚本/资源
-> - 主菜单提供 `示例 Demo` 分组，包含两个独立入口；示例内通过返回按钮或 `Esc` 返回主菜单（重载 `Boot` 场景）
+> - 主菜单提供 `示例 Demo` 分组，包含 ClickGame 入口；示例内通过返回按钮或 `Esc` 返回主菜单（重载 `Boot` 场景）
 
 
 

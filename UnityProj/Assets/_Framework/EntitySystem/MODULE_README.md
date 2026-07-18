@@ -50,7 +50,7 @@ AIBehaviorSO 是条件-动作表，按优先级从高到低配置：
 
 ### 5. Play → 验证
 
-按 Play，Entity 会按波次生成。场景中有 `EntityDemoInputBridge` 时可用 WASD + Space 操控玩家。
+按 Play，Entity 会按波次生成。若需要玩家输入，可在业务场景中接入自己的输入桥接组件并驱动 `ControlComponent`。
 
 ---
 

@@ -2,18 +2,14 @@
 
 ## 当前状态（2026-04-07）
 
-模板现在提供两个独立示例入口：
+模板现在提供一个独立示例入口：
 
-1. **ClickGame（点击计数器）**
+**ClickGame（点击计数器）**
    - 启动后进入 `MainMenuPanel`
    - 点击“点击游戏”会加载 `Assets/_Example/ClickGame/Scenes/ClickGame.unity`
    - 支持：点击加分、倒计时、结算、重开、Esc 返回主菜单、分享、最高分本地保存
    - FairyGUI 包源文件位于：`UIProject/assets/ClickGame/`
    - 运行时代码位于：`Assets/_Example/ClickGame/`
-
-2. **DanmakuDemo（弹幕演示）**
-   - 点击“弹幕Demo”会加载 `Assets/_Example/DanmakuDemo/Scenes/DanmakuDemo.unity`
-   - 支持：数字键 1/2/3 切难度、Esc 返回主菜单
 
 ## 玩法
 - 在限定时间内尽可能多地点击按钮
@@ -40,18 +36,12 @@ _Example/
       ClickGameBinder.cs
       MenuIconButton.cs
 
-  DanmakuDemo/
-    Scenes/DanmakuDemo.unity
-    Scripts/
-      DanmakuDemoController.cs
-      DanmakuDebugHUD.cs
-      SimplePlayerMover.cs
 ```
 
 ## 运行方式
 1. 打开 `Assets/_Framework/GameLifecycle/Boot.unity`
 2. 点击 Play
-3. 在主菜单的“示例 Demo”区域点击“点击游戏”或“弹幕Demo”
+3. 在主菜单的“示例 Demo”区域点击“点击游戏”
 
 
 ## FairyGUI 发布（ClickGame）

@@ -5,6 +5,7 @@
 ## 约定
 - `Boot.unity` — 启动场景（仅包含 GameBootstrapper）
 - `Main.unity` — 游戏主场景
+- `Transition.unity` — 空过渡场景，供 SceneLoader 在卸载最后一个业务场景前临时切入
 - 其他场景按功能命名
 
 ## 场景引用

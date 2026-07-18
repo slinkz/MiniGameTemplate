@@ -31,6 +31,7 @@ last_verified: 2026-05-17
 > 4. 新增 `public Task UnloadSceneAsync(SceneDefinition)` — 通过 `sceneHandle.UnloadAsync()` 释放
 > 5. 场景已加载判断内置（`GetSceneByName().isLoaded` 短路返回）
 > 6. `_isLoading` 互斥仅对 Single 模式生效（Additive 不阻塞后续操作）
+> 7. 当待卸载场景是最后一个已加载场景时，先切入 `Transition.unity` 再释放旧 SceneHandle，避免 Unity 最后场景卸载 warning
 
 ---
 
@@ -42,7 +43,7 @@ last_verified: 2026-05-17
 | `Node_LevelSelect` | SD_Main (Single) | `LevelSelectScreen` | — |
 | `Node_Battle` | SD_Battle (Single) | _(空，由 BattleController 自管)_ | true |
 
-> **2026-05-06 重构**：MainMenu/LevelSelect 从纯 UI 节点改为关联 SD_Main（Single 模式），Battle 改为 `UnloadSceneOnExit=false`。场景切换由 Single 模式自动替换完成——Push Battle 时 Main 被替换，Pop 回 LevelSelect 时 Battle 被替换。
+> **2026-07-18 更新**：MainMenu/LevelSelect 关联 SD_Main（Single 模式），Battle 离开时允许卸载；若 Battle 是最后一个已加载场景，SceneLoader 会先切入空 `Transition.unity`，再回到 SD_Main。
 
 ---
 
@@ -78,9 +79,9 @@ last_verified: 2026-05-17
   Pop()
   → Stack: [MainMenu, LevelSelect]
   → CloseAllPanels() + CloseSuspendedPanels(Battle层)
-  → ExitNode: UnloadSceneOnExit=true → 不手动卸载（Single 自动替换）
+  → ExitNode: UnloadSceneOnExit=true → SceneLoader 先切 Transition，再释放 Battle handle
   → ResumePanels(LevelSelect层) → LevelSelectScreen.OnResume() → Show
-  → SceneLoader.LoadScene(SD_Main, Single) → Battle 被替换
+  → SceneLoader.LoadScene(SD_Main, Single) → Transition 被替换
   ↓
 [胜利 → 确认]
   Pop()  ← 同上效果
@@ -117,18 +118,19 @@ last_verified: 2026-05-17
 场景布局：
   Boot.unity  → 仅启动时短暂存在，GameBootstrapper 在此初始化所有 Singleton 后切走
   Main.unity  → 非战斗宿主场景（正交相机 Size=8），承载 MainMenu / LevelSelect 面板
+  Transition.unity → 空过渡场景，用于卸载最后一个业务场景前的安全落点
   Battle.unity → 战斗场景，承载 BattleController / EntitySystem / UI Controllers
 
 常驻层（DontDestroyOnLoad）：
   GameBootstrapper → AppFlowNavigator / SceneLoader / UIManager / DanmakuSystem / FairyGUI GRoot
 
 场景切换流程：
-  Boot ──Single──→ Main ──Single──→ Battle ──Single──→ Main
+  Boot ──Single──→ Main ──Single──→ Battle ──Single──→ Transition ──Single──→ Main
                                       ↑ Push              ↑ Pop
 ```
 
 **设计决策**：
 - **所有场景都是 Single 模式加载**——利用 Unity 的 LoadSceneMode.Single 自动替换前一个场景
-- `Node_Battle.UnloadSceneOnExit = false`——Pop 时不需手动卸载，因为 EnterNode(LevelSelect) 会加载 SD_Main(Single)，自动替换 Battle
+- `Node_Battle.UnloadSceneOnExit = true`——Pop 时先经过 `Transition.unity` 释放 Battle handle，再加载 SD_Main(Single)
 - 战斗中的 FairyGUI 对象直接挂 GRoot（DontDestroyOnLoad），各 UI Controller 必须在 `OnDestroy` 中 `Dispose()` 清理
 - DanmakuSystem 是 DontDestroyOnLoad，需在 `BattleController.OnDestroy` 中显式 `ClearAll()`

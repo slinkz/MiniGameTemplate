@@ -154,12 +154,12 @@ public class EntityConfigSO : ScriptableObject
 
 | 步骤 | 内容 | AC（全部需满足） |
 |------|------|-----------------|
-| P1.0 | ~~阵营枚举统一迁移（BulletFaction → EnumCamp）~~ ✅ 2026-04-30 | ✅ 全项目零 `BulletFaction` 引用 + 编译通过 + DanmakuDemo 行为不变（SA-002，v2.3 新增） |
+| P1.0 | ~~阵营枚举统一迁移（BulletFaction → EnumCamp）~~ ✅ 2026-04-30 | ✅ 全项目零 `BulletFaction` 引用 + 编译通过；当时以旧弹幕示例行为不变验收（SA-002，v2.3 新增），当前验证改用业务战斗链路或专用临时验证场景 |
 | P1.1 | ~~IEntityComponent / ITickable / Entity 容器~~ ✅ 2026-04-30 | ✅ 编译通过 + GetComponent(ComponentType) O(1) 返回正确组件 + GetComponent 未注册类型返回 null |
 | P1.2 | ~~EntityEventBus（零 GC 泛型事件总线）~~ ✅ 2026-04-30 | ✅ 编译通过 + Publish→Subscribe 正确分发 + ClearAll 后无残留 + Profiler 验证 100 次 Pub/Sub 周期 GC = 0 |
 | P1.3 | ~~EntityPool + EntityManager~~ ✅ 2026-04-30 | ✅ 编译通过 + Profiler 验证 50 次 Acquire+Release 周期 GC = 0 + 池满 LogWarning 不崩 + 延迟销毁在 Tick 中不崩 |
 | P1.4 | ~~StateComponent + HealthComponent~~ ✅ 2026-04-30 | ✅ 编译通过 + 互斥状态冲突时正确阻止 + OnDamaged 事件携带正确来源 + HP=0 触发 OnDeath |
-| P1.5 | ~~CollisionComponent（ICollisionTarget 桥接）~~ ✅ 2026-04-30 | ✅ 编译通过 + DanmakuDemo 中弹丸命中 Entity 触发 OnCollisionHit + 注册/注销不泄漏槽位 |
+| P1.5 | ~~CollisionComponent（ICollisionTarget 桥接）~~ ✅ 2026-04-30 | ✅ 编译通过 + 弹丸命中 Entity 触发 OnCollisionHit + 注册/注销不泄漏槽位；历史验收使用旧弹幕示例，当前验证改用业务战斗链路或专用临时验证场景 |
 | P1.6 | ~~MovementComponent + AnimationComponent（纯逻辑）~~ ✅ 2026-04-30 | ✅ 编译通过 + Entity 位置按速度更新 + CurrentAnimId 随状态切换 |
 | P1.7 | ~~ControlComponent + AIComponent + AttackComponent~~ ✅ 2026-04-30 | ✅ 编译通过 + 同 Entity 互斥挂载校验 + AI 条件-动作表（AIBehaviorSO）驱动行为切换 + IAIAction 有状态 Action（Patrol 多帧上下文保持）+ AttackComponent 定时发射弹幕 (**v2.4 扩展**) |
 | P1.8 | ~~EntityConfigSO 配置驱动验证 + Editor 工具~~ ✅ 2026-04-30 | ✅ 从 EntityConfigSO 创建完整 Entity（含正确组件列表）+ Inspector 可编辑所有 Phase 1 字段（含 AIBehavior/Attack/Effect 新增字段）+ **EntityConfigSOEditor 条件显示 + HelpBox 警告正常工作**（ET-001/002）+ **Components CheckboxGrid 互斥校验正常**（ET-002）+ **EntityConfigValidator MenuItem 批量校验输出正确**（ET-006）+ **AIBehaviorSOEditor 可读摘要标题正常显示**（ET-005）+ **EntitySpawnWaveSOEditor 摘要面板正常显示**（ET-007）+ **EntityDebugWindow Play Mode 概览面板可打开并显示数据**（ET-008）+ **SOCreationWizard 含 Entity 系列 3 种 SO 类型**（ET-010）(**v2.5 扩展**) |
@@ -218,4 +218,3 @@ public class EntityConfigSO : ScriptableObject
 | AttackComponent 复用 Skill 槽位（GD-R4-003） | Phase 3 SkillComponent 上线时需处理与 AttackComponent 的槽位共存或替代关系 | Phase 3 决策：SkillComponent 可包含 AttackComponent 能力，或两者共存（Skill 槽位拆分为 Attack + Skill） |
 
 ---
-

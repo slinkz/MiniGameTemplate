@@ -16,7 +16,7 @@ related_docs: Docs/Agent/TOOLS/MCP_INTEGRATION.md, Docs/Agent/SHOOTER_GAME/SG_V2
 | 资产 | 推荐预览 |
 |------|----------|
 | 敌人/子弹 sprite | 测试关卡或战斗场景 |
-| VFX | DanmakuDemo / 业务命中链路 |
+| VFX | 业务命中链路 / 专用临时验证场景 |
 | UI icon | FairyGUI 编辑器 + Unity UI 面板 |
 | Audio | 触发事件所在流程 |
 | 背景 | 目标关卡或主界面 |

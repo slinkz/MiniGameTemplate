@@ -27,7 +27,7 @@ related_docs: skills/vfx-creator/SKILL.md, Docs/Agent/MODULE_CARDS/VFXSystem.md
 4. 创建 `VFXTypeSO`。
 5. 注册到 `VFXTypeRegistrySO`。
 6. 接到 `SpriteSheetVFXSystem` 或业务触发链路。
-7. 在 DanmakuDemo 或目标业务链路验证。
+7. 在目标业务链路或专用临时验证场景验证。
 8. 更新 Manifest 和必要文档。
 
 ## 验收顺序

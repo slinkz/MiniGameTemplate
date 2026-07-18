@@ -43,4 +43,7 @@ If any file under `UIProject/assets/**` changes, the final response must remind 
 
 ## Reference Case
 
-See `Docs/Agent/changes/2026-07-16-vfxdemo-cleanup/`.
+See:
+
+- `Docs/Agent/changes/2026-07-16-vfxdemo-cleanup/`
+- `Docs/Agent/changes/2026-07-18-danmaku-demo-cleanup/`

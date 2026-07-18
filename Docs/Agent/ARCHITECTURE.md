@@ -83,7 +83,7 @@ MiniGameTemplate/               ← Git 仓库根
     ├── Assets/SpineCSharp/     # Optional Junction → ThirdParty/spine-runtimes/spine-csharp/src
     ├── Assets/_Framework/      # 框架代码
     ├── Assets/_Game/           # 游戏业务代码
-    ├── Assets/_Example/        # 示例代码（ClickGame / DanmakuDemo）
+    ├── Assets/_Example/        # 示例代码（ClickGame）
     ├── DataTables/             # Luban 配置表
 
     ├── ThirdParty/             # FairyGUI + Spine 子模块，YooAsset 源码
@@ -163,19 +163,17 @@ FairyGUI 编辑器（UIProject/）
           └→ UIManager 管理面板生命周期
 
 当前示例包：
-  - MainMenu    → 主菜单双入口（ClickGame / DanmakuDemo）
+  - MainMenu    → 主菜单示例入口（ClickGame）
   - ClickGame   → 点击计数器示例 UI
 
 当前示例场景流转：
   Boot.unity
     └→ MainMenuPanel
-         ├→ LoadScene("ClickGame")
-         │    └→ ClickGameSceneEntry 打开 ClickCounterPanel
-         └→ LoadScene("DanmakuDemo")
-              └→ DanmakuDemoController 驱动弹幕示例
+         └→ LoadScene("ClickGame")
+              └→ ClickGameSceneEntry 打开 ClickCounterPanel
 
 示例返回主菜单：
-  ClickGame / DanmakuDemo
+  ClickGame
     └→ ExampleSceneNavigator.ReturnToMainMenu()
          └→ 重载 Boot.unity 并重新打开 MainMenuPanel
 

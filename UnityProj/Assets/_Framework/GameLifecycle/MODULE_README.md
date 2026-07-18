@@ -38,6 +38,11 @@ void LoadGameScene() {
 - **ScenePath**：YooAsset 资源路径，如 `Assets/Scenes/GameScene.unity`（为空时走 SceneManager）
 - **IsAdditive**：是否叠加加载
 
+### Transition 场景
+- `Assets/_Game/Scenes/Transition.unity` 是空过渡场景。
+- 当 `SceneLoader` 需要卸载最后一个已加载业务场景时，会先切入 `Transition.unity`，再释放旧场景句柄，避免 Unity 报 `Unloading the last loaded scene` warning。
+- `Transition.unity` 必须保留在 Build Settings 中，并随 YooAsset 场景资源一起重新构建。
+
 ## 注意
 - Boot场景**必须**在Build Settings中排第一位
 - Boot场景仅包含GameBootstrapper和必要的DontDestroyOnLoad对象

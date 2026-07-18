@@ -9,7 +9,7 @@
 虽然简单，但它用到了模板的几乎所有核心模块：
 
 > **当前版本说明（2026-04-11）**
-> - 示例入口已调整为主菜单 `示例 Demo` 分组下的两个按钮：`点击游戏`、`弹幕Demo`。
+> - 示例入口位于主菜单 `示例 Demo` 分组下：`点击游戏`。
 > - ClickGame 的 FairyGUI 源文件位于 `UIProject/assets/ClickGame/`，运行时代码位于 `Assets/_Example/ClickGame/`。
 > - 若修改主菜单 UI，请同步更新 FairyGUI 源文件 `UIProject/assets/MainMenu/MainMenuPanel.xml` 与导出代码。
 
@@ -47,15 +47,9 @@ Assets/_Example/
 │       ├── ClickCounterPanel.Logic.cs
 │       ├── ClickGameBinder.cs
 │       └── MenuIconButton.cs
-├── DanmakuDemo/
-│   ├── Scenes/DanmakuDemo.unity
-│   └── Scripts/
-│       ├── DanmakuDemoController.cs
-│       ├── DanmakuDebugHUD.cs
-│       └── SimplePlayerMover.cs
 ```
 
-本篇重点解读 ClickGame；DanmakuDemo 作为第二个示例，主要用于展示 DanmakuSystem 的集成方式与场景切换流程。
+本篇重点解读 ClickGame，这是当前模板保留的示例入口。
 
 
 
@@ -350,12 +344,9 @@ ClickButton ──→ ClickGameManager ──写→ PlayerScore.asset ──→ 
 当前模板的示例流转如下：
 
 1. 从 `Boot.unity` 启动，进入主菜单
-2. 在主菜单的“示例 Demo”区域选择目标入口：`点击游戏` / `弹幕Demo`
+2. 在主菜单的“示例 Demo”区域选择目标入口：`点击游戏`
 3. `ClickGame` 由 `ClickGameSceneEntry` 注册 `ClickGameBinder` 并打开 `ClickCounterPanel`
-4. `DanmakuDemo` 加载独立场景，避免把示例对象直接堆在 `Boot`
-5. 示例内通过返回按钮或 `Esc` 重载 `Boot` 场景并重新打开主菜单
-
-DanmakuDemo 复用统一返回策略。
+4. 示例内通过返回按钮或 `Esc` 重载 `Boot` 场景并重新打开主菜单
 
 ## 下一步
 

@@ -59,7 +59,7 @@ namespace MiniGameTemplate.Editor.Entity
             so.AttackFireOffset = new Vector2(0f, 0.5f);
             // 尝试加载 Demo 弹幕配置（如不存在则留空，用户手动配置）
             so.AttackBulletPattern = AssetDatabase.LoadAssetAtPath<BulletPatternSO>(
-                "Assets/_Example/DanmakuDemo/BulletPattern/Pattern_Aimed5.asset");
+                "Assets/_Game/Configs/Danmaku/BulletPattern/Pattern_Aimed5.asset");
             so.KnockbackDistance = 0f; // 玩家不被击退（或很小）
             so.KnockbackDuration = 0f;
             so.DebugColor = new Color(0.2f, 0.8f, 1f, 1f); // 浅蓝

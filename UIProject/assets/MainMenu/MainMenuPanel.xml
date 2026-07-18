@@ -24,10 +24,6 @@
       <relation target="gen_64" sidePair="center-center,bottom-top"/>
       <Button title="点击游戏"/>
     </component>
-    <component id="gen_55" name="btnDanmakuDemo" src="gen_02" fileName="components/MenuIconButton.xml" xy="210,840" size="300,70">
-      <relation target="n0_i69i" sidePair="center-center,bottom-top"/>
-      <Button title="弹幕Demo"/>
-    </component>
     <component id="gen_56" name="btnSettings" src="gen_02" fileName="components/MenuIconButton.xml" xy="140,1100" size="80,80">
       <relation target="gen_57" sidePair="middle-middle,left-right%"/>
       <Button title="设置"/>

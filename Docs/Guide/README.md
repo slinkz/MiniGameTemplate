@@ -12,7 +12,7 @@ MiniGameTemplate 是一个 **Unity 微信小游戏开发模板**。它提供了�
 - 📦 **18 个即用模块** — 事件/数据/UI(FairyGUI)/音频/对象池/状态机/计时器/资源(YooAsset)/微信桥接/弹幕/Entity-Component/VFX/RuntimeAtlas 等
 - 🎯 **微信小游戏优化** — 内存管理、WebGL 约束、构建配置全部预设好
 - 🛠 **编辑器工具链** — 架构验证、资源审计、SO 创建向导、一键构建
-- 📝 **两个示例** — ClickGame（点击计数器）、DanmakuDemo（弹幕演示）
+- 📝 **一个示例** — ClickGame（点击计数器）
 
 ## 技术栈
 

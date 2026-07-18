@@ -3,7 +3,7 @@ system: shootergame
 scope: architecture
 last_verified: 2026-05-06
 depends_on: [SG_TDD_INDEX, APPFLOW_TDD]
-related_code: Assets/_Game/Scripts/ShooterGame/Core/*.cs, Assets/_Game/Scenes/Main.unity, Assets/_Game/Scenes/Battle.unity
+related_code: Assets/_Game/Scripts/ShooterGame/Core/*.cs, Assets/_Game/Scenes/Main.unity, Assets/_Game/Scenes/Battle.unity, Assets/_Game/Scenes/Transition.unity
 ---
 
 # SG_TDD_01: 总体架构
@@ -90,6 +90,9 @@ Main Scene (非战斗宿主)
   └── 正交相机 (Size=8)
   └── FairyGUI 面板运行在 GRoot（DontDestroyOnLoad）上：MainMenu / LevelSelect
 
+Transition Scene (空过渡)
+  └── 无业务对象；SceneLoader 在卸载最后一个业务场景前临时切入
+
 Battle Scene (战斗)
   └── BattleController (MonoBehaviour)
       ├── Awake(): 读取 SG_CurrentLevelIndex → 加载对应 SG_LevelConfigSO
@@ -148,7 +151,7 @@ Battle Scene (战斗)
 │  ├── VictoryPanelController                  │
 │  └── DefeatPanelController                   │
 └───────────────────────────────────────────────┘
-        │ Pop() → LoadScene(SD_Main, Single) → Battle 被替换 + OnDestroy 清理
+        │ Pop() → LoadScene(Transition, Single) → 释放 Battle handle → LoadScene(SD_Main, Single)
         ▼
         回到 Main.unity
 ```
@@ -295,4 +298,7 @@ Main.unity
 Battle.unity
 ├── BattleController / EntitySystemBootstrap / CameraShaker 等
 └── UI Controllers 在 Start() 中将面板挂到 GRoot
+
+Transition.unity
+└── 空过渡场景，避免卸载最后一个已加载业务场景时触发 Unity warning
 ```
